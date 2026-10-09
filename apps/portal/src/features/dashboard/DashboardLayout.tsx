@@ -62,7 +62,7 @@ function ProfileMenu() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-3 py-1.5 px-2 rounded-lg hover:bg-[#F3F8F6] transition-colors"
+        className="flex items-center gap-3 py-2 px-3 rounded-xl bg-white border border-[#E5EAE8] shadow-sm hover:shadow transition-shadow"
       >
         <div className="w-8 h-8 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
           {initials}
@@ -144,7 +144,7 @@ export function DashboardLayout() {
       {/* Right side — topbar + content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="h-14 bg-white border-b border-[#E5EAE8] flex items-center justify-end px-6 flex-shrink-0">
+        <header className="h-14 flex items-center justify-end px-6 flex-shrink-0">
           <ProfileMenu />
         </header>
 
