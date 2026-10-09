@@ -113,7 +113,7 @@ function TrustedBySection() {
       <p className="text-center text-[13px] text-[#6B7280] mb-7">
         Trusted by businesses that care about their reputation
       </p>
-      <div className="flex flex-wrap justify-center gap-10 lg:gap-16 reveal-stagger revealed">
+      <div className="flex flex-wrap justify-center gap-10 lg:gap-16 reveal-stagger">
         {INDUSTRIES.map(({ label, icon }) => (
           <div key={label} className="flex flex-col items-center gap-2 text-[#9CA3AF]">
             {icon}
