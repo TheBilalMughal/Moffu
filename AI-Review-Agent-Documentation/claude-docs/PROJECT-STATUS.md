@@ -1,38 +1,75 @@
 # Project Status
 
 ## Current milestone
-PHASE 1 — Foundation (IN PROGRESS)
+PHASE 3 — Brand Brain Setup UI (NEXT)
 
-## Completed (Phase 1)
+## Completed
+
+### Phase 1 — Foundation
 - Monorepo initialized: pnpm workspaces + Turborepo, root `package.json`, `tsconfig.base.json`, `.gitignore`, `.prettierrc`
 - `packages/config`: shared ESLint and TypeScript configs (base/react/next)
 - `packages/types`: shared TypeScript types — auth, organization, RBAC, common primitives
 - `packages/ui`: design tokens (#0D4C3C brand palette), Button/Input/Label/Alert primitives, `cn()` utility
-- `apps/web`: Next.js 14 marketing site scaffold, Tailwind, globals.css, placeholder homepage, `.env.example`
-- `apps/portal`: Vite/React customer portal, Supabase auth client, auth service + store (Zustand), Login/Signup/ForgotPassword/ResetPassword/VerifyEmail pages, AuthGuard/GuestGuard, route structure, `.env.example`
-- `apps/admin`: Vite/React admin portal, platform RBAC auth store, AdminLoginPage, AdminAuthGuard (checks platform_members), `.env.example`
-- `supabase/`: Supabase project initialized (`config.toml`), 5 migrations written:
-  - `000001`: Extensions (uuid-ossp, pgcrypto, citext) + human reference ID system (`next_ref_id()`)
-  - `000002`: Regions, countries, currencies (reference data, all `is_active=false` pending TBD launch decisions)
-  - `000003`: User profiles (auto-trigger on auth.users insert), organizations, org_members, invitations — RLS policies, sole owner protection
-  - `000004`: Customer RBAC (permission registry, role_permissions, user overrides, platform_members), last-super-admin protection, `has_permission()` function
-  - `000005`: Audit events + security events (append-only, RLS)
+- `apps/web`: Next.js 14 marketing site scaffold, Tailwind, globals.css, homepage with hero/features/CTA sections
+- `apps/portal`: Vite/React customer portal — full auth + dashboard shell
+- `apps/admin`: Vite/React admin portal scaffold, AdminLoginPage, AdminAuthGuard
+- `supabase/`: 5 migrations (extensions, regions/currencies, user profiles/orgs/members, RBAC, audit/security events)
+- `pnpm typecheck` — all 6 packages pass
 
-## Phase 1 completion gates
-- **DONE**: `pnpm typecheck` — 6/6 packages pass (2026-10-09). Fixed: `vite/client` types missing in portal/admin tsconfigs, and `onAuthStateChange` callback async signature mismatch.
-- **NOTE**: `pnpm install` exits code 1 due to pnpm 12.4.2 `ERR_PNPM_IGNORED_BUILDS` security check for esbuild. All packages ARE installed (424 cached). Run `pnpm approve-builds` interactively to permanently resolve; typecheck/build work regardless.
-- Supabase migrations NOT tested: Docker Desktop not installed; local Supabase stack cannot start
-- No `.env.local` files — Supabase credentials not yet provided
+### Phase 2 — Marketing Site + Portal Auth + Dashboard UI
+**Marketing site (`apps/web`):**
+- Homepage — hero, features, testimonials, CTA sections
+- SiteNav — Login/Get Started buttons wired to portal (`PORTAL_URL` env var, server-side only)
+- Responsive layout, `#0D4C3C` brand color
 
-## Phase 2 planned
-- Onboarding flow (org creation, country/timezone, Brand Brain setup)
-- Google OAuth connection (disabled/mocked until credentials provided)
-- Review workflow foundation
+**Portal Auth (`apps/portal/src/features/auth`):**
+- Split-layout `AuthLayout` — left panel (dark green gradient, tagline), right panel (form)
+- `LoginPage` — email/password with eye toggle, remember me, forgot password link, Google OAuth stub (disabled)
+- `SignupPage` — full name, email, password + confirm, mismatch validation, success/resend state
+- `ForgotPasswordPage` — email field, success state with back-to-login
+- `h-screen overflow-hidden` (no scroll), animated page transitions (`auth-in` keyframe on pathname key)
+- Back-to-website link with left arrow; left panel logo clickable — both go to `VITE_WEB_URL`
+- `apps/portal/vercel.json` — SPA catch-all rewrite for Vercel
 
-## External/configuration
-See `EXTERNAL-ACTIONS.md`.
-- **BLOCKS migrations test**: Docker Desktop required for local Supabase OR provide cloud Supabase credentials
-- **BLOCKS all auth/UI testing**: Supabase project URL + anon key required in `.env.local`
+**Portal Dashboard (`apps/portal/src/features/dashboard`):**
+- `DashboardLayout` — sidebar (logo + nav + profile at bottom) + full-width content area; **no topbar**
+- Sidebar profile: avatar initials + full name + email, dropdown opens upward (Settings + Sign out)
+- Full name fix: reads both `display_name` and `full_name` from `user_metadata`
+- `OverviewPage` — stat cards (mock "—"), empty state CTA
+- `ReviewsPage` — filter tabs (All/Pending/Draft Ready/Replied), review cards, Generate AI Draft, editable textarea, Approve & Publish / Discard
+- `SettingsPage` — account info, Google Business Profile stub (Coming soon), Billing stub
+
+**Deployments:**
+- Marketing site → `moffu.vercel.app` (project: moffu)
+- Portal → `appmoffu.vercel.app` (project: portalmoffu)
+- `PORTAL_URL` set in web's Vercel env (server-side); `VITE_WEB_URL` needs to be set in portalmoffu Vercel env
+
+## Phase 3 — Brand Brain Setup UI (NEXT)
+Onboarding flow after first login: company name, tone/voice, language preference.
+No external API required — pure UI + Supabase DB write.
+
+## Phase 4 — Google Business Profile Integration
+- **BLOCKED**: Requires Google OAuth credentials (Client ID + Secret)
+- Connect GBP account, sync reviews to DB, RLS per org
+
+## Phase 5 — AI Response Generation
+- **BLOCKED on Phase 4**: needs real reviews
+- OpenAI/Claude API key required (server-side only)
+
+## Phase 6 — Billing & Subscription (Stripe)
+- Stripe keys required
+- Plans TBD
+
+## Phase 7 — Admin Portal
+- Internal platform management
+- Depends on core feature set being stable
+
+## External/configuration pending
+- `VITE_WEB_URL` → set to `https://moffu.vercel.app` in portalmoffu Vercel project (for "Back to website" link in prod)
+- Google OAuth credentials → needed for Phase 4
+- OpenAI or Anthropic API key → needed for Phase 5
+- Stripe keys → needed for Phase 6
+- Docker Desktop or cloud Supabase creds → for local migration testing
 
 ## Rule
 When asked "pending kya hai?" inspect actual code/database/config/tests; never guess from chat history.
