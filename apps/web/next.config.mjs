@@ -13,6 +13,7 @@ const nextConfig = {
   ],
   // Transpile workspace packages
   transpilePackages: ['@moffu/ui', '@moffu/types'],
+  output: 'standalone',
 };
 
 export default nextConfig;
