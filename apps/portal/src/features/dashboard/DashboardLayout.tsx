@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { authService } from '@/features/auth/auth.service';
 import { useAuthStore } from '@/features/auth/auth.store';
@@ -27,36 +28,76 @@ function CogIcon() {
   );
 }
 
-function ArrowRightOnRectangleIcon() {
-  return (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-    </svg>
-  );
-}
-
 const navItems = [
   { to: '/dashboard', label: 'Overview', icon: <ChartBarIcon /> },
   { to: '/reviews', label: 'Reviews', icon: <StarIcon /> },
   { to: '/settings', label: 'Settings', icon: <CogIcon /> },
 ];
 
-export function DashboardLayout() {
+function ProfileMenu() {
   const { user } = useAuthStore();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const displayName = user?.user_metadata?.display_name ?? user?.email ?? 'Account';
+  const initials = user?.user_metadata?.display_name
+    ? user.user_metadata.display_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+    : user?.email?.slice(0, 2).toUpperCase() ?? '??';
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   async function handleLogout() {
     await authService.logout();
     window.location.replace('/auth/login');
   }
 
-  const initials = user?.user_metadata?.display_name
-    ? user.user_metadata.display_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
-    : user?.email?.slice(0, 2).toUpperCase() ?? '??';
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg hover:bg-[#F3F8F6] transition-colors"
+      >
+        <div className="w-8 h-8 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+          {initials}
+        </div>
+        <span className="text-sm font-medium text-[#111827] max-w-[140px] truncate">{displayName}</span>
+        <svg className={`w-4 h-4 text-[#9CA3AF] transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
 
+      {open && (
+        <div className="absolute right-0 top-full mt-1.5 w-56 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 z-50">
+          <div className="px-4 py-2.5 border-b border-[#F3F4F6]">
+            <p className="text-sm font-medium text-[#111827] truncate">{displayName}</p>
+            <p className="text-xs text-[#9CA3AF] truncate mt-0.5">{user?.email}</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+            </svg>
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function DashboardLayout() {
   return (
     <div className="flex h-screen bg-[#F8FAF9] overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-[232px] flex-shrink-0 bg-white border-r border-[#E5EAE8] flex flex-col">
+      <aside className="w-[220px] flex-shrink-0 bg-white border-r border-[#E5EAE8] flex flex-col">
         {/* Logo */}
         <div className="px-5 py-5 border-b border-[#E5EAE8]">
           <span className="text-[#0D4C3C] font-bold text-lg tracking-tight select-none">Moffu</span>
@@ -82,34 +123,20 @@ export function DashboardLayout() {
             </NavLink>
           ))}
         </nav>
-
-        {/* User section */}
-        <div className="px-3 py-4 border-t border-[#E5EAE8]">
-          <div className="flex items-center gap-3 px-3 py-2 rounded-lg">
-            <div className="w-8 h-8 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
-              {initials}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-[#111827] truncate">
-                {user?.user_metadata?.display_name ?? 'My Account'}
-              </p>
-              <p className="text-xs text-[#9CA3AF] truncate">{user?.email}</p>
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full mt-1 flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-[#6B7280] hover:bg-red-50 hover:text-red-600 transition-colors"
-          >
-            <ArrowRightOnRectangleIcon />
-            Sign out
-          </button>
-        </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
-        <Outlet />
-      </main>
+      {/* Right side — topbar + content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Topbar */}
+        <header className="h-14 bg-white border-b border-[#E5EAE8] flex items-center justify-end px-6 flex-shrink-0">
+          <ProfileMenu />
+        </header>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

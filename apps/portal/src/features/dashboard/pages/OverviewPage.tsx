@@ -12,7 +12,7 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
 
 export function OverviewPage() {
   return (
-    <div className="px-8 py-8 max-w-5xl">
+    <div className="px-8 py-8">
       <div className="mb-7">
         <h1 className="text-[1.5rem] font-bold text-[#111827]">Overview</h1>
         <p className="text-sm text-[#6B7280] mt-0.5">Your review performance at a glance.</p>

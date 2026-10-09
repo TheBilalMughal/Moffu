@@ -4,7 +4,7 @@ export function SettingsPage() {
   const { user } = useAuthStore();
 
   return (
-    <div className="px-8 py-8 max-w-2xl">
+    <div className="px-8 py-8">
       <div className="mb-7">
         <h1 className="text-[1.5rem] font-bold text-[#111827]">Settings</h1>
         <p className="text-sm text-[#6B7280] mt-0.5">Manage your account and preferences.</p>
