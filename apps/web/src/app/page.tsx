@@ -74,7 +74,7 @@ function HeroSection() {
               Get Started
             </Link>
             <Link
-              href="#how-it-works"
+              href="/feature"
               className="border border-[#D1D5DB] bg-white hover:bg-[#F9FAFB] text-[#111827] px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
             >
               See How It Works
