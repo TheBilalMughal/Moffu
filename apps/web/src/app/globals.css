@@ -22,6 +22,30 @@
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
 
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.55s ease-out, transform 0.55s ease-out;
+  }
+  .reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Staggered children */
+  .reveal-stagger > * {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.45s ease-out, transform 0.45s ease-out;
+  }
+  .reveal-stagger.revealed > *:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0ms; }
+  .reveal-stagger.revealed > *:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 80ms; }
+  .reveal-stagger.revealed > *:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 160ms; }
+  .reveal-stagger.revealed > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 240ms; }
+  .reveal-stagger.revealed > *:nth-child(5) { opacity: 1; transform: translateY(0); transition-delay: 320ms; }
+  .reveal-stagger.revealed > *:nth-child(6) { opacity: 1; transform: translateY(0); transition-delay: 400ms; }
+
   /* Reduced motion — respect user preference */
   @media (prefers-reduced-motion: reduce) {
     *,

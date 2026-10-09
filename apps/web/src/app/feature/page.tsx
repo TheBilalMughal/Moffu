@@ -196,7 +196,7 @@ export default function FeaturePage() {
         </nav>
 
         {/* Hero */}
-        <section className="bg-white px-8 lg:px-16 py-20 text-center max-w-4xl mx-auto">
+        <section className="bg-white px-8 lg:px-16 py-20 text-center max-w-4xl mx-auto reveal">
           <p className="text-[11px] font-semibold text-[#0D4C3C] uppercase tracking-[0.14em] mb-4">
             · Feature
           </p>
@@ -222,7 +222,7 @@ export default function FeaturePage() {
             <h2 id="features-heading" className="text-[2rem] font-bold text-[#111827] text-center mb-14">
               Everything Brand Brain can do
             </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 reveal-stagger">
               {FEATURES.map(({ title, description, icon }) => (
                 <div key={title} className="bg-white rounded-xl p-7 border border-[#E5E7EB]">
                   <div className="w-10 h-10 rounded-lg bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center mb-5">
@@ -242,7 +242,7 @@ export default function FeaturePage() {
             <h2 id="how-heading" className="text-[2rem] font-bold text-[#111827] text-center mb-14">
               How Brand Brain works
             </h2>
-            <div className="grid sm:grid-cols-2 gap-6">
+            <div className="grid sm:grid-cols-2 gap-6 reveal-stagger">
               {HOW_IT_WORKS.map(({ step, title, body }) => (
                 <div key={step} className="flex gap-5">
                   <div className="text-[2rem] font-bold text-[#E5E7EB] leading-none flex-shrink-0 w-10">
@@ -264,7 +264,7 @@ export default function FeaturePage() {
             <h2 id="faq-heading" className="text-[2rem] font-bold text-[#111827] text-center mb-12">
               Frequently asked questions
             </h2>
-            <div className="space-y-6">
+            <div className="space-y-6 reveal-stagger">
               {FAQ.map(({ q, a }) => (
                 <div key={q} className="bg-white rounded-xl p-7 border border-[#E5E7EB]">
                   <h3 className="font-bold text-[#111827] mb-2">{q}</h3>

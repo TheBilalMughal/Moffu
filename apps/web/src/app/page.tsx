@@ -109,11 +109,11 @@ function HeroSection() {
 
 function TrustedBySection() {
   return (
-    <section className="bg-white px-8 lg:px-16 py-10">
+    <section className="bg-white px-8 lg:px-16 py-10 reveal">
       <p className="text-center text-[13px] text-[#6B7280] mb-7">
         Trusted by businesses that care about their reputation
       </p>
-      <div className="flex flex-wrap justify-center gap-10 lg:gap-16">
+      <div className="flex flex-wrap justify-center gap-10 lg:gap-16 reveal-stagger revealed">
         {INDUSTRIES.map(({ label, icon }) => (
           <div key={label} className="flex flex-col items-center gap-2 text-[#9CA3AF]">
             {icon}
@@ -176,14 +176,14 @@ function HowItWorksSection() {
   return (
     <section id="how-it-works" className="py-16 bg-white flex-1 flex flex-col justify-center">
       <div className="px-8 lg:px-16">
-        <div className="text-center mb-10">
+        <div className="text-center mb-10 reveal">
           <h2 className="text-[2.125rem] font-bold text-[#111827] mb-3">How It Works</h2>
           <p className="text-[#6B7280] text-[1.0625rem]">
             Get from reviews to on-brand responses in four simple steps.
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-6 reveal-stagger">
           {HOW_IT_WORKS_STEPS.map(({ n, title, body }) => (
             <div key={n} className="border border-[#E5E7EB] rounded-xl p-7 bg-white">
               <div className="w-9 h-9 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-sm font-bold mb-6">
@@ -236,7 +236,7 @@ function BrandBrainSection() {
       </div>
 
       {/* Right — text */}
-      <div className="flex flex-col justify-center px-8 lg:px-16 xl:px-20 py-20 bg-white">
+      <div className="flex flex-col justify-center px-8 lg:px-16 xl:px-20 py-20 bg-white reveal">
         <h2 className="text-[2.375rem] leading-[1.15] font-bold text-[#111827] mb-5">
           Your AI should learn your brand, not sound like everyone else.
         </h2>
@@ -303,7 +303,7 @@ function PricingSection() {
   return (
     <section id="pricing" className="h-screen flex flex-col justify-center bg-[#F8FAFB]">
       <div className="px-8 lg:px-16">
-        <div className="text-center mb-10">
+        <div className="text-center mb-10 reveal">
           <h2 className="text-[2.125rem] font-bold text-[#111827] mb-3">
             Plans for every stage of growth
           </h2>

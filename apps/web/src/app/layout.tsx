@@ -4,6 +4,7 @@ import './globals.css';
 import { SiteNav } from './_components/SiteNav';
 import { SiteFooter } from './_components/SiteFooter';
 import { PageTransition } from './_components/PageTransition';
+import { ScrollAnimations } from './_components/ScrollAnimations';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen">
         <SiteNav />
+        <ScrollAnimations />
         <PageTransition>{children}</PageTransition>
         <SiteFooter />
       </body>
