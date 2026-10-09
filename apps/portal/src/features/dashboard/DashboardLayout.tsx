@@ -34,7 +34,7 @@ const navItems = [
   { to: '/settings', label: 'Settings', icon: <CogIcon /> },
 ];
 
-function ProfileMenu() {
+function SidebarProfile() {
   const { user } = useAuthStore();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -62,17 +62,17 @@ function ProfileMenu() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-3 py-2 px-3 rounded-xl bg-white border border-[#E5EAE8] shadow-sm hover:shadow transition-shadow"
+        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-[#F3F8F6] transition-colors group"
       >
         <div className="w-8 h-8 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
           {initials}
         </div>
-        <div className="text-left">
-          <p className="text-sm font-semibold text-[#111827] leading-tight truncate max-w-[160px]">
+        <div className="text-left flex-1 min-w-0">
+          <p className="text-sm font-semibold text-[#111827] leading-tight truncate">
             {displayName || email}
           </p>
           {displayName && (
-            <p className="text-xs text-[#9CA3AF] leading-tight truncate max-w-[160px]">{email}</p>
+            <p className="text-xs text-[#9CA3AF] leading-tight truncate">{email}</p>
           )}
         </div>
         <svg className={`w-4 h-4 text-[#9CA3AF] flex-shrink-0 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -81,7 +81,7 @@ function ProfileMenu() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-50">
+        <div className="absolute left-0 bottom-full mb-2 w-52 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-50">
           <NavLink
             to="/settings"
             onClick={() => setOpen(false)}
@@ -139,20 +139,17 @@ export function DashboardLayout() {
             </NavLink>
           ))}
         </nav>
+
+        {/* Profile at bottom */}
+        <div className="border-t border-[#E5EAE8] px-3 py-3">
+          <SidebarProfile />
+        </div>
       </aside>
 
-      {/* Right side — topbar + content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Topbar */}
-        <header className="h-14 flex items-center justify-end px-6 flex-shrink-0">
-          <ProfileMenu />
-        </header>
-
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
-          <Outlet />
-        </main>
-      </div>
+      {/* Page content — full height, no topbar */}
+      <main className="flex-1 overflow-y-auto">
+        <Outlet />
+      </main>
     </div>
   );
 }
