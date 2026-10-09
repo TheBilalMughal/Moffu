@@ -223,12 +223,6 @@ export default function BrandBrainPage() {
             >
               Start Free Trial
             </Link>
-            <Link
-              href="/#how-it-works"
-              className="border border-[#D1D5DB] bg-white hover:bg-[#F9FAFB] text-[#111827] px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
-            >
-              See How It Works
-            </Link>
           </div>
         </section>
 

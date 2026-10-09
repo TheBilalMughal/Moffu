@@ -5,7 +5,7 @@ const FOOTER_NAV = [
     heading: 'Product',
     links: [
       { label: 'Features', href: '/#product' },
-      { label: 'Brand Brain', href: '/brand-brain' },
+      { label: 'Features', href: '/brand-brain' },
       { label: 'How It Works', href: '/#how-it-works' },
       { label: 'Pricing', href: '/#pricing' },
     ],
