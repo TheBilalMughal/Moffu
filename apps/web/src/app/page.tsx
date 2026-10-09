@@ -21,13 +21,6 @@ function LogoMark() {
   );
 }
 
-function StarIcon() {
-  return (
-    <svg className="w-4 h-4 text-[#F59E0B]" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-    </svg>
-  );
-}
 
 function CheckSolid({ className = 'w-4 h-4' }: { className?: string }) {
   return (
@@ -85,141 +78,93 @@ function SiteNav() {
 // Hero — full-width split screen
 // ---------------------------------------------------------------------------
 
-function ReviewCardDemo() {
-  return (
-    <div className="bg-white rounded-xl shadow-2xl border border-[#E5E7EB] p-6 w-full max-w-[360px]">
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-9 h-9 rounded-full border border-[#E5E7EB] flex items-center justify-center flex-shrink-0 bg-white">
-          <span
-            className="text-[15px] font-bold"
-            style={{ color: '#4285F4', fontFamily: 'sans-serif' }}
-            aria-label="Google"
-          >
-            G
-          </span>
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-[#111827]">Sarah M.</span>
-            <span className="text-xs text-[#9CA3AF]">2 days ago</span>
-          </div>
-          <div className="flex gap-0.5 mt-0.5" aria-label="5 stars">
-            {Array.from({ length: 5 }).map((_, i) => <StarIcon key={i} />)}
-          </div>
-        </div>
-      </div>
-
-      <p className="text-[13px] text-[#374151] leading-relaxed mb-5">
-        Great service and friendly staff! We had an amazing experience...
-      </p>
-
-      <div className="border-t border-[#E5E7EB] pt-4">
-        <div className="flex items-center gap-1.5 mb-2.5">
-          <div className="w-2 h-2 rounded-full bg-[#16A34A]" aria-hidden="true" />
-          <span className="text-[11px] font-semibold text-[#16A34A] uppercase tracking-wider">
-            AI Draft Response
-          </span>
-        </div>
-        <p className="text-[13px] text-[#374151] leading-relaxed mb-4">
-          Thank you, Sarah! We're so glad to hear you had an amazing experience with our team. We
-          appreciate your kind words and hope to see you again soon!
-        </p>
-        <div className="flex gap-2.5">
-          <button
-            type="button"
-            className="flex-1 text-[13px] border border-[#E5E7EB] text-[#374151] hover:bg-[#F8FAFB] px-3 py-2.5 rounded-lg font-medium transition-colors duration-150"
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            className="flex-1 text-[13px] bg-[#0D4C3C] hover:bg-[#083F32] text-white px-3 py-2.5 rounded-lg font-medium transition-colors duration-150"
-          >
-            Approve &amp; Publish
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function HeroSection() {
   return (
-    <section className="min-h-[620px] grid lg:grid-cols-[55%_45%]">
-      {/* Left — copy */}
-      <div className="flex flex-col justify-center px-8 lg:px-16 xl:px-24 py-20 bg-white">
-        <p className="text-[11px] font-semibold text-[#0D4C3C] uppercase tracking-[0.14em] mb-5">
-          · Google Review Management
-        </p>
-        <h1 className="text-5xl xl:text-[3.25rem] leading-[1.12] font-bold text-[#111827] mb-5 max-w-[540px]">
-          AI review responses that sound like your brand.
-        </h1>
-        <p className="text-[1.0625rem] text-[#6B7280] leading-relaxed mb-9 max-w-[500px]">
-          Connect your Google Business Profile, teach your AI agent how your brand
-          communicates, and turn customer reviews into thoughtful, on-brand responses.
-        </p>
+    <section className="relative h-[calc(100vh-64px)] flex flex-col overflow-hidden">
+      {/* Full-width background image */}
+      <Image
+        src="/images/hero-bg.jpg"
+        alt=""
+        fill
+        className="object-cover object-center"
+        priority
+        aria-hidden="true"
+      />
+      {/* Fallback gradient */}
+      <div
+        className="absolute inset-0 -z-10"
+        style={{ background: 'linear-gradient(145deg, #C9B49A 0%, #A8896A 35%, #7A6050 65%, #5C4535 100%)' }}
+        aria-hidden="true"
+      />
+      {/* Left overlay — white fade so text stays legible */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'linear-gradient(to right, white 42%, rgba(255,255,255,0.85) 58%, transparent 75%)' }}
+        aria-hidden="true"
+      />
 
-        <div className="flex flex-wrap items-center gap-3 mb-10">
-          <Link
-            href="/signup"
-            className="bg-[#0D4C3C] hover:bg-[#083F32] text-white px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
-          >
-            Get Started
-          </Link>
-          <Link
-            href="#how-it-works"
-            className="border border-[#D1D5DB] bg-white hover:bg-[#F9FAFB] text-[#111827] px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
-          >
-            See How It Works
-          </Link>
-        </div>
-
-        <div className="flex flex-wrap gap-7">
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-[#6B7280] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            <span className="text-xs text-[#6B7280]">Google Business Integration</span>
+      {/* Hero content */}
+      <div className="relative z-10 flex-1 flex items-center px-8 lg:px-16 xl:px-24">
+        <div className="max-w-[560px]">
+          <p className="text-[11px] font-semibold text-[#0D4C3C] uppercase tracking-[0.14em] mb-5">
+            · Google Review Management
+          </p>
+          <h1 className="text-5xl xl:text-[3.25rem] leading-[1.12] font-bold text-[#111827] mb-5">
+            AI review responses that sound like your brand.
+          </h1>
+          <p className="text-[1.0625rem] text-[#6B7280] leading-relaxed mb-9">
+            Connect your Google Business Profile, teach your AI agent how your brand
+            communicates, and turn customer reviews into thoughtful, on-brand responses.
+          </p>
+          <div className="flex flex-wrap items-center gap-3 mb-10">
+            <Link
+              href="/signup"
+              className="bg-[#0D4C3C] hover:bg-[#083F32] text-white px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
+            >
+              Get Started
+            </Link>
+            <Link
+              href="#how-it-works"
+              className="border border-[#D1D5DB] bg-white hover:bg-[#F9FAFB] text-[#111827] px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
+            >
+              See How It Works
+            </Link>
           </div>
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-[#6B7280] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-            <span className="text-xs text-[#6B7280]">Your Brand Voice Everywhere</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-[#6B7280] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span className="text-xs text-[#6B7280]">Built for Multi-Location Businesses</span>
+          <div className="flex flex-wrap gap-7">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-[#6B7280] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span className="text-xs text-[#6B7280]">Google Business Integration</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-[#6B7280] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              <span className="text-xs text-[#6B7280]">Your Brand Voice Everywhere</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-[#6B7280] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="text-xs text-[#6B7280]">Built for Multi-Location Businesses</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Right — review card on photo background, full bleed to viewport edge */}
-      <div className="relative hidden lg:flex items-center justify-center overflow-hidden">
-        {/* Background photo — place file at apps/web/public/images/hero-bg.jpg */}
-        <Image
-          src="/images/hero-bg.jpg"
-          alt=""
-          fill
-          className="object-cover object-center"
-          priority
-          aria-hidden="true"
-        />
-        {/* Fallback gradient shown until/unless real photo is added */}
-        <div
-          className="absolute inset-0 -z-10"
-          style={{
-            background: 'linear-gradient(145deg, #C9B49A 0%, #A8896A 35%, #7A6050 65%, #5C4535 100%)',
-          }}
-          aria-hidden="true"
-        />
-        {/* Subtle dark overlay so card pops against photo */}
-        <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
-        {/* Card */}
-        <div className="relative z-10 px-10">
-          <ReviewCardDemo />
+      {/* Trusted by — bottom strip inside the same viewport */}
+      <div className="relative z-10 bg-white/90 backdrop-blur-sm border-t border-[#E5E7EB] px-8 lg:px-16 py-5">
+        <p className="text-center text-[12px] text-[#6B7280] mb-4">
+          Trusted by businesses that care about their reputation
+        </p>
+        <div className="flex flex-wrap justify-center gap-8 lg:gap-14">
+          {INDUSTRIES.map(({ label, icon }) => (
+            <div key={label} className="flex flex-col items-center gap-1.5 text-[#9CA3AF]">
+              {icon}
+              <span className="text-[11px] text-[#9CA3AF]">{label}</span>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -261,25 +206,6 @@ const INDUSTRIES = [
   },
 ];
 
-function TrustedBySection() {
-  return (
-    <section className="py-14 border-t border-[#E5E7EB] bg-white">
-      <div className="px-8 lg:px-16">
-        <p className="text-center text-[13px] text-[#6B7280] mb-9">
-          Trusted by businesses that care about their reputation
-        </p>
-        <div className="flex flex-wrap justify-center gap-10 lg:gap-16">
-          {INDUSTRIES.map(({ label, icon }) => (
-            <div key={label} className="flex flex-col items-center gap-2 text-[#9CA3AF]">
-              {icon}
-              <span className="text-xs text-[#9CA3AF]">{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // How It Works
@@ -532,7 +458,6 @@ export default function HomePage() {
       <SiteNav />
       <main>
         <HeroSection />
-        <TrustedBySection />
         <HowItWorksSection />
         <BrandBrainSection />
         <PricingSection />
