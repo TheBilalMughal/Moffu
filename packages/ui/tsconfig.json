@@ -1,0 +1,7 @@
+{
+  "extends": "@moffu/config/typescript/react",
+  "compilerOptions": {
+    "outDir": "dist"
+  },
+  "include": ["src"]
+}
