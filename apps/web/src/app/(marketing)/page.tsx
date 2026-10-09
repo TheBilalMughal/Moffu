@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { PricingToggle } from './_components/PricingToggle';
+import { PricingToggle } from '../_components/PricingToggle';
 
 // ---------------------------------------------------------------------------
 // Icons
