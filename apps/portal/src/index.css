@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes auth-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-animate {
+  animation: auth-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @layer base {
   :root {
     --color-brand: #0D4C3C;

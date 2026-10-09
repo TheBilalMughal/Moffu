@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router-dom';
 import { env } from '@/lib/env';
 
 function LogoMark({ href }: { href: string }) {
@@ -18,6 +19,8 @@ interface AuthLayoutProps {
 }
 
 export function AuthLayout({ children }: AuthLayoutProps) {
+  const { pathname } = useLocation();
+
   return (
     <div className="h-screen overflow-hidden flex">
       {/* Left — hero panel */}
@@ -64,7 +67,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           </a>
         </header>
         <main className="flex-1 flex items-center justify-center px-8 py-10">
-          <div className="w-full max-w-[420px]">
+          <div key={pathname} className="auth-animate w-full max-w-[420px]">
             {children}
           </div>
         </main>
