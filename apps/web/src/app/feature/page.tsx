@@ -276,17 +276,17 @@ export default function FeaturePage() {
         </section>
 
         {/* CTA */}
-        <section className="bg-[#0D4C3C] px-8 lg:px-16 py-20 text-center">
-          <h2 className="text-[2rem] font-bold text-white mb-4">
+        <section className="bg-white border-t border-[#E5E7EB] px-8 lg:px-16 py-20 text-center reveal">
+          <h2 className="text-[2rem] font-bold text-[#111827] mb-4">
             Ready to set up your Brand Brain?
           </h2>
-          <p className="text-[#A7C4BC] mb-8 text-[1.0625rem] max-w-xl mx-auto">
+          <p className="text-[#6B7280] mb-8 text-[1.0625rem] max-w-xl mx-auto">
             Connect your Google Business Profile and start responding to reviews
             in your brand voice — today.
           </p>
           <Link
             href="/signup"
-            className="inline-block bg-white hover:bg-[#F9FAFB] text-[#0D4C3C] px-8 py-4 rounded-lg font-semibold text-sm transition-colors duration-150"
+            className="inline-block bg-[#0D4C3C] hover:bg-[#083F32] text-white px-8 py-4 rounded-lg font-semibold text-sm transition-colors duration-150"
           >
             Get Started Free
           </Link>
