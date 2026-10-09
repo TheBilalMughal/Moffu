@@ -9,6 +9,10 @@
     --color-foreground: #212529;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   * {
     @apply border-neutral-200;
   }
