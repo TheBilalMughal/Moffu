@@ -39,7 +39,7 @@ function ProfileMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const displayName = user?.user_metadata?.display_name ?? '';
+  const displayName = user?.user_metadata?.display_name ?? user?.user_metadata?.full_name ?? '';
   const email = user?.email ?? '';
   const initials = displayName
     ? displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
@@ -144,7 +144,7 @@ export function DashboardLayout() {
       {/* Right side — topbar + content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="h-14 flex items-center justify-end px-6 flex-shrink-0">
+        <header className="h-14 bg-white border-b border-[#E5EAE8] flex items-center justify-end px-6 flex-shrink-0">
           <ProfileMenu />
         </header>
 
