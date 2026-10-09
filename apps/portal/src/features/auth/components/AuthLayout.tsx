@@ -1,15 +1,15 @@
 import { env } from '@/lib/env';
 
-function LogoMark() {
+function LogoMark({ href }: { href: string }) {
   return (
-    <div className="flex items-center gap-2.5">
+    <a href={href} className="flex items-center gap-2.5 w-fit">
       <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
         <svg width="18" height="14" viewBox="0 0 18 14" fill="none" aria-hidden="true">
           <path d="M1 13V1l8 8L17 1v12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
       <span className="font-semibold text-white text-[15px]">Moffu</span>
-    </div>
+    </a>
   );
 }
 
@@ -25,7 +25,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         style={{ background: 'linear-gradient(145deg, #0D4C3C 0%, #083F32 60%, #052D23 100%)' }}>
         {/* Logo */}
         <div className="relative z-10 p-8">
-          <LogoMark />
+          <LogoMark href={env.webUrl} />
         </div>
         {/* Tagline */}
         <div className="relative z-10 mt-auto p-10 pb-14">
@@ -55,12 +55,12 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           </div>
           <a
             href={env.webUrl}
-            className="text-sm text-[#6B7280] hover:text-[#111827] transition-colors flex items-center gap-1"
+            className="text-sm text-[#6B7280] hover:text-[#111827] transition-colors flex items-center gap-1.5"
           >
-            Back to website
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
             </svg>
+            Back to website
           </a>
         </header>
         <main className="flex-1 flex items-center justify-center px-8 py-10">
