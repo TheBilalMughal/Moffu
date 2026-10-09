@@ -67,12 +67,12 @@ function HeroSection() {
             communicates, and turn customer reviews into thoughtful, on-brand responses.
           </p>
           <div className="flex flex-wrap items-center gap-3 mb-10">
-            <Link
-              href="/signup"
+            <a
+              href={`${process.env.NEXT_PUBLIC_PORTAL_URL ?? ''}/auth/signup`}
               className="bg-[#0D4C3C] hover:bg-[#083F32] text-white px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
             >
               Get Started
-            </Link>
+            </a>
             <Link
               href="/feature"
               className="border border-[#D1D5DB] bg-white hover:bg-[#F9FAFB] text-[#111827] px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"

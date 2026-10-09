@@ -10,6 +10,8 @@ function LogoMark() {
   );
 }
 
+const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? '';
+
 export function SiteNav() {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-[#E5E7EB]">
@@ -35,15 +37,18 @@ export function SiteNav() {
         </nav>
 
         <div className="flex items-center gap-5">
-          <Link href="/login" className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150">
+          <a
+            href={`${portalUrl}/auth/login`}
+            className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150"
+          >
             Login
-          </Link>
-          <Link
-            href="/signup"
+          </a>
+          <a
+            href={`${portalUrl}/auth/signup`}
             className="text-sm bg-[#0D4C3C] hover:bg-[#083F32] text-white px-5 py-2.5 rounded-lg font-medium transition-colors duration-150"
           >
             Get Started
-          </Link>
+          </a>
         </div>
       </div>
     </header>
