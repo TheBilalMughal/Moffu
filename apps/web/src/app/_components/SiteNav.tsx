@@ -10,7 +10,7 @@ function LogoMark() {
   );
 }
 
-const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? '';
+const portalUrl = process.env.PORTAL_URL ?? '';
 
 export function SiteNav() {
   return (

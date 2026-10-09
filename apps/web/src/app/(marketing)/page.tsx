@@ -68,7 +68,7 @@ function HeroSection() {
           </p>
           <div className="flex flex-wrap items-center gap-3 mb-10">
             <a
-              href={`${process.env.NEXT_PUBLIC_PORTAL_URL ?? ''}/auth/signup`}
+              href={`${process.env.PORTAL_URL ?? ''}/auth/signup`}
               className="bg-[#0D4C3C] hover:bg-[#083F32] text-white px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
             >
               Get Started
