@@ -19,7 +19,7 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen flex">
+    <div className="h-screen overflow-hidden flex">
       {/* Left — hero panel */}
       <div className="hidden lg:flex lg:w-[48%] relative flex-col bg-[#0D4C3C]"
         style={{ background: 'linear-gradient(145deg, #0D4C3C 0%, #083F32 60%, #052D23 100%)' }}>
@@ -42,7 +42,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       </div>
 
       {/* Right — form panel */}
-      <div className="flex-1 flex flex-col bg-white">
+      <div className="flex-1 flex flex-col bg-white overflow-y-auto">
         <header className="flex items-center justify-between px-8 py-5 lg:justify-end">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 lg:hidden">
