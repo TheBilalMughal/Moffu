@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Input, Label, Alert, AlertDescription } from '@moffu/ui';
 import { authService } from '../auth.service';
+import { AuthLayout } from '../components/AuthLayout';
 
 export function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -15,71 +15,68 @@ export function ForgotPasswordPage() {
     setLoading(true);
     const { error: err } = await authService.forgotPassword({ email });
     setLoading(false);
-    if (err) {
-      setError(err.message);
-      return;
-    }
+    if (err) { setError(err.message); return; }
     setDone(true);
   }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="text-center">
-          <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-brand-500">
-            <span className="text-lg font-bold text-white">M</span>
+  if (done) {
+    return (
+      <AuthLayout>
+        <div className="text-center py-8">
+          <div className="w-14 h-14 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center mx-auto mb-5">
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
           </div>
-          <h1 className="text-2xl font-semibold text-neutral-900">Reset password</h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            Enter your email and we&apos;ll send a reset link.
+          <h2 className="text-xl font-bold text-[#111827] mb-2">Check your email</h2>
+          <p className="text-sm text-[#6B7280] max-w-xs mx-auto mb-6">
+            We sent a password reset link to <strong className="text-[#111827]">{email}</strong>.
           </p>
+          <Link to="/auth/login" className="text-sm text-[#0D4C3C] font-semibold hover:underline">
+            Back to log in
+          </Link>
         </div>
+      </AuthLayout>
+    );
+  }
 
-        {done ? (
-          <div className="space-y-3 rounded-lg border border-success-DEFAULT/30 bg-success-light p-4 text-sm text-success-dark">
-            <p>
-              If an account exists for <strong>{email}</strong>, you&apos;ll receive a password reset
-              email shortly.
-            </p>
-            <Link to="/auth/login" className="font-medium underline underline-offset-2">
-              Back to sign in
-            </Link>
-          </div>
-        ) : (
-          <>
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-              <div className="space-y-1.5">
-                <Label htmlFor="email" required>
-                  Email address
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  disabled={loading}
-                />
-              </div>
-              <Button type="submit" className="w-full" loading={loading}>
-                Send reset link
-              </Button>
-            </form>
-            <p className="text-center text-sm text-neutral-500">
-              <Link to="/auth/login" className="font-medium text-brand-500 hover:underline">
-                Back to sign in
-              </Link>
-            </p>
-          </>
-        )}
+  return (
+    <AuthLayout>
+      <div className="mb-8">
+        <h1 className="text-[2rem] font-bold text-[#111827] mb-2">Forgot your password?</h1>
+        <p className="text-[#6B7280] text-[0.9375rem]">Enter your email and we'll send you a reset link.</p>
       </div>
-    </div>
+
+      <div className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-[#374151] mb-1.5">Email</label>
+            <input
+              id="email" type="email" required autoComplete="email"
+              value={email} onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@company.com"
+              className="w-full px-4 py-3 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] transition-colors"
+            />
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{error}</div>
+          )}
+
+          <button type="submit" disabled={loading}
+            className="w-full bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-60 text-white py-3 rounded-lg text-sm font-semibold transition-colors duration-150">
+            {loading ? 'Sending…' : 'Send reset link'}
+          </button>
+        </form>
+
+        <Link to="/auth/login"
+          className="flex items-center justify-center gap-1.5 text-sm text-[#0D4C3C] font-medium hover:underline">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+          </svg>
+          Back to log in
+        </Link>
+      </div>
+    </AuthLayout>
   );
 }

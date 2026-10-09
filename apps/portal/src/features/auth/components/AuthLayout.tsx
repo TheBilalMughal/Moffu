@@ -1,0 +1,74 @@
+import { env } from '@/lib/env';
+
+function LogoMark() {
+  return (
+    <div className="flex items-center gap-2.5">
+      <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+        <svg width="18" height="14" viewBox="0 0 18 14" fill="none" aria-hidden="true">
+          <path d="M1 13V1l8 8L17 1v12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+      <span className="font-semibold text-white text-[15px]">Moffu</span>
+    </div>
+  );
+}
+
+interface AuthLayoutProps {
+  children: React.ReactNode;
+}
+
+export function AuthLayout({ children }: AuthLayoutProps) {
+  return (
+    <div className="min-h-screen flex">
+      {/* Left — hero panel */}
+      <div className="hidden lg:flex lg:w-[48%] relative flex-col bg-[#0D4C3C]"
+        style={{ background: 'linear-gradient(145deg, #0D4C3C 0%, #083F32 60%, #052D23 100%)' }}>
+        {/* Logo */}
+        <div className="relative z-10 p-8">
+          <LogoMark />
+        </div>
+        {/* Tagline */}
+        <div className="relative z-10 mt-auto p-10 pb-14">
+          <h2 className="text-white text-[2.1rem] font-bold leading-tight mb-3">
+            Every review deserves a thoughtful reply.
+          </h2>
+          <p className="text-white/65 text-[0.9375rem] leading-relaxed">
+            Keep your brand voice consistent, one response at a time.
+          </p>
+        </div>
+        {/* Decorative circles */}
+        <div className="absolute bottom-0 right-0 w-72 h-72 rounded-full bg-white/5 translate-x-1/3 translate-y-1/3 pointer-events-none" />
+        <div className="absolute top-1/3 right-8 w-32 h-32 rounded-full bg-white/5 pointer-events-none" />
+      </div>
+
+      {/* Right — form panel */}
+      <div className="flex-1 flex flex-col bg-white">
+        <header className="flex items-center justify-between px-8 py-5 lg:justify-end">
+          {/* Mobile logo */}
+          <div className="flex items-center gap-2 lg:hidden">
+            <div className="w-7 h-7 bg-[#0D4C3C] rounded-md flex items-center justify-center">
+              <svg width="14" height="11" viewBox="0 0 18 14" fill="none" aria-hidden="true">
+                <path d="M1 13V1l8 8L17 1v12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <span className="font-semibold text-[#111827] text-sm">Moffu</span>
+          </div>
+          <a
+            href={env.webUrl}
+            className="text-sm text-[#6B7280] hover:text-[#111827] transition-colors flex items-center gap-1"
+          >
+            Back to website
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-8 py-10">
+          <div className="w-full max-w-[420px]">
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
