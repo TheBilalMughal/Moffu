@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Brand Brain — Teach Your AI How Your Brand Communicates | Moffu',
+  title: 'Features — Brand Brain AI Review Responses | Moffu',
   description:
     'Brand Brain is your AI\'s memory. Set your tone, response rules, and personality once — and every Google review reply sounds exactly like you, every time.',
   keywords: [
@@ -15,20 +15,20 @@ export const metadata: Metadata = {
     'review response software',
   ],
   openGraph: {
-    title: 'Brand Brain — Teach Your AI How Your Brand Communicates',
+    title: 'Features — Brand Brain AI Review Responses',
     description:
       'Set your tone, rules, and personality once. Moffu\'s Brand Brain ensures every review response sounds like you — not a generic bot.',
-    url: 'https://moffu.com/brand-brain',
+    url: 'https://moffu.com/feature',
     siteName: 'Moffu',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Brand Brain by Moffu',
+    title: 'Moffu Features — Brand Brain',
     description: 'Teach your AI your brand voice. Every review reply, on-brand.',
   },
   alternates: {
-    canonical: 'https://moffu.com/brand-brain',
+    canonical: 'https://moffu.com/feature',
   },
 };
 
@@ -138,16 +138,12 @@ const FAQ = [
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Breadcrumb structured data
-// ---------------------------------------------------------------------------
-
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://moffu.com' },
-    { '@type': 'ListItem', position: 2, name: 'Brand Brain', item: 'https://moffu.com/brand-brain' },
+    { '@type': 'ListItem', position: 2, name: 'Features', item: 'https://moffu.com/feature' },
   ],
 };
 
@@ -161,11 +157,7 @@ const faqSchema = {
   })),
 };
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
-
-export default function BrandBrainPage() {
+export default function FeaturePage() {
   return (
     <>
       <script
@@ -197,7 +189,7 @@ export default function BrandBrainPage() {
               </svg>
             </li>
             <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-              <span itemProp="name" className="text-[#111827] font-medium">Brand Brain</span>
+              <span itemProp="name" className="text-[#111827] font-medium">Features</span>
               <meta itemProp="position" content="2" />
             </li>
           </ol>
@@ -216,14 +208,12 @@ export default function BrandBrainPage() {
             your tone, rules, and preferences — and every Google review response sounds
             authentically like you.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href="/signup"
-              className="bg-[#0D4C3C] hover:bg-[#083F32] text-white px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
-            >
-              Start Free Trial
-            </Link>
-          </div>
+          <Link
+            href="/signup"
+            className="inline-block bg-[#0D4C3C] hover:bg-[#083F32] text-white px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
+          >
+            Start Free Trial
+          </Link>
         </section>
 
         {/* Features grid */}
@@ -302,7 +292,6 @@ export default function BrandBrainPage() {
           </Link>
         </section>
       </main>
-
     </>
   );
 }

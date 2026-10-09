@@ -258,7 +258,7 @@ function BrandBrainSection() {
 
         <div>
           <Link
-            href="/brand-brain"
+            href="/feature"
             className="inline-block border border-[#D1D5DB] bg-white hover:bg-[#F8FAFB] text-[#374151] px-6 py-3 rounded-lg text-sm font-medium transition-colors duration-150"
           >
             Learn about Brand Brain
