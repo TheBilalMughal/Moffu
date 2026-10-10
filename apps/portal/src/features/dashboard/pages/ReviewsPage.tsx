@@ -146,68 +146,188 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-// ── Weekly Line Chart ─────────────────────────────────────────────────────────
+// ── Reviews Line Chart ────────────────────────────────────────────────────────
 
-function WeeklyLineChart({ reviews }: { reviews: Review[] }) {
-  const { days, counts, maxVal } = useMemo(() => {
-    const now = new Date();
-    const days: string[] = [];
-    const counts: number[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(now.getDate() - i);
-      days.push(['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()] ?? '');
-      const iso = d.toISOString().split('T')[0] ?? '';
-      counts.push(reviews.filter(r => r.published_at?.startsWith(iso)).length);
+type ChartPeriod = 'today' | 'week' | 'month' | '3months';
+
+const PERIOD_LABELS: Record<ChartPeriod, string> = {
+  today: 'Today', week: 'This Week', month: 'This Month', '3months': 'Last 3 Months',
+};
+
+function buildChartData(reviews: Review[], period: ChartPeriod) {
+  const now = new Date();
+  const pts: { label: string; iso: string; count: number }[] = [];
+
+  if (period === 'today') {
+    for (let h = 0; h < 24; h += 3) {
+      const label = h === 0 ? '12am' : h < 12 ? `${h}am` : h === 12 ? '12pm' : `${h - 12}pm`;
+      const isoDate = now.toISOString().split('T')[0] ?? '';
+      const count = reviews.filter(r => {
+        if (!r.published_at) return false;
+        const d = new Date(r.published_at);
+        return d.toISOString().startsWith(isoDate) && d.getHours() >= h && d.getHours() < h + 3;
+      }).length;
+      pts.push({ label, iso: `${isoDate}T${String(h).padStart(2,'0')}`, count });
     }
-    return { days, counts, maxVal: Math.max(...counts, 4) };
-  }, [reviews]);
+  } else if (period === 'week') {
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now); d.setDate(now.getDate() - i);
+      const iso = d.toISOString().split('T')[0] ?? '';
+      const label = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()] ?? '';
+      pts.push({ label, iso, count: reviews.filter(r => r.published_at?.startsWith(iso)).length });
+    }
+  } else if (period === 'month') {
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now); d.setDate(now.getDate() - i);
+      const iso = d.toISOString().split('T')[0] ?? '';
+      const label = i % 5 === 0 ? `${d.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}` : '';
+      pts.push({ label, iso, count: reviews.filter(r => r.published_at?.startsWith(iso)).length });
+    }
+  } else {
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const y = d.getFullYear(); const m = d.getMonth();
+      const isoPrefix = `${y}-${String(m + 1).padStart(2,'0')}`;
+      const label = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m] ?? '';
+      pts.push({ label, iso: isoPrefix, count: reviews.filter(r => r.published_at?.startsWith(isoPrefix)).length });
+    }
+  }
+  return pts;
+}
 
-  const W = 900; const H = 100;
-  const PAD = { top: 12, right: 16, bottom: 28, left: 28 };
+function smoothPath(pts: { x: number; y: number }[]): string {
+  if (pts.length < 2) return pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  let d = `M ${pts[0]!.x} ${pts[0]!.y}`;
+  for (let i = 1; i < pts.length; i++) {
+    const prev = pts[i - 1]!; const curr = pts[i]!;
+    const cpx = (prev.x + curr.x) / 2;
+    d += ` C ${cpx} ${prev.y} ${cpx} ${curr.y} ${curr.x} ${curr.y}`;
+  }
+  return d;
+}
+
+function ReviewsLineChart({ reviews }: { reviews: Review[] }) {
+  const [period, setPeriod] = useState<ChartPeriod>('week');
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  const data = useMemo(() => buildChartData(reviews, period), [reviews, period]);
+
+  const totalInPeriod = data.reduce((s, p) => s + p.count, 0);
+  const maxVal = Math.max(...data.map(p => p.count), 1);
+  const yTickCount = 4;
+  const yTicks = Array.from({ length: yTickCount + 1 }, (_, i) => Math.round((maxVal * i) / yTickCount));
+
+  const W = 1000; const H = 130;
+  const PAD = { top: 16, right: 20, bottom: 32, left: 36 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
-  const xStep = innerW / 6;
-  const yTicks = [0, Math.round(maxVal / 2), maxVal];
-
-  const pts = counts.map((v, i) => ({
-    x: PAD.left + i * xStep,
-    y: PAD.top + innerH - (v / maxVal) * innerH,
+  const pts = data.map((d, i) => ({
+    x: PAD.left + (i / Math.max(data.length - 1, 1)) * innerW,
+    y: PAD.top + innerH - (d.count / maxVal) * innerH,
   }));
 
-  const linePath = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-  const areaPath = `${linePath} L ${pts[pts.length - 1]!.x} ${PAD.top + innerH} L ${pts[0]!.x} ${PAD.top + innerH} Z`;
+  const line = smoothPath(pts);
+  const area = pts.length > 1
+    ? `${line} L ${pts[pts.length - 1]!.x} ${PAD.top + innerH} L ${pts[0]!.x} ${PAD.top + innerH} Z`
+    : '';
+
+  const labelIndices = useMemo(() => {
+    if (data.length <= 12) return data.map((_, i) => i);
+    const step = Math.ceil(data.length / 10);
+    return data.reduce<number[]>((acc, d, i) => { if (d.label || i % step === 0) acc.push(i); return acc; }, []);
+  }, [data]);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 80 }} aria-hidden="true">
-      {/* Y-axis grid lines + labels */}
-      {yTicks.map(v => {
-        const y = PAD.top + innerH - (v / maxVal) * innerH;
-        return (
-          <g key={v}>
-            <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y}
-              stroke="#E5E7EB" strokeWidth={1} strokeDasharray="4 3"/>
-            <text x={PAD.left - 6} y={y + 3.5} textAnchor="end"
-              fontSize={9} fill="#9CA3AF">{v}</text>
-          </g>
-        );
-      })}
+    <div className="w-full">
+      {/* Chart header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-baseline gap-3">
+          <span className="text-2xl font-bold text-[#111827]">{totalInPeriod}</span>
+          <span className="text-sm text-[#9CA3AF]">reviews · {PERIOD_LABELS[period].toLowerCase()}</span>
+        </div>
+        {/* Period selector */}
+        <div className="flex items-center bg-[#F3F4F6] rounded-lg p-0.5 gap-0.5">
+          {(Object.keys(PERIOD_LABELS) as ChartPeriod[]).map(p => (
+            <button key={p} onClick={() => setPeriod(p)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${period === p ? 'bg-white text-[#111827] shadow-sm' : 'text-[#6B7280] hover:text-[#374151]'}`}>
+              {PERIOD_LABELS[p]}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {/* Area fill */}
-      <path d={areaPath} fill="#0D4C3C" fillOpacity={0.06}/>
+      {/* SVG chart */}
+      <div className="relative w-full" onMouseLeave={() => setHovered(null)}>
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 130 }} aria-hidden="true">
+          <defs>
+            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#0D4C3C" stopOpacity="0.12"/>
+              <stop offset="100%" stopColor="#0D4C3C" stopOpacity="0"/>
+            </linearGradient>
+          </defs>
 
-      {/* Line */}
-      <path d={linePath} fill="none" stroke="#0D4C3C" strokeWidth={1.75} strokeLinejoin="round" strokeLinecap="round"/>
+          {/* Y grid lines */}
+          {yTicks.map(v => {
+            const y = PAD.top + innerH - (v / maxVal) * innerH;
+            return (
+              <g key={v}>
+                <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y}
+                  stroke="#F3F4F6" strokeWidth={1}/>
+                <text x={PAD.left - 8} y={y + 4} textAnchor="end" fontSize={10} fill="#D1D5DB">{v}</text>
+              </g>
+            );
+          })}
 
-      {/* Dots + x-labels */}
-      {pts.map((p, i) => (
-        <g key={i}>
-          <circle cx={p.x} cy={p.y} r={3} fill="#0D4C3C" fillOpacity={counts[i]! > 0 ? 1 : 0.3}/>
-          <text x={p.x} y={H - 4} textAnchor="middle" fontSize={9} fill="#9CA3AF">{days[i]}</text>
-        </g>
-      ))}
-    </svg>
+          {/* Hover vertical line */}
+          {hovered !== null && pts[hovered] && (
+            <line x1={pts[hovered]!.x} y1={PAD.top} x2={pts[hovered]!.x} y2={PAD.top + innerH}
+              stroke="#0D4C3C" strokeWidth={1} strokeDasharray="3 3" strokeOpacity={0.4}/>
+          )}
+
+          {/* Area */}
+          {area && <path d={area} fill="url(#chartGrad)"/>}
+
+          {/* Line */}
+          <path d={line} fill="none" stroke="#0D4C3C" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>
+
+          {/* X-axis labels */}
+          {labelIndices.map(i => {
+            const d = data[i]; const p = pts[i];
+            if (!d?.label || !p) return null;
+            return (
+              <text key={i} x={p.x} y={H - 6} textAnchor="middle" fontSize={10} fill="#9CA3AF">{d.label}</text>
+            );
+          })}
+
+          {/* Hover targets + dots */}
+          {pts.map((p, i) => (
+            <g key={i} onMouseEnter={() => setHovered(i)} style={{ cursor: 'default' }}>
+              <rect x={p.x - (innerW / data.length / 2)} y={PAD.top} width={innerW / data.length} height={innerH} fill="transparent"/>
+              {(hovered === i || data[i]!.count > 0) && (
+                <circle cx={p.x} cy={p.y} r={hovered === i ? 4.5 : 3}
+                  fill={hovered === i ? '#0D4C3C' : '#0D4C3C'}
+                  stroke="white" strokeWidth={1.5}/>
+              )}
+            </g>
+          ))}
+        </svg>
+
+        {/* Tooltip */}
+        {hovered !== null && data[hovered] && pts[hovered] && (() => {
+          const d = data[hovered]!; const p = pts[hovered]!;
+          const pct = (p.x / W) * 100;
+          const alignRight = pct > 75;
+          return (
+            <div className="absolute top-2 pointer-events-none z-10 bg-[#111827] text-white text-xs rounded-lg px-3 py-2 shadow-lg whitespace-nowrap"
+              style={{ left: alignRight ? 'auto' : `calc(${pct}% + 8px)`, right: alignRight ? `calc(${100 - pct}% + 8px)` : 'auto' }}>
+              <p className="font-semibold">{d.count} review{d.count !== 1 ? 's' : ''}</p>
+              <p className="text-white/60 mt-0.5">{d.label || d.iso}</p>
+            </div>
+          );
+        })()}
+      </div>
+    </div>
   );
 }
 
@@ -928,9 +1048,9 @@ export function ReviewsPage() {
         </div>
       </div>
 
-      {/* Weekly chart */}
-      <div className="px-10 pt-4 pb-2 border-b border-[#E5EAE8] bg-white flex-shrink-0">
-        <WeeklyLineChart reviews={reviews}/>
+      {/* Reviews trend chart */}
+      <div className="px-10 pt-5 pb-4 border-b border-[#E5EAE8] bg-white flex-shrink-0">
+        <ReviewsLineChart reviews={reviews}/>
       </div>
 
       {/* Filters */}
