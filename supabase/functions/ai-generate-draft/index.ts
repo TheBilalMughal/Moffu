@@ -91,8 +91,15 @@ Reply (output the reply text only, nothing else):`;
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 300 },
+          system_instruction: {
+            parts: [{ text: 'You are a customer service specialist. Output ONLY the reply text — no labels, no markdown, no thinking, no extra commentary.' }],
+          },
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 300,
+            thinkingConfig: { thinkingBudget: 0 },
+          },
         }),
       }
     );
