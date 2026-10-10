@@ -28,9 +28,18 @@ function CogIcon() {
   );
 }
 
+function SlidersIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+    </svg>
+  );
+}
+
 const navItems = [
   { to: '/dashboard', label: 'Overview', icon: <ChartBarIcon /> },
   { to: '/reviews', label: 'Reviews', icon: <StarIcon /> },
+  { to: '/brand-brain', label: 'Brand Brain', icon: <SlidersIcon /> },
   { to: '/settings', label: 'Settings', icon: <CogIcon /> },
 ];
 

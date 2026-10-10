@@ -12,6 +12,7 @@ import { DashboardLayout } from '@/features/dashboard/DashboardLayout';
 import { OverviewPage } from '@/features/dashboard/pages/OverviewPage';
 import { ReviewsPage } from '@/features/dashboard/pages/ReviewsPage';
 import { SettingsPage } from '@/features/dashboard/pages/SettingsPage';
+import { BrandBrainPage } from '@/features/brand-brain/BrandBrainPage';
 
 export function App() {
   const initialize = useAuthStore((s) => s.initialize);
@@ -63,6 +64,7 @@ export function App() {
         >
           <Route path="/dashboard" element={<OverviewPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
+          <Route path="/brand-brain" element={<BrandBrainPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
 
