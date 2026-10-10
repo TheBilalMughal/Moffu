@@ -63,7 +63,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
             </svg>
-            Back to website
+            Back to Moffu
           </a>
         </header>
         <main className="flex-1 flex items-center justify-center px-8 py-10">
