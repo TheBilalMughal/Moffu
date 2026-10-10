@@ -395,8 +395,8 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
           </div>
         )}
 
-        {/* 2x2 stat cards */}
-        <div className="grid grid-cols-2 gap-3 mt-4">
+        {/* Stat cards — single row */}
+        <div className="grid grid-cols-4 gap-3 mt-4">
           <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
             <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Total Reviews</p>
             <p className="text-lg font-bold text-[#111827]">{totalReviews}</p>
