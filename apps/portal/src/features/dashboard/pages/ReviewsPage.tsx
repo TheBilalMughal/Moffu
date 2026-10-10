@@ -1057,9 +1057,9 @@ export function ReviewsPage() {
       <div className="flex-1 overflow-auto">
 
         {/* Sticky filter bar — sits on top of table */}
-        <div className="sticky top-0 z-20 bg-white border-b border-[#E5EAE8] px-10 py-2.5 space-y-2">
-          {/* Status tabs */}
-          <div className="flex items-center gap-1">
+        <div className="sticky top-0 z-20 bg-white border-b border-[#E5EAE8] px-10 py-2.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Status tabs */}
             {(['all','pending','draft_ready','replied'] as const).map(key => {
               const labels = { all:'All', pending:'Pending', draft_ready:'Draft Ready', replied:'Replied' };
               return (
@@ -1070,10 +1070,10 @@ export function ReviewsPage() {
                 </button>
               );
             })}
-          </div>
 
-          {/* Filter controls */}
-          <div className="flex items-center gap-2 flex-wrap">
+            {/* Divider */}
+            <div className="w-px h-5 bg-[#E5E7EB] mx-1 flex-shrink-0"/>
+
             <div className="relative">
               <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
