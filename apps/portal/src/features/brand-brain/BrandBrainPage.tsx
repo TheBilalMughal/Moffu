@@ -573,32 +573,36 @@ function Step4({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
         </div>
 
         {/* Right column — Per-star overrides */}
-        <div className="space-y-3">
-          <div>
-            <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide mb-1">Per-star tone & length</h3>
-            <p className="text-[11px] text-[#9CA3AF] leading-snug">Override tone or length per rating bucket. Leave blank to use defaults.</p>
+        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden bg-[#FAFAFA]">
+          <div className="px-4 py-3 bg-white border-b border-[#E5EAE8]">
+            <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide">Per-star tone & length</h3>
+            <p className="text-[11px] text-[#9CA3AF] mt-0.5">Override tone or length per rating bucket. Leave blank to use defaults.</p>
           </div>
-          {starBuckets.map(bucket => {
-            const rule = data.star_rating_rules[bucket.key];
-            return (
-              <div key={bucket.key} className="p-3.5 bg-[#FAFAFA] rounded-xl border border-[#E5EAE8] space-y-2.5">
-                <div className="flex items-center gap-2">
-                  <p className={`text-sm font-semibold leading-none ${bucket.color}`}>{bucket.stars}</p>
-                  <p className="text-xs text-[#6B7280] font-medium">{bucket.label}</p>
+          <div className="divide-y divide-[#E5EAE8]">
+            {starBuckets.map(bucket => {
+              const rule = data.star_rating_rules[bucket.key];
+              return (
+                <div key={bucket.key} className="px-4 py-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm font-semibold ${bucket.color}`}>{bucket.stars}</span>
+                    <span className="text-xs font-semibold text-[#374151]">{bucket.label}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-[#9CA3AF] mb-1 block font-medium">Tone</label>
+                      <SelectField value={rule?.tone ?? ''} onChange={v => setStarRule(bucket.key, 'tone', v || null)}
+                        options={TONE_PRESETS.map(p => p.label)} placeholder="Default"/>
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-[#9CA3AF] mb-1 block font-medium">Length</label>
+                      <SelectField value={rule?.reply_length ?? ''} onChange={v => setStarRule(bucket.key, 'reply_length', v || null)}
+                        options={REPLY_LENGTHS.map(r => r.key)} placeholder="Default"/>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[10px] text-[#9CA3AF] mb-1 block font-medium">Tone</label>
-                  <SelectField value={rule?.tone ?? ''} onChange={v => setStarRule(bucket.key, 'tone', v || null)}
-                    options={TONE_PRESETS.map(p => p.label)} placeholder="Default"/>
-                </div>
-                <div>
-                  <label className="text-[10px] text-[#9CA3AF] mb-1 block font-medium">Length</label>
-                  <SelectField value={rule?.reply_length ?? ''} onChange={v => setStarRule(bucket.key, 'reply_length', v || null)}
-                    options={REPLY_LENGTHS.map(r => r.key)} placeholder="Default"/>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
