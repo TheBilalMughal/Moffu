@@ -859,6 +859,35 @@ function DateRangePicker({ from, to, onChange, pill = false, alignRight = false 
 
 // ── Review Row ────────────────────────────────────────────────────────────────
 
+function PageSizeDropdown({ value, onChange }: { value: number; onChange: (n: number) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', fn);
+    return () => document.removeEventListener('mousedown', fn);
+  }, []);
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1 text-xs text-[#6B7280] hover:text-[#374151] border border-[#D1D5DB] hover:border-[#9CA3AF] rounded-lg px-2.5 py-1 transition-colors">
+        <span>{value} / page</span>
+        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      {open && (
+        <div className="absolute bottom-full mb-1.5 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1 min-w-[110px]">
+          {[25,50,75,100].map(n => (
+            <button key={n} onClick={() => { onChange(n); setOpen(false); }}
+              className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${value===n ? 'text-[#0D4C3C] font-semibold bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F3F4F6]'}`}>
+              {n} rows
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ReviewRow({ review, locationName, expanded, selected, focused, onToggle, onSelect,
   onGenerateDraft, onPublish, onDiscard, onSaveNote, onFlag }: {
   review: Review; locationName: string; expanded: boolean;
@@ -1598,14 +1627,7 @@ export function ReviewsPage() {
               ? 'No results'
               : `${(page-1)*pageSize+1}–${Math.min(page*pageSize,filtered.length)} of ${filtered.length} reviews`}
           </p>
-          <div className="flex items-center gap-1">
-            {[25,50,75,100].map(n => (
-              <button key={n} onClick={() => { setPageSize(n); setPage(1); }}
-                className={`w-8 h-6 rounded text-xs font-medium transition-colors ${pageSize===n ? 'bg-[#0D4C3C] text-white' : 'text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6]'}`}>
-                {n}
-              </button>
-            ))}
-          </div>
+          <PageSizeDropdown value={pageSize} onChange={n => { setPageSize(n); setPage(1); }}/>
         </div>
         <div className="flex items-center gap-1">
           <button onClick={() => setPage(1)} disabled={page===1}
