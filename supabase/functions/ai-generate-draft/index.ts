@@ -85,33 +85,31 @@ Reply (output the reply text only, nothing else):`;
 
 
     // Call Gemini
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: 'You are a customer service specialist. Output ONLY the reply text — no labels, no markdown, no thinking, no extra commentary.' }],
-          },
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 300,
-            thinkingConfig: { thinkingBudget: 0 },
-          },
-        }),
+    const geminiBody = JSON.stringify({
+      system_instruction: {
+        parts: [{ text: 'You are a customer service specialist. Output ONLY the reply text — no labels, no markdown, no thinking, no extra commentary.' }],
+      },
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 300, thinkingConfig: { thinkingBudget: 0 } },
+    });
+
+    const models = ['gemini-2.5-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-latest'];
+    let draft = '';
+
+    for (const model of models) {
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: geminiBody }
+      );
+      if (!geminiRes.ok) {
+        const err = await geminiRes.text();
+        console.error(`Gemini ${model} error:`, geminiRes.status, err);
+        continue;
       }
-    );
-
-    if (!geminiRes.ok) {
-      const err = await geminiRes.text();
-      console.error('Gemini API error:', geminiRes.status, err);
-      return json({ error: 'AI generation failed' }, 500);
+      const geminiData = await geminiRes.json();
+      draft = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+      if (draft) break;
     }
-
-    const geminiData = await geminiRes.json();
-    const draft = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
 
     if (!draft) return json({ error: 'Empty response from AI' }, 500);
 
