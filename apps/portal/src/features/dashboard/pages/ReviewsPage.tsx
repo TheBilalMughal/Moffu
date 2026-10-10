@@ -1049,7 +1049,7 @@ export function ReviewsPage() {
       </div>
 
       {/* Reviews trend chart */}
-      <div className="px-10 pt-5 pb-4 border-b border-[#E5EAE8] bg-white flex-shrink-0">
+      <div className="px-10 pt-5 pb-4 bg-white flex-shrink-0">
         <ReviewsLineChart reviews={reviews}/>
       </div>
 
