@@ -44,9 +44,21 @@ PHASE 3 — Brand Brain Setup UI (NEXT)
 - Portal → `appmoffu.vercel.app` (project: portalmoffu)
 - `PORTAL_URL` set in web's Vercel env (server-side); `VITE_WEB_URL` needs to be set in portalmoffu Vercel env
 
-## Phase 3 — Brand Brain Setup UI (NEXT)
-Onboarding flow after first login: company name, tone/voice, language preference.
-No external API required — pure UI + Supabase DB write.
+## Phase 3 — Brand Brain Setup UI
+**UI: COMPLETE** | Backend persistence: PENDING
+
+`apps/portal/src/features/brand-brain/BrandBrainPage.tsx`
+- Business info (name, type, short description)
+- Tone presets (Professional / Friendly / Formal / Casual) — radio card selection
+- Reply settings — length (Short/Medium/Long), address by name toggle, emoji toggle
+- Language — primary language dropdown, reviewer language behaviour radio
+- Negative review handling — Manual / Cautious draft / Normal
+- Prohibited phrases — tag input with add/remove
+- Example reply textarea (style reference)
+- Save button with loading + success state
+- Route `/brand-brain`, sidebar nav item (sliders icon)
+
+**Still needed:** Supabase `brand_brain` table migration + RLS + service write (Phase 3 backend)
 
 ## Phase 4 — Google Business Profile Integration
 - **BLOCKED**: Requires Google OAuth credentials (Client ID + Secret)
