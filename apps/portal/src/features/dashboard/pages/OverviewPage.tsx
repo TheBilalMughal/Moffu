@@ -278,17 +278,39 @@ export function OverviewPage() {
   useEffect(() => {
     if (!user) return;
     const onboardingDone = user.user_metadata?.onboarding_completed;
+    if (onboardingDone) return;
 
+    // Clean URL param if present
     if (stepParam === 'select') {
-      // Came back from GBP OAuth during onboarding
-      setOnboardingStage('select');
-      setShowOnboarding(true);
-      // Clean the URL param without re-navigating
       navigate('/dashboard', { replace: true });
-    } else if (!onboardingDone) {
-      setOnboardingStage('connect');
-      setShowOnboarding(true);
     }
+
+    // Determine correct stage based on GBP state in DB
+    async function resolveStage() {
+      const { data: conn } = await googleService.getConnection();
+
+      if (!conn) {
+        // No GBP connection at all — start from connect
+        setOnboardingStage('connect');
+        setShowOnboarding(true);
+        return;
+      }
+
+      // GBP connected — check if any location is selected
+      const { data: locs } = await googleService.getLocations();
+      const hasSelected = locs?.some((l) => l.is_selected) ?? false;
+
+      if (!hasSelected) {
+        // Connected but no location selected — skip to select
+        setOnboardingStage('select');
+        setShowOnboarding(true);
+      } else {
+        // Connected + location selected — auto-complete onboarding
+        await supabase.auth.updateUser({ data: { onboarding_completed: true } });
+      }
+    }
+
+    resolveStage();
   }, [user, stepParam]);
 
   function handleOnboardingComplete() {
