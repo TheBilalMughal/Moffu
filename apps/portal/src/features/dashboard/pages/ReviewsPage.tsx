@@ -1049,7 +1049,7 @@ export function ReviewsPage() {
       </div>
 
       {/* Filters + Chart — 2-column grid */}
-      <div className="border-b border-[#E5EAE8] bg-white flex-shrink-0 grid grid-cols-[1fr_auto] divide-x divide-[#E5EAE8]">
+      <div className="border-b border-[#E5EAE8] bg-white flex-shrink-0 grid grid-cols-1 lg:grid-cols-[1fr_420px] divide-y lg:divide-y-0 lg:divide-x divide-[#E5EAE8]">
 
         {/* LEFT — tabs + filters */}
         <div className="px-10 py-4 space-y-2.5">
@@ -1138,7 +1138,7 @@ export function ReviewsPage() {
         </div>
 
         {/* RIGHT — chart */}
-        <div className="w-[480px] px-8 py-4 flex-shrink-0">
+        <div className="px-8 py-4 min-w-0">
           <ReviewsLineChart reviews={reviews}/>
         </div>
 
