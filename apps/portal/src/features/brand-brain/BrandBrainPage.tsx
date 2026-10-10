@@ -241,33 +241,40 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
   onLocOverride: (locId: string, field: keyof LocIdentityOverride, value: string | null) => void;
 }) {
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6">
       <div>
         <h2 className="text-lg font-bold text-[#111827] mb-1">Business Identity</h2>
         <p className="text-sm text-[#6B7280]">Basic details that personalise every AI-generated reply.</p>
       </div>
 
-      {/* Global defaults */}
-      <div className="space-y-4 p-4 border border-[#E5EAE8] rounded-xl bg-[#FAFAFA]">
-        <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wide">Global defaults</p>
-        <div>
-          <label className="block text-xs font-semibold text-[#374151] mb-1.5">Business name <span className="text-red-400">*</span></label>
-          <input type="text" value={data.business_name} onChange={e => onChange({ business_name: e.target.value })}
-            placeholder="e.g. The Blue Door Café" className={inputCls}/>
+      {/* Global defaults — 3-col row */}
+      <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+        <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+          <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Global defaults</p>
+          <p className="text-[11px] text-[#9CA3AF] mt-0.5">Applied to all locations unless overridden below.</p>
         </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#374151] mb-1.5">Business type</label>
-          <SelectField value={data.business_type} onChange={v => onChange({ business_type: v })}
-            options={BUSINESS_TYPES} placeholder="Select a type…"/>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#374151] mb-1.5">
-            Short description <span className="text-[#9CA3AF] font-normal">(optional)</span>
-          </label>
-          <textarea value={data.business_desc} onChange={e => onChange({ business_desc: e.target.value })}
-            placeholder="One sentence about what makes your business unique." rows={2} maxLength={200}
-            className={`${inputCls} resize-none`}/>
-          <p className="text-[10px] text-[#9CA3AF] mt-0.5 text-right">{data.business_desc.length}/200</p>
+        <div className="px-5 py-5 bg-[#FAFAFA] grid grid-cols-3 gap-5">
+          <div>
+            <label className="block text-xs font-semibold text-[#374151] mb-1.5">Business name <span className="text-red-400">*</span></label>
+            <input type="text" value={data.business_name} onChange={e => onChange({ business_name: e.target.value })}
+              placeholder="e.g. The Blue Door Café" className={inputCls}/>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-[#374151] mb-1.5">Business type</label>
+            <SelectField value={data.business_type} onChange={v => onChange({ business_type: v })}
+              options={BUSINESS_TYPES} placeholder="Select a type…"/>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-[#374151] mb-1.5">
+              Short description <span className="text-[#9CA3AF] font-normal">(optional)</span>
+            </label>
+            <div className="relative">
+              <textarea value={data.business_desc} onChange={e => onChange({ business_desc: e.target.value })}
+                placeholder="One sentence about what makes your business unique." rows={2} maxLength={200}
+                className={`${inputCls} resize-none`}/>
+              <p className="text-[10px] text-[#9CA3AF] mt-0.5 text-right">{data.business_desc.length}/200</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -279,7 +286,7 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
             <h3 className="text-sm font-semibold text-[#374151]">Per-location identity</h3>
             <span className="text-xs text-[#9CA3AF]">— leave blank to inherit the global default above</span>
           </div>
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-4">
             {locations.map(loc => {
               const ov = locOverrides[loc.id] ?? { business_name: null, business_type: null, business_desc: null };
               return (
@@ -402,7 +409,7 @@ function Step2({ data, onChange, onAnalyzeVoice }: {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6">
       {showImport && <ImportRepliesModal onApply={handleAnalyze} onClose={() => setShowImport(false)} analyzing={analyzing}/>}
 
       <div>
@@ -410,40 +417,50 @@ function Step2({ data, onChange, onAnalyzeVoice }: {
         <p className="text-sm text-[#6B7280]">Pick the voice that best matches your brand.</p>
       </div>
 
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="text-xs font-semibold text-[#374151]">Tone preset</label>
-          <button onClick={() => setShowImport(true)}
-            className="flex items-center gap-1.5 text-xs text-[#0D4C3C] font-medium hover:underline">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-            Import from real replies
-          </button>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {TONE_PRESETS.map(p => (
-            <button key={p.key} onClick={() => onChange({ tone: p.key })}
-              className={`text-left p-4 rounded-xl border-2 transition-all ${data.tone === p.key ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#E5EAE8] hover:border-[#0D4C3C]/40 hover:bg-[#F8FAF9]'}`}>
-              <div className="flex items-center justify-between mb-1.5">
-                <p className={`text-sm font-bold ${data.tone === p.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>{p.label}</p>
-                <Radio checked={data.tone === p.key} onClick={() => onChange({ tone: p.key })}/>
-              </div>
-              <p className="text-xs text-[#6B7280] leading-relaxed">{p.desc}</p>
+      <div className="grid grid-cols-2 gap-6 items-start">
+        {/* Left — Tone presets */}
+        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+          <div className="px-5 py-3 bg-white border-b border-[#E5EAE8] flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Tone preset</p>
+              <p className="text-[11px] text-[#9CA3AF] mt-0.5">Choose the voice that fits your brand.</p>
+            </div>
+            <button onClick={() => setShowImport(true)}
+              className="flex items-center gap-1.5 text-xs text-[#0D4C3C] font-medium hover:underline flex-shrink-0 ml-3">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              Import from replies
             </button>
-          ))}
+          </div>
+          <div className="p-4 bg-[#FAFAFA] grid grid-cols-2 gap-2">
+            {TONE_PRESETS.map(p => (
+              <button key={p.key} onClick={() => onChange({ tone: p.key })}
+                className={`text-left p-4 rounded-xl border-2 transition-all ${data.tone === p.key ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#E5EAE8] bg-white hover:border-[#0D4C3C]/40 hover:bg-[#F8FAF9]'}`}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className={`text-sm font-bold ${data.tone === p.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>{p.label}</p>
+                  <Radio checked={data.tone === p.key} onClick={() => onChange({ tone: p.key })}/>
+                </div>
+                <p className="text-xs text-[#6B7280] leading-relaxed">{p.desc}</p>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div>
-        <label className="block text-xs font-semibold text-[#374151] mb-1.5">
-          Custom tone instructions <span className="text-[#9CA3AF] font-normal">(optional)</span>
-        </label>
-        <textarea value={data.custom_tone_instructions} onChange={e => onChange({ custom_tone_instructions: e.target.value })}
-          placeholder="e.g. Always mention our loyalty program. Use rhetorical questions occasionally. Keep a warm but professional distance."
-          rows={3} maxLength={400} className={`${inputCls} resize-none`}/>
-        <p className="text-[10px] text-[#9CA3AF] mt-0.5 flex justify-between">
-          <span>Extra instructions beyond the tone preset. Injected directly into every AI prompt.</span>
-          <span>{data.custom_tone_instructions.length}/400</span>
-        </p>
+        {/* Right — Custom instructions */}
+        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+          <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+            <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Custom tone instructions</p>
+            <p className="text-[11px] text-[#9CA3AF] mt-0.5">Extra style notes injected into every AI prompt.</p>
+          </div>
+          <div className="p-5 bg-[#FAFAFA]">
+            <textarea value={data.custom_tone_instructions} onChange={e => onChange({ custom_tone_instructions: e.target.value })}
+              placeholder="e.g. Always mention our loyalty program. Use rhetorical questions occasionally. Keep a warm but professional distance."
+              rows={6} maxLength={400} className={`${inputCls} resize-none`}/>
+            <p className="text-[10px] text-[#9CA3AF] mt-1.5 flex justify-between">
+              <span>Beyond the preset — added directly to the AI prompt.</span>
+              <span>{data.custom_tone_instructions.length}/400</span>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -453,48 +470,72 @@ function Step2({ data, onChange, onAnalyzeVoice }: {
 
 function Step3({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial<BrandBrainData>) => void }) {
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6">
       <div>
         <h2 className="text-lg font-bold text-[#111827] mb-1">Reply Format</h2>
         <p className="text-sm text-[#6B7280]">Control how AI structures and formats each reply.</p>
       </div>
 
-      <div>
-        <label className="block text-xs font-semibold text-[#374151] mb-2">Reply length</label>
-        <div className="flex gap-2">
-          {REPLY_LENGTHS.map(opt => (
-            <button key={opt.key} onClick={() => onChange({ reply_length: opt.key })}
-              className={`flex-1 py-3 px-3 rounded-xl border-2 text-sm font-medium transition-all text-center ${data.reply_length === opt.key ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] text-[#6B7280] hover:border-[#0D4C3C]/40'}`}>
-              <span className="block font-bold">{opt.label}</span>
-              <span className="block text-xs font-normal mt-0.5 opacity-70">{opt.desc}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-2.5">
-        <label className="block text-xs font-semibold text-[#374151]">Reply behaviour</label>
-        {[
-          { label: 'Address reviewer by name', sub: 'e.g. "Thank you, Sarah!" when name is available.', field: 'use_customer_name' as const },
-          { label: 'Allow emoji in replies', sub: 'Adds occasional emoji when tone allows it.', field: 'use_emoji' as const },
-        ].map(item => (
-          <div key={item.field} className="flex items-center justify-between px-4 py-3 bg-[#F8FAF9] rounded-xl border border-[#E5EAE8]">
-            <div>
-              <p className="text-sm font-medium text-[#111827]">{item.label}</p>
-              <p className="text-xs text-[#9CA3AF] mt-0.5">{item.sub}</p>
+      <div className="grid grid-cols-2 gap-6 items-start">
+        {/* Left — Length + Behaviour */}
+        <div className="space-y-5">
+          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+            <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+              <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Reply length</p>
             </div>
-            <Toggle checked={data[item.field] as boolean} onChange={() => onChange({ [item.field]: !data[item.field] })}/>
+            <div className="px-5 py-4 bg-[#FAFAFA]">
+              <div className="flex gap-2">
+                {REPLY_LENGTHS.map(opt => (
+                  <button key={opt.key} onClick={() => onChange({ reply_length: opt.key })}
+                    className={`flex-1 py-3 px-3 rounded-xl border-2 text-sm font-medium transition-all text-center ${data.reply_length === opt.key ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] bg-white text-[#6B7280] hover:border-[#0D4C3C]/40'}`}>
+                    <span className="block font-bold">{opt.label}</span>
+                    <span className="block text-xs font-normal mt-0.5 opacity-70">{opt.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
 
-      <div>
-        <label className="block text-xs font-semibold text-[#374151] mb-1.5">
-          Reply signature <span className="text-[#9CA3AF] font-normal">(optional)</span>
-        </label>
-        <input type="text" value={data.reply_signature} onChange={e => onChange({ reply_signature: e.target.value })}
-          placeholder="e.g. Warm regards, The Blue Door Café Team" maxLength={120} className={inputCls}/>
-        <p className="text-xs text-[#9CA3AF] mt-1">Appended to the end of every reply. Leave blank to skip.</p>
+          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+            <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+              <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Reply behaviour</p>
+            </div>
+            <div className="px-5 py-4 bg-[#FAFAFA] space-y-2.5">
+              {[
+                { label: 'Address reviewer by name', sub: 'e.g. "Thank you, Sarah!" when name is available.', field: 'use_customer_name' as const },
+                { label: 'Allow emoji in replies', sub: 'Adds occasional emoji when tone allows it.', field: 'use_emoji' as const },
+              ].map(item => (
+                <div key={item.field} className="flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-[#E5EAE8]">
+                  <div>
+                    <p className="text-sm font-medium text-[#111827]">{item.label}</p>
+                    <p className="text-xs text-[#9CA3AF] mt-0.5">{item.sub}</p>
+                  </div>
+                  <Toggle checked={data[item.field] as boolean} onChange={() => onChange({ [item.field]: !data[item.field] })}/>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right — Reply signature */}
+        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+          <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+            <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Reply signature</p>
+            <p className="text-[11px] text-[#9CA3AF] mt-0.5">Appended to every reply. Leave blank to skip.</p>
+          </div>
+          <div className="px-5 py-5 bg-[#FAFAFA]">
+            <input type="text" value={data.reply_signature} onChange={e => onChange({ reply_signature: e.target.value })}
+              placeholder="e.g. Warm regards, The Blue Door Café Team" maxLength={120} className={inputCls}/>
+            <p className="text-xs text-[#9CA3AF] mt-2">Used as a consistent sign-off across all AI-generated replies.</p>
+
+            {data.reply_signature && (
+              <div className="mt-4 p-4 border border-[#E5EAE8] rounded-xl bg-white">
+                <p className="text-[10px] text-[#9CA3AF] mb-1.5 font-medium uppercase tracking-wide">Preview</p>
+                <p className="text-sm text-[#374151] italic">…and we look forward to seeing you again soon.<br/><span className="not-italic font-medium text-[#111827]">{data.reply_signature}</span></p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -522,7 +563,7 @@ function Step4({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
   ];
 
   return (
-    <div className="space-y-5 max-w-4xl">
+    <div className="space-y-5">
       <div>
         <h2 className="text-lg font-bold text-[#111827] mb-1">Language & Rules</h2>
         <p className="text-sm text-[#6B7280]">Language settings, negative handling, and per-star overrides.</p>
@@ -630,85 +671,115 @@ function Step5({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6">
       <div>
         <h2 className="text-lg font-bold text-[#111827] mb-1">Guardrails</h2>
         <p className="text-sm text-[#6B7280]">Set boundaries, inject context, and control approval flow.</p>
       </div>
 
-      {/* Prohibited phrases */}
-      <div>
-        <label className="block text-xs font-bold text-[#374151] uppercase tracking-wide mb-2">Prohibited phrases</label>
-        <p className="text-xs text-[#9CA3AF] mb-3">Words or phrases AI must never use — promises, legal terms, competitor names.</p>
-        <PhrasesInput phrases={data.prohibited_phrases} onChange={v => onChange({ prohibited_phrases: v })}/>
-      </div>
+      <div className="grid grid-cols-2 gap-6 items-start">
+        {/* Left — Prohibited phrases + Keyword contexts */}
+        <div className="space-y-5">
 
-      {/* Keyword contexts */}
-      <div>
-        <label className="block text-xs font-bold text-[#374151] uppercase tracking-wide mb-2">Keyword-triggered context</label>
-        <p className="text-xs text-[#9CA3AF] mb-3">When a review mentions a keyword, inject extra context into the AI reply.</p>
-        <div className="space-y-2 mb-3">
-          {data.keyword_contexts.map(kc => (
-            <div key={kc.id} className="flex items-start gap-2 p-3 bg-[#F8FAF9] rounded-lg border border-[#E5EAE8]">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-[#0D4C3C] mb-0.5">"{kc.keyword}"</p>
-                <p className="text-xs text-[#374151]">{kc.context}</p>
-              </div>
-              <button onClick={() => onChange({ keyword_contexts: data.keyword_contexts.filter(x => x.id !== kc.id) })}
-                className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0 mt-0.5">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
-              </button>
+          {/* Prohibited phrases */}
+          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+            <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+              <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Prohibited phrases</p>
+              <p className="text-[11px] text-[#9CA3AF] mt-0.5">Words AI must never use — promises, legal terms, competitor names.</p>
             </div>
-          ))}
-        </div>
-        <div className="p-4 border border-[#E5EAE8] rounded-xl space-y-2.5">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-[10px] text-[#9CA3AF] mb-1">Trigger keyword</label>
-              <input type="text" value={kwInput.keyword} onChange={e => setKwInput(p => ({ ...p, keyword: e.target.value }))}
-                placeholder="e.g. parking, wait time" className={`${inputCls} py-2`}/>
-            </div>
-            <div>
-              <label className="block text-[10px] text-[#9CA3AF] mb-1">Context to inject</label>
-              <input type="text" value={kwInput.context} onChange={e => setKwInput(p => ({ ...p, context: e.target.value }))}
-                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addKeyword(); } }}
-                placeholder="e.g. We're adding 50 new parking spots" className={`${inputCls} py-2`}/>
+            <div className="px-5 py-4 bg-[#FAFAFA]">
+              <PhrasesInput phrases={data.prohibited_phrases} onChange={v => onChange({ prohibited_phrases: v })}/>
             </div>
           </div>
-          <button onClick={addKeyword} disabled={!kwInput.keyword.trim() || !kwInput.context.trim()}
-            className="text-sm font-medium text-[#0D4C3C] border border-[#0D4C3C] px-4 py-2 rounded-lg hover:bg-[#E6F2EE] disabled:opacity-40 transition-colors">
-            Add context rule
-          </button>
-        </div>
-      </div>
 
-      {/* Approval rules */}
-      <div>
-        <label className="block text-xs font-bold text-[#374151] uppercase tracking-wide mb-2">Manual approval queue</label>
-        <p className="text-xs text-[#9CA3AF] mb-3">Require a human to approve AI drafts before they can be published.</p>
-        <div className="flex gap-2">
-          {[
-            { val: 0, label: 'Never',     sub: 'All drafts auto-approved' },
-            { val: 3, label: '≤3 stars',  sub: 'Flag negative reviews' },
-            { val: 4, label: '≤4 stars',  sub: 'Flag most reviews' },
-            { val: 6, label: 'Always',    sub: 'All drafts need approval' },
-          ].map(opt => (
-            <button key={opt.val} onClick={() => onChange({ approval_rules: { require_approval_below: opt.val } })}
-              className={`flex-1 py-2.5 px-2 rounded-xl border-2 text-xs font-medium transition-all text-center ${data.approval_rules.require_approval_below === opt.val ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] text-[#6B7280] hover:border-[#0D4C3C]/40'}`}>
-              <span className="block font-bold">{opt.label}</span>
-              <span className="block font-normal opacity-70 mt-0.5">{opt.sub}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+          {/* Keyword contexts */}
+          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+            <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+              <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Keyword-triggered context</p>
+              <p className="text-[11px] text-[#9CA3AF] mt-0.5">Inject context when a review mentions a keyword.</p>
+            </div>
+            <div className="px-5 py-4 bg-[#FAFAFA] space-y-3">
+              {data.keyword_contexts.length > 0 && (
+                <div className="space-y-2">
+                  {data.keyword_contexts.map(kc => (
+                    <div key={kc.id} className="flex items-start gap-2 p-3 bg-white rounded-lg border border-[#E5EAE8]">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-[#0D4C3C] mb-0.5">"{kc.keyword}"</p>
+                        <p className="text-xs text-[#374151]">{kc.context}</p>
+                      </div>
+                      <button onClick={() => onChange({ keyword_contexts: data.keyword_contexts.filter(x => x.id !== kc.id) })}
+                        className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0 mt-0.5">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="p-4 border border-[#E5EAE8] rounded-xl bg-white space-y-2.5">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-[#9CA3AF] mb-1">Trigger keyword</label>
+                    <input type="text" value={kwInput.keyword} onChange={e => setKwInput(p => ({ ...p, keyword: e.target.value }))}
+                      placeholder="e.g. parking" className={`${inputCls} py-2`}/>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-[#9CA3AF] mb-1">Context to inject</label>
+                    <input type="text" value={kwInput.context} onChange={e => setKwInput(p => ({ ...p, context: e.target.value }))}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addKeyword(); } }}
+                      placeholder="e.g. We're adding 50 new spots" className={`${inputCls} py-2`}/>
+                  </div>
+                </div>
+                <button onClick={addKeyword} disabled={!kwInput.keyword.trim() || !kwInput.context.trim()}
+                  className="text-sm font-medium text-[#0D4C3C] border border-[#0D4C3C] px-4 py-2 rounded-lg hover:bg-[#E6F2EE] disabled:opacity-40 transition-colors">
+                  Add context rule
+                </button>
+              </div>
+            </div>
+          </div>
 
-      {/* Example reply */}
-      <div>
-        <label className="block text-xs font-bold text-[#374151] uppercase tracking-wide mb-1.5">Example reply</label>
-        <p className="text-xs text-[#9CA3AF] mb-2">A reply you've written that captures your voice. AI uses it as a style reference.</p>
-        <textarea value={data.example_reply} onChange={e => onChange({ example_reply: e.target.value })}
-          placeholder="Paste an example reply you're happy with…" rows={4} maxLength={800} className={`${inputCls} resize-none`}/>
-        <p className="text-[10px] text-[#9CA3AF] mt-0.5 text-right">{data.example_reply.length}/800</p>
+        </div>
+
+        {/* Right — Approval queue + Example reply */}
+        <div className="space-y-5">
+
+          {/* Approval queue */}
+          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+            <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+              <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Manual approval queue</p>
+              <p className="text-[11px] text-[#9CA3AF] mt-0.5">Require a human to approve AI drafts before publishing.</p>
+            </div>
+            <div className="px-5 py-4 bg-[#FAFAFA]">
+              <div className="flex gap-2">
+                {[
+                  { val: 0, label: 'Never',    sub: 'All drafts auto-approved' },
+                  { val: 3, label: '≤3 stars', sub: 'Flag negative reviews' },
+                  { val: 4, label: '≤4 stars', sub: 'Flag most reviews' },
+                  { val: 6, label: 'Always',   sub: 'All drafts need approval' },
+                ].map(opt => (
+                  <button key={opt.val} onClick={() => onChange({ approval_rules: { require_approval_below: opt.val } })}
+                    className={`flex-1 py-2.5 px-2 rounded-xl border-2 text-xs font-medium transition-all text-center ${data.approval_rules.require_approval_below === opt.val ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] bg-white text-[#6B7280] hover:border-[#0D4C3C]/40'}`}>
+                    <span className="block font-bold">{opt.label}</span>
+                    <span className="block font-normal opacity-70 mt-0.5">{opt.sub}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Example reply */}
+          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+            <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+              <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Example reply</p>
+              <p className="text-[11px] text-[#9CA3AF] mt-0.5">AI uses this as a style reference — paste one you're happy with.</p>
+            </div>
+            <div className="px-5 py-4 bg-[#FAFAFA]">
+              <textarea value={data.example_reply} onChange={e => onChange({ example_reply: e.target.value })}
+                placeholder="Paste an example reply you're happy with…" rows={6} maxLength={800} className={`${inputCls} resize-none`}/>
+              <p className="text-[10px] text-[#9CA3AF] mt-1 text-right">{data.example_reply.length}/800</p>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );
@@ -846,7 +917,7 @@ function Step6({ locations, locCache, globalData, onDataChange, onFlagToggle }: 
   const [selectedLoc, setSelectedLoc] = useState(locations[0]?.id ?? '');
   if (locations.length === 0) {
     return (
-      <div className="max-w-2xl">
+      <div>
         <h2 className="text-lg font-bold text-[#111827] mb-1">Location Overrides</h2>
         <div className="mt-6 text-center py-12 border border-[#E5EAE8] rounded-xl bg-[#FAFAFA]">
           <svg className="w-10 h-10 text-[#D1D5DB] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -861,14 +932,14 @@ function Step6({ locations, locCache, globalData, onDataChange, onFlagToggle }: 
   const cache = locCache[selectedLoc];
 
   return (
-    <div className="max-w-2xl">
+    <div>
       <div className="mb-5">
         <h2 className="text-lg font-bold text-[#111827] mb-1">Location Overrides</h2>
         <p className="text-sm text-[#6B7280]">Customise Brand Brain settings per location. Toggle a field to override it.</p>
       </div>
-      <div className="flex gap-4">
+      <div className="flex gap-5">
         {/* Location list */}
-        <div className="w-40 flex-shrink-0 space-y-1">
+        <div className="w-52 flex-shrink-0 space-y-1">
           {locations.map(l => {
             const lflags = locCache[l.id]?.flags;
             const overrides = lflags ? Object.values(lflags).filter(Boolean).length : 0;
@@ -928,85 +999,95 @@ function Step7({ data, onGeneratePreview, onSave, saving }: {
   const [previewDraft, setPreviewDraft] = useState<string | null>(null);
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="space-y-6">
       <div>
         <h2 className="text-lg font-bold text-[#111827] mb-1">AI Voice Preview</h2>
         <p className="text-sm text-[#6B7280]">Generate a sample reply using your Brand Brain settings before saving.</p>
       </div>
 
-      <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3 bg-[#FAFAFA] border-b border-[#E5EAE8]">
-          <h3 className="text-sm font-semibold text-[#374151]">Test review</h3>
-          <button onClick={() => setShowCustom(s => !s)} className="text-xs text-[#0D4C3C] font-medium hover:underline">
-            {showCustom ? 'Use default' : 'Customise'}
-          </button>
-        </div>
-        {showCustom ? (
-          <div className="px-5 py-4 space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[10px] text-[#9CA3AF] mb-1">Reviewer name</label>
-                <input type="text" value={customReview.reviewer_name} onChange={e => setCustomReview(p => ({ ...p, reviewer_name: e.target.value }))} className={`${inputCls} py-2`}/>
-              </div>
-              <div>
-                <label className="block text-[10px] text-[#9CA3AF] mb-1">Rating</label>
-                <div className="flex gap-1.5">
-                  {[1,2,3,4,5].map(n => (
-                    <button key={n} onClick={() => setCustomReview(p => ({ ...p, rating: n }))}
-                      className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${customReview.rating === n ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C]'}`}>
-                      {n}★
-                    </button>
-                  ))}
+      <div className="grid grid-cols-2 gap-6 items-start">
+        {/* Left — Test review config */}
+        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3 bg-white border-b border-[#E5EAE8]">
+            <div>
+              <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Test review</p>
+              <p className="text-[11px] text-[#9CA3AF] mt-0.5">Review to test your Brand Brain voice against.</p>
+            </div>
+            <button onClick={() => setShowCustom(s => !s)} className="text-xs text-[#0D4C3C] font-medium hover:underline flex-shrink-0 ml-3">
+              {showCustom ? 'Use default' : 'Customise'}
+            </button>
+          </div>
+          {showCustom ? (
+            <div className="px-5 py-4 bg-[#FAFAFA] space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-[#9CA3AF] mb-1">Reviewer name</label>
+                  <input type="text" value={customReview.reviewer_name} onChange={e => setCustomReview(p => ({ ...p, reviewer_name: e.target.value }))} className={`${inputCls} py-2`}/>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-[#9CA3AF] mb-1">Rating</label>
+                  <div className="flex gap-1.5">
+                    {[1,2,3,4,5].map(n => (
+                      <button key={n} onClick={() => setCustomReview(p => ({ ...p, rating: n }))}
+                        className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${customReview.rating === n ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C]'}`}>
+                        {n}★
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div>
-              <label className="block text-[10px] text-[#9CA3AF] mb-1">Review text</label>
-              <textarea value={customReview.body} onChange={e => setCustomReview(p => ({ ...p, body: e.target.value }))}
-                rows={3} className={`${inputCls} resize-none`}/>
-            </div>
-          </div>
-        ) : (
-          <div className="px-5 py-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-xs font-bold flex-shrink-0">SJ</div>
               <div>
-                <p className="text-sm font-semibold text-[#111827]">Sarah Johnson</p>
-                <p className="text-xs text-amber-500">★★★★★ 5 stars</p>
+                <label className="block text-[10px] text-[#9CA3AF] mb-1">Review text</label>
+                <textarea value={customReview.body} onChange={e => setCustomReview(p => ({ ...p, body: e.target.value }))}
+                  rows={4} className={`${inputCls} resize-none`}/>
               </div>
             </div>
-            <p className="text-sm text-[#374151]">Absolutely loved my experience here! The staff were incredibly friendly and the food was delicious.</p>
-          </div>
-        )}
-      </div>
-
-      {previewDraft && (
-        <div className="border border-[#0D4C3C]/30 rounded-xl overflow-hidden bg-[#F0F7F5]">
-          <div className="px-5 py-3 border-b border-[#0D4C3C]/20 flex items-center gap-2">
-            <svg className="w-4 h-4 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-            <h3 className="text-sm font-semibold text-[#0D4C3C]">AI-generated sample reply</h3>
-          </div>
-          <div className="px-5 py-4">
-            <p className="text-sm text-[#374151] leading-relaxed whitespace-pre-wrap">{previewDraft}</p>
-          </div>
+          ) : (
+            <div className="px-5 py-4 bg-[#FAFAFA]">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-xs font-bold flex-shrink-0">SJ</div>
+                <div>
+                  <p className="text-sm font-semibold text-[#111827]">Sarah Johnson</p>
+                  <p className="text-xs text-amber-500">★★★★★ 5 stars</p>
+                </div>
+              </div>
+              <p className="text-sm text-[#374151]">Absolutely loved my experience here! The staff were incredibly friendly and the food was delicious.</p>
+            </div>
+          )}
         </div>
-      )}
 
-      <PreviewStepActions
-        generating={generating} previewDraft={previewDraft} saving={saving}
-        onGenerate={async () => {
-          setGenerating(true); setPreviewError('');
-          const { draft, error } = await (async () => {
-            const r = await brandBrainService.previewVoice(data, showCustom ? customReview : undefined);
-            return r;
-          })();
-          if (error) setPreviewError(error);
-          else if (draft) setPreviewDraft(draft);
-          setGenerating(false);
-        }}
-        onSave={onSave}
-        error={previewError}
-      />
+        {/* Right — AI output + actions */}
+        <div className="space-y-4">
+          <div className={`border rounded-xl overflow-hidden transition-all ${previewDraft ? 'border-[#0D4C3C]/30 bg-[#F0F7F5]' : 'border-[#E5EAE8] bg-[#FAFAFA]'}`}>
+            <div className={`px-5 py-3 border-b flex items-center gap-2 ${previewDraft ? 'border-[#0D4C3C]/20' : 'border-[#E5EAE8] bg-white'}`}>
+              <svg className={`w-4 h-4 ${previewDraft ? 'text-[#0D4C3C]' : 'text-[#9CA3AF]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              <p className={`text-xs font-bold uppercase tracking-wide ${previewDraft ? 'text-[#0D4C3C]' : 'text-[#374151]'}`}>AI-generated sample reply</p>
+            </div>
+            <div className="px-5 py-4 min-h-[140px] flex items-center">
+              {previewDraft
+                ? <p className="text-sm text-[#374151] leading-relaxed whitespace-pre-wrap">{previewDraft}</p>
+                : <p className="text-sm text-[#9CA3AF] italic">Click "Generate preview" to see how your Brand Brain sounds.</p>
+              }
+            </div>
+          </div>
+
+          <PreviewStepActions
+            generating={generating} previewDraft={previewDraft} saving={saving}
+            onGenerate={async () => {
+              setGenerating(true); setPreviewError('');
+              const { draft, error } = await (async () => {
+                const r = await brandBrainService.previewVoice(data, showCustom ? customReview : undefined);
+                return r;
+              })();
+              if (error) setPreviewError(error);
+              else if (draft) setPreviewDraft(draft);
+              setGenerating(false);
+            }}
+            onSave={onSave}
+            error={previewError}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -1264,7 +1345,7 @@ export function BrandBrainPage() {
       <StepIndicator current={step} steps={visibleSteps} completed={completed} onJump={jumpTo}/>
 
       {/* Step content */}
-      <div className="flex-1 overflow-y-auto px-10 py-6">
+      <div className="flex-1 overflow-y-auto px-8 py-7">
         {step === 1 && <Step1 data={data} onChange={patch} locations={locations} locOverrides={locNameOverrides} onLocOverride={setLocName}/>}
         {step === 2 && <Step2 data={data} onChange={patch} onAnalyzeVoice={handleAnalyzeVoice}/>}
         {step === 3 && <Step3 data={data} onChange={patch}/>}
