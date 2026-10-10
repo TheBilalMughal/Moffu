@@ -305,7 +305,7 @@ function ReviewRow({ review, locationName, expanded, onToggle, onGenerateDraft, 
 
       <tr onClick={onToggle} className={`group cursor-pointer border-b border-[#F3F4F6] transition-colors ${expanded ? 'bg-[#F8FAF9]' : 'hover:bg-[#FAFAFA]'}`}>
         {/* Date */}
-        <td className="pl-10 pr-3 py-3 w-36 text-xs text-[#6B7280] whitespace-nowrap font-mono">{fmtDate(review.published_at)}</td>
+        <td className="pl-3 pr-3 py-3 w-36 text-xs text-[#6B7280] whitespace-nowrap font-mono">{fmtDate(review.published_at)}</td>
 
         {/* Reviewer */}
         <td className="px-3 py-3 w-44">
@@ -337,7 +337,7 @@ function ReviewRow({ review, locationName, expanded, onToggle, onGenerateDraft, 
         </td>
 
         {/* Inline action */}
-        <td className="px-3 py-3 pr-10 w-44" onClick={e => e.stopPropagation()}>
+        <td className="px-3 py-3 w-44" onClick={e => e.stopPropagation()}>
           {uiStatus === 'pending' && (
             <button
               onClick={() => onGenerateDraft(review.id)}
@@ -368,7 +368,7 @@ function ReviewRow({ review, locationName, expanded, onToggle, onGenerateDraft, 
         </td>
 
         {/* Chevron */}
-        <td className="pl-2 pr-10 py-3 w-6">
+        <td className="px-2 py-3 w-6">
           <svg className={`w-4 h-4 text-[#C4C9D4] transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
           </svg>
@@ -378,7 +378,7 @@ function ReviewRow({ review, locationName, expanded, onToggle, onGenerateDraft, 
       {/* Expanded detail */}
       {expanded && (
         <tr className="bg-[#F8FAF9] border-b border-[#E5EAE8]">
-          <td colSpan={7} className="pl-10 pr-10 py-4">
+          <td colSpan={7} className="py-4 px-3">
             <div className="max-w-2xl">
               {review.body && (
                 <div className="mb-3">
@@ -633,33 +633,35 @@ export function ReviewsPage() {
             {hasFilters && <button onClick={clearAll} className="text-xs text-[#0D4C3C] underline mt-1">Clear filters</button>}
           </div>
         ) : (
-          <table className="w-full">
-            <thead className="bg-[#FAFAFA] border-b border-[#E5EAE8] sticky top-0 z-10">
-              <tr>
-                <th className="pl-10 pr-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-36">Date</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-44">Reviewer</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-36">Location</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Review</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-32">Status</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-44 pr-10">Action</th>
-                <th className="w-6 pr-10"/>
-              </tr>
-            </thead>
-            <tbody className="bg-white">
-              {paginated.map(review => (
-                <ReviewRow
-                  key={`${review.id}-${review.status}-${review.reply_draft??''}`}
-                  review={review}
-                  locationName={locationName(review.location_id)}
-                  expanded={expandedId === review.id}
-                  onToggle={() => setExpandedId(expandedId === review.id ? null : review.id)}
-                  onGenerateDraft={handleGenerateDraft}
-                  onPublish={handlePublish}
-                  onDiscard={handleDiscard}
-                />
-              ))}
-            </tbody>
-          </table>
+          <div className="px-10">
+            <table className="w-full">
+              <thead className="bg-[#FAFAFA] border-b border-[#E5EAE8] sticky top-0 z-10">
+                <tr>
+                  <th className="pl-3 pr-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-36">Date</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-44">Reviewer</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-36">Location</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Review</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-32">Status</th>
+                  <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-44">Action</th>
+                  <th className="w-6"/>
+                </tr>
+              </thead>
+              <tbody className="bg-white">
+                {paginated.map(review => (
+                  <ReviewRow
+                    key={`${review.id}-${review.status}-${review.reply_draft??''}`}
+                    review={review}
+                    locationName={locationName(review.location_id)}
+                    expanded={expandedId === review.id}
+                    onToggle={() => setExpandedId(expandedId === review.id ? null : review.id)}
+                    onGenerateDraft={handleGenerateDraft}
+                    onPublish={handlePublish}
+                    onDiscard={handleDiscard}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
