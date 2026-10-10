@@ -21,6 +21,7 @@ interface Review {
   reply_draft: string | null; reply_text: string | null;
   location_id: string | null; notes: string | null;
   draft_history: DraftHistoryItem[];
+  reply_published_at: string | null;
 }
 interface Location { id: string; display_name: string | null; }
 
@@ -83,6 +84,15 @@ const STATUS_CFG: Record<UiStatus, { dot: string; label: string }> = {
   replied:    { dot: 'bg-[#0D4C3C]', label: 'Replied'    },
 };
 
+// ── Reply Templates ───────────────────────────────────────────────────────────
+
+const REPLY_TEMPLATES = [
+  { label: 'Thank You',   text: 'Thank you so much for your kind words! We truly appreciate your support and look forward to serving you again.' },
+  { label: 'Apology',     text: 'We sincerely apologize for your experience. Your feedback is very important to us and we are working to make things right.' },
+  { label: 'Follow Up',   text: 'Thank you for your review. We would love to connect with you directly to learn more about your experience.' },
+  { label: 'Invite Back', text: 'We appreciate your honest feedback. We hope to have the opportunity to serve you better on your next visit.' },
+];
+
 // ── FilterDropdown ────────────────────────────────────────────────────────────
 
 function FilterDropdown({ label, icon, options, value, onChange }: {
@@ -132,6 +142,51 @@ function FilterDropdown({ label, icon, options, value, onChange }: {
   );
 }
 
+// ── Star Distribution Dropdown ────────────────────────────────────────────────
+
+function StarDistributionDropdown({ reviews }: { reviews: Review[] }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', fn);
+    return () => document.removeEventListener('mousedown', fn);
+  }, []);
+
+  const counts = [5,4,3,2,1].map(star => ({ star, count: reviews.filter(r => r.rating === star).length }));
+  const maxCount = Math.max(...counts.map(c => c.count), 1);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={() => setOpen(o => !o)}
+        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${open ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+        <svg className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+        </svg>
+        <span className="text-xs">Distribution</span>
+        <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+      </button>
+      {open && (
+        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg p-3 min-w-[192px]">
+          {counts.map(({ star, count }) => (
+            <div key={star} className="flex items-center gap-2 mb-1.5 last:mb-0">
+              <span className="text-xs text-[#6B7280] w-3 text-right">{star}</span>
+              <svg className="w-3 h-3 text-amber-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>
+              <div className="flex-1 bg-[#F3F4F6] rounded-full h-1.5">
+                <div className="bg-amber-400 h-1.5 rounded-full transition-all" style={{ width: `${(count / maxCount) * 100}%` }}/>
+              </div>
+              <span className="text-xs text-[#9CA3AF] w-5 text-right">{count}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Stars ─────────────────────────────────────────────────────────────────────
 
 function Stars({ rating }: { rating: number }) {
@@ -154,42 +209,64 @@ const PERIOD_LABELS: Record<ChartPeriod, string> = {
   today: 'Today', week: 'This Week', month: 'This Month', '3months': 'Last 3 Months',
 };
 
-function buildChartData(reviews: Review[], period: ChartPeriod) {
+interface ChartPoint {
+  label: string; iso: string; count: number;
+  totalRating: number; ratedCount: number;
+  positive: number; neutral: number; negative: number;
+}
+
+function makeChartPoint(label: string, iso: string, matched: Review[]): ChartPoint {
+  return {
+    label, iso, count: matched.length,
+    totalRating: matched.reduce((s, r) => s + r.rating, 0),
+    ratedCount: matched.filter(r => r.rating > 0).length,
+    positive: matched.filter(r => r.rating >= 4).length,
+    neutral: matched.filter(r => r.rating === 3).length,
+    negative: matched.filter(r => r.rating <= 2).length,
+  };
+}
+
+function buildChartDataExtended(reviews: Review[], period: ChartPeriod, previousPeriod = false): ChartPoint[] {
   const now = new Date();
-  const pts: { label: string; iso: string; count: number }[] = [];
+  const pts: ChartPoint[] = [];
 
   if (period === 'today') {
+    const offset = previousPeriod ? 1 : 0;
+    const target = new Date(now); target.setDate(now.getDate() - offset);
+    const isoDate = target.toISOString().split('T')[0] ?? '';
     for (let h = 0; h < 24; h += 3) {
-      const label = h === 0 ? '12am' : h < 12 ? `${h}am` : h === 12 ? '12pm' : `${h - 12}pm`;
-      const isoDate = now.toISOString().split('T')[0] ?? '';
-      const count = reviews.filter(r => {
+      const label = previousPeriod ? '' : (h === 0 ? '12am' : h < 12 ? `${h}am` : h === 12 ? '12pm' : `${h - 12}pm`);
+      const matched = reviews.filter(r => {
         if (!r.published_at) return false;
         const d = new Date(r.published_at);
         return d.toISOString().startsWith(isoDate) && d.getHours() >= h && d.getHours() < h + 3;
-      }).length;
-      pts.push({ label, iso: `${isoDate}T${String(h).padStart(2,'0')}`, count });
+      });
+      pts.push(makeChartPoint(label, `${isoDate}T${String(h).padStart(2,'0')}`, matched));
     }
   } else if (period === 'week') {
+    const offset = previousPeriod ? 7 : 0;
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(now); d.setDate(now.getDate() - i);
+      const d = new Date(now); d.setDate(now.getDate() - i - offset);
       const iso = d.toISOString().split('T')[0] ?? '';
-      const label = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()] ?? '';
-      pts.push({ label, iso, count: reviews.filter(r => r.published_at?.startsWith(iso)).length });
+      const label = previousPeriod ? '' : (['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()] ?? '');
+      pts.push(makeChartPoint(label, iso, reviews.filter(r => r.published_at?.startsWith(iso))));
     }
   } else if (period === 'month') {
+    const offset = previousPeriod ? 30 : 0;
     for (let i = 29; i >= 0; i--) {
-      const d = new Date(now); d.setDate(now.getDate() - i);
+      const d = new Date(now); d.setDate(now.getDate() - i - offset);
       const iso = d.toISOString().split('T')[0] ?? '';
-      const label = i % 5 === 0 ? `${d.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}` : '';
-      pts.push({ label, iso, count: reviews.filter(r => r.published_at?.startsWith(iso)).length });
+      const label = previousPeriod ? '' : (i % 5 === 0 ? `${d.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}` : '');
+      pts.push(makeChartPoint(label, iso, reviews.filter(r => r.published_at?.startsWith(iso))));
     }
   } else {
+    const monthOff = previousPeriod ? 12 : 0;
     for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const d = new Date(now.getFullYear(), now.getMonth() - i - monthOff, 1);
       const y = d.getFullYear(); const m = d.getMonth();
       const isoPrefix = `${y}-${String(m + 1).padStart(2,'0')}`;
-      const label = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m] ?? '';
-      pts.push({ label, iso: isoPrefix, count: reviews.filter(r => r.published_at?.startsWith(isoPrefix)).length });
+      const label = previousPeriod ? '' : (['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m] ?? '');
+      pts.push(makeChartPoint(label, isoPrefix, reviews.filter(r => r.published_at?.startsWith(isoPrefix))));
     }
   }
   return pts;
@@ -209,28 +286,57 @@ function smoothPath(pts: { x: number; y: number }[]): string {
 function ReviewsLineChart({ reviews }: { reviews: Review[] }) {
   const [period, setPeriod] = useState<ChartPeriod>('week');
   const [hovered, setHovered] = useState<number | null>(null);
+  const [showRating, setShowRating] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
+  const [showSentiment, setShowSentiment] = useState(false);
 
-  const data = useMemo(() => buildChartData(reviews, period), [reviews, period]);
+  const data = useMemo(() => buildChartDataExtended(reviews, period, false), [reviews, period]);
+  const prevData = useMemo(() => showComparison ? buildChartDataExtended(reviews, period, true) : [], [reviews, period, showComparison]);
 
   const totalInPeriod = data.reduce((s, p) => s + p.count, 0);
+  const prevTotalInPeriod = prevData.reduce((s, p) => s + p.count, 0);
+  const delta = totalInPeriod - prevTotalInPeriod;
+
   const maxVal = Math.max(...data.map(p => p.count), 1);
   const yTickCount = 4;
   const yTicks = Array.from({ length: yTickCount + 1 }, (_, i) => Math.round((maxVal * i) / yTickCount));
 
   const W = 1000; const H = 130;
-  const PAD = { top: 16, right: 20, bottom: 32, left: 36 };
+  const PAD = { top: 16, right: showRating && !showSentiment ? 44 : 20, bottom: 32, left: 36 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
-  const pts = data.map((d, i) => ({
-    x: PAD.left + (i / Math.max(data.length - 1, 1)) * innerW,
-    y: PAD.top + innerH - (d.count / maxVal) * innerH,
-  }));
+  function toXY(i: number, val: number, maxV: number) {
+    return {
+      x: PAD.left + (i / Math.max(data.length - 1, 1)) * innerW,
+      y: PAD.top + innerH - (val / maxV) * innerH,
+    };
+  }
 
+  const pts = data.map((d, i) => toXY(i, d.count, maxVal));
   const line = smoothPath(pts);
   const area = pts.length > 1
     ? `${line} L ${pts[pts.length - 1]!.x} ${PAD.top + innerH} L ${pts[0]!.x} ${PAD.top + innerH} Z`
     : '';
+
+  const ratingPts = data.map((d, i) => ({
+    x: PAD.left + (i / Math.max(data.length - 1, 1)) * innerW,
+    y: d.ratedCount > 0
+      ? PAD.top + innerH - ((d.totalRating / d.ratedCount - 1) / 4) * innerH
+      : PAD.top + innerH,
+  }));
+  const ratingLine = smoothPath(ratingPts);
+
+  const prevPts = prevData.map((d, i) => ({
+    x: PAD.left + (i / Math.max(prevData.length - 1, 1)) * innerW,
+    y: PAD.top + innerH - (d.count / maxVal) * innerH,
+  }));
+  const prevLine = prevPts.length > 1 ? smoothPath(prevPts) : '';
+
+  const maxSentVal = Math.max(...data.map(p => Math.max(p.positive, p.neutral, p.negative)), 1);
+  const posLine = smoothPath(data.map((d, i) => toXY(i, d.positive, maxSentVal)));
+  const neuLine = smoothPath(data.map((d, i) => toXY(i, d.neutral, maxSentVal)));
+  const negLine = smoothPath(data.map((d, i) => toXY(i, d.negative, maxSentVal)));
 
   const labelIndices = useMemo(() => {
     if (data.length <= 12) return data.map((_, i) => i);
@@ -241,21 +347,70 @@ function ReviewsLineChart({ reviews }: { reviews: Review[] }) {
   return (
     <div className="w-full">
       {/* Chart header */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-baseline gap-3">
+      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <div className="flex items-baseline gap-2 flex-wrap">
           <span className="text-2xl font-bold text-[#111827]">{totalInPeriod}</span>
+          {showComparison && prevData.length > 0 && (
+            <span className={`text-sm font-semibold ${delta > 0 ? 'text-emerald-500' : delta < 0 ? 'text-red-500' : 'text-[#9CA3AF]'}`}>
+              ({delta > 0 ? '+' : ''}{delta})
+            </span>
+          )}
           <span className="text-sm text-[#9CA3AF]">reviews · {PERIOD_LABELS[period].toLowerCase()}</span>
         </div>
-        {/* Period selector */}
-        <div className="flex items-center bg-[#F3F4F6] rounded-lg p-0.5 gap-0.5">
-          {(Object.keys(PERIOD_LABELS) as ChartPeriod[]).map(p => (
-            <button key={p} onClick={() => setPeriod(p)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${period === p ? 'bg-white text-[#111827] shadow-sm' : 'text-[#6B7280] hover:text-[#374151]'}`}>
-              {PERIOD_LABELS[p]}
-            </button>
-          ))}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button onClick={() => setShowRating(s => !s)}
+            className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${showRating ? 'bg-amber-50 text-amber-600 border border-amber-200' : 'text-[#6B7280] bg-[#F3F4F6]'}`}>
+            Avg Rating
+          </button>
+          <button onClick={() => setShowComparison(s => !s)}
+            className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${showComparison ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'text-[#6B7280] bg-[#F3F4F6]'}`}>
+            vs Previous
+          </button>
+          <button onClick={() => setShowSentiment(s => !s)}
+            className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${showSentiment ? 'bg-[#E6F2EE] text-[#0D4C3C] border border-[#0D4C3C]/20' : 'text-[#6B7280] bg-[#F3F4F6]'}`}>
+            Sentiment
+          </button>
+          <div className="flex items-center bg-[#F3F4F6] rounded-lg p-0.5 gap-0.5">
+            {(Object.keys(PERIOD_LABELS) as ChartPeriod[]).map(p => (
+              <button key={p} onClick={() => setPeriod(p)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${period === p ? 'bg-white text-[#111827] shadow-sm' : 'text-[#6B7280] hover:text-[#374151]'}`}>
+                {PERIOD_LABELS[p]}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
+
+      {/* Legend */}
+      {(showRating || showSentiment || showComparison) && (
+        <div className="flex items-center gap-4 mb-2 flex-wrap">
+          {!showSentiment && (
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-1.5 rounded-full bg-[#0D4C3C]"/>
+              <span className="text-xs text-[#6B7280]">Reviews</span>
+            </div>
+          )}
+          {showRating && !showSentiment && (
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-1.5 rounded-full bg-amber-400"/>
+              <span className="text-xs text-[#6B7280]">Avg Rating</span>
+            </div>
+          )}
+          {showSentiment && (
+            <>
+              <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-emerald-500"/><span className="text-xs text-[#6B7280]">Positive</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-[#9CA3AF]"/><span className="text-xs text-[#6B7280]">Neutral</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-red-500"/><span className="text-xs text-[#6B7280]">Negative</span></div>
+            </>
+          )}
+          {showComparison && (
+            <div className="flex items-center gap-1.5">
+              <svg width="16" height="6" viewBox="0 0 16 6"><line x1="0" y1="3" x2="16" y2="3" stroke="#9CA3AF" strokeWidth="1.5" strokeDasharray="4 2"/></svg>
+              <span className="text-xs text-[#6B7280]">Prev period</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* SVG chart */}
       <div className="relative w-full" onMouseLeave={() => setHovered(null)}>
@@ -267,61 +422,69 @@ function ReviewsLineChart({ reviews }: { reviews: Review[] }) {
             </linearGradient>
           </defs>
 
-          {/* Y grid lines */}
           {yTicks.map(v => {
             const y = PAD.top + innerH - (v / maxVal) * innerH;
             return (
               <g key={v}>
-                <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y}
-                  stroke="#F3F4F6" strokeWidth={1}/>
+                <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#F3F4F6" strokeWidth={1}/>
                 <text x={PAD.left - 8} y={y + 4} textAnchor="end" fontSize={10} fill="#D1D5DB">{v}</text>
               </g>
             );
           })}
 
-          {/* Hover vertical line */}
+          {showRating && !showSentiment && [1,2,3,4,5].map(v => {
+            const y = PAD.top + innerH - ((v - 1) / 4) * innerH;
+            return <text key={v} x={W - PAD.right + 6} y={y + 4} textAnchor="start" fontSize={10} fill="#F59E0B">{v}</text>;
+          })}
+
           {hovered !== null && pts[hovered] && (
             <line x1={pts[hovered]!.x} y1={PAD.top} x2={pts[hovered]!.x} y2={PAD.top + innerH}
               stroke="#0D4C3C" strokeWidth={1} strokeDasharray="3 3" strokeOpacity={0.4}/>
           )}
 
-          {/* Area */}
-          {area && <path d={area} fill="url(#chartGrad)"/>}
+          {showComparison && prevLine && (
+            <path d={prevLine} fill="none" stroke="#9CA3AF" strokeWidth={1.5} strokeDasharray="5 3" strokeLinejoin="round" strokeLinecap="round"/>
+          )}
 
-          {/* Line */}
-          <path d={line} fill="none" stroke="#0D4C3C" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>
+          {!showSentiment && area && <path d={area} fill="url(#chartGrad)"/>}
+          {!showSentiment && <path d={line} fill="none" stroke="#0D4C3C" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>}
+          {showRating && !showSentiment && <path d={ratingLine} fill="none" stroke="#F59E0B" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round"/>}
 
-          {/* X-axis labels */}
+          {showSentiment && (
+            <>
+              <path d={posLine} fill="none" stroke="#10B981" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round"/>
+              <path d={neuLine} fill="none" stroke="#9CA3AF" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round"/>
+              <path d={negLine} fill="none" stroke="#EF4444" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round"/>
+            </>
+          )}
+
           {labelIndices.map(i => {
             const d = data[i]; const p = pts[i];
             if (!d?.label || !p) return null;
-            return (
-              <text key={i} x={p.x} y={H - 6} textAnchor="middle" fontSize={10} fill="#9CA3AF">{d.label}</text>
-            );
+            return <text key={i} x={p.x} y={H - 6} textAnchor="middle" fontSize={10} fill="#9CA3AF">{d.label}</text>;
           })}
 
-          {/* Hover targets + dots */}
           {pts.map((p, i) => (
             <g key={i} onMouseEnter={() => setHovered(i)} style={{ cursor: 'default' }}>
               <rect x={p.x - (innerW / data.length / 2)} y={PAD.top} width={innerW / data.length} height={innerH} fill="transparent"/>
               {(hovered === i || data[i]!.count > 0) && (
-                <circle cx={p.x} cy={p.y} r={hovered === i ? 4.5 : 3}
-                  fill={hovered === i ? '#0D4C3C' : '#0D4C3C'}
-                  stroke="white" strokeWidth={1.5}/>
+                <circle cx={p.x} cy={p.y} r={hovered === i ? 4.5 : 3} fill="#0D4C3C" stroke="white" strokeWidth={1.5}/>
               )}
             </g>
           ))}
         </svg>
 
-        {/* Tooltip */}
         {hovered !== null && data[hovered] && pts[hovered] && (() => {
           const d = data[hovered]!; const p = pts[hovered]!;
           const pct = (p.x / W) * 100;
           const alignRight = pct > 75;
+          const avgRtg = d.ratedCount > 0 ? (d.totalRating / d.ratedCount).toFixed(1) : null;
           return (
             <div className="absolute top-2 pointer-events-none z-10 bg-[#111827] text-white text-xs rounded-lg px-3 py-2 shadow-lg whitespace-nowrap"
               style={{ left: alignRight ? 'auto' : `calc(${pct}% + 8px)`, right: alignRight ? `calc(${100 - pct}% + 8px)` : 'auto' }}>
               <p className="font-semibold">{d.count} review{d.count !== 1 ? 's' : ''}</p>
+              {avgRtg && showRating && <p className="text-amber-400 mt-0.5">Avg {avgRtg}</p>}
+              {showSentiment && <p className="text-white/60 mt-0.5">{d.positive}+ {d.neutral}~ {d.negative}-</p>}
               <p className="text-white/60 mt-0.5">{d.label || d.iso}</p>
             </div>
           );
@@ -393,12 +556,13 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
 
 // ── Publish Modal ─────────────────────────────────────────────────────────────
 
-function PublishModal({ review, locationName, onClose, onPublish }: {
+function PublishModal({ review, locationName, onClose, onPublish, initialText }: {
   review: Review; locationName: string;
   onClose: () => void;
   onPublish: (id: string, draft: string) => Promise<{ error?: string }>;
+  initialText?: string;
 }) {
-  const [text, setText] = useState(review.reply_draft ?? '');
+  const [text, setText] = useState(initialText ?? review.reply_draft ?? '');
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState('');
 
@@ -436,6 +600,16 @@ function PublishModal({ review, locationName, onClose, onPublish }: {
         </div>
         <div className="px-6 py-4">
           <label className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide block mb-2">Your Reply</label>
+          {/* Template chips */}
+          <div className="flex flex-wrap gap-1 mb-2">
+            <span className="text-xs text-[#9CA3AF] self-center mr-0.5">Templates:</span>
+            {REPLY_TEMPLATES.map(tpl => (
+              <button key={tpl.label} onClick={() => setText(tpl.text)}
+                className="text-xs px-2 py-1 rounded-md bg-[#F3F4F6] text-[#374151] hover:bg-[#E6F2EE] hover:text-[#0D4C3C] border border-[#E5E7EB] transition-colors cursor-pointer">
+                {tpl.label}
+              </button>
+            ))}
+          </div>
           <textarea value={text} onChange={e => setText(e.target.value)} rows={5}
             className="w-full text-sm text-[#374151] border border-[#D1D5DB] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0D4C3C] resize-none"
             placeholder="Write your reply…"/>
@@ -455,9 +629,10 @@ function PublishModal({ review, locationName, onClose, onPublish }: {
 
 // ── Bulk Action Bar ───────────────────────────────────────────────────────────
 
-function BulkActionBar({ count, generating, onGenerate, onClear }: {
+function BulkActionBar({ count, generating, onGenerate, onClear, onMarkAttention, onExportSelected }: {
   count: number; generating: boolean;
   onGenerate: () => void; onClear: () => void;
+  onMarkAttention: () => void; onExportSelected: () => void;
 }) {
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#111827] text-white rounded-xl px-5 py-3 shadow-xl">
@@ -469,6 +644,20 @@ function BulkActionBar({ count, generating, onGenerate, onClear }: {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
         </svg>
         {generating ? 'Generating…' : `Generate Drafts (${count})`}
+      </button>
+      <button onClick={onMarkAttention}
+        className="flex items-center gap-1.5 text-sm font-semibold text-amber-600 bg-white hover:bg-amber-50 px-3 py-1.5 rounded-lg transition-colors">
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21V5a2 2 0 012-2h14l-3 5 3 5H5v8"/>
+        </svg>
+        Mark Attention
+      </button>
+      <button onClick={onExportSelected}
+        className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 bg-white hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+        </svg>
+        Export Selected
       </button>
       <button onClick={onClear} className="text-sm text-white/60 hover:text-white transition-colors">Clear</button>
     </div>
@@ -599,7 +788,7 @@ function DateRangePicker({ from, to, onChange }: { from: string; to: string; onC
 // ── Review Row ────────────────────────────────────────────────────────────────
 
 function ReviewRow({ review, locationName, expanded, selected, focused, onToggle, onSelect,
-  onGenerateDraft, onPublish, onDiscard, onSaveNote }: {
+  onGenerateDraft, onPublish, onDiscard, onSaveNote, onFlag }: {
   review: Review; locationName: string; expanded: boolean;
   selected: boolean; focused: boolean;
   onToggle: () => void; onSelect: (e: React.MouseEvent) => void;
@@ -607,13 +796,17 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
   onPublish: (id: string, draft: string) => Promise<{ error?: string }>;
   onDiscard: (id: string) => Promise<void>;
   onSaveNote: (id: string, note: string) => Promise<void>;
+  onFlag: (id: string) => void;
 }) {
   const uiStatus = toUiStatus(review.status);
   const s = STATUS_CFG[uiStatus];
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalInitialText, setModalInitialText] = useState<string | undefined>(undefined);
   const [historyTab, setHistoryTab] = useState(false);
   const [note, setNote] = useState(review.notes ?? '');
   const [savingNote, setSavingNote] = useState(false);
+  const [showManual, setShowManual] = useState(false);
+  const [manualText, setManualText] = useState('');
   const isDrafting = review.status === 'DRAFTING';
   const isPublishing = review.status === 'PUBLISHING';
   const initials = (review.reviewer_name ?? '?').split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
@@ -629,9 +822,25 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
     setSavingNote(false);
   }
 
+  // Response time for replied reviews
+  const responseTimeDays = uiStatus === 'replied' && review.reply_published_at && review.published_at
+    ? Math.floor((new Date(review.reply_published_at).getTime() - new Date(review.published_at).getTime()) / 86400000)
+    : null;
+
+  const statusDot = review.status === 'NEEDS_ATTENTION' ? 'bg-amber-400' : s.dot;
+  const statusLabel = isPublishing ? 'Publishing…' : isDrafting ? 'Generating…' : review.status === 'NEEDS_ATTENTION' ? 'Needs Attention' : s.label;
+
   return (
     <>
-      {modalOpen && <PublishModal review={review} locationName={locationName} onClose={() => setModalOpen(false)} onPublish={onPublish}/>}
+      {modalOpen && (
+        <PublishModal
+          review={review}
+          locationName={locationName}
+          onClose={() => { setModalOpen(false); setModalInitialText(undefined); }}
+          onPublish={onPublish}
+          {...(modalInitialText !== undefined ? { initialText: modalInitialText } : {})}
+        />
+      )}
 
       <tr onClick={onToggle}
         className={`group cursor-pointer border-b border-[#F3F4F6] transition-colors ${focused ? 'ring-1 ring-inset ring-[#0D4C3C]/30' : ''} ${expanded ? 'bg-[#F8FAF9]' : 'hover:bg-[#FAFAFA]'} ${selected ? 'bg-[#F0F7F5]' : ''}`}>
@@ -670,34 +879,50 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
           </div>
         </td>
 
-        {/* Status + age */}
+        {/* Status + age + response time */}
         <td className="px-3 py-3 w-28">
           <span className="inline-flex items-center gap-1.5 text-xs text-[#6B7280]">
-            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${s.dot}`}/>
-            {isPublishing ? 'Publishing…' : isDrafting ? 'Generating…' : s.label}
+            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot}`}/>
+            {statusLabel}
           </span>
           {age && <p className={`text-[10px] mt-0.5 ml-3 ${age.urgency}`}>{age.label}</p>}
+          {responseTimeDays !== null && (
+            <p className={`text-[10px] mt-0.5 ml-3 ${responseTimeDays <= 1 ? 'text-emerald-500' : 'text-[#9CA3AF]'}`}>
+              {responseTimeDays}d response
+            </p>
+          )}
         </td>
 
-        {/* Inline action */}
+        {/* Inline action + flag */}
         <td className="px-3 py-3 w-44 pr-10" onClick={e => e.stopPropagation()}>
-          {uiStatus === 'pending' && (
-            <button onClick={() => onGenerateDraft(review.id)} disabled={isDrafting}
-              className="flex items-center gap-1.5 text-xs font-medium text-[#0D4C3C] hover:text-[#083F32] border border-[#0D4C3C]/30 hover:border-[#0D4C3C] bg-white hover:bg-[#F0F7F5] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap">
-              <svg className={`w-3.5 h-3.5 ${isDrafting ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+          <div className="flex items-center gap-2">
+            {uiStatus === 'pending' && (
+              <button onClick={() => onGenerateDraft(review.id)} disabled={isDrafting}
+                className="flex items-center gap-1.5 text-xs font-medium text-[#0D4C3C] hover:text-[#083F32] border border-[#0D4C3C]/30 hover:border-[#0D4C3C] bg-white hover:bg-[#F0F7F5] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap">
+                <svg className={`w-3.5 h-3.5 ${isDrafting ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                </svg>
+                {isDrafting ? 'Generating…' : 'Generate Draft'}
+              </button>
+            )}
+            {uiStatus === 'draft_ready' && (
+              <button onClick={() => { setModalInitialText(undefined); setModalOpen(true); }} disabled={isPublishing}
+                className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
+                Approve & Publish
+              </button>
+            )}
+            {uiStatus === 'replied' && <span className="text-xs text-[#9CA3AF]">Published</span>}
+            {/* Flag button */}
+            <button
+              onClick={() => onFlag(review.id)}
+              title={review.status === 'NEEDS_ATTENTION' ? 'Remove flag' : 'Flag for attention'}
+              className={`flex-shrink-0 transition-colors ${review.status === 'NEEDS_ATTENTION' ? 'text-amber-500' : 'text-[#9CA3AF] hover:text-amber-500'}`}>
+              <svg className="w-4 h-4" fill={review.status === 'NEEDS_ATTENTION' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21V5a2 2 0 012-2h14l-3 5 3 5H5v8"/>
               </svg>
-              {isDrafting ? 'Generating…' : 'Generate Draft'}
             </button>
-          )}
-          {uiStatus === 'draft_ready' && (
-            <button onClick={() => setModalOpen(true)} disabled={isPublishing}
-              className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap">
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
-              Approve & Publish
-            </button>
-          )}
-          {uiStatus === 'replied' && <span className="text-xs text-[#9CA3AF]">Published</span>}
+          </div>
         </td>
 
         {/* Chevron */}
@@ -739,9 +964,24 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
 
                   {!historyTab ? (
                     <>
+                      {/* Template chips for draft_ready */}
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        <span className="text-xs text-[#9CA3AF] self-center mr-0.5">Templates:</span>
+                        {REPLY_TEMPLATES.map(tpl => (
+                          <button key={tpl.label}
+                            onClick={e => {
+                              e.stopPropagation();
+                              setModalInitialText(tpl.text + (review.reply_draft ? '\n\n' + review.reply_draft : ''));
+                              setModalOpen(true);
+                            }}
+                            className="text-xs px-2 py-1 rounded-md bg-[#F3F4F6] text-[#374151] hover:bg-[#E6F2EE] hover:text-[#0D4C3C] border border-[#E5E7EB] transition-colors cursor-pointer">
+                            {tpl.label}
+                          </button>
+                        ))}
+                      </div>
                       <p className="text-sm text-[#374151] bg-white border border-[#E5EAE8] rounded-lg px-3 py-2.5 leading-relaxed mb-2">{review.reply_draft}</p>
                       <div className="flex gap-2">
-                        <button onClick={e => { e.stopPropagation(); setModalOpen(true); }}
+                        <button onClick={e => { e.stopPropagation(); setModalInitialText(undefined); setModalOpen(true); }}
                           className="text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-3 py-1.5 rounded-lg transition-colors">
                           Approve & Publish
                         </button>
@@ -775,14 +1015,41 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
                 </div>
               )}
 
+              {/* Pending section with AI + manual option */}
               {uiStatus === 'pending' && (
-                <button onClick={e => { e.stopPropagation(); onGenerateDraft(review.id); }} disabled={isDrafting}
-                  className="flex items-center gap-2 text-sm font-medium text-[#0D4C3C] hover:text-[#083F32] transition-colors disabled:opacity-50">
-                  <svg className={`w-4 h-4 ${isDrafting ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
-                  </svg>
-                  {isDrafting ? 'Generating…' : 'Generate AI Draft'}
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button onClick={e => { e.stopPropagation(); onGenerateDraft(review.id); }} disabled={isDrafting}
+                    className="flex items-center gap-2 text-sm font-medium text-[#0D4C3C] hover:text-[#083F32] transition-colors disabled:opacity-50 self-start">
+                    <svg className={`w-4 h-4 ${isDrafting ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                    </svg>
+                    {isDrafting ? 'Generating…' : 'Generate AI Draft'}
+                  </button>
+                  <button onClick={e => { e.stopPropagation(); setShowManual(m => !m); }}
+                    className="text-xs text-[#6B7280] hover:text-[#0D4C3C] self-start transition-colors">
+                    Write manually
+                  </button>
+                  {showManual && (
+                    <div onClick={e => e.stopPropagation()}>
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        <span className="text-xs text-[#9CA3AF] self-center mr-0.5">Templates:</span>
+                        {REPLY_TEMPLATES.map(tpl => (
+                          <button key={tpl.label} onClick={() => setManualText(tpl.text)}
+                            className="text-xs px-2 py-1 rounded-md bg-[#F3F4F6] text-[#374151] hover:bg-[#E6F2EE] hover:text-[#0D4C3C] border border-[#E5E7EB] transition-colors cursor-pointer">
+                            {tpl.label}
+                          </button>
+                        ))}
+                      </div>
+                      <textarea value={manualText} onChange={e => setManualText(e.target.value)} rows={4}
+                        placeholder="Write your reply…"
+                        className="w-full text-sm text-[#374151] border border-[#D1D5DB] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0D4C3C] resize-none transition-colors"/>
+                      <button onClick={async () => { await onPublish(review.id, manualText); }} disabled={!manualText.trim()}
+                        className="mt-2 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+                        Publish
+                      </button>
+                    </div>
+                  )}
+                </div>
               )}
 
               {/* Internal notes */}
@@ -836,7 +1103,7 @@ export function ReviewsPage() {
   async function loadReviews() {
     const { data } = await supabase
       .from('reviews')
-      .select('id, reviewer_name, rating, published_at, body, status, reply_draft, reply_text, location_id, notes, draft_history')
+      .select('id, reviewer_name, rating, published_at, body, status, reply_draft, reply_text, location_id, notes, draft_history, reply_published_at')
       .order('published_at', { ascending: false });
     if (data) setReviews(data as Review[]);
     setLoading(false);
@@ -915,6 +1182,14 @@ export function ReviewsPage() {
   const avgRating = reviews.length ? (reviews.reduce((s,r) => s + r.rating, 0) / reviews.length).toFixed(1) : '—';
   const hasFilters = !!(search || statusFilter !== 'all' || ratingFilter > 0 || locationFilter || dateFrom || dateTo);
 
+  // Stats bar computations
+  const repliedCount = reviews.filter(r => r.status === 'PUBLISHED').length;
+  const replyRate = reviews.length > 0 ? `${(repliedCount / reviews.length * 100).toFixed(0)}%` : '—';
+  const repliedWithTimes = reviews.filter(r => r.status === 'PUBLISHED' && r.reply_published_at && r.published_at);
+  const avgResponseTime = repliedWithTimes.length > 0
+    ? `${(repliedWithTimes.reduce((s, r) => s + Math.floor((new Date(r.reply_published_at!).getTime() - new Date(r.published_at!).getTime()) / 86400000), 0) / repliedWithTimes.length).toFixed(1)} days`
+    : '—';
+
   function locationName(id: string | null) { return id ? (locations.find(l => l.id === id)?.display_name ?? '') : ''; }
   function clearAll() { setSearch(''); setStatusFilter('all'); setRatingFilter(0); setLocationFilter(''); setDateFrom(''); setDateTo(''); setSortBy('newest'); setPage(1); }
 
@@ -924,7 +1199,6 @@ export function ReviewsPage() {
     if (error) { setToast({ message: error, type: 'error' }); setSyncing(false); return; }
     setToast({ message: `Synced ${synced} review${synced !== 1 ? 's' : ''}.`, type: 'success' });
     await loadReviews();
-    // Auto-generate drafts for new reviews
     const newReviews = reviews.filter(r => r.status === 'NEW');
     if (newReviews.length > 0) {
       for (const r of newReviews) { await googleService.generateDraft(r.id); }
@@ -935,7 +1209,6 @@ export function ReviewsPage() {
 
   async function handleGenerateDraft(id: string) {
     const review = reviews.find(r => r.id === id);
-    // Save current draft to history before regenerating
     if (review?.reply_draft) {
       const newHistory = [...(review.draft_history ?? []), { draft: review.reply_draft, created_at: new Date().toISOString() }];
       await supabase.from('reviews').update({ draft_history: newHistory }).eq('id', id);
@@ -962,12 +1235,33 @@ export function ReviewsPage() {
     setReviews(p => p.map(r => r.id === id ? { ...r, notes: note || null } : r));
   }
 
+  async function handleFlag(id: string) {
+    const review = reviews.find(r => r.id === id);
+    if (!review) return;
+    const newStatus: DbStatus = review.status === 'NEEDS_ATTENTION' ? 'NEW' : 'NEEDS_ATTENTION';
+    setReviews(p => p.map(r => r.id === id ? { ...r, status: newStatus } : r));
+    await supabase.from('reviews').update({ status: newStatus }).eq('id', id);
+  }
+
   async function handleBulkGenerate() {
     setBulkGenerating(true);
     const ids = [...selectedIds];
     for (const id of ids) { await handleGenerateDraft(id); }
     setSelectedIds(new Set()); setBulkGenerating(false);
     setToast({ message: `Generated drafts for ${ids.length} review${ids.length !== 1 ? 's' : ''}.`, type: 'success' });
+  }
+
+  async function handleBulkMarkAttention() {
+    const count = selectedIds.size;
+    await supabase.from('reviews').update({ status: 'NEEDS_ATTENTION' }).in('id', [...selectedIds]);
+    setSelectedIds(new Set());
+    await loadReviews();
+    setToast({ message: `Marked ${count} review${count !== 1 ? 's' : ''} as Needs Attention.`, type: 'success' });
+  }
+
+  function handleExportSelected() {
+    const selectedReviews = reviews.filter(r => selectedIds.has(r.id));
+    exportCSV(selectedReviews, locations);
   }
 
   function toggleSelect(id: string) {
@@ -1014,7 +1308,14 @@ export function ReviewsPage() {
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)}/>}
       {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
       {selectedIds.size > 0 && (
-        <BulkActionBar count={selectedIds.size} generating={bulkGenerating} onGenerate={handleBulkGenerate} onClear={() => setSelectedIds(new Set())}/>
+        <BulkActionBar
+          count={selectedIds.size}
+          generating={bulkGenerating}
+          onGenerate={handleBulkGenerate}
+          onClear={() => setSelectedIds(new Set())}
+          onMarkAttention={handleBulkMarkAttention}
+          onExportSelected={handleExportSelected}
+        />
       )}
 
       {/* Header */}
@@ -1050,13 +1351,34 @@ export function ReviewsPage() {
 
       {/* Chart — full width */}
       <div className="px-10 pt-4 pb-5 border-b border-[#E5EAE8] bg-white flex-shrink-0">
+        {/* Stats bar */}
+        <div className="flex gap-6 mb-4 flex-wrap">
+          <div className="bg-[#F9FAFB] rounded-lg px-4 py-2.5">
+            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Total Reviews</p>
+            <p className="text-lg font-bold text-[#111827]">{reviews.length}</p>
+          </div>
+          <div className="bg-[#F9FAFB] rounded-lg px-4 py-2.5">
+            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Rating</p>
+            <p className="text-lg font-bold text-amber-500">
+              {reviews.length ? `${(reviews.reduce((s,r) => s + r.rating, 0) / reviews.length).toFixed(1)} ★` : '—'}
+            </p>
+          </div>
+          <div className="bg-[#F9FAFB] rounded-lg px-4 py-2.5">
+            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Reply Rate</p>
+            <p className="text-lg font-bold text-[#111827]">{replyRate}</p>
+          </div>
+          <div className="bg-[#F9FAFB] rounded-lg px-4 py-2.5">
+            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Response Time</p>
+            <p className="text-lg font-bold text-[#111827]">{avgResponseTime}</p>
+          </div>
+        </div>
         <ReviewsLineChart reviews={reviews}/>
       </div>
 
       {/* Table + sticky filter bar */}
       <div className="flex-1 overflow-auto">
 
-        {/* Sticky filter bar — sits on top of table */}
+        {/* Sticky filter bar */}
         <div className="sticky top-0 z-20 bg-white border-b border-[#E5EAE8] px-10 py-2.5">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Status tabs */}
@@ -1105,6 +1427,13 @@ export function ReviewsPage() {
               options={[{value:'newest',label:'Newest first'},{value:'oldest',label:'Oldest first'},{value:'unanswered',label:'Unanswered first'},{value:'highest',label:'Highest rated'},{value:'lowest',label:'Lowest rated'}]}
             />
 
+            {reviews.length > 0 && (
+              <>
+                <div className="w-px h-5 bg-[#E5E7EB] mx-0.5 flex-shrink-0"/>
+                <StarDistributionDropdown reviews={reviews}/>
+              </>
+            )}
+
             {hasFilters && <button onClick={clearAll} className="text-xs text-[#9CA3AF] hover:text-red-500 font-medium transition-colors">Clear all</button>}
             {hasFilters && <span className="text-xs text-[#9CA3AF] ml-auto">{filtered.length} result{filtered.length!==1?'s':''}</span>}
 
@@ -1118,13 +1447,13 @@ export function ReviewsPage() {
                   placeholder="Preset name…"
                   className="text-xs border border-[#D1D5DB] rounded-lg px-2 py-1 focus:outline-none focus:border-[#0D4C3C] w-32"/>
                 <button onClick={savePreset} className="text-xs text-white bg-[#0D4C3C] px-2 py-1 rounded-lg hover:bg-[#083F32]">Save</button>
-                <button onClick={() => setShowPresetInput(false)} className="text-xs text-[#9CA3AF] hover:text-red-500">✕</button>
+                <button onClick={() => setShowPresetInput(false)} className="text-xs text-[#9CA3AF] hover:text-red-500">×</button>
               </div>
             )}
           </div>
 
           {presets.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
               <span className="text-xs text-[#9CA3AF]">Presets:</span>
               {presets.map(p => (
                 <div key={p.id} className="flex items-center gap-0.5 bg-[#F3F4F6] rounded-md px-2 py-0.5">
@@ -1182,6 +1511,7 @@ export function ReviewsPage() {
                   onPublish={handlePublish}
                   onDiscard={handleDiscard}
                   onSaveNote={handleSaveNote}
+                  onFlag={handleFlag}
                 />
               ))}
             </tbody>
