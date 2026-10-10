@@ -1215,7 +1215,7 @@ export function ReviewsPage() {
   }
 
   async function loadLocations() {
-    const { data } = await supabase.from('google_locations').select('id, display_name');
+    const { data } = await supabase.from('google_locations').select('id, display_name').eq('is_selected', true);
     if (data) setLocations(data as Location[]);
   }
 
