@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { brandBrainService, KeywordContext } from '@/features/brand-brain/brandBrain.service';
+import { useLocationStore } from '@/features/location/location.store';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Review = { id: string; body: string; rating: number; published_at: string; location_id: string | null };
-type Location = { id: string; display_name: string | null };
 type DateRange = '7d' | '30d' | '90d' | 'all';
 type Tab = 'keywords' | 'trends' | 'agent';
 
@@ -550,13 +550,12 @@ function FilterDropdown<T extends string>({ value, onChange, options }: {
 
 export function InsightsPage() {
   const [allReviews, setAllReviews] = useState<Review[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
   const [keywordContexts, setKeywordContexts] = useState<KeywordContext[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const { selectedId: globalLocationId } = useLocationStore();
   const [tab, setTab] = useState<Tab>('keywords');
   const [dateRange, setDateRange] = useState<DateRange>('30d');
-  const [locationId, setLocationId] = useState<string>('all');
   const [starFilter, setStarFilter] = useState<string>('all');
   const [showBigrams, setShowBigrams] = useState(false);
 
@@ -569,11 +568,9 @@ export function InsightsPage() {
   useEffect(() => {
     Promise.all([
       supabase.from('reviews').select('id, body, rating, published_at, location_id').order('published_at', { ascending: false }),
-      supabase.from('google_locations').select('id, display_name'),
       brandBrainService.load(),
-    ]).then(([revRes, locRes, brainRes]) => {
+    ]).then(([revRes, brainRes]) => {
       setAllReviews((revRes.data ?? []).filter(r => r.body));
-      setLocations(locRes.data ?? []);
       const kcs: KeywordContext[] = brainRes.data?.keyword_contexts ?? [];
       setKeywordContexts(kcs);
       setAddedKeywords(new Set(kcs.map(k => k.keyword.toLowerCase())));
@@ -593,10 +590,10 @@ export function InsightsPage() {
     let rs = allReviews;
     const cutoff = cutoffDate(dateRange);
     if (cutoff) rs = rs.filter(r => r.published_at && new Date(r.published_at) >= cutoff);
-    if (locationId !== 'all') rs = rs.filter(r => r.location_id === locationId);
+    if (globalLocationId) rs = rs.filter(r => r.location_id === globalLocationId);
     if (starFilter !== 'all') rs = rs.filter(r => String(r.rating) === starFilter);
     return rs;
-  }, [allReviews, dateRange, locationId, starFilter]);
+  }, [allReviews, dateRange, globalLocationId, starFilter]);
 
   const positiveReviews = useMemo(() => reviews.filter(r => r.rating >= 4), [reviews]);
   const negativeReviews = useMemo(() => reviews.filter(r => r.rating <= 2), [reviews]);
@@ -660,11 +657,6 @@ export function InsightsPage() {
     { value: '30d', label: 'Last 30 days' },
     { value: '90d', label: 'Last 90 days' },
     { value: 'all', label: 'All time' },
-  ];
-
-  const locationOptions = [
-    { value: 'all', label: 'All locations' },
-    ...locations.map(l => ({ value: l.id, label: l.display_name ?? l.id })),
   ];
 
   const starOptions = [
@@ -752,9 +744,6 @@ export function InsightsPage() {
       {tab !== 'agent' && (
         <div className="px-8 py-3 flex-shrink-0 bg-[#F8FAF9] border-b border-[#E5EAE8] flex items-center gap-2.5 flex-wrap">
           <FilterDropdown value={dateRange} onChange={setDateRange} options={dateOptions}/>
-          {locations.length > 0 && (
-            <FilterDropdown value={locationId} onChange={setLocationId} options={locationOptions}/>
-          )}
           <FilterDropdown value={starFilter} onChange={setStarFilter} options={starOptions}/>
           {tab === 'keywords' && (
             <button
@@ -769,8 +758,8 @@ export function InsightsPage() {
               {showBigrams ? 'Phrases (2-word)' : 'Single words'}
             </button>
           )}
-          {(dateRange !== '30d' || locationId !== 'all' || starFilter !== 'all') && (
-            <button onClick={() => { setDateRange('30d'); setLocationId('all'); setStarFilter('all'); }}
+          {(dateRange !== '30d' || starFilter !== 'all') && (
+            <button onClick={() => { setDateRange('30d'); setStarFilter('all'); }}
               className="text-xs text-[#9CA3AF] hover:text-[#374151] transition-colors underline">
               Reset filters
             </button>

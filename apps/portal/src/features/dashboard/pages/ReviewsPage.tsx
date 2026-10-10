@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { googleService } from '@/features/google/google.service';
+import { useLocationStore } from '@/features/location/location.store';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -1172,6 +1173,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function ReviewsPage() {
+  const { selectedId: globalLocationId } = useLocationStore();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1253,6 +1255,7 @@ export function ReviewsPage() {
     let list = reviews.filter(r => {
       if (statusFilter !== 'all' && toUiStatus(r.status) !== statusFilter) return false;
       if (ratingFilter > 0 && r.rating !== ratingFilter) return false;
+      if (globalLocationId && r.location_id !== globalLocationId) return false;
       if (locationFilter && r.location_id !== locationFilter) return false;
       if (search) { const q = search.toLowerCase(); if (!r.reviewer_name?.toLowerCase().includes(q) && !r.body?.toLowerCase().includes(q)) return false; }
       if (dateFrom && r.published_at && r.published_at < dateFrom) return false;
@@ -1270,7 +1273,7 @@ export function ReviewsPage() {
       return (a.published_at ?? '') < (b.published_at ?? '') ? -1 : 1;
     });
     return list;
-  }, [reviews, statusFilter, ratingFilter, locationFilter, search, dateFrom, dateTo, sortBy, flagFilter]);
+  }, [reviews, statusFilter, ratingFilter, globalLocationId, locationFilter, search, dateFrom, dateTo, sortBy, flagFilter]);
 
   useEffect(() => { filteredRef.current = filtered; }, [filtered]);
 
@@ -1499,13 +1502,6 @@ export function ReviewsPage() {
               options={[{value:'0',label:'All ratings'},{value:'5',label:'5 stars'},{value:'4',label:'4 stars'},{value:'3',label:'3 stars'},{value:'2',label:'2 stars'},{value:'1',label:'1 star'}]}
             />
 
-            {locations.length > 0 && (
-              <FilterDropdown label="Location" value={locationFilter}
-                onChange={v => { setLocationFilter(v); setPage(1); }}
-                icon={<svg className="w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>}
-                options={[{value:'',label:'All locations'},...locations.map(l => ({value:l.id,label:l.display_name??l.id}))]}
-              />
-            )}
 
             <DateRangePicker from={dateFrom} to={dateTo} onChange={(f,t) => { setDateFrom(f); setDateTo(t); setPage(1); }}/>
 
