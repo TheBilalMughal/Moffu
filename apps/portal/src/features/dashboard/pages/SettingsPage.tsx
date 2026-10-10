@@ -64,13 +64,18 @@ export function SettingsPage() {
   async function handleConnect() {
     setConnectingGoogle(true);
     setErrorMsg('');
-    const { auth_url, error } = await googleService.startOAuth();
-    if (error || !auth_url) {
-      setErrorMsg(error ?? 'Could not start Google connection.');
+    try {
+      const { auth_url, error } = await googleService.startOAuth();
+      if (error || !auth_url) {
+        setErrorMsg(error ?? 'Could not start Google connection.');
+        setConnectingGoogle(false);
+        return;
+      }
+      window.location.href = auth_url;
+    } catch {
+      setErrorMsg('Network error — could not reach server.');
       setConnectingGoogle(false);
-      return;
     }
-    window.location.href = auth_url;
   }
 
   async function handleDisconnect() {
