@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     // Fetch brand brain settings
     const { data: brain } = await supabase
       .from('brand_brain')
-      .select('business_name, tone, reply_length, address_by_name, use_emoji, primary_language, negative_handling, prohibited_phrases, example_reply')
+      .select('business_name, tone, reply_length, use_customer_name, use_emoji, primary_language, negative_rule, prohibited_phrases, example_reply')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -56,12 +56,12 @@ Deno.serve(async (req) => {
       brain?.reply_length === 'Short' ? '1-2 sentences' :
       brain?.reply_length === 'Long'  ? '4-5 sentences' :
                                         '2-3 sentences';
-    const addressByName = brain?.address_by_name ?? false;
+    const addressByName = brain?.use_customer_name ?? false;
     const useEmoji = brain?.use_emoji ?? false;
     const language = brain?.primary_language ?? 'English';
     const prohibited = (brain?.prohibited_phrases as string[] ?? []).join(', ');
     const exampleReply = brain?.example_reply ?? '';
-    const negativeHandling = brain?.negative_handling ?? 'Normal';
+    const negativeHandling = brain?.negative_rule ?? 'Normal';
 
     const firstName = (review.reviewer_name ?? '').split(' ')[0] || 'there';
 
