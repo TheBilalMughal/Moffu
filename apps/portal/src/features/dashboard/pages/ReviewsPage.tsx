@@ -1431,11 +1431,11 @@ export function ReviewsPage() {
         />
       </div>
 
-      {/* Table + sticky filter bar */}
-      <div className="flex-1 overflow-auto">
+      {/* Filter bar + Table */}
+      <div className="flex-1 flex flex-col min-h-0">
 
-        {/* Sticky filter bar */}
-        <div className="sticky top-0 z-20 bg-white border-b border-[#E5EAE8] px-10 py-2.5">
+        {/* Filter bar — outside scroll, always visible */}
+        <div className="flex-shrink-0 bg-white border-b border-[#E5EAE8] px-10 py-2.5">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Status tabs */}
             {(['all','pending','draft_ready','replied'] as const).map(key => {
@@ -1521,6 +1521,8 @@ export function ReviewsPage() {
           )}
         </div>
 
+        {/* Scrollable table area */}
+        <div className="flex-1 overflow-auto">
         {loading ? (
           <div className="px-10 py-4 space-y-2">{[1,2,3,4,5].map(n => <div key={n} className="h-12 bg-[#F3F4F6] rounded-lg animate-pulse"/>)}</div>
         ) : paginated.length === 0 ? (
@@ -1599,6 +1601,7 @@ export function ReviewsPage() {
           </div>
         </div>
       )}
+      </div>{/* end filter bar + table flex col */}
     </div>
   );
 }
