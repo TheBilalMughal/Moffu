@@ -146,39 +146,68 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-// ── Status Breakdown Chart ────────────────────────────────────────────────────
+// ── Weekly Line Chart ─────────────────────────────────────────────────────────
 
-function StatusBreakdownChart({ counts }: {
-  counts: { all: number; pending: number; draft_ready: number; replied: number };
-}) {
-  const total = counts.all;
-  const segments = [
-    { key: 'pending',    color: '#F59E0B', label: 'Pending',    count: counts.pending },
-    { key: 'draft_ready',color: '#60A5FA', label: 'Draft Ready',count: counts.draft_ready },
-    { key: 'replied',    color: '#0D4C3C', label: 'Replied',    count: counts.replied },
-  ];
+function WeeklyLineChart({ reviews }: { reviews: Review[] }) {
+  const { days, counts, maxVal } = useMemo(() => {
+    const now = new Date();
+    const days: string[] = [];
+    const counts: number[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      days.push(['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()] ?? '');
+      const iso = d.toISOString().split('T')[0] ?? '';
+      counts.push(reviews.filter(r => r.published_at?.startsWith(iso)).length);
+    }
+    return { days, counts, maxVal: Math.max(...counts, 4) };
+  }, [reviews]);
+
+  const W = 900; const H = 100;
+  const PAD = { top: 12, right: 16, bottom: 28, left: 28 };
+  const innerW = W - PAD.left - PAD.right;
+  const innerH = H - PAD.top - PAD.bottom;
+
+  const xStep = innerW / 6;
+  const yTicks = [0, Math.round(maxVal / 2), maxVal];
+
+  const pts = counts.map((v, i) => ({
+    x: PAD.left + i * xStep,
+    y: PAD.top + innerH - (v / maxVal) * innerH,
+  }));
+
+  const linePath = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  const areaPath = `${linePath} L ${pts[pts.length - 1]!.x} ${PAD.top + innerH} L ${pts[0]!.x} ${PAD.top + innerH} Z`;
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Stacked bar */}
-      <div className="flex rounded-full overflow-hidden h-2 w-44 bg-[#F3F4F6]">
-        {total > 0 && segments.map(s => (
-          <div key={s.key}
-            title={`${s.label}: ${s.count}`}
-            style={{ width: `${(s.count / total) * 100}%`, backgroundColor: s.color }}
-          />
-        ))}
-      </div>
-      {/* Legend */}
-      <div className="flex items-center gap-3.5">
-        {segments.map(s => (
-          <span key={s.key} className="flex items-center gap-1.5 text-[10px] text-[#6B7280] whitespace-nowrap">
-            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }}/>
-            <span className="font-medium text-[#374151]">{s.count}</span> {s.label}
-          </span>
-        ))}
-      </div>
-    </div>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 80 }} aria-hidden="true">
+      {/* Y-axis grid lines + labels */}
+      {yTicks.map(v => {
+        const y = PAD.top + innerH - (v / maxVal) * innerH;
+        return (
+          <g key={v}>
+            <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y}
+              stroke="#E5E7EB" strokeWidth={1} strokeDasharray="4 3"/>
+            <text x={PAD.left - 6} y={y + 3.5} textAnchor="end"
+              fontSize={9} fill="#9CA3AF">{v}</text>
+          </g>
+        );
+      })}
+
+      {/* Area fill */}
+      <path d={areaPath} fill="#0D4C3C" fillOpacity={0.06}/>
+
+      {/* Line */}
+      <path d={linePath} fill="none" stroke="#0D4C3C" strokeWidth={1.75} strokeLinejoin="round" strokeLinecap="round"/>
+
+      {/* Dots + x-labels */}
+      {pts.map((p, i) => (
+        <g key={i}>
+          <circle cx={p.x} cy={p.y} r={3} fill="#0D4C3C" fillOpacity={counts[i]! > 0 ? 1 : 0.3}/>
+          <text x={p.x} y={H - 4} textAnchor="middle" fontSize={9} fill="#9CA3AF">{days[i]}</text>
+        </g>
+      ))}
+    </svg>
   );
 }
 
@@ -870,16 +899,9 @@ export function ReviewsPage() {
 
       {/* Header */}
       <div className="px-10 py-4 border-b border-[#E5EAE8] bg-white flex items-center justify-between gap-4 flex-shrink-0">
-        <div className="flex items-end gap-6">
-          <div>
-            <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
-            <p className="text-xs text-[#9CA3AF] mt-0.5">{reviews.length} total · avg {avgRating}★</p>
-          </div>
-          {/* Status breakdown chart */}
-          <div className="pb-1">
-            <p className="text-[10px] text-[#9CA3AF] mb-2">Review breakdown</p>
-            <StatusBreakdownChart counts={counts}/>
-          </div>
+        <div>
+          <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
+          <p className="text-xs text-[#9CA3AF] mt-0.5">{reviews.length} total · avg {avgRating}★</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setShowShortcuts(true)} title="Keyboard shortcuts"
@@ -904,6 +926,11 @@ export function ReviewsPage() {
             {syncing ? 'Syncing…' : 'Sync Reviews'}
           </button>
         </div>
+      </div>
+
+      {/* Weekly chart */}
+      <div className="px-10 pt-4 pb-2 border-b border-[#E5EAE8] bg-white flex-shrink-0">
+        <WeeklyLineChart reviews={reviews}/>
       </div>
 
       {/* Filters */}
