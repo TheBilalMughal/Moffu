@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { googleService } from './google.service';
+import { supabase } from '@/lib/supabase';
 
 export function GoogleCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -25,12 +26,18 @@ export function GoogleCallbackPage() {
       return;
     }
 
-    googleService.handleCallback(code, state).then(({ error: err }) => {
+    googleService.handleCallback(code, state).then(async ({ error: err }) => {
       if (err) {
         setErrorMsg(err);
         setStatus('error');
       } else {
-        navigate('/settings?google=connected', { replace: true });
+        const { data: { user } } = await supabase.auth.getUser();
+        const onboardingDone = user?.user_metadata?.onboarding_completed;
+        if (!onboardingDone) {
+          navigate('/dashboard?step=select', { replace: true });
+        } else {
+          navigate('/settings?google=connected', { replace: true });
+        }
       }
     });
   }, []);

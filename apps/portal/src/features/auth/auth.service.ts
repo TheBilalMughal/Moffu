@@ -92,6 +92,15 @@ export const authService = {
     return {};
   },
 
+  async loginWithGoogle(): Promise<{ error?: AuthServiceError }> {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${env.appUrl}/dashboard` },
+    });
+    if (error) return { error: toServiceError(error) };
+    return {};
+  },
+
   getSession() {
     return supabase.auth.getSession();
   },

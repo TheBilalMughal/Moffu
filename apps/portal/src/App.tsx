@@ -4,7 +4,6 @@ import { useAuthStore } from '@/features/auth/auth.store';
 import { authService } from '@/features/auth/auth.service';
 import { AuthGuard, GuestGuard } from '@/components/AuthGuard';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
-import { SignupPage } from '@/features/auth/pages/SignupPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage';
@@ -35,14 +34,7 @@ export function App() {
             </GuestGuard>
           }
         />
-        <Route
-          path="/auth/signup"
-          element={
-            <GuestGuard>
-              <SignupPage />
-            </GuestGuard>
-          }
-        />
+        <Route path="/auth/signup" element={<Navigate to="/auth/login" replace />} />
         <Route
           path="/auth/forgot-password"
           element={
