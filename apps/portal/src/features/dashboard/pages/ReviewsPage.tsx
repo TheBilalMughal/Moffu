@@ -351,74 +351,53 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
   }, [data]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
-      {/* Left: summary + legend + stat cards */}
-      <div className="flex flex-col">
-        <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-2xl font-bold text-[#111827]">{totalInPeriod}</span>
-          {showComparison && prevData.length > 0 && (
-            <span className={`text-sm font-semibold ${delta > 0 ? 'text-emerald-500' : delta < 0 ? 'text-red-500' : 'text-[#9CA3AF]'}`}>
-              ({delta > 0 ? '+' : ''}{delta})
-            </span>
+    <div>
+      {/* Top row: summary+legend left, controls right */}
+      <div className="flex items-start justify-between gap-4 mb-3 flex-wrap">
+        <div>
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-2xl font-bold text-[#111827]">{totalInPeriod}</span>
+            {showComparison && prevData.length > 0 && (
+              <span className={`text-sm font-semibold ${delta > 0 ? 'text-emerald-500' : delta < 0 ? 'text-red-500' : 'text-[#9CA3AF]'}`}>
+                ({delta > 0 ? '+' : ''}{delta})
+              </span>
+            )}
+            <span className="text-sm text-[#9CA3AF]">reviews · {PERIOD_LABELS[period].toLowerCase()}</span>
+          </div>
+          {/* Legend */}
+          {(showRating || showSentiment || showComparison) && (
+            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+              {!showSentiment && (
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-1.5 rounded-full bg-[#0D4C3C]"/>
+                  <span className="text-xs text-[#6B7280]">Reviews</span>
+                </div>
+              )}
+              {showRating && !showSentiment && (
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-1.5 rounded-full bg-amber-400"/>
+                  <span className="text-xs text-[#6B7280]">Avg Rating</span>
+                </div>
+              )}
+              {showSentiment && (
+                <>
+                  <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-emerald-500"/><span className="text-xs text-[#6B7280]">Positive</span></div>
+                  <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-[#9CA3AF]"/><span className="text-xs text-[#6B7280]">Neutral</span></div>
+                  <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-red-500"/><span className="text-xs text-[#6B7280]">Negative</span></div>
+                </>
+              )}
+              {showComparison && (
+                <div className="flex items-center gap-1.5">
+                  <svg width="16" height="6" viewBox="0 0 16 6"><line x1="0" y1="3" x2="16" y2="3" stroke="#9CA3AF" strokeWidth="1.5" strokeDasharray="4 2"/></svg>
+                  <span className="text-xs text-[#6B7280]">Prev period</span>
+                </div>
+              )}
+            </div>
           )}
-          <span className="text-sm text-[#9CA3AF]">reviews · {PERIOD_LABELS[period].toLowerCase()}</span>
         </div>
 
-        {/* Legend */}
-        {(showRating || showSentiment || showComparison) && (
-          <div className="flex items-center gap-3 mt-2 flex-wrap">
-            {!showSentiment && (
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-1.5 rounded-full bg-[#0D4C3C]"/>
-                <span className="text-xs text-[#6B7280]">Reviews</span>
-              </div>
-            )}
-            {showRating && !showSentiment && (
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-1.5 rounded-full bg-amber-400"/>
-                <span className="text-xs text-[#6B7280]">Avg Rating</span>
-              </div>
-            )}
-            {showSentiment && (
-              <>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-emerald-500"/><span className="text-xs text-[#6B7280]">Positive</span></div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-[#9CA3AF]"/><span className="text-xs text-[#6B7280]">Neutral</span></div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-red-500"/><span className="text-xs text-[#6B7280]">Negative</span></div>
-              </>
-            )}
-            {showComparison && (
-              <div className="flex items-center gap-1.5">
-                <svg width="16" height="6" viewBox="0 0 16 6"><line x1="0" y1="3" x2="16" y2="3" stroke="#9CA3AF" strokeWidth="1.5" strokeDasharray="4 2"/></svg>
-                <span className="text-xs text-[#6B7280]">Prev period</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Stat cards — single row */}
-        <div className="grid grid-cols-4 gap-3 mt-4">
-          <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
-            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Total Reviews</p>
-            <p className="text-lg font-bold text-[#111827]">{totalReviews}</p>
-          </div>
-          <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
-            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Rating</p>
-            <p className="text-lg font-bold text-amber-500">{avgRatingStr}</p>
-          </div>
-          <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
-            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Reply Rate</p>
-            <p className="text-lg font-bold text-[#111827]">{replyRateProp}</p>
-          </div>
-          <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
-            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Response Time</p>
-            <p className="text-lg font-bold text-[#111827]">{avgResponseTimeProp}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Right: controls + chart */}
-      <div>
-        <div className="flex items-center justify-end gap-1.5 flex-wrap mb-3">
+        {/* Controls */}
+        <div className="flex items-center gap-1.5 flex-wrap flex-shrink-0">
           <button onClick={() => setShowRating(s => !s)}
             className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${showRating ? 'bg-amber-50 text-amber-600 border border-amber-200' : 'text-[#6B7280] bg-[#F3F4F6]'}`}>
             Avg Rating
@@ -440,9 +419,10 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
             ))}
           </div>
         </div>
+      </div>
 
-        {/* SVG chart */}
-        <div className="relative w-full" onMouseLeave={() => setHovered(null)}>
+      {/* SVG chart — full width */}
+      <div className="relative w-full" onMouseLeave={() => setHovered(null)}>
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 130 }} aria-hidden="true">
           <defs>
             <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
@@ -518,6 +498,25 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
             </div>
           );
         })()}
+        </div>
+
+      {/* Stat cards — full width single row */}
+      <div className="grid grid-cols-4 gap-3 mt-4">
+        <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
+          <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Total Reviews</p>
+          <p className="text-lg font-bold text-[#111827]">{totalReviews}</p>
+        </div>
+        <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
+          <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Rating</p>
+          <p className="text-lg font-bold text-amber-500">{avgRatingStr}</p>
+        </div>
+        <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
+          <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Reply Rate</p>
+          <p className="text-lg font-bold text-[#111827]">{replyRateProp}</p>
+        </div>
+        <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
+          <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Response Time</p>
+          <p className="text-lg font-bold text-[#111827]">{avgResponseTimeProp}</p>
         </div>
       </div>
     </div>
