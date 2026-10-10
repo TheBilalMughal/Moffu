@@ -450,11 +450,15 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
               </button>
             ))}
           </div>
-          <DateRangePicker
-            from={chartFrom}
-            to={chartTo}
-            onChange={(f, t) => { setChartFrom(f); setChartTo(t); if (f && t) setPeriod('custom'); }}
-          />
+          <div className="flex items-center bg-[#F3F4F6] rounded-lg p-0.5">
+            <DateRangePicker
+              from={chartFrom}
+              to={chartTo}
+              onChange={(f, t) => { setChartFrom(f); setChartTo(t); if (f && t) setPeriod('custom'); }}
+              pill
+              alignRight
+            />
+          </div>
         </div>
       </div>
 
@@ -782,7 +786,7 @@ function CalMonth({ year, month, from, to, hovered, onDay, onHover }: {
   );
 }
 
-function DateRangePicker({ from, to, onChange }: { from: string; to: string; onChange: (f: string, t: string) => void }) {
+function DateRangePicker({ from, to, onChange, pill = false, alignRight = false }: { from: string; to: string; onChange: (f: string, t: string) => void; pill?: boolean; alignRight?: boolean }) {
   const [open, setOpen] = useState(false);
   const [selecting, setSelecting] = useState<'from'|'to'>('from');
   const [hovered, setHovered] = useState<Date | null>(null);
@@ -810,8 +814,10 @@ function DateRangePicker({ from, to, onChange }: { from: string; to: string; onC
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border transition-colors ${hasValue ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
-        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        className={pill
+          ? `px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${hasValue ? 'bg-white text-[#111827] shadow-sm' : 'text-[#6B7280] hover:text-[#374151]'}`
+          : `flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border transition-colors ${hasValue ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+        <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
         <span>{label}</span>
@@ -820,7 +826,7 @@ function DateRangePicker({ from, to, onChange }: { from: string; to: string; onC
         </span>}
       </button>
       {open && (
-        <div className="absolute top-full mt-2 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg p-4 min-w-max">
+        <div className={`absolute top-full mt-2 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg p-4 min-w-max ${alignRight ? 'right-0' : 'left-0'}`}>
           <div className="flex items-center justify-between mb-3">
             <button onClick={() => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y-1); } else setViewMonth(m => m-1); }}
               className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
