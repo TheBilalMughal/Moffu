@@ -308,7 +308,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
   const yTicks = Array.from({ length: yTickCount + 1 }, (_, i) => Math.round((maxVal * i) / yTickCount));
 
   const W = 1000; const H = 130;
-  const PAD = { top: 16, right: showRating && !showSentiment ? 44 : 20, bottom: 32, left: 36 };
+  const PAD = { top: 10, right: showRating && !showSentiment ? 36 : 6, bottom: 28, left: 6 };
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
@@ -436,7 +436,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
             return (
               <g key={v}>
                 <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#F3F4F6" strokeWidth={1}/>
-                <text x={PAD.left - 8} y={y + 4} textAnchor="end" fontSize={10} fill="#D1D5DB">{v}</text>
+                <text x={PAD.left + 4} y={y - 3} fontSize={9} fill="#D1D5DB">{v}</text>
               </g>
             );
           })}
