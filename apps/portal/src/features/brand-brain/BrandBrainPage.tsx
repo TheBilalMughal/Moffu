@@ -533,41 +533,49 @@ function Step4({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
         <div className="space-y-5">
 
           {/* Language */}
-          <div className="space-y-4 p-4 bg-[#F8FAF9] rounded-xl border border-[#E5EAE8]">
-            <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide">Language</h3>
-            <div>
-              <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">Primary language</label>
-              <SelectField value={data.primary_language} onChange={v => onChange({ primary_language: v })} options={LANGUAGES}/>
+          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden bg-[#FAFAFA]">
+            <div className="px-4 py-3 bg-white border-b border-[#E5EAE8]">
+              <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide">Language</h3>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#6B7280] mb-2">When reviewer writes in a different language</label>
-              <div className="space-y-2">
-                {[
-                  { key: 'primary' as const, label: 'Always reply in my primary language' },
-                  { key: 'match'   as const, label: "Match the reviewer's language" },
-                ].map(opt => (
-                  <label key={opt.key} className="flex items-center gap-3 cursor-pointer" onClick={() => onChange({ reviewer_lang_behaviour: opt.key })}>
-                    <Radio checked={data.reviewer_lang_behaviour === opt.key} onClick={() => onChange({ reviewer_lang_behaviour: opt.key })}/>
-                    <span className="text-sm text-[#374151]">{opt.label}</span>
-                  </label>
-                ))}
+            <div className="px-4 py-4 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">Primary language</label>
+                <SelectField value={data.primary_language} onChange={v => onChange({ primary_language: v })} options={LANGUAGES}/>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-[#6B7280] mb-2">When reviewer writes in a different language</label>
+                <div className="space-y-2">
+                  {[
+                    { key: 'primary' as const, label: 'Always reply in my primary language' },
+                    { key: 'match'   as const, label: "Match the reviewer's language" },
+                  ].map(opt => (
+                    <label key={opt.key} className="flex items-center gap-3 cursor-pointer" onClick={() => onChange({ reviewer_lang_behaviour: opt.key })}>
+                      <Radio checked={data.reviewer_lang_behaviour === opt.key} onClick={() => onChange({ reviewer_lang_behaviour: opt.key })}/>
+                      <span className="text-sm text-[#374151]">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Negative handling */}
-          <div className="space-y-2.5">
-            <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide">Negative review handling (1–2 stars)</h3>
-            {NEGATIVE_OPTS.map(opt => (
-              <div key={opt.key} onClick={() => onChange({ negative_rule: opt.key })}
-                className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${data.negative_rule === opt.key ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#E5EAE8] hover:border-[#0D4C3C]/40'}`}>
-                <div className="mt-0.5"><Radio checked={data.negative_rule === opt.key} onClick={() => onChange({ negative_rule: opt.key })}/></div>
-                <div>
-                  <p className={`text-sm font-bold ${data.negative_rule === opt.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>{opt.label}</p>
-                  <p className="text-xs text-[#6B7280] mt-0.5">{opt.desc}</p>
+          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden bg-[#FAFAFA]">
+            <div className="px-4 py-3 bg-white border-b border-[#E5EAE8]">
+              <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide">Negative review handling (1–2 stars)</h3>
+            </div>
+            <div className="px-4 py-4 space-y-2.5">
+              {NEGATIVE_OPTS.map(opt => (
+                <div key={opt.key} onClick={() => onChange({ negative_rule: opt.key })}
+                  className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${data.negative_rule === opt.key ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#E5EAE8] bg-white hover:border-[#0D4C3C]/40'}`}>
+                  <div className="mt-0.5"><Radio checked={data.negative_rule === opt.key} onClick={() => onChange({ negative_rule: opt.key })}/></div>
+                  <div>
+                    <p className={`text-sm font-bold ${data.negative_rule === opt.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>{opt.label}</p>
+                    <p className="text-xs text-[#6B7280] mt-0.5">{opt.desc}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
         </div>
