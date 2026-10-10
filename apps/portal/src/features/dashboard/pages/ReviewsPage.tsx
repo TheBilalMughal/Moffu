@@ -499,7 +499,7 @@ export function ReviewsPage() {
   }
 
   async function handleSync() {
-    setSyncing(true); setSyncMsg(''); setSyncError('');
+    setSyncing(true);
     const { synced, error } = await googleService.syncReviews();
     if (error) setToast({ message: error, type: 'error' });
     else { setToast({ message: `Synced ${synced} review${synced !== 1 ? 's' : ''}.`, type: 'success' }); await loadReviews(); }
