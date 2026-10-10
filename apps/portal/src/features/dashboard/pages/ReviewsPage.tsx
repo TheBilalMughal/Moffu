@@ -108,12 +108,13 @@ function ReviewCard({
         <div className="pt-3 border-t border-[#F3F4F6]">
           <button
             onClick={() => onGenerateDraft(review.id)}
-            className="flex items-center gap-2 text-sm font-medium text-[#0D4C3C] hover:text-[#083F32] transition-colors"
+            disabled={review.status === 'DRAFTING'}
+            className="flex items-center gap-2 text-sm font-medium text-[#0D4C3C] hover:text-[#083F32] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <svg className={`w-4 h-4 ${review.status === 'DRAFTING' ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
             </svg>
-            Generate AI Draft
+            {review.status === 'DRAFTING' ? 'Generating…' : 'Generate AI Draft'}
           </button>
         </div>
       )}
@@ -229,12 +230,14 @@ export function ReviewsPage() {
   }
 
   async function handleGenerateDraft(id: string) {
-    // Phase 5: AI generation. For now, set a placeholder draft in DB.
-    await supabase
-      .from('reviews')
-      .update({ status: 'DRAFT_READY', reply_draft: 'Thank you for taking the time to share your feedback! We really appreciate your honest review and will use it to continue improving our service. We hope to serve you again soon!' })
-      .eq('id', id);
-    await loadReviews();
+    setReviews((prev) => prev.map((r) => r.id === id ? { ...r, status: 'DRAFTING' as const } : r));
+    const { error } = await googleService.generateDraft(id);
+    if (error) {
+      setReviews((prev) => prev.map((r) => r.id === id ? { ...r, status: 'NEW' as const } : r));
+      setSyncError(error);
+    } else {
+      await loadReviews();
+    }
   }
 
   async function handlePublish(id: string, draft: string): Promise<{ error?: string }> {

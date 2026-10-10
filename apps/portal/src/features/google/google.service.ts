@@ -109,6 +109,20 @@ export const googleService = {
     return {};
   },
 
+  async generateDraft(reviewId: string): Promise<{ draft?: string; error?: string }> {
+    const auth = await getAuthHeader();
+    if (!auth) return { error: 'Not authenticated' };
+
+    const res = await fetch(`${BASE}/ai-generate-draft`, {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ review_id: reviewId }),
+    });
+    const json = await res.json();
+    if (!res.ok) return { error: json.error ?? 'AI generation failed' };
+    return { draft: json.draft };
+  },
+
   async publishReply(reviewId: string, replyText: string): Promise<{ error?: string }> {
     const auth = await getAuthHeader();
     if (!auth) return { error: 'Not authenticated' };

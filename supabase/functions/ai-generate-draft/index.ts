@@ -1,0 +1,134 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')!;
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+  });
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) return json({ error: 'Unauthorized' }, 401);
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+    if (userError || !user) return json({ error: 'Unauthorized' }, 401);
+
+    const { review_id } = await req.json();
+    if (!review_id) return json({ error: 'Missing review_id' }, 400);
+
+    // Fetch review
+    const { data: review, error: reviewError } = await supabase
+      .from('reviews')
+      .select('reviewer_name, rating, body')
+      .eq('id', review_id)
+      .eq('user_id', user.id)
+      .single();
+
+    if (reviewError || !review) return json({ error: 'Review not found' }, 404);
+
+    // Fetch brand brain settings
+    const { data: brain } = await supabase
+      .from('brand_brain')
+      .select('business_name, tone, reply_length, address_by_name, use_emoji, primary_language, negative_handling, prohibited_phrases, example_reply')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    const businessName = brain?.business_name ?? 'our business';
+    const tone = brain?.tone ?? 'Professional';
+    const lengthGuide =
+      brain?.reply_length === 'Short' ? '1-2 sentences' :
+      brain?.reply_length === 'Long'  ? '4-5 sentences' :
+                                        '2-3 sentences';
+    const addressByName = brain?.address_by_name ?? false;
+    const useEmoji = brain?.use_emoji ?? false;
+    const language = brain?.primary_language ?? 'English';
+    const prohibited = (brain?.prohibited_phrases as string[] ?? []).join(', ');
+    const exampleReply = brain?.example_reply ?? '';
+    const negativeHandling = brain?.negative_handling ?? 'Normal';
+
+    const firstName = (review.reviewer_name ?? '').split(' ')[0] || 'there';
+
+    const prompt = [
+      `You are writing a Google Business review reply on behalf of ${businessName}.`,
+      '',
+      `Review (${review.rating}/5 stars):`,
+      `"${review.body ?? '(no text provided)'}"`,
+      `Reviewer: ${review.reviewer_name ?? 'Anonymous'}`,
+      '',
+      'Instructions:',
+      `- Tone: ${tone}`,
+      `- Length: ${lengthGuide}`,
+      `- Language: ${language}`,
+      addressByName
+        ? `- Address the reviewer by first name: ${firstName}`
+        : '- Do not address the reviewer by name',
+      useEmoji
+        ? '- You may use 1-2 relevant emojis'
+        : '- Do not use emojis',
+      prohibited
+        ? `- Do NOT use any of these phrases: ${prohibited}`
+        : '',
+      review.rating <= 2
+        ? `- This is a negative review. Handling: ${negativeHandling}. Be empathetic, acknowledge the concern, and offer to resolve it offline if appropriate.`
+        : '',
+      exampleReply
+        ? `\nMatch the tone and style of this example reply:\n"${exampleReply}"`
+        : '',
+      '',
+      'Write ONLY the reply text. No intro, no labels, no quotation marks.',
+    ].filter(Boolean).join('\n');
+
+    // Call Gemini
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 300 },
+        }),
+      }
+    );
+
+    if (!geminiRes.ok) {
+      const err = await geminiRes.text();
+      console.error('Gemini API error:', geminiRes.status, err);
+      return json({ error: 'AI generation failed' }, 500);
+    }
+
+    const geminiData = await geminiRes.json();
+    const draft = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+
+    if (!draft) return json({ error: 'Empty response from AI' }, 500);
+
+    // Save draft to DB and set status DRAFT_READY
+    await supabase
+      .from('reviews')
+      .update({ reply_draft: draft, status: 'DRAFT_READY' })
+      .eq('id', review_id)
+      .eq('user_id', user.id);
+
+    return json({ draft });
+  } catch (err) {
+    console.error('ai-generate-draft error:', err);
+    return json({ error: 'Internal error' }, 500);
+  }
+});
