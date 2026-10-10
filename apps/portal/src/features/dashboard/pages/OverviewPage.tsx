@@ -102,8 +102,8 @@ function OnboardingModal({ initialStage, onComplete }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
       <div className="bg-white rounded-2xl border border-[#E5EAE8] shadow-xl w-full max-w-lg mx-4 relative overflow-hidden">
 
-        {/* X button — only way to dismiss (disabled during sync) */}
-        {stage !== 'syncing' && (
+        {/* X button — not shown on connect (forced) or syncing stages */}
+        {stage !== 'connect' && stage !== 'syncing' && (
           <button
             onClick={handleClose}
             className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F3F4F6] text-[#9CA3AF] hover:text-[#374151] transition-colors z-10"
