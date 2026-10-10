@@ -94,7 +94,10 @@ function OnboardingModal({ initialStage, onComplete }: {
   }
 
   async function handleClose() {
-    await supabase.auth.updateUser({ data: { onboarding_completed: true } });
+    // Only mark onboarding complete on the final done stage
+    if (stage === 'done') {
+      await supabase.auth.updateUser({ data: { onboarding_completed: true } });
+    }
     onComplete();
   }
 
