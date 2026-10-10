@@ -1048,95 +1048,100 @@ export function ReviewsPage() {
         </div>
       </div>
 
-      {/* Reviews trend chart */}
-      <div className="px-10 pt-5 pb-4 border-b border-[#E5EAE8] bg-white flex-shrink-0">
-        <ReviewsLineChart reviews={reviews}/>
-      </div>
+      {/* Filters + Chart — 2-column grid */}
+      <div className="border-b border-[#E5EAE8] bg-white flex-shrink-0 grid grid-cols-[1fr_auto] divide-x divide-[#E5EAE8]">
 
-      {/* Filters */}
-      <div className="px-10 py-3 border-b border-[#E5EAE8] bg-white flex-shrink-0 space-y-2">
-        {/* Status tabs */}
-        <div className="flex items-center gap-1">
-          {(['all','pending','draft_ready','replied'] as const).map(key => {
-            const labels = { all:'All', pending:'Pending', draft_ready:'Draft Ready', replied:'Replied' };
-            return (
-              <button key={key} onClick={() => { setStatusFilter(key); setPage(1); }}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${statusFilter===key ? 'bg-[#0D4C3C] text-white' : 'text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6]'}`}>
-                {labels[key]}
-                <span className={`ml-1.5 text-xs ${statusFilter===key ? 'text-white/70' : 'text-[#9CA3AF]'}`}>{counts[key]}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Filter controls */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Search */}
-          <div className="relative">
-            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
-            </svg>
-            <input type="text" placeholder="Search reviewer or review…" value={search}
-              onChange={e => { setSearch(e.target.value); setPage(1); }}
-              className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-lg focus:outline-none focus:border-[#0D4C3C] w-56 transition-colors"/>
+        {/* LEFT — tabs + filters */}
+        <div className="px-10 py-4 space-y-2.5">
+          {/* Status tabs */}
+          <div className="flex items-center gap-1">
+            {(['all','pending','draft_ready','replied'] as const).map(key => {
+              const labels = { all:'All', pending:'Pending', draft_ready:'Draft Ready', replied:'Replied' };
+              return (
+                <button key={key} onClick={() => { setStatusFilter(key); setPage(1); }}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${statusFilter===key ? 'bg-[#0D4C3C] text-white' : 'text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6]'}`}>
+                  {labels[key]}
+                  <span className={`ml-1.5 text-xs ${statusFilter===key ? 'text-white/70' : 'text-[#9CA3AF]'}`}>{counts[key]}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <FilterDropdown label="Rating" value={String(ratingFilter)}
-            onChange={v => { setRatingFilter(Number(v)); setPage(1); }}
-            icon={<svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>}
-            options={[{value:'0',label:'All ratings'},{value:'5',label:'5 stars'},{value:'4',label:'4 stars'},{value:'3',label:'3 stars'},{value:'2',label:'2 stars'},{value:'1',label:'1 star'}]}
-          />
+          {/* Filter controls */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative">
+              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+              </svg>
+              <input type="text" placeholder="Search reviewer or review…" value={search}
+                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-lg focus:outline-none focus:border-[#0D4C3C] w-56 transition-colors"/>
+            </div>
 
-          {locations.length > 0 && (
-            <FilterDropdown label="Location" value={locationFilter}
-              onChange={v => { setLocationFilter(v); setPage(1); }}
-              icon={<svg className="w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>}
-              options={[{value:'',label:'All locations'},...locations.map(l => ({value:l.id,label:l.display_name??l.id}))]}
+            <FilterDropdown label="Rating" value={String(ratingFilter)}
+              onChange={v => { setRatingFilter(Number(v)); setPage(1); }}
+              icon={<svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>}
+              options={[{value:'0',label:'All ratings'},{value:'5',label:'5 stars'},{value:'4',label:'4 stars'},{value:'3',label:'3 stars'},{value:'2',label:'2 stars'},{value:'1',label:'1 star'}]}
             />
-          )}
 
-          <DateRangePicker from={dateFrom} to={dateTo} onChange={(f,t) => { setDateFrom(f); setDateTo(t); setPage(1); }}/>
+            {locations.length > 0 && (
+              <FilterDropdown label="Location" value={locationFilter}
+                onChange={v => { setLocationFilter(v); setPage(1); }}
+                icon={<svg className="w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>}
+                options={[{value:'',label:'All locations'},...locations.map(l => ({value:l.id,label:l.display_name??l.id}))]}
+              />
+            )}
 
-          <FilterDropdown label="Sort" value={sortBy}
-            onChange={v => { setSortBy(v as SortKey); setPage(1); }}
-            icon={<svg className="w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>}
-            options={[{value:'newest',label:'Newest first'},{value:'oldest',label:'Oldest first'},{value:'unanswered',label:'Unanswered first'},{value:'highest',label:'Highest rated'},{value:'lowest',label:'Lowest rated'}]}
-          />
+            <DateRangePicker from={dateFrom} to={dateTo} onChange={(f,t) => { setDateFrom(f); setDateTo(t); setPage(1); }}/>
 
-          {hasFilters && <button onClick={clearAll} className="text-xs text-[#9CA3AF] hover:text-red-500 font-medium transition-colors">Clear all</button>}
-          {hasFilters && <span className="text-xs text-[#9CA3AF] ml-auto">{filtered.length} result{filtered.length!==1?'s':''}</span>}
+            <FilterDropdown label="Sort" value={sortBy}
+              onChange={v => { setSortBy(v as SortKey); setPage(1); }}
+              icon={<svg className="w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>}
+              options={[{value:'newest',label:'Newest first'},{value:'oldest',label:'Oldest first'},{value:'unanswered',label:'Unanswered first'},{value:'highest',label:'Highest rated'},{value:'lowest',label:'Lowest rated'}]}
+            />
 
-          {/* Save preset */}
-          {hasFilters && !showPresetInput && (
-            <button onClick={() => setShowPresetInput(true)}
-              className="text-xs text-[#0D4C3C] font-medium hover:underline transition-colors">
-              Save preset
-            </button>
-          )}
-          {showPresetInput && (
-            <div className="flex items-center gap-1.5">
-              <input autoFocus type="text" value={presetName} onChange={e => setPresetName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') setShowPresetInput(false); }}
-                placeholder="Preset name…"
-                className="text-xs border border-[#D1D5DB] rounded-lg px-2 py-1 focus:outline-none focus:border-[#0D4C3C] w-32"/>
-              <button onClick={savePreset} className="text-xs text-white bg-[#0D4C3C] px-2 py-1 rounded-lg hover:bg-[#083F32]">Save</button>
-              <button onClick={() => setShowPresetInput(false)} className="text-xs text-[#9CA3AF] hover:text-red-500">✕</button>
+            {hasFilters && <button onClick={clearAll} className="text-xs text-[#9CA3AF] hover:text-red-500 font-medium transition-colors">Clear all</button>}
+            {hasFilters && <span className="text-xs text-[#9CA3AF] ml-auto">{filtered.length} result{filtered.length!==1?'s':''}</span>}
+
+            {/* Save preset */}
+            {hasFilters && !showPresetInput && (
+              <button onClick={() => setShowPresetInput(true)}
+                className="text-xs text-[#0D4C3C] font-medium hover:underline transition-colors">
+                Save preset
+              </button>
+            )}
+            {showPresetInput && (
+              <div className="flex items-center gap-1.5">
+                <input autoFocus type="text" value={presetName} onChange={e => setPresetName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') setShowPresetInput(false); }}
+                  placeholder="Preset name…"
+                  className="text-xs border border-[#D1D5DB] rounded-lg px-2 py-1 focus:outline-none focus:border-[#0D4C3C] w-32"/>
+                <button onClick={savePreset} className="text-xs text-white bg-[#0D4C3C] px-2 py-1 rounded-lg hover:bg-[#083F32]">Save</button>
+                <button onClick={() => setShowPresetInput(false)} className="text-xs text-[#9CA3AF] hover:text-red-500">✕</button>
+              </div>
+            )}
+          </div>
+
+          {/* Presets row */}
+          {presets.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs text-[#9CA3AF]">Presets:</span>
+              {presets.map(p => (
+                <div key={p.id} className="flex items-center gap-0.5 bg-[#F3F4F6] rounded-md px-2 py-0.5">
+                  <button onClick={() => applyPreset(p)} className="text-xs text-[#374151] hover:text-[#0D4C3C] font-medium">{p.name}</button>
+                  <button onClick={() => deletePreset(p.id)} className="text-[#9CA3AF] hover:text-red-500 ml-1 text-xs leading-none">×</button>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Presets row */}
-        {presets.length > 0 && (
-          <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-            <span className="text-xs text-[#9CA3AF]">Presets:</span>
-            {presets.map(p => (
-              <div key={p.id} className="flex items-center gap-0.5 bg-[#F3F4F6] rounded-md px-2 py-0.5">
-                <button onClick={() => applyPreset(p)} className="text-xs text-[#374151] hover:text-[#0D4C3C] font-medium">{p.name}</button>
-                <button onClick={() => deletePreset(p.id)} className="text-[#9CA3AF] hover:text-red-500 ml-1 text-xs leading-none">×</button>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* RIGHT — chart */}
+        <div className="w-[480px] px-8 py-4 flex-shrink-0">
+          <ReviewsLineChart reviews={reviews}/>
+        </div>
+
       </div>
 
       {/* Table */}
