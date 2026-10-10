@@ -734,7 +734,7 @@ export function InsightsPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex items-center gap-0 border-b border-[#E5EAE8]">
+        <div className="flex items-center gap-0">
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
