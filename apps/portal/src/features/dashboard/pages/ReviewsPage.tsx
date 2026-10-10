@@ -203,10 +203,10 @@ function Stars({ rating }: { rating: number }) {
 
 // ── Reviews Line Chart ────────────────────────────────────────────────────────
 
-type ChartPeriod = 'today' | 'week' | 'month' | '3months';
+type ChartPeriod = 'today' | 'week' | 'month' | 'custom';
 
-const PERIOD_LABELS: Record<ChartPeriod, string> = {
-  today: 'Today', week: 'This Week', month: 'This Month', '3months': 'Last 3 Months',
+const PERIOD_LABELS: Record<Exclude<ChartPeriod,'custom'>, string> = {
+  today: 'Today', week: 'This Week', month: 'This Month',
 };
 
 interface ChartPoint {
@@ -259,14 +259,35 @@ function buildChartDataExtended(reviews: Review[], period: ChartPeriod, previous
       const label = previousPeriod ? '' : (i % 5 === 0 ? `${d.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}` : '');
       pts.push(makeChartPoint(label, iso, reviews.filter(r => r.published_at?.startsWith(iso))));
     }
+  }
+  return pts;
+}
+
+function buildChartDataCustom(reviews: Review[], from: string, to: string): ChartPoint[] {
+  if (!from || !to) return [];
+  const fromD = new Date(from + 'T00:00:00');
+  const toD = new Date(to + 'T00:00:00');
+  const daysDiff = Math.max(1, Math.floor((toD.getTime() - fromD.getTime()) / 86400000) + 1);
+  const pts: ChartPoint[] = [];
+  if (daysDiff <= 90) {
+    const step = Math.ceil(daysDiff / 8);
+    for (let i = 0; i < daysDiff; i++) {
+      const d = new Date(fromD); d.setDate(fromD.getDate() + i);
+      const iso = d.toISOString().split('T')[0] ?? '';
+      const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const label = (i === 0 || i === daysDiff - 1 || i % step === 0)
+        ? `${d.getDate()} ${MONTHS[d.getMonth()]}` : '';
+      pts.push(makeChartPoint(label, iso, reviews.filter(r => r.published_at?.startsWith(iso))));
+    }
   } else {
-    const monthOff = previousPeriod ? 12 : 0;
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i - monthOff, 1);
-      const y = d.getFullYear(); const m = d.getMonth();
+    let cur = new Date(fromD.getFullYear(), fromD.getMonth(), 1);
+    const endM = new Date(toD.getFullYear(), toD.getMonth(), 1);
+    while (cur <= endM) {
+      const y = cur.getFullYear(); const m = cur.getMonth();
       const isoPrefix = `${y}-${String(m + 1).padStart(2,'0')}`;
-      const label = previousPeriod ? '' : (['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m] ?? '');
+      const label = (['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m] ?? '');
       pts.push(makeChartPoint(label, isoPrefix, reviews.filter(r => r.published_at?.startsWith(isoPrefix))));
+      cur = new Date(y, m + 1, 1);
     }
   }
   return pts;
@@ -291,13 +312,22 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
   avgResponseTime: string;
 }) {
   const [period, setPeriod] = useState<ChartPeriod>('week');
+  const [chartFrom, setChartFrom] = useState('');
+  const [chartTo, setChartTo] = useState('');
   const [hovered, setHovered] = useState<number | null>(null);
   const [showRating, setShowRating] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
   const [showSentiment, setShowSentiment] = useState(false);
 
-  const data = useMemo(() => buildChartDataExtended(reviews, period, false), [reviews, period]);
-  const prevData = useMemo(() => showComparison ? buildChartDataExtended(reviews, period, true) : [], [reviews, period, showComparison]);
+  const data = useMemo(() => {
+    if (period === 'custom') return buildChartDataCustom(reviews, chartFrom, chartTo);
+    return buildChartDataExtended(reviews, period, false);
+  }, [reviews, period, chartFrom, chartTo]);
+
+  const prevData = useMemo(() => {
+    if (!showComparison || period === 'custom') return [];
+    return buildChartDataExtended(reviews, period, true);
+  }, [reviews, period, showComparison]);
 
   const totalInPeriod = data.reduce((s, p) => s + p.count, 0);
   const prevTotalInPeriod = prevData.reduce((s, p) => s + p.count, 0);
@@ -362,7 +392,9 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
                 ({delta > 0 ? '+' : ''}{delta})
               </span>
             )}
-            <span className="text-sm text-[#9CA3AF]">reviews · {PERIOD_LABELS[period].toLowerCase()}</span>
+            <span className="text-sm text-[#9CA3AF]">
+            reviews · {period === 'custom' ? (chartFrom && chartTo ? `${fmtDate(chartFrom)} – ${fmtDate(chartTo)}` : 'custom range') : PERIOD_LABELS[period].toLowerCase()}
+          </span>
           </div>
           {/* Legend */}
           {(showRating || showSentiment || showComparison) && (
@@ -411,13 +443,18 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
             Sentiment
           </button>
           <div className="flex items-center bg-[#F3F4F6] rounded-lg p-0.5 gap-0.5">
-            {(Object.keys(PERIOD_LABELS) as ChartPeriod[]).map(p => (
+            {(Object.keys(PERIOD_LABELS) as Exclude<ChartPeriod,'custom'>[]).map(p => (
               <button key={p} onClick={() => setPeriod(p)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${period === p ? 'bg-white text-[#111827] shadow-sm' : 'text-[#6B7280] hover:text-[#374151]'}`}>
                 {PERIOD_LABELS[p]}
               </button>
             ))}
           </div>
+          <DateRangePicker
+            from={chartFrom}
+            to={chartTo}
+            onChange={(f, t) => { setChartFrom(f); setChartTo(t); if (f && t) setPeriod('custom'); }}
+          />
         </div>
       </div>
 
