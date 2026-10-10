@@ -1048,11 +1048,16 @@ export function ReviewsPage() {
         </div>
       </div>
 
-      {/* Filters + Chart — 2-column grid */}
-      <div className="border-b border-[#E5EAE8] bg-white flex-shrink-0 grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[#E5EAE8]">
+      {/* Chart — full width */}
+      <div className="px-10 pt-4 pb-5 border-b border-[#E5EAE8] bg-white flex-shrink-0">
+        <ReviewsLineChart reviews={reviews}/>
+      </div>
 
-        {/* LEFT — tabs + filters */}
-        <div className="px-10 py-4 space-y-2.5">
+      {/* Table + sticky filter bar */}
+      <div className="flex-1 overflow-auto">
+
+        {/* Sticky filter bar — sits on top of table */}
+        <div className="sticky top-0 z-20 bg-white border-b border-[#E5EAE8] px-10 py-2.5 space-y-2">
           {/* Status tabs */}
           <div className="flex items-center gap-1">
             {(['all','pending','draft_ready','replied'] as const).map(key => {
@@ -1069,7 +1074,6 @@ export function ReviewsPage() {
 
           {/* Filter controls */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Search */}
             <div className="relative">
               <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
@@ -1104,12 +1108,8 @@ export function ReviewsPage() {
             {hasFilters && <button onClick={clearAll} className="text-xs text-[#9CA3AF] hover:text-red-500 font-medium transition-colors">Clear all</button>}
             {hasFilters && <span className="text-xs text-[#9CA3AF] ml-auto">{filtered.length} result{filtered.length!==1?'s':''}</span>}
 
-            {/* Save preset */}
             {hasFilters && !showPresetInput && (
-              <button onClick={() => setShowPresetInput(true)}
-                className="text-xs text-[#0D4C3C] font-medium hover:underline transition-colors">
-                Save preset
-              </button>
+              <button onClick={() => setShowPresetInput(true)} className="text-xs text-[#0D4C3C] font-medium hover:underline transition-colors">Save preset</button>
             )}
             {showPresetInput && (
               <div className="flex items-center gap-1.5">
@@ -1123,7 +1123,6 @@ export function ReviewsPage() {
             )}
           </div>
 
-          {/* Presets row */}
           {presets.length > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-xs text-[#9CA3AF]">Presets:</span>
@@ -1137,15 +1136,6 @@ export function ReviewsPage() {
           )}
         </div>
 
-        {/* RIGHT — chart */}
-        <div className="px-8 py-4 min-w-0">
-          <ReviewsLineChart reviews={reviews}/>
-        </div>
-
-      </div>
-
-      {/* Table */}
-      <div className="flex-1 overflow-auto">
         {loading ? (
           <div className="px-10 py-4 space-y-2">{[1,2,3,4,5].map(n => <div key={n} className="h-12 bg-[#F3F4F6] rounded-lg animate-pulse"/>)}</div>
         ) : paginated.length === 0 ? (
