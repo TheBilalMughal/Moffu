@@ -45,11 +45,35 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-const STATUS_CFG: Record<UiStatus, { dot: string; label: string; badge: string }> = {
-  pending:    { dot: 'bg-amber-400', label: 'Pending',     badge: 'text-amber-700 bg-amber-50 border-amber-200' },
-  draft_ready:{ dot: 'bg-blue-400',  label: 'Draft Ready', badge: 'text-blue-700 bg-blue-50 border-blue-200' },
-  replied:    { dot: 'bg-[#0D4C3C]', label: 'Replied',    badge: 'text-[#0D4C3C] bg-[#E6F2EE] border-[#C3DDD6]' },
+const STATUS_CFG: Record<UiStatus, { dot: string; label: string }> = {
+  pending:    { dot: 'bg-amber-400', label: 'Pending'     },
+  draft_ready:{ dot: 'bg-blue-400',  label: 'Draft Ready' },
+  replied:    { dot: 'bg-[#0D4C3C]', label: 'Replied'    },
 };
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+
+function Toast({ message, type, onDone }: { message: string; type: 'success' | 'error'; onDone: () => void }) {
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const hide = setTimeout(() => setVisible(false), 3200);
+    const remove = setTimeout(onDone, 3700);
+    return () => { clearTimeout(hide); clearTimeout(remove); };
+  }, [onDone]);
+
+  return (
+    <div className={`fixed top-5 right-5 z-[100] flex items-start gap-3 bg-white shadow-lg rounded-xl px-4 py-3 max-w-sm border border-[#E5EAE8] transition-all duration-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
+      <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${type === 'error' ? 'bg-red-100' : 'bg-emerald-100'}`}>
+        {type === 'error'
+          ? <svg className="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+          : <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
+        }
+      </div>
+      <p className="text-sm text-[#374151] leading-snug">{message}</p>
+    </div>
+  );
+}
 
 const PAGE_SIZE = 20;
 const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -330,7 +354,7 @@ function ReviewRow({ review, locationName, expanded, onToggle, onGenerateDraft, 
 
         {/* Status */}
         <td className="px-3 py-3 w-32">
-          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded border ${s.badge}`}>
+          <span className="inline-flex items-center gap-1.5 text-xs text-[#6B7280]">
             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${s.dot}`}/>
             {isPublishing ? 'Publishing…' : isDrafting ? 'Generating…' : s.label}
           </span>
@@ -437,8 +461,7 @@ export function ReviewsPage() {
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [syncMsg, setSyncMsg] = useState('');
-  const [syncError, setSyncError] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | UiStatus>('all');
@@ -478,15 +501,15 @@ export function ReviewsPage() {
   async function handleSync() {
     setSyncing(true); setSyncMsg(''); setSyncError('');
     const { synced, error } = await googleService.syncReviews();
-    if (error) setSyncError(error);
-    else { setSyncMsg(`Synced ${synced} review${synced !== 1 ? 's' : ''}.`); await loadReviews(); }
+    if (error) setToast({ message: error, type: 'error' });
+    else { setToast({ message: `Synced ${synced} review${synced !== 1 ? 's' : ''}.`, type: 'success' }); await loadReviews(); }
     setSyncing(false);
   }
 
   async function handleGenerateDraft(id: string) {
     setReviews(p => p.map(r => r.id === id ? { ...r, status: 'DRAFTING' as const } : r));
     const { error } = await googleService.generateDraft(id);
-    if (error) { setReviews(p => p.map(r => r.id === id ? { ...r, status: 'NEW' as const } : r)); setSyncError(error); }
+    if (error) { setReviews(p => p.map(r => r.id === id ? { ...r, status: 'NEW' as const } : r)); setToast({ message: error, type: 'error' }); }
     else await loadReviews();
   }
 
@@ -544,17 +567,7 @@ export function ReviewsPage() {
         </button>
       </div>
 
-      {/* Alerts */}
-      {(syncMsg || syncError) && (
-        <div className="px-10 pt-3 flex-shrink-0">
-          {syncMsg && <div className="mb-2 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-2.5 text-sm text-emerald-700 flex items-center justify-between">
-            {syncMsg}<button onClick={() => setSyncMsg('')}><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg></button>
-          </div>}
-          {syncError && <div className="mb-2 bg-red-50 border border-red-200 rounded-lg px-4 py-2.5 text-sm text-red-700 flex items-center justify-between">
-            {syncError}<button onClick={() => setSyncError('')}><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg></button>
-          </div>}
-        </div>
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
 
       {/* Filters */}
       <div className="px-10 py-3 border-b border-[#E5EAE8] bg-white flex-shrink-0">
