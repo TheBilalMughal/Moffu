@@ -69,7 +69,7 @@ PHASE 4 — Google Business Profile Integration (BLOCKED: needs Google OAuth cre
 **Service layer:** `brandBrain.service.ts` — load (maybeSingle) + save (upsert onConflict user_id)
 
 ## Phase 4 — Google Business Profile Integration
-**Backend: COMPLETE** | **UI: COMPLETE** | Secrets: PENDING (manual Supabase dashboard step)
+**COMPLETE** ✅ (verified end-to-end: OAuth flow, token storage, UI state)
 
 **DB migration 007 applied (`kgttncfkzdrgswfkkdji`):**
 - `google_connections` (state machine: PENDING/CONNECTED/REFRESH_FAILED/REVOKED/DISCONNECTED/ERROR)
@@ -77,20 +77,21 @@ PHASE 4 — Google Business Profile Integration (BLOCKED: needs Google OAuth cre
 - `google_locations` (per-connection, user-selectable)
 - `reviews` (synced from Google, full status machine: NEW→PUBLISHED)
 
-**Edge Functions deployed (all ACTIVE):**
-- `google-oauth-start` — generates state, returns Google auth URL
-- `google-oauth-callback` — exchanges code for tokens, fetches locations
-- `google-sync-reviews` — syncs reviews from Google (with token refresh)
-- `google-publish-reply` — publishes approved reply to Google (idempotent)
-- `google-disconnect` — revokes tokens, marks DISCONNECTED
+**Edge Functions deployed (all ACTIVE, `verify_jwt: false` + manual auth):**
+- `google-oauth-start` v7 — generates state, returns Google auth URL
+- `google-oauth-callback` v4 — exchanges code for tokens, fetches locations
+- `google-sync-reviews` v4 — syncs reviews from Google (with token refresh)
+- `google-publish-reply` v4 — publishes approved reply to Google (idempotent)
+- `google-disconnect` v4 — revokes tokens, marks DISCONNECTED
+
+**Secrets set in Supabase dashboard:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` ✅
 
 **Portal UI:**
 - `SettingsPage` — Connect/Disconnect/Sync now buttons, location toggles, last synced timestamp
 - `GoogleCallbackPage` — handles `/auth/google/callback` redirect from Google
 - `google.service.ts` — client wrapper for all edge function calls
 
-**Pending (1 manual step):** Set secrets in Supabase dashboard:
-- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
+**Verified working:** bilalxmughal@gmail.com connected successfully. "No locations" expected — account has no verified Google Business Profile. Real customers with verified profiles will see locations list.
 
 ## Phase 5 — AI Response Generation
 - **BLOCKED on Phase 4**: needs real reviews

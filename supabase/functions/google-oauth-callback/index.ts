@@ -92,20 +92,32 @@ Deno.serve(async (req) => {
       { headers: { Authorization: `Bearer ${tokens.access_token}` } }
     );
 
-    if (accountsRes.ok) {
+    if (!accountsRes.ok) {
+      const accountsErr = await accountsRes.text();
+      console.error('Accounts API failed:', accountsRes.status, accountsErr);
+      // Mark connection with attention required so user knows to check API setup
+      await supabase.from('google_connections').update({
+        error_message: `Business Account API error (${accountsRes.status}): ensure "My Business Account Management API" and "My Business Business Information API" are enabled in Google Cloud Console.`,
+      }).eq('id', connection.id);
+    } else {
       const accountsData = await accountsRes.json();
       const accounts: Array<{ name: string }> = accountsData.accounts ?? [];
+      console.log(`Found ${accounts.length} accounts`);
 
       for (const account of accounts) {
-        // Fetch locations for each account
         const locRes = await fetch(
           `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?readMask=name,title,storefrontAddress`,
           { headers: { Authorization: `Bearer ${tokens.access_token}` } }
         );
-        if (!locRes.ok) continue;
+        if (!locRes.ok) {
+          const locErr = await locRes.text();
+          console.error('Locations API failed for', account.name, ':', locRes.status, locErr);
+          continue;
+        }
 
         const locData = await locRes.json();
         const locations: Array<{ name: string; title?: string; storefrontAddress?: { addressLines?: string[] } }> = locData.locations ?? [];
+        console.log(`Found ${locations.length} locations for ${account.name}`);
 
         for (const loc of locations) {
           const address = loc.storefrontAddress?.addressLines?.join(', ') ?? null;
