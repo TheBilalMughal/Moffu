@@ -56,6 +56,10 @@ function ReviewCard({
   const status = STATUS_CONFIG[uiStatus];
   const [draftText, setDraftText] = useState(review.reply_draft ?? '');
   const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    setDraftText(review.reply_draft ?? '');
+  }, [review.reply_draft]);
   const [publishing, setPublishing] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const [publishError, setPublishError] = useState('');
