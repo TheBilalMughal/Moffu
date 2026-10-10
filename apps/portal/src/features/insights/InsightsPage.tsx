@@ -553,7 +553,7 @@ export function InsightsPage() {
   const [keywordContexts, setKeywordContexts] = useState<KeywordContext[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { selectedId: globalLocationId } = useLocationStore();
+  const { selectedId: globalLocationId, locations: selectedLocations } = useLocationStore();
   const [tab, setTab] = useState<Tab>('keywords');
   const [dateRange, setDateRange] = useState<DateRange>('30d');
   const [starFilter, setStarFilter] = useState<string>('all');
@@ -587,13 +587,14 @@ export function InsightsPage() {
   // ── Filtered reviews ──────────────────────────────────────────────────────
 
   const reviews = useMemo(() => {
-    let rs = allReviews;
+    const selectedIds = new Set(selectedLocations.map(l => l.id));
+    let rs = allReviews.filter(r => !r.location_id || selectedIds.has(r.location_id));
     const cutoff = cutoffDate(dateRange);
     if (cutoff) rs = rs.filter(r => r.published_at && new Date(r.published_at) >= cutoff);
     if (globalLocationId) rs = rs.filter(r => r.location_id === globalLocationId);
     if (starFilter !== 'all') rs = rs.filter(r => String(r.rating) === starFilter);
     return rs;
-  }, [allReviews, dateRange, globalLocationId, starFilter]);
+  }, [allReviews, selectedLocations, dateRange, globalLocationId, starFilter]);
 
   const positiveReviews = useMemo(() => reviews.filter(r => r.rating >= 4), [reviews]);
   const negativeReviews = useMemo(() => reviews.filter(r => r.rating <= 2), [reviews]);

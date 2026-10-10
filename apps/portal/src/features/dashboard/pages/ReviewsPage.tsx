@@ -1252,7 +1252,9 @@ export function ReviewsPage() {
 
   // Filtering + sorting
   const filtered = useMemo(() => {
+    const selectedLocationIds = new Set(locations.map(l => l.id));
     let list = reviews.filter(r => {
+      if (r.location_id && !selectedLocationIds.has(r.location_id)) return false;
       if (statusFilter !== 'all' && toUiStatus(r.status) !== statusFilter) return false;
       if (ratingFilter > 0 && r.rating !== ratingFilter) return false;
       if (globalLocationId && r.location_id !== globalLocationId) return false;
@@ -1273,7 +1275,7 @@ export function ReviewsPage() {
       return (a.published_at ?? '') < (b.published_at ?? '') ? -1 : 1;
     });
     return list;
-  }, [reviews, statusFilter, ratingFilter, globalLocationId, locationFilter, search, dateFrom, dateTo, sortBy, flagFilter]);
+  }, [reviews, locations, statusFilter, ratingFilter, globalLocationId, locationFilter, search, dateFrom, dateTo, sortBy, flagFilter]);
 
   useEffect(() => { filteredRef.current = filtered; }, [filtered]);
 
