@@ -283,7 +283,13 @@ function smoothPath(pts: { x: number; y: number }[]): string {
   return d;
 }
 
-function ReviewsLineChart({ reviews }: { reviews: Review[] }) {
+function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: replyRateProp, avgResponseTime: avgResponseTimeProp }: {
+  reviews: Review[];
+  totalReviews: number;
+  avgRatingStr: string;
+  replyRate: string;
+  avgResponseTime: string;
+}) {
   const [period, setPeriod] = useState<ChartPeriod>('week');
   const [hovered, setHovered] = useState<number | null>(null);
   const [showRating, setShowRating] = useState(false);
@@ -345,9 +351,9 @@ function ReviewsLineChart({ reviews }: { reviews: Review[] }) {
   }, [data]);
 
   return (
-    <div className="w-full">
-      {/* Chart header */}
-      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+    <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
+      {/* Left: summary + legend + stat cards */}
+      <div className="flex flex-col">
         <div className="flex items-baseline gap-2 flex-wrap">
           <span className="text-2xl font-bold text-[#111827]">{totalInPeriod}</span>
           {showComparison && prevData.length > 0 && (
@@ -357,7 +363,62 @@ function ReviewsLineChart({ reviews }: { reviews: Review[] }) {
           )}
           <span className="text-sm text-[#9CA3AF]">reviews · {PERIOD_LABELS[period].toLowerCase()}</span>
         </div>
-        <div className="flex items-center gap-1.5 flex-wrap">
+
+        {/* Legend */}
+        {(showRating || showSentiment || showComparison) && (
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            {!showSentiment && (
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-1.5 rounded-full bg-[#0D4C3C]"/>
+                <span className="text-xs text-[#6B7280]">Reviews</span>
+              </div>
+            )}
+            {showRating && !showSentiment && (
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-1.5 rounded-full bg-amber-400"/>
+                <span className="text-xs text-[#6B7280]">Avg Rating</span>
+              </div>
+            )}
+            {showSentiment && (
+              <>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-emerald-500"/><span className="text-xs text-[#6B7280]">Positive</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-[#9CA3AF]"/><span className="text-xs text-[#6B7280]">Neutral</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-red-500"/><span className="text-xs text-[#6B7280]">Negative</span></div>
+              </>
+            )}
+            {showComparison && (
+              <div className="flex items-center gap-1.5">
+                <svg width="16" height="6" viewBox="0 0 16 6"><line x1="0" y1="3" x2="16" y2="3" stroke="#9CA3AF" strokeWidth="1.5" strokeDasharray="4 2"/></svg>
+                <span className="text-xs text-[#6B7280]">Prev period</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 2x2 stat cards */}
+        <div className="grid grid-cols-2 gap-3 mt-4">
+          <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
+            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Total Reviews</p>
+            <p className="text-lg font-bold text-[#111827]">{totalReviews}</p>
+          </div>
+          <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
+            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Rating</p>
+            <p className="text-lg font-bold text-amber-500">{avgRatingStr}</p>
+          </div>
+          <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
+            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Reply Rate</p>
+            <p className="text-lg font-bold text-[#111827]">{replyRateProp}</p>
+          </div>
+          <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
+            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Response Time</p>
+            <p className="text-lg font-bold text-[#111827]">{avgResponseTimeProp}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right: controls + chart */}
+      <div>
+        <div className="flex items-center justify-end gap-1.5 flex-wrap mb-3">
           <button onClick={() => setShowRating(s => !s)}
             className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${showRating ? 'bg-amber-50 text-amber-600 border border-amber-200' : 'text-[#6B7280] bg-[#F3F4F6]'}`}>
             Avg Rating
@@ -379,41 +440,9 @@ function ReviewsLineChart({ reviews }: { reviews: Review[] }) {
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Legend */}
-      {(showRating || showSentiment || showComparison) && (
-        <div className="flex items-center gap-4 mb-2 flex-wrap">
-          {!showSentiment && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-1.5 rounded-full bg-[#0D4C3C]"/>
-              <span className="text-xs text-[#6B7280]">Reviews</span>
-            </div>
-          )}
-          {showRating && !showSentiment && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-1.5 rounded-full bg-amber-400"/>
-              <span className="text-xs text-[#6B7280]">Avg Rating</span>
-            </div>
-          )}
-          {showSentiment && (
-            <>
-              <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-emerald-500"/><span className="text-xs text-[#6B7280]">Positive</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-[#9CA3AF]"/><span className="text-xs text-[#6B7280]">Neutral</span></div>
-              <div className="flex items-center gap-1.5"><div className="w-3 h-1.5 rounded-full bg-red-500"/><span className="text-xs text-[#6B7280]">Negative</span></div>
-            </>
-          )}
-          {showComparison && (
-            <div className="flex items-center gap-1.5">
-              <svg width="16" height="6" viewBox="0 0 16 6"><line x1="0" y1="3" x2="16" y2="3" stroke="#9CA3AF" strokeWidth="1.5" strokeDasharray="4 2"/></svg>
-              <span className="text-xs text-[#6B7280]">Prev period</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* SVG chart */}
-      <div className="relative w-full" onMouseLeave={() => setHovered(null)}>
+        {/* SVG chart */}
+        <div className="relative w-full" onMouseLeave={() => setHovered(null)}>
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 130 }} aria-hidden="true">
           <defs>
             <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
@@ -489,6 +518,7 @@ function ReviewsLineChart({ reviews }: { reviews: Review[] }) {
             </div>
           );
         })()}
+        </div>
       </div>
     </div>
   );
@@ -1350,28 +1380,13 @@ export function ReviewsPage() {
 
       {/* Chart — full width */}
       <div className="px-10 pt-4 pb-5 border-b border-[#E5EAE8] bg-white flex-shrink-0">
-        {/* Stats bar */}
-        <div className="flex gap-6 mb-4 flex-wrap">
-          <div className="bg-[#F9FAFB] rounded-lg px-4 py-2.5">
-            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Total Reviews</p>
-            <p className="text-lg font-bold text-[#111827]">{reviews.length}</p>
-          </div>
-          <div className="bg-[#F9FAFB] rounded-lg px-4 py-2.5">
-            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Rating</p>
-            <p className="text-lg font-bold text-amber-500">
-              {reviews.length ? `${(reviews.reduce((s,r) => s + r.rating, 0) / reviews.length).toFixed(1)} ★` : '—'}
-            </p>
-          </div>
-          <div className="bg-[#F9FAFB] rounded-lg px-4 py-2.5">
-            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Reply Rate</p>
-            <p className="text-lg font-bold text-[#111827]">{replyRate}</p>
-          </div>
-          <div className="bg-[#F9FAFB] rounded-lg px-4 py-2.5">
-            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Response Time</p>
-            <p className="text-lg font-bold text-[#111827]">{avgResponseTime}</p>
-          </div>
-        </div>
-        <ReviewsLineChart reviews={reviews}/>
+        <ReviewsLineChart
+          reviews={reviews}
+          totalReviews={reviews.length}
+          avgRatingStr={reviews.length ? `${(reviews.reduce((s,r) => s + r.rating, 0) / reviews.length).toFixed(1)} ★` : '—'}
+          replyRate={replyRate}
+          avgResponseTime={avgResponseTime}
+        />
       </div>
 
       {/* Table + sticky filter bar */}
