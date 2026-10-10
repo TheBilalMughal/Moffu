@@ -39,12 +39,6 @@ export function SiteNav() {
         <div className="flex items-center gap-5">
           <a
             href={`${portalUrl}/auth/login`}
-            className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150"
-          >
-            Login
-          </a>
-          <a
-            href={`${portalUrl}/auth/signup`}
             className="text-sm bg-[#0D4C3C] hover:bg-[#083F32] text-white px-5 py-2.5 rounded-lg font-medium transition-colors duration-150"
           >
             Get Started
