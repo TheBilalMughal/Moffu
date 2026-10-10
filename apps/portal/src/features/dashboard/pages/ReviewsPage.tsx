@@ -483,7 +483,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
           ))}
         </svg>
 
-        {hovered !== null && data[hovered] && pts[hovered] && (() => {
+        {hovered !== null && data[hovered] && pts[hovered] && (data[hovered]!.count > 0 || showSentiment) && (() => {
           const d = data[hovered]!; const p = pts[hovered]!;
           const pct = (p.x / W) * 100;
           const alignRight = pct > 75;
