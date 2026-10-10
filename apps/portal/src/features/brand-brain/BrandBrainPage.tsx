@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   brandBrainService, BrandBrainData, LocationOverride, GoogleLocation,
   StarRatingRules, KeywordContext, ApprovalRules,
@@ -106,15 +107,50 @@ function SelectField({ value, onChange, options, placeholder, disabled }: {
   options: string[]; placeholder?: string; disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [dropStyle, setDropStyle] = useState<React.CSSProperties>({});
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const fn = (e: MouseEvent) => {
+      if (btnRef.current?.contains(e.target as Node)) return;
+      if (dropRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
     document.addEventListener('mousedown', fn);
     return () => document.removeEventListener('mousedown', fn);
   }, []);
+
+  function handleOpen() {
+    if (disabled) return;
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setDropStyle({ position: 'fixed', top: rect.bottom + 4, left: rect.left, width: rect.width, zIndex: 9999 });
+    }
+    setOpen(o => !o);
+  }
+
+  const dropdown = open ? (
+    <div ref={dropRef} style={dropStyle} className="bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 max-h-56 overflow-y-auto">
+      {placeholder && (
+        <button onClick={() => { onChange(''); setOpen(false); }}
+          className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${!value ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#9CA3AF] hover:bg-[#F8F9FA]'}`}>
+          {placeholder}
+        </button>
+      )}
+      {options.map(opt => (
+        <button key={opt} onClick={() => { onChange(opt); setOpen(false); }}
+          className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${value === opt ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}>
+          <span>{opt}</span>
+          {value === opt && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
+        </button>
+      ))}
+    </div>
+  ) : null;
+
   return (
-    <div className="relative" ref={ref}>
-      <button onClick={() => !disabled && setOpen(o => !o)} disabled={disabled}
+    <div className="relative">
+      <button ref={btnRef} onClick={handleOpen} disabled={disabled}
         className={`w-full flex items-center justify-between text-sm border rounded-lg px-3.5 py-2.5 text-left transition-colors
           ${disabled ? 'bg-[#F9FAFB] text-[#9CA3AF] border-[#E5E7EB] cursor-default' : 'bg-white text-[#111827] border-[#D1D5DB] hover:border-[#0D4C3C] focus:outline-none'}`}>
         <span className={!value ? 'text-[#9CA3AF]' : ''}>{value || placeholder || 'Select…'}</span>
@@ -122,23 +158,7 @@ function SelectField({ value, onChange, options, placeholder, disabled }: {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
         </svg>
       </button>
-      {open && (
-        <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 max-h-56 overflow-y-auto">
-          {placeholder && (
-            <button onClick={() => { onChange(''); setOpen(false); }}
-              className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${!value ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#9CA3AF] hover:bg-[#F8F9FA]'}`}>
-              {placeholder}
-            </button>
-          )}
-          {options.map(opt => (
-            <button key={opt} onClick={() => { onChange(opt); setOpen(false); }}
-              className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${value === opt ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}>
-              <span>{opt}</span>
-              {value === opt && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
-            </button>
-          ))}
-        </div>
-      )}
+      {createPortal(dropdown, document.body)}
     </div>
   );
 }
@@ -241,113 +261,112 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
   onLocOverride: (locId: string, field: keyof LocIdentityOverride, value: string | null) => void;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
         <h2 className="text-lg font-bold text-[#111827] mb-1">Business Identity</h2>
         <p className="text-sm text-[#6B7280]">Basic details that personalise every AI-generated reply.</p>
       </div>
 
-      {/* Global defaults — 3-col row */}
-      <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-        <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
-          <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Global defaults</p>
-          <p className="text-[11px] text-[#9CA3AF] mt-0.5">Applied to all locations unless overridden below.</p>
-        </div>
-        <div className="px-5 py-5 bg-[#FAFAFA] grid grid-cols-3 gap-5">
-          <div>
-            <label className="block text-xs font-semibold text-[#374151] mb-1.5">Business name <span className="text-red-400">*</span></label>
-            <input type="text" value={data.business_name} onChange={e => onChange({ business_name: e.target.value })}
-              placeholder="e.g. The Blue Door Café" className={inputCls}/>
+      <div className="grid grid-cols-2 gap-6 items-start">
+        {/* Left — Global defaults */}
+        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+          <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+            <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Global defaults</p>
+            <p className="text-[11px] text-[#9CA3AF] mt-0.5">Applied to all locations unless overridden.</p>
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-[#374151] mb-1.5">Business type</label>
-            <SelectField value={data.business_type} onChange={v => onChange({ business_type: v })}
-              options={BUSINESS_TYPES} placeholder="Select a type…"/>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-[#374151] mb-1.5">
-              Short description <span className="text-[#9CA3AF] font-normal">(optional)</span>
-            </label>
-            <div className="relative">
+          <div className="px-5 py-5 bg-[#FAFAFA] space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5">Business name <span className="text-red-400">*</span></label>
+              <input type="text" value={data.business_name} onChange={e => onChange({ business_name: e.target.value })}
+                placeholder="e.g. The Blue Door Café" className={inputCls}/>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5">Business type</label>
+              <SelectField value={data.business_type} onChange={v => onChange({ business_type: v })}
+                options={BUSINESS_TYPES} placeholder="Select a type…"/>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5">
+                Short description <span className="text-[#9CA3AF] font-normal">(optional)</span>
+              </label>
               <textarea value={data.business_desc} onChange={e => onChange({ business_desc: e.target.value })}
-                placeholder="One sentence about what makes your business unique." rows={2} maxLength={200}
+                placeholder="One sentence about what makes your business unique." rows={3} maxLength={200}
                 className={`${inputCls} resize-none`}/>
               <p className="text-[10px] text-[#9CA3AF] mt-0.5 text-right">{data.business_desc.length}/200</p>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Per-location identity */}
-      {locations.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <svg className="w-4 h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            <h3 className="text-sm font-semibold text-[#374151]">Per-location identity</h3>
-            <span className="text-xs text-[#9CA3AF]">— leave blank to inherit the global default above</span>
+        {/* Right — Per-location identity */}
+        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+          <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+            <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Per-location overrides</p>
+            <p className="text-[11px] text-[#9CA3AF] mt-0.5">Leave blank to inherit the global default.</p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            {locations.map(loc => {
-              const ov = locOverrides[loc.id] ?? { business_name: null, business_type: null, business_desc: null };
-              return (
-                <div key={loc.id} className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-                  {/* Location header */}
-                  <div className="flex items-center gap-2 px-4 py-2.5 bg-[#FAFAFA] border-b border-[#E5EAE8]">
-                    <div className="w-6 h-6 rounded-full bg-[#E6F2EE] flex items-center justify-center flex-shrink-0">
-                      <svg className="w-3 h-3 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#111827] truncate">{loc.display_name ?? 'Location'}</p>
-                      {loc.address && <p className="text-[10px] text-[#9CA3AF] truncate">{loc.address}</p>}
-                    </div>
-                    {(ov.business_name || ov.business_type || ov.business_desc) && (
-                      <span className="ml-auto text-[10px] font-semibold text-[#0D4C3C] bg-[#E6F2EE] px-2 py-0.5 rounded-md flex-shrink-0">
-                        {[ov.business_name && 'name', ov.business_type && 'type', ov.business_desc && 'desc'].filter(Boolean).join(' · ')} overridden
-                      </span>
-                    )}
-                  </div>
-                  {/* Fields */}
-                  <div className="px-4 py-3 space-y-3">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Business name</label>
-                      <div className="flex items-center gap-2">
-                        <input type="text" value={ov.business_name ?? ''} onChange={e => onLocOverride(loc.id, 'business_name', e.target.value || null)}
-                          placeholder={data.business_name || 'Same as default'} className={`${inputCls} py-2`}/>
-                        {ov.business_name && <button onClick={() => onLocOverride(loc.id, 'business_name', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>}
+          {locations.length === 0 ? (
+            <div className="px-5 py-10 bg-[#FAFAFA] text-center">
+              <svg className="w-8 h-8 text-[#D1D5DB] mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <p className="text-xs text-[#9CA3AF]">No locations connected yet.</p>
+            </div>
+          ) : (
+            <div className="bg-[#FAFAFA] divide-y divide-[#E5EAE8]">
+              {locations.map(loc => {
+                const ov = locOverrides[loc.id] ?? { business_name: null, business_type: null, business_desc: null };
+                const hasOverride = !!(ov.business_type || ov.business_desc);
+                return (
+                  <div key={loc.id}>
+                    {/* Location header */}
+                    <div className="flex items-center gap-2.5 px-5 py-3 bg-white border-b border-[#E5EAE8]">
+                      <div className="w-6 h-6 rounded-full bg-[#E6F2EE] flex items-center justify-center flex-shrink-0">
+                        <svg className="w-3 h-3 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                       </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-[#374151] uppercase tracking-wide truncate">{loc.display_name ?? 'Location'}</p>
+                        {loc.address && <p className="text-[10px] text-[#9CA3AF] truncate">{loc.address}</p>}
+                      </div>
+                      {hasOverride && (
+                        <span className="text-[10px] font-semibold text-[#0D4C3C] bg-[#E6F2EE] px-2 py-0.5 rounded-md flex-shrink-0">
+                          {[ov.business_type && 'type', ov.business_desc && 'desc'].filter(Boolean).join(' · ')} overridden
+                        </span>
+                      )}
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Business type</label>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <SelectField value={ov.business_type ?? ''} onChange={v => onLocOverride(loc.id, 'business_type', v || null)}
-                            options={BUSINESS_TYPES} placeholder={data.business_type || 'Same as default'}/>
+                    {/* Fields */}
+                    <div className="px-5 py-4 space-y-3">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Business type</label>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1">
+                            <SelectField value={ov.business_type ?? ''} onChange={v => onLocOverride(loc.id, 'business_type', v || null)}
+                              options={BUSINESS_TYPES} placeholder={data.business_type || 'Same as default'}/>
+                          </div>
+                          {ov.business_type && (
+                            <button onClick={() => onLocOverride(loc.id, 'business_type', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                          )}
                         </div>
-                        {ov.business_type && <button onClick={() => onLocOverride(loc.id, 'business_type', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>}
                       </div>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Short description</label>
-                      <div className="flex items-start gap-2">
-                        <textarea value={ov.business_desc ?? ''} onChange={e => onLocOverride(loc.id, 'business_desc', e.target.value || null)}
-                          placeholder={data.business_desc || 'Same as default'} rows={2} maxLength={200}
-                          className={`${inputCls} resize-none flex-1`}/>
-                        {ov.business_desc && <button onClick={() => onLocOverride(loc.id, 'business_desc', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0 mt-2">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>}
+                      <div>
+                        <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Short description</label>
+                        <div className="flex items-start gap-2">
+                          <textarea value={ov.business_desc ?? ''} onChange={e => onLocOverride(loc.id, 'business_desc', e.target.value || null)}
+                            placeholder={data.business_desc || 'Same as default'} rows={2} maxLength={200}
+                            className={`${inputCls} resize-none flex-1`}/>
+                          {ov.business_desc && (
+                            <button onClick={() => onLocOverride(loc.id, 'business_desc', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0 mt-2">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -939,7 +958,7 @@ function Step6({ locations, locCache, globalData, onDataChange, onFlagToggle }: 
       </div>
       <div className="flex gap-5">
         {/* Location list */}
-        <div className="w-52 flex-shrink-0 space-y-1">
+        <div className="w-64 flex-shrink-0 space-y-1">
           {locations.map(l => {
             const lflags = locCache[l.id]?.flags;
             const overrides = lflags ? Object.values(lflags).filter(Boolean).length : 0;
