@@ -528,9 +528,9 @@ function Step4({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
         <p className="text-sm text-[#6B7280]">Language settings, negative handling, and per-star overrides.</p>
       </div>
 
-      <div className="flex gap-5 items-start">
+      <div className="grid grid-cols-2 gap-5 items-start">
         {/* Left column — Language + Negative handling */}
-        <div className="flex-1 min-w-0 space-y-5">
+        <div className="space-y-5">
 
           {/* Language */}
           <div className="space-y-4 p-4 bg-[#F8FAF9] rounded-xl border border-[#E5EAE8]">
@@ -573,7 +573,7 @@ function Step4({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
         </div>
 
         {/* Right column — Per-star overrides */}
-        <div className="w-64 flex-shrink-0 space-y-3">
+        <div className="space-y-3">
           <div>
             <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide mb-1">Per-star tone & length</h3>
             <p className="text-[11px] text-[#9CA3AF] leading-snug">Override tone or length per rating bucket. Leave blank to use defaults.</p>
