@@ -192,7 +192,7 @@ export function DashboardLayout() {
   const { setLocations } = useLocationStore();
 
   useEffect(() => {
-    supabase.from('google_locations').select('id, display_name').then(({ data }) => {
+    supabase.from('google_locations').select('id, display_name').eq('is_selected', true).then(({ data }) => {
       setLocations(data ?? []);
     });
   }, [setLocations]);
