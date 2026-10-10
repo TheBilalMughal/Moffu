@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { createPortal } from 'react-dom';
 import {
   brandBrainService, BrandBrainData, LocationOverride, GoogleLocation,
@@ -45,7 +46,8 @@ const WIZARD_STEPS = [
   { id: 4, label: 'Rules',     icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
   { id: 5, label: 'Guardrails',icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
   { id: 6, label: 'Locations', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z' },
-  { id: 7, label: 'Preview',   icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' },
+  { id: 7, label: 'Insights',  icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+  { id: 8, label: 'Preview',   icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' },
 ];
 
 // ── Default state ─────────────────────────────────────────────────────────────
@@ -1131,6 +1133,159 @@ function Step7({ data, onGeneratePreview, onSave, saving }: {
   );
 }
 
+// ── Step 7: Review Insights ───────────────────────────────────────────────────
+
+const STOP_WORDS = new Set([
+  'the','a','an','and','or','but','in','on','at','to','for','of','with','by','from',
+  'is','was','are','were','be','been','being','have','has','had','do','does','did',
+  'will','would','could','should','may','might','not','no','i','we','you','they',
+  'he','she','it','my','our','your','their','its','this','that','these','those',
+  'so','if','as','all','very','just','more','also','about','up','out','get','got',
+  'which','who','what','when','where','how','into','go','come','back','there','here',
+  'them','than','then','now','only','some','can','us','me','him','her','really',
+  'great','good','place','food','service','staff','time','back','visit','experience',
+]);
+
+function extractKeywords(texts: string[]): [string, number][] {
+  const freq = new Map<string, number>();
+  for (const text of texts) {
+    const words = text.toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/);
+    for (const w of words) {
+      if (w.length >= 4 && !STOP_WORDS.has(w) && !/^\d+$/.test(w)) {
+        freq.set(w, (freq.get(w) ?? 0) + 1);
+      }
+    }
+  }
+  return [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, 18);
+}
+
+function KeywordBar({ word, count, max, color }: { word: string; count: number; max: number; color: string }) {
+  const pct = Math.max(4, Math.round((count / max) * 100));
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="text-xs font-medium text-[#374151] w-28 truncate flex-shrink-0">{word}</span>
+      <div className="flex-1 bg-[#F3F4F6] rounded-full h-1.5 overflow-hidden">
+        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }}/>
+      </div>
+      <span className="text-[10px] text-[#9CA3AF] w-4 text-right flex-shrink-0">{count}</span>
+    </div>
+  );
+}
+
+function StepInsights() {
+  const [rows, setRows] = useState<{ body: string; rating: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.from('reviews').select('body, rating').then(({ data }) => {
+      setRows((data ?? []).filter(r => r.body));
+      setLoading(false);
+    });
+  }, []);
+
+  const positiveKw = extractKeywords(rows.filter(r => r.rating >= 4).map(r => r.body));
+  const negativeKw = extractKeywords(rows.filter(r => r.rating <= 2).map(r => r.body));
+  const maxPos = positiveKw[0]?.[1] ?? 1;
+  const maxNeg = negativeKw[0]?.[1] ?? 1;
+  const totalReviews = rows.length;
+  const posCount = rows.filter(r => r.rating >= 4).length;
+  const negCount = rows.filter(r => r.rating <= 2).length;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-bold text-[#111827] mb-1">Review Insights</h2>
+        <p className="text-sm text-[#6B7280]">Top words from your reviews — use these to train your Agent's context and guardrails.</p>
+      </div>
+
+      {loading ? (
+        <div className="grid grid-cols-2 gap-5">
+          {[0,1].map(i => (
+            <div key={i} className="border border-[#E5EAE8] rounded-xl overflow-hidden animate-pulse">
+              <div className="h-12 bg-[#F3F4F6]"/>
+              <div className="p-5 space-y-3">{[...Array(8)].map((_,j) => <div key={j} className="h-4 bg-[#F3F4F6] rounded-full"/>)}</div>
+            </div>
+          ))}
+        </div>
+      ) : totalReviews === 0 ? (
+        <div className="text-center py-16 border border-[#E5EAE8] rounded-xl bg-[#FAFAFA]">
+          <svg className="w-10 h-10 text-[#D1D5DB] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          <p className="text-sm font-medium text-[#374151]">No reviews yet</p>
+          <p className="text-xs text-[#9CA3AF] mt-1">Sync your Google reviews first — insights will appear here.</p>
+        </div>
+      ) : (
+        <>
+          {/* Summary strip */}
+          <div className="flex items-center gap-6 px-5 py-3 bg-[#F8FAF9] rounded-xl border border-[#E5EAE8]">
+            <div className="text-center"><p className="text-lg font-bold text-[#111827]">{totalReviews}</p><p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Total reviews</p></div>
+            <div className="w-px h-8 bg-[#E5EAE8]"/>
+            <div className="text-center"><p className="text-lg font-bold text-emerald-600">{posCount}</p><p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Positive (4–5★)</p></div>
+            <div className="w-px h-8 bg-[#E5EAE8]"/>
+            <div className="text-center"><p className="text-lg font-bold text-red-500">{negCount}</p><p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Negative (1–2★)</p></div>
+            <div className="w-px h-8 bg-[#E5EAE8]"/>
+            <div className="flex-1">
+              <div className="flex items-center gap-1.5 mb-1">
+                <div className="h-2 rounded-full bg-emerald-500 transition-all" style={{ width: `${(posCount/totalReviews)*100}%`, minWidth: 4 }}/>
+                <div className="h-2 rounded-full bg-[#E5EAE8] flex-1"/>
+              </div>
+              <p className="text-[10px] text-[#9CA3AF]">{Math.round(posCount/totalReviews*100)}% positive sentiment</p>
+            </div>
+          </div>
+
+          {/* Two column keyword lists */}
+          <div className="grid grid-cols-2 gap-5">
+            {/* Positive */}
+            <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+              <div className="px-5 py-3 bg-white border-b border-[#E5EAE8] flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"/>
+                <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">What customers love</p>
+                <span className="ml-auto text-[10px] text-[#9CA3AF]">from {posCount} positive reviews</span>
+              </div>
+              {positiveKw.length === 0 ? (
+                <p className="px-5 py-8 text-xs text-[#9CA3AF] text-center">Not enough positive reviews yet.</p>
+              ) : (
+                <div className="px-5 py-4 space-y-2.5 bg-[#FAFAFA]">
+                  {positiveKw.map(([word, count]) => (
+                    <KeywordBar key={word} word={word} count={count} max={maxPos} color="#10B981"/>
+                  ))}
+                </div>
+              )}
+              {positiveKw.length > 0 && (
+                <div className="px-5 py-3 border-t border-[#E5EAE8] bg-white">
+                  <p className="text-[10px] text-[#9CA3AF]">Tip: Add top words to your <span className="font-semibold text-[#0D4C3C]">Keyword-triggered context</span> in Guardrails to highlight these strengths in replies.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Negative */}
+            <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+              <div className="px-5 py-3 bg-white border-b border-[#E5EAE8] flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0"/>
+                <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Common complaints</p>
+                <span className="ml-auto text-[10px] text-[#9CA3AF]">from {negCount} negative reviews</span>
+              </div>
+              {negativeKw.length === 0 ? (
+                <p className="px-5 py-8 text-xs text-[#9CA3AF] text-center">No negative reviews found.</p>
+              ) : (
+                <div className="px-5 py-4 space-y-2.5 bg-[#FAFAFA]">
+                  {negativeKw.map(([word, count]) => (
+                    <KeywordBar key={word} word={word} count={count} max={maxNeg} color="#F87171"/>
+                  ))}
+                </div>
+              )}
+              {negativeKw.length > 0 && (
+                <div className="px-5 py-3 border-t border-[#E5EAE8] bg-white">
+                  <p className="text-[10px] text-[#9CA3AF]">Tip: Add recurring complaints to <span className="font-semibold text-[#0D4C3C]">Keyword-triggered context</span> so the Agent addresses them proactively.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function PreviewStepActions({ generating, previewDraft, saving, onGenerate, onSave, error }: {
   generating: boolean; previewDraft: string | null; saving: boolean;
   onGenerate: () => void; onSave: () => void; error: string;
@@ -1200,7 +1355,7 @@ export function BrandBrainPage() {
       brandBrainService.loadLocations(),
       brandBrainService.loadAllOverrides(),
     ]).then(([globalRes, locsRes, overridesRes]) => {
-      if (globalRes.data) { setData(globalRes.data); setCompleted(new Set([1,2,3,4,5,6,7])); }
+      if (globalRes.data) { setData(globalRes.data); setCompleted(new Set([1,2,3,4,5,6,7,8])); }
       const locs = locsRes.data ?? [];
       setLocations(locs);
 
@@ -1391,7 +1546,8 @@ export function BrandBrainPage() {
         {step === 4 && <Step4 data={data} onChange={patch}/>}
         {step === 5 && <Step5 data={data} onChange={patch}/>}
         {step === 6 && locations.length > 0 && <Step6 locations={locations} locCache={locCache} globalData={data} onDataChange={patchLocData} onFlagToggle={toggleLocFlag}/>}
-        {step === 7 && <Step7 data={data} onGeneratePreview={async (tr) => { const r = await brandBrainService.previewVoice(data, tr); if (r.error) setToast({ message: r.error, type: 'error' }); return; }} onSave={handleSave} saving={saving}/>}
+        {step === 7 && <StepInsights/>}
+        {step === 8 && <Step7 data={data} onGeneratePreview={async (tr) => { const r = await brandBrainService.previewVoice(data, tr); if (r.error) setToast({ message: r.error, type: 'error' }); return; }} onSave={handleSave} saving={saving}/>}
       </div>
 
       {/* Navigation footer */}
