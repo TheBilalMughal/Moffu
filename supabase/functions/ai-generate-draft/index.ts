@@ -65,35 +65,24 @@ Deno.serve(async (req) => {
 
     const firstName = (review.reviewer_name ?? '').split(' ')[0] || 'there';
 
-    const prompt = [
-      `You are writing a Google Business review reply on behalf of ${businessName}.`,
-      '',
-      `Review (${review.rating}/5 stars):`,
-      `"${review.body ?? '(no text provided)'}"`,
-      `Reviewer: ${review.reviewer_name ?? 'Anonymous'}`,
-      '',
-      'Instructions:',
-      `- Tone: ${tone}`,
-      `- Length: ${lengthGuide}`,
-      `- Language: ${language}`,
-      addressByName
-        ? `- Address the reviewer by first name: ${firstName}`
-        : '- Do not address the reviewer by name',
-      useEmoji
-        ? '- You may use 1-2 relevant emojis'
-        : '- Do not use emojis',
-      prohibited
-        ? `- Do NOT use any of these phrases: ${prohibited}`
-        : '',
-      review.rating <= 2
-        ? `- This is a negative review. Handling: ${negativeHandling}. Be empathetic, acknowledge the concern, and offer to resolve it offline if appropriate.`
-        : '',
-      exampleReply
-        ? `\nMatch the tone and style of this example reply:\n"${exampleReply}"`
-        : '',
-      '',
-      'Write ONLY the reply text. No intro, no labels, no quotation marks.',
-    ].filter(Boolean).join('\n');
+    const constraints = [
+      `Tone: ${tone}`,
+      `Length: ${lengthGuide}`,
+      `Language: ${language}`,
+      addressByName ? `Address reviewer by first name "${firstName}"` : 'Do not use the reviewer\'s name',
+      useEmoji ? 'You may include 1-2 relevant emojis' : 'No emojis',
+      prohibited ? `Never use these phrases: ${prohibited}` : '',
+      review.rating <= 2 ? `Negative review — be empathetic, acknowledge the issue, offer to resolve offline. Strategy: ${negativeHandling}` : '',
+    ].filter(Boolean).join('. ');
+
+    const prompt = `Write a Google Business review reply for ${businessName}.
+
+Customer review (${review.rating}/5 stars): "${review.body ?? '(no text)'}"
+
+Requirements: ${constraints}${exampleReply ? `\n\nStyle reference (match this tone): "${exampleReply}"` : ''}
+
+Reply (output the reply text only, nothing else):`;
+
 
     // Call Gemini
     const geminiRes = await fetch(
