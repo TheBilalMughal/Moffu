@@ -1250,6 +1250,12 @@ export function ReviewsPage() {
     return () => document.removeEventListener('keydown', onKey);
   }, [focusedIdx]);
 
+  // Reviews scoped to is_selected locations only — used for stats, chart, tab counts
+  const activeReviews = useMemo(() => {
+    const selectedIds = new Set(locations.map(l => l.id));
+    return reviews.filter(r => !r.location_id || selectedIds.has(r.location_id));
+  }, [reviews, locations]);
+
   // Filtering + sorting
   const filtered = useMemo(() => {
     const selectedLocationIds = new Set(locations.map(l => l.id));
@@ -1283,18 +1289,18 @@ export function ReviewsPage() {
   const paginated = filtered.slice((page-1)*pageSize, page*pageSize);
 
   const counts = {
-    all: reviews.length,
-    pending:    reviews.filter(r => toUiStatus(r.status) === 'pending').length,
-    draft_ready:reviews.filter(r => toUiStatus(r.status) === 'draft_ready').length,
-    replied:    reviews.filter(r => toUiStatus(r.status) === 'replied').length,
+    all: activeReviews.length,
+    pending:    activeReviews.filter(r => toUiStatus(r.status) === 'pending').length,
+    draft_ready:activeReviews.filter(r => toUiStatus(r.status) === 'draft_ready').length,
+    replied:    activeReviews.filter(r => toUiStatus(r.status) === 'replied').length,
   };
-  const avgRating = reviews.length ? (reviews.reduce((s,r) => s + r.rating, 0) / reviews.length).toFixed(1) : '—';
+  const avgRating = activeReviews.length ? (activeReviews.reduce((s,r) => s + r.rating, 0) / activeReviews.length).toFixed(1) : '—';
   const hasFilters = !!(search || statusFilter !== 'all' || ratingFilter > 0 || locationFilter || dateFrom || dateTo || flagFilter);
 
   // Stats bar computations
-  const repliedCount = reviews.filter(r => r.status === 'PUBLISHED').length;
-  const replyRate = reviews.length > 0 ? `${(repliedCount / reviews.length * 100).toFixed(0)}%` : '—';
-  const repliedWithTimes = reviews.filter(r => r.status === 'PUBLISHED' && r.reply_published_at && r.published_at);
+  const repliedCount = activeReviews.filter(r => r.status === 'PUBLISHED').length;
+  const replyRate = activeReviews.length > 0 ? `${(repliedCount / activeReviews.length * 100).toFixed(0)}%` : '—';
+  const repliedWithTimes = activeReviews.filter(r => r.status === 'PUBLISHED' && r.reply_published_at && r.published_at);
   const avgResponseTime = repliedWithTimes.length > 0
     ? `${(repliedWithTimes.reduce((s, r) => s + Math.floor((new Date(r.reply_published_at!).getTime() - new Date(r.published_at!).getTime()) / 86400000), 0) / repliedWithTimes.length).toFixed(1)} days`
     : '—';
@@ -1460,9 +1466,9 @@ export function ReviewsPage() {
       {/* Chart — full width */}
       <div className="px-10 pt-4 pb-5 bg-white flex-shrink-0">
         <ReviewsLineChart
-          reviews={reviews}
-          totalReviews={reviews.length}
-          avgRatingStr={reviews.length ? `${(reviews.reduce((s,r) => s + r.rating, 0) / reviews.length).toFixed(1)} ★` : '—'}
+          reviews={activeReviews}
+          totalReviews={activeReviews.length}
+          avgRatingStr={activeReviews.length ? `${(activeReviews.reduce((s,r) => s + r.rating, 0) / activeReviews.length).toFixed(1)} ★` : '—'}
           replyRate={replyRate}
           avgResponseTime={avgResponseTime}
         />
