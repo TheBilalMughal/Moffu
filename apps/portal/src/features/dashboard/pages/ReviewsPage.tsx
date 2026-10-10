@@ -146,29 +146,38 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-// ── Sparkline ─────────────────────────────────────────────────────────────────
+// ── Status Breakdown Chart ────────────────────────────────────────────────────
 
-function Sparkline({ reviews }: { reviews: Review[] }) {
-  const bars = useMemo(() => {
-    const weeks: number[] = Array(8).fill(0);
-    const now = Date.now();
-    reviews.forEach(r => {
-      if (!r.published_at) return;
-      const daysAgo = (now - new Date(r.published_at).getTime()) / 86400000;
-      const weekIdx = Math.floor(daysAgo / 7);
-      if (weekIdx < 8) { weeks[7 - weekIdx] = (weeks[7 - weekIdx] ?? 0) + 1; }
-    });
-    return weeks;
-  }, [reviews]);
+function StatusBreakdownChart({ counts }: {
+  counts: { all: number; pending: number; draft_ready: number; replied: number };
+}) {
+  const total = counts.all;
+  const segments = [
+    { key: 'pending',    color: '#F59E0B', label: 'Pending',    count: counts.pending },
+    { key: 'draft_ready',color: '#60A5FA', label: 'Draft Ready',count: counts.draft_ready },
+    { key: 'replied',    color: '#0D4C3C', label: 'Replied',    count: counts.replied },
+  ];
 
-  const max = Math.max(...bars, 1);
   return (
-    <div className="flex items-end gap-0.5 h-6">
-      {bars.map((v, i) => (
-        <div key={i} title={`${v} review${v !== 1 ? 's' : ''}`}
-          style={{ height: `${Math.max(15, (v / max) * 100)}%` }}
-          className="w-3 bg-[#0D4C3C]/20 hover:bg-[#0D4C3C]/50 rounded-sm transition-colors cursor-default flex-shrink-0"/>
-      ))}
+    <div className="flex flex-col gap-2">
+      {/* Stacked bar */}
+      <div className="flex rounded-full overflow-hidden h-2 w-44 bg-[#F3F4F6]">
+        {total > 0 && segments.map(s => (
+          <div key={s.key}
+            title={`${s.label}: ${s.count}`}
+            style={{ width: `${(s.count / total) * 100}%`, backgroundColor: s.color }}
+          />
+        ))}
+      </div>
+      {/* Legend */}
+      <div className="flex items-center gap-3.5">
+        {segments.map(s => (
+          <span key={s.key} className="flex items-center gap-1.5 text-[10px] text-[#6B7280] whitespace-nowrap">
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: s.color }}/>
+            <span className="font-medium text-[#374151]">{s.count}</span> {s.label}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -866,10 +875,10 @@ export function ReviewsPage() {
             <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
             <p className="text-xs text-[#9CA3AF] mt-0.5">{reviews.length} total · avg {avgRating}★</p>
           </div>
-          {/* Sparkline — last 8 weeks */}
+          {/* Status breakdown chart */}
           <div className="pb-1">
-            <p className="text-[10px] text-[#9CA3AF] mb-1">Last 8 weeks</p>
-            <Sparkline reviews={reviews}/>
+            <p className="text-[10px] text-[#9CA3AF] mb-2">Review breakdown</p>
+            <StatusBreakdownChart counts={counts}/>
           </div>
         </div>
         <div className="flex items-center gap-2">
