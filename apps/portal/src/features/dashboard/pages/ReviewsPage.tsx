@@ -1423,7 +1423,7 @@ export function ReviewsPage() {
       </div>
 
       {/* Chart — full width */}
-      <div className="px-10 pt-4 pb-5 border-b border-[#E5EAE8] bg-white flex-shrink-0">
+      <div className="px-10 pt-4 pb-5 bg-white flex-shrink-0">
         <ReviewsLineChart
           reviews={reviews}
           totalReviews={reviews.length}
