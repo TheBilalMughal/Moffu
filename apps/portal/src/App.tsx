@@ -12,6 +12,7 @@ import { OverviewPage } from '@/features/dashboard/pages/OverviewPage';
 import { ReviewsPage } from '@/features/dashboard/pages/ReviewsPage';
 import { SettingsPage } from '@/features/dashboard/pages/SettingsPage';
 import { BrandBrainPage } from '@/features/brand-brain/BrandBrainPage';
+import { InsightsPage } from '@/features/insights/InsightsPage';
 import { GoogleCallbackPage } from '@/features/google/GoogleCallbackPage';
 
 export function App() {
@@ -66,6 +67,7 @@ export function App() {
         >
           <Route path="/dashboard" element={<OverviewPage />} />
           <Route path="/reviews" element={<ReviewsPage />} />
+          <Route path="/insights" element={<InsightsPage />} />
           <Route path="/brand-brain" element={<BrandBrainPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>

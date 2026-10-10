@@ -171,6 +171,25 @@ export const brandBrainService = {
     return data;
   },
 
+  async addKeywordContext(keyword: string, context: string): Promise<{ error?: ServiceError }> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: { message: 'Not authenticated.' } };
+
+    const { data: existing } = await supabase
+      .from('brand_brain').select('keyword_contexts').eq('user_id', user.id).maybeSingle();
+
+    const current: KeywordContext[] = existing?.keyword_contexts ?? [];
+    if (current.some(k => k.keyword.toLowerCase() === keyword.toLowerCase())) return {};
+
+    const updated = [...current, { id: crypto.randomUUID(), keyword, context }];
+    const { error } = await supabase
+      .from('brand_brain')
+      .upsert({ user_id: user.id, keyword_contexts: updated }, { onConflict: 'user_id' });
+
+    if (error) return { error: { message: error.message } };
+    return {};
+  },
+
   async analyzeVoice(replies: string[]): Promise<{ suggestions?: Partial<BrandBrainData>; error?: string }> {
     const auth = await getAuthHeader();
     if (!auth) return { error: 'Not authenticated' };
