@@ -260,6 +260,14 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
   locOverrides: Record<string, LocIdentityOverride>;
   onLocOverride: (locId: string, field: keyof LocIdentityOverride, value: string | null) => void;
 }) {
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  function toggle(id: string) {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
   return (
     <div className="space-y-5">
       <div>
@@ -313,10 +321,14 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
               {locations.map(loc => {
                 const ov = locOverrides[loc.id] ?? { business_name: null, business_type: null, business_desc: null };
                 const hasOverride = !!(ov.business_type || ov.business_desc);
+                const isOpen = expanded.has(loc.id);
                 return (
                   <div key={loc.id}>
-                    {/* Location header */}
-                    <div className="flex items-center gap-2.5 px-5 py-3 bg-white border-b border-[#E5EAE8]">
+                    {/* Clickable location header */}
+                    <button
+                      onClick={() => toggle(loc.id)}
+                      className="w-full flex items-center gap-2.5 px-5 py-3 bg-white hover:bg-[#F8FAF9] transition-colors text-left"
+                    >
                       <div className="w-6 h-6 rounded-full bg-[#E6F2EE] flex items-center justify-center flex-shrink-0">
                         <svg className="w-3 h-3 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                       </div>
@@ -329,37 +341,45 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
                           {[ov.business_type && 'type', ov.business_desc && 'desc'].filter(Boolean).join(' · ')} overridden
                         </span>
                       )}
-                    </div>
-                    {/* Fields */}
-                    <div className="px-5 py-4 space-y-3">
-                      <div>
-                        <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Business type</label>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1">
-                            <SelectField value={ov.business_type ?? ''} onChange={v => onLocOverride(loc.id, 'business_type', v || null)}
-                              options={BUSINESS_TYPES} placeholder={data.business_type || 'Same as default'}/>
+                      <svg
+                        className={`w-4 h-4 text-[#9CA3AF] flex-shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </button>
+                    {/* Collapsible fields */}
+                    {isOpen && (
+                      <div className="px-5 py-4 space-y-3 border-t border-[#E5EAE8]">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Business type</label>
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1">
+                              <SelectField value={ov.business_type ?? ''} onChange={v => onLocOverride(loc.id, 'business_type', v || null)}
+                                options={BUSINESS_TYPES} placeholder={data.business_type || 'Same as default'}/>
+                            </div>
+                            {ov.business_type && (
+                              <button onClick={() => onLocOverride(loc.id, 'business_type', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+                              </button>
+                            )}
                           </div>
-                          {ov.business_type && (
-                            <button onClick={() => onLocOverride(loc.id, 'business_type', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-                            </button>
-                          )}
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Short description</label>
+                          <div className="flex items-start gap-2">
+                            <textarea value={ov.business_desc ?? ''} onChange={e => onLocOverride(loc.id, 'business_desc', e.target.value || null)}
+                              placeholder={data.business_desc || 'Same as default'} rows={2} maxLength={200}
+                              className={`${inputCls} resize-none flex-1`}/>
+                            {ov.business_desc && (
+                              <button onClick={() => onLocOverride(loc.id, 'business_desc', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0 mt-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <div>
-                        <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Short description</label>
-                        <div className="flex items-start gap-2">
-                          <textarea value={ov.business_desc ?? ''} onChange={e => onLocOverride(loc.id, 'business_desc', e.target.value || null)}
-                            placeholder={data.business_desc || 'Same as default'} rows={2} maxLength={200}
-                            className={`${inputCls} resize-none flex-1`}/>
-                          {ov.business_desc && (
-                            <button onClick={() => onLocOverride(loc.id, 'business_desc', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0 mt-2">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 );
               })}
