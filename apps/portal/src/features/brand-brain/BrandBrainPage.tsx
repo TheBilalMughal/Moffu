@@ -231,12 +231,14 @@ function StepIndicator({ current, steps, completed, onJump }: {
 
 // ── Step 1: Business Identity ─────────────────────────────────────────────────
 
+type LocIdentityOverride = { business_name: string | null; business_type: string | null; business_desc: string | null };
+
 function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
   data: BrandBrainData;
   onChange: (p: Partial<BrandBrainData>) => void;
   locations: GoogleLocation[];
-  locOverrides: Record<string, LocationOverride & { _dirty?: boolean }>;
-  onLocOverride: (locId: string, field: 'business_name', value: string | null) => void;
+  locOverrides: Record<string, LocIdentityOverride>;
+  onLocOverride: (locId: string, field: keyof LocIdentityOverride, value: string | null) => void;
 }) {
   return (
     <div className="space-y-6 max-w-2xl">
@@ -245,20 +247,19 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
         <p className="text-sm text-[#6B7280]">Basic details that personalise every AI-generated reply.</p>
       </div>
 
-      <div className="space-y-4">
+      {/* Global defaults */}
+      <div className="space-y-4 p-4 border border-[#E5EAE8] rounded-xl bg-[#FAFAFA]">
+        <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wide">Global defaults</p>
         <div>
           <label className="block text-xs font-semibold text-[#374151] mb-1.5">Business name <span className="text-red-400">*</span></label>
           <input type="text" value={data.business_name} onChange={e => onChange({ business_name: e.target.value })}
             placeholder="e.g. The Blue Door Café" className={inputCls}/>
-          <p className="text-xs text-[#9CA3AF] mt-1">Used in every AI reply as the business identifier.</p>
         </div>
-
         <div>
           <label className="block text-xs font-semibold text-[#374151] mb-1.5">Business type</label>
           <SelectField value={data.business_type} onChange={v => onChange({ business_type: v })}
             options={BUSINESS_TYPES} placeholder="Select a type…"/>
         </div>
-
         <div>
           <label className="block text-xs font-semibold text-[#374151] mb-1.5">
             Short description <span className="text-[#9CA3AF] font-normal">(optional)</span>
@@ -270,31 +271,69 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
         </div>
       </div>
 
-      {/* Per-location business names */}
+      {/* Per-location identity */}
       {locations.length > 0 && (
-        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-          <div className="px-4 py-3 bg-[#FAFAFA] border-b border-[#E5EAE8] flex items-center gap-2">
+        <div>
+          <div className="flex items-center gap-2 mb-3">
             <svg className="w-4 h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            <h3 className="text-sm font-semibold text-[#374151]">Per-location business names</h3>
-            <span className="text-xs text-[#9CA3AF]">— leave blank to use the default above</span>
+            <h3 className="text-sm font-semibold text-[#374151]">Per-location identity</h3>
+            <span className="text-xs text-[#9CA3AF]">— leave blank to inherit the global default above</span>
           </div>
-          <div className="divide-y divide-[#F3F4F6]">
+          <div className="space-y-3">
             {locations.map(loc => {
-              const override = locOverrides[loc.id];
-              const val = override?.business_name ?? '';
+              const ov = locOverrides[loc.id] ?? { business_name: null, business_type: null, business_desc: null };
               return (
-                <div key={loc.id} className="flex items-center gap-3 px-4 py-3">
-                  <div className="w-40 flex-shrink-0">
-                    <p className="text-sm font-medium text-[#111827] truncate">{loc.display_name ?? 'Location'}</p>
-                    {loc.address && <p className="text-[10px] text-[#9CA3AF] truncate">{loc.address}</p>}
+                <div key={loc.id} className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+                  {/* Location header */}
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-[#FAFAFA] border-b border-[#E5EAE8]">
+                    <div className="w-6 h-6 rounded-full bg-[#E6F2EE] flex items-center justify-center flex-shrink-0">
+                      <svg className="w-3 h-3 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-[#111827] truncate">{loc.display_name ?? 'Location'}</p>
+                      {loc.address && <p className="text-[10px] text-[#9CA3AF] truncate">{loc.address}</p>}
+                    </div>
+                    {(ov.business_name || ov.business_type || ov.business_desc) && (
+                      <span className="ml-auto text-[10px] font-semibold text-[#0D4C3C] bg-[#E6F2EE] px-2 py-0.5 rounded-md flex-shrink-0">
+                        {[ov.business_name && 'name', ov.business_type && 'type', ov.business_desc && 'desc'].filter(Boolean).join(' · ')} overridden
+                      </span>
+                    )}
                   </div>
-                  <div className="flex-1 flex items-center gap-2">
-                    <input type="text" value={val} onChange={e => onLocOverride(loc.id, 'business_name', e.target.value || null)}
-                      placeholder={data.business_name || 'Same as default'}
-                      className={`${inputCls} py-2`}/>
-                    {val && <button onClick={() => onLocOverride(loc.id, 'business_name', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>}
+                  {/* Fields */}
+                  <div className="px-4 py-3 space-y-3">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Business name</label>
+                      <div className="flex items-center gap-2">
+                        <input type="text" value={ov.business_name ?? ''} onChange={e => onLocOverride(loc.id, 'business_name', e.target.value || null)}
+                          placeholder={data.business_name || 'Same as default'} className={`${inputCls} py-2`}/>
+                        {ov.business_name && <button onClick={() => onLocOverride(loc.id, 'business_name', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Business type</label>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <SelectField value={ov.business_type ?? ''} onChange={v => onLocOverride(loc.id, 'business_type', v || null)}
+                            options={BUSINESS_TYPES} placeholder={data.business_type || 'Same as default'}/>
+                        </div>
+                        {ov.business_type && <button onClick={() => onLocOverride(loc.id, 'business_type', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Short description</label>
+                      <div className="flex items-start gap-2">
+                        <textarea value={ov.business_desc ?? ''} onChange={e => onLocOverride(loc.id, 'business_desc', e.target.value || null)}
+                          placeholder={data.business_desc || 'Same as default'} rows={2} maxLength={200}
+                          className={`${inputCls} resize-none flex-1`}/>
+                        {ov.business_desc && <button onClick={() => onLocOverride(loc.id, 'business_desc', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0 mt-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>}
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
@@ -531,26 +570,24 @@ function Step4({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
       <div>
         <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide mb-2">Per-star tone & length overrides</h3>
         <p className="text-xs text-[#9CA3AF] mb-3">Optionally use a different tone or length for specific star ratings. Leave blank to use defaults.</p>
-        <div className="space-y-2.5">
+        <div className="grid grid-cols-3 gap-3">
           {starBuckets.map(bucket => {
             const rule = data.star_rating_rules[bucket.key];
             return (
-              <div key={bucket.key} className="flex items-center gap-3 p-3.5 bg-[#FAFAFA] rounded-xl border border-[#E5EAE8]">
-                <div className="w-24 flex-shrink-0">
-                  <p className={`text-sm ${bucket.color}`}>{bucket.stars}</p>
-                  <p className="text-xs text-[#6B7280] font-medium">{bucket.label}</p>
+              <div key={bucket.key} className="p-3.5 bg-[#FAFAFA] rounded-xl border border-[#E5EAE8] space-y-3">
+                <div>
+                  <p className={`text-base font-semibold leading-none ${bucket.color}`}>{bucket.stars}</p>
+                  <p className="text-xs text-[#6B7280] font-medium mt-1">{bucket.label}</p>
                 </div>
-                <div className="flex-1 grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] text-[#9CA3AF] mb-1 block">Tone</label>
-                    <SelectField value={rule?.tone ?? ''} onChange={v => setStarRule(bucket.key, 'tone', v || null)}
-                      options={TONE_PRESETS.map(p => p.label)} placeholder="Default"/>
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-[#9CA3AF] mb-1 block">Length</label>
-                    <SelectField value={rule?.reply_length ?? ''} onChange={v => setStarRule(bucket.key, 'reply_length', v || null)}
-                      options={REPLY_LENGTHS.map(r => r.key)} placeholder="Default"/>
-                  </div>
+                <div>
+                  <label className="text-[10px] text-[#9CA3AF] mb-1 block font-medium">Tone</label>
+                  <SelectField value={rule?.tone ?? ''} onChange={v => setStarRule(bucket.key, 'tone', v || null)}
+                    options={TONE_PRESETS.map(p => p.label)} placeholder="Default"/>
+                </div>
+                <div>
+                  <label className="text-[10px] text-[#9CA3AF] mb-1 block font-medium">Length</label>
+                  <SelectField value={rule?.reply_length ?? ''} onChange={v => setStarRule(bucket.key, 'reply_length', v || null)}
+                    options={REPLY_LENGTHS.map(r => r.key)} placeholder="Default"/>
                 </div>
               </div>
             );
@@ -1006,8 +1043,8 @@ export function BrandBrainPage() {
   const [data, setData] = useState<BrandBrainData>(DEFAULT_DATA);
   const [locations, setLocations] = useState<GoogleLocation[]>([]);
 
-  // Per-location name overrides (managed in Step 1) — { locationId: { business_name } }
-  const [locNameOverrides, setLocNameOverrides] = useState<Record<string, { business_name: string | null }>>({});
+  // Per-location identity overrides (managed in Step 1)
+  const [locNameOverrides, setLocNameOverrides] = useState<Record<string, LocIdentityOverride>>({});
 
   // Per-location full overrides (Step 6)
   const [locCache, setLocCache] = useState<Record<string, { data: BrandBrainData; flags: OverrideFlags; loaded: boolean }>>({});
@@ -1029,12 +1066,16 @@ export function BrandBrainPage() {
       setLocations(locs);
 
       // Build locNameOverrides
-      const names: Record<string, { business_name: string | null }> = {};
+      const names: Record<string, LocIdentityOverride> = {};
       const cache: Record<string, { data: BrandBrainData; flags: OverrideFlags; loaded: boolean }> = {};
 
       const allOverrides = overridesRes.data ?? [];
       for (const ov of allOverrides) {
-        names[ov.location_id] = { business_name: ov.business_name ?? null };
+        names[ov.location_id] = {
+          business_name: ov.business_name ?? null,
+          business_type: (ov as unknown as Record<string, string | null>).business_type ?? null,
+          business_desc: (ov as unknown as Record<string, string | null>).business_desc ?? null,
+        };
 
         const flags = { ...DEFAULT_FLAGS };
         const overrideData = { ...(globalRes.data ?? DEFAULT_DATA) };
@@ -1053,7 +1094,7 @@ export function BrandBrainPage() {
       // Init cache for locations without overrides
       for (const loc of locs) {
         if (!cache[loc.id]) cache[loc.id] = { data: { ...(globalRes.data ?? DEFAULT_DATA) }, flags: { ...DEFAULT_FLAGS }, loaded: true };
-        if (!names[loc.id]) names[loc.id] = { business_name: null };
+        if (!names[loc.id]) names[loc.id] = { business_name: null, business_type: null, business_desc: null };
       }
 
       setLocNameOverrides(names);
@@ -1064,8 +1105,11 @@ export function BrandBrainPage() {
 
   function patch(p: Partial<BrandBrainData>) { setData(prev => ({ ...prev, ...p })); }
 
-  function setLocName(locId: string, field: 'business_name', value: string | null) {
-    setLocNameOverrides(prev => ({ ...prev, [locId]: { ...prev[locId], [field]: value } }));
+  function setLocName(locId: string, field: keyof LocIdentityOverride, value: string | null) {
+    setLocNameOverrides(prev => {
+      const cur = prev[locId] ?? { business_name: null, business_type: null, business_desc: null };
+      return { ...prev, [locId]: { ...cur, [field]: value } };
+    });
   }
 
   function patchLocData(locId: string, p: Partial<BrandBrainData>) {
@@ -1103,17 +1147,20 @@ export function BrandBrainPage() {
 
     // Save location overrides
     for (const locId of locations.map(l => l.id)) {
-      const nameOverride = locNameOverrides[locId]?.business_name;
+      const identOv = locNameOverrides[locId];
       const cache = locCache[locId];
       const flags = cache?.flags ?? DEFAULT_FLAGS;
-      const hasAny = Object.values(flags).some(Boolean) || !!nameOverride;
+      const hasAny = Object.values(flags).some(Boolean)
+        || !!identOv?.business_name || !!identOv?.business_type || !!identOv?.business_desc;
 
       if (!hasAny) {
         await brandBrainService.deleteOverride(locId);
       } else {
         const cacheData = cache?.data ?? data;
         const payload: Omit<LocationOverride, 'location_id'> = {
-          business_name: nameOverride ?? null,
+          business_name: identOv?.business_name ?? null,
+          business_type: identOv?.business_type ?? null,
+          business_desc: identOv?.business_desc ?? null,
           tone: flags.tone ? cacheData.tone : null,
           reply_length: flags.reply_length ? cacheData.reply_length : null,
           use_customer_name: flags.use_customer_name ? cacheData.use_customer_name : null,
@@ -1199,7 +1246,7 @@ export function BrandBrainPage() {
 
       {/* Step content */}
       <div className="flex-1 overflow-y-auto px-10 py-6">
-        {step === 1 && <Step1 data={data} onChange={patch} locations={locations} locOverrides={Object.fromEntries(Object.entries(locNameOverrides).map(([k,v]) => [k, { location_id: k, ...v }]))} onLocOverride={setLocName}/>}
+        {step === 1 && <Step1 data={data} onChange={patch} locations={locations} locOverrides={locNameOverrides} onLocOverride={setLocName}/>}
         {step === 2 && <Step2 data={data} onChange={patch} onAnalyzeVoice={handleAnalyzeVoice}/>}
         {step === 3 && <Step3 data={data} onChange={patch}/>}
         {step === 4 && <Step4 data={data} onChange={patch}/>}

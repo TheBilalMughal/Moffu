@@ -32,6 +32,8 @@ export interface BrandBrainData {
 export interface LocationOverride {
   location_id: string;
   business_name?: string | null;
+  business_type?: string | null;
+  business_desc?: string | null;
   tone?: string | null;
   reply_length?: string | null;
   use_customer_name?: boolean | null;
