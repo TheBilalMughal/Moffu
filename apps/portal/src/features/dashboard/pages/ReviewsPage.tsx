@@ -496,7 +496,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
           {pts.map((p, i) => (
             <g key={i} onMouseEnter={() => setHovered(i)} style={{ cursor: 'default' }}>
               <rect x={p.x - (innerW / data.length / 2)} y={PAD.top} width={innerW / data.length} height={innerH} fill="transparent"/>
-              {(hovered === i || data[i]!.count > 0) && (
+              {!showSentiment && (hovered === i || data[i]!.count > 0) && (
                 <circle cx={p.x} cy={p.y} r={hovered === i ? 4.5 : 3} fill="#0D4C3C" stroke="white" strokeWidth={1.5}/>
               )}
             </g>
