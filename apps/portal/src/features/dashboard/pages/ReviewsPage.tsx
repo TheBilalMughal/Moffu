@@ -359,7 +359,7 @@ export function ReviewsPage() {
         <div className="space-y-4">
           {filtered.map((review) => (
             <ReviewCard
-              key={review.id}
+              key={`${review.id}-${review.status}-${review.reply_draft ?? ''}`}
               review={review}
               onGenerateDraft={handleGenerateDraft}
               onPublish={handlePublish}
