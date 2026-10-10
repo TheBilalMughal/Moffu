@@ -1322,7 +1322,6 @@ export function ReviewsPage() {
       <div className="px-10 py-4 bg-white flex items-center justify-between gap-4 flex-shrink-0">
         <div>
           <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
-          <p className="text-xs text-[#9CA3AF] mt-0.5">{reviews.length} total · avg {avgRating}★</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setShowShortcuts(true)} title="Keyboard shortcuts"
