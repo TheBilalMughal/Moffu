@@ -85,21 +85,21 @@ Reply (output the reply text only, nothing else):`;
 
 
     // Call Gemini
-    const geminiBody = JSON.stringify({
-      system_instruction: {
-        parts: [{ text: 'You are a customer service specialist. Output ONLY the reply text — no labels, no markdown, no thinking, no extra commentary.' }],
-      },
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 300, thinkingConfig: { thinkingBudget: 0 } },
-    });
+    const sysInstruction = { parts: [{ text: 'You are a customer service specialist. Output ONLY the reply text — no labels, no markdown, no extra commentary.' }] };
+    const contents = [{ role: 'user', parts: [{ text: prompt }] }];
 
-    const models = ['gemini-2.5-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-latest'];
+    const modelConfigs = [
+      { model: 'gemini-3.8-flash', body: { system_instruction: sysInstruction, contents, generationConfig: { temperature: 0.7, maxOutputTokens: 300, thinkingConfig: { thinkingBudget: 0 } } } },
+      { model: 'gemini-3.8-flash', body: { system_instruction: sysInstruction, contents, generationConfig: { temperature: 0.7, maxOutputTokens: 300, thinkingConfig: { thinkingBudget: 0 } } } },
+      { model: 'gemini-3.5-flash-lite', body: { system_instruction: sysInstruction, contents, generationConfig: { temperature: 0.7, maxOutputTokens: 300 } } },
+    ];
+
     let draft = '';
 
-    for (const model of models) {
+    for (const { model, body } of modelConfigs) {
       const geminiRes = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: geminiBody }
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
       );
       if (!geminiRes.ok) {
         const err = await geminiRes.text();
