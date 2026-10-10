@@ -423,7 +423,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
 
       {/* SVG chart — full width */}
       <div className="relative w-full" onMouseLeave={() => setHovered(null)}>
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 130 }} aria-hidden="true">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 100 }} aria-hidden="true">
           <defs>
             <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#0D4C3C" stopOpacity="0.12"/>
