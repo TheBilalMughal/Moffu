@@ -1018,7 +1018,7 @@ export function ReviewsPage() {
       )}
 
       {/* Header */}
-      <div className="px-10 py-4 border-b border-[#E5EAE8] bg-white flex items-center justify-between gap-4 flex-shrink-0">
+      <div className="px-10 py-4 bg-white flex items-center justify-between gap-4 flex-shrink-0">
         <div>
           <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
           <p className="text-xs text-[#9CA3AF] mt-0.5">{reviews.length} total · avg {avgRating}★</p>
@@ -1049,7 +1049,7 @@ export function ReviewsPage() {
       </div>
 
       {/* Reviews trend chart */}
-      <div className="px-10 pt-5 pb-4 bg-white flex-shrink-0">
+      <div className="px-10 pt-5 pb-4 border-b border-[#E5EAE8] bg-white flex-shrink-0">
         <ReviewsLineChart reviews={reviews}/>
       </div>
 
