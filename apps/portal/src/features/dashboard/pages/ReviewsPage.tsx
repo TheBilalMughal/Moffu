@@ -1,23 +1,30 @@
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { googleService } from '@/features/google/google.service';
 
+// ── Types ────────────────────────────────────────────────────────────────────
+
 type DbStatus = 'NEW' | 'DRAFTING' | 'DRAFT_READY' | 'AWAITING_APPROVAL' | 'NEEDS_ATTENTION' | 'PUBLISHING' | 'PUBLISHED' | 'PUBLISH_FAILED';
 type UiStatus = 'pending' | 'draft_ready' | 'replied';
+type SortKey = 'newest' | 'oldest' | 'unanswered' | 'highest' | 'lowest';
 
-interface Review {
-  id: string;
-  reviewer_name: string;
-  rating: number;
-  published_at: string | null;
-  body: string | null;
-  status: DbStatus;
-  reply_draft: string | null;
-  reply_text: string | null;
-  location_id: string | null;
+interface DraftHistoryItem { draft: string; created_at: string; }
+interface FilterPreset { id: string; name: string; filters: SavedFilters; }
+interface SavedFilters {
+  search: string; statusFilter: 'all' | UiStatus;
+  ratingFilter: number; locationFilter: string;
+  dateFrom: string; dateTo: string; sortBy: SortKey;
 }
-
+interface Review {
+  id: string; reviewer_name: string; rating: number;
+  published_at: string | null; body: string | null; status: DbStatus;
+  reply_draft: string | null; reply_text: string | null;
+  location_id: string | null; notes: string | null;
+  draft_history: DraftHistoryItem[];
+}
 interface Location { id: string; display_name: string | null; }
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function toUiStatus(s: DbStatus): UiStatus {
   if (s === 'PUBLISHED') return 'replied';
@@ -33,32 +40,55 @@ function fmtDate(iso: string | null) {
   return `${day}-${mon}-${d.getFullYear()}`;
 }
 
-function Stars({ rating }: { rating: number }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1,2,3,4,5].map(n => (
-        <svg key={n} className={`w-3 h-3 ${n <= rating ? 'text-amber-400' : 'text-[#E5E7EB]'}`} viewBox="0 0 20 20" fill="currentColor">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-        </svg>
-      ))}
-    </div>
-  );
+function fmtAge(iso: string | null, uiStatus: UiStatus) {
+  if (!iso || uiStatus === 'replied') return null;
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  const urgency = days >= 3 ? 'text-red-500' : days >= 1 ? 'text-amber-500' : 'text-[#9CA3AF]';
+  return { label: days === 0 ? 'Today' : days === 1 ? '1d ago' : `${days}d ago`, urgency };
 }
 
+function getSentiment(rating: number) {
+  if (rating >= 4) return { label: 'Positive', cls: 'text-emerald-600' };
+  if (rating === 3) return { label: 'Neutral',  cls: 'text-[#9CA3AF]' };
+  return { label: 'Negative', cls: 'text-red-500' };
+}
+
+function exportCSV(reviews: Review[], locations: Location[]) {
+  const headers = ['Date','Reviewer','Rating','Location','Review','Status','Draft'];
+  const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
+  const rows = reviews.map(r => [
+    fmtDate(r.published_at), r.reviewer_name ?? '', String(r.rating),
+    locations.find(l => l.id === r.location_id)?.display_name ?? '',
+    r.body ?? '', toUiStatus(r.status), r.reply_draft ?? '',
+  ].map(esc).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  Object.assign(document.createElement('a'), { href: url, download: `reviews-${new Date().toISOString().split('T')[0]}.csv` }).click();
+  URL.revokeObjectURL(url);
+}
+
+function loadPresets(): FilterPreset[] {
+  try { return JSON.parse(localStorage.getItem('moffu_review_presets') || '[]'); } catch { return []; }
+}
+function savePresets(p: FilterPreset[]) {
+  try { localStorage.setItem('moffu_review_presets', JSON.stringify(p)); } catch {}
+}
+
+const PAGE_SIZE = 20;
+const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS_SHORT  = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 const STATUS_CFG: Record<UiStatus, { dot: string; label: string }> = {
   pending:    { dot: 'bg-amber-400', label: 'Pending'     },
   draft_ready:{ dot: 'bg-blue-400',  label: 'Draft Ready' },
   replied:    { dot: 'bg-[#0D4C3C]', label: 'Replied'    },
 };
 
-// ── Filter Dropdown ──────────────────────────────────────────────────────────
+// ── FilterDropdown ────────────────────────────────────────────────────────────
 
 function FilterDropdown({ label, icon, options, value, onChange }: {
-  label: string;
-  icon: React.ReactNode;
+  label: string; icon: React.ReactNode;
   options: { value: string; label: string }[];
-  value: string;
-  onChange: (v: string) => void;
+  value: string; onChange: (v: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -73,10 +103,8 @@ function FilterDropdown({ label, icon, options, value, onChange }: {
 
   return (
     <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}
-      >
+      <button onClick={() => setOpen(o => !o)}
+        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
         <span className="flex-shrink-0">{icon}</span>
         <span className="text-xs">{active ? selectedLabel : label}</span>
         {active
@@ -86,19 +114,15 @@ function FilterDropdown({ label, icon, options, value, onChange }: {
           : <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
         }
       </button>
-
       {open && (
         <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 min-w-[160px]">
           {options.map(opt => {
-            const selected = opt.value === value;
+            const sel = opt.value === value;
             return (
-              <button
-                key={opt.value}
-                onClick={() => { onChange(opt.value); setOpen(false); }}
-                className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${selected ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
-              >
+              <button key={opt.value} onClick={() => { onChange(opt.value); setOpen(false); }}
+                className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${sel ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}>
                 <span>{opt.label}</span>
-                {selected && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
+                {sel && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
               </button>
             );
           })}
@@ -108,17 +132,56 @@ function FilterDropdown({ label, icon, options, value, onChange }: {
   );
 }
 
-// ── Toast ────────────────────────────────────────────────────────────────────
+// ── Stars ─────────────────────────────────────────────────────────────────────
+
+function Stars({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1,2,3,4,5].map(n => (
+        <svg key={n} className={`w-3 h-3 ${n <= rating ? 'text-amber-400' : 'text-[#E5E7EB]'}`} viewBox="0 0 20 20" fill="currentColor">
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+// ── Sparkline ─────────────────────────────────────────────────────────────────
+
+function Sparkline({ reviews }: { reviews: Review[] }) {
+  const bars = useMemo(() => {
+    const weeks: number[] = Array(8).fill(0);
+    const now = Date.now();
+    reviews.forEach(r => {
+      if (!r.published_at) return;
+      const daysAgo = (now - new Date(r.published_at).getTime()) / 86400000;
+      const weekIdx = Math.floor(daysAgo / 7);
+      if (weekIdx < 8) { weeks[7 - weekIdx] = (weeks[7 - weekIdx] ?? 0) + 1; }
+    });
+    return weeks;
+  }, [reviews]);
+
+  const max = Math.max(...bars, 1);
+  return (
+    <div className="flex items-end gap-0.5 h-6">
+      {bars.map((v, i) => (
+        <div key={i} title={`${v} review${v !== 1 ? 's' : ''}`}
+          style={{ height: `${Math.max(15, (v / max) * 100)}%` }}
+          className="w-3 bg-[#0D4C3C]/20 hover:bg-[#0D4C3C]/50 rounded-sm transition-colors cursor-default flex-shrink-0"/>
+      ))}
+    </div>
+  );
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
 
 function Toast({ message, type, onDone }: { message: string; type: 'success' | 'error'; onDone: () => void }) {
   const [visible, setVisible] = useState(true);
-
   useEffect(() => {
-    const hide = setTimeout(() => setVisible(false), 3200);
-    const remove = setTimeout(onDone, 3700);
-    return () => { clearTimeout(hide); clearTimeout(remove); };
+    const h = setTimeout(() => setVisible(false), 3200);
+    const r = setTimeout(onDone, 3700);
+    return () => { clearTimeout(h); clearTimeout(r); };
   }, [onDone]);
-
   return (
     <div className={`fixed top-5 right-5 z-[100] flex items-start gap-3 bg-white shadow-lg rounded-xl px-4 py-3 max-w-sm border border-[#E5EAE8] transition-all duration-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
       <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${type === 'error' ? 'bg-red-100' : 'bg-emerald-100'}`}>
@@ -132,15 +195,48 @@ function Toast({ message, type, onDone }: { message: string; type: 'success' | '
   );
 }
 
-const PAGE_SIZE = 20;
-const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const DAYS_SHORT = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+// ── Shortcuts Modal ───────────────────────────────────────────────────────────
 
-// ── Publish Modal ────────────────────────────────────────────────────────────
+function ShortcutsModal({ onClose }: { onClose: () => void }) {
+  const shortcuts = [
+    { key: 'J / ↓', desc: 'Next review' },
+    { key: 'K / ↑', desc: 'Previous review' },
+    { key: 'Enter', desc: 'Expand / collapse row' },
+    { key: 'G', desc: 'Generate AI draft' },
+    { key: 'A', desc: 'Open Approve & Publish modal' },
+    { key: 'X', desc: 'Select / deselect row' },
+    { key: '?', desc: 'Toggle this help' },
+    { key: 'Esc', desc: 'Close modal / clear focus' },
+  ];
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E5EAE8]">
+          <h2 className="text-sm font-semibold text-[#111827]">Keyboard Shortcuts</h2>
+          <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#374151]">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div className="px-5 py-3 space-y-2">
+          {shortcuts.map(s => (
+            <div key={s.key} className="flex items-center justify-between">
+              <span className="text-xs text-[#6B7280]">{s.desc}</span>
+              <kbd className="text-xs font-mono bg-[#F3F4F6] text-[#374151] px-2 py-0.5 rounded border border-[#E5E7EB]">{s.key}</kbd>
+            </div>
+          ))}
+        </div>
+        <div className="px-5 py-3 border-t border-[#E5EAE8]">
+          <p className="text-xs text-[#9CA3AF]">Shortcuts work when no input is focused.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Publish Modal ─────────────────────────────────────────────────────────────
 
 function PublishModal({ review, locationName, onClose, onPublish }: {
-  review: Review;
-  locationName: string;
+  review: Review; locationName: string;
   onClose: () => void;
   onPublish: (id: string, draft: string) => Promise<{ error?: string }>;
 }) {
@@ -158,15 +254,12 @@ function PublishModal({ review, locationName, onClose, onPublish }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5EAE8]">
           <h2 className="text-base font-semibold text-[#111827]">Review Reply</h2>
-          <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#374151] transition-colors">
+          <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#374151]">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
-
-        {/* Review */}
         <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E5EAE8]">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-xs font-semibold flex-shrink-0">
@@ -175,7 +268,7 @@ function PublishModal({ review, locationName, onClose, onPublish }: {
             <div>
               <p className="text-sm font-medium text-[#111827]">{review.reviewer_name ?? 'Anonymous'}</p>
               <div className="flex items-center gap-2">
-                <Stars rating={review.rating} />
+                <Stars rating={review.rating}/>
                 <span className="text-xs text-[#9CA3AF]">{fmtDate(review.published_at)}</span>
                 {locationName && <span className="text-xs text-[#9CA3AF]">· {locationName}</span>}
               </div>
@@ -183,30 +276,17 @@ function PublishModal({ review, locationName, onClose, onPublish }: {
           </div>
           {review.body && <p className="text-sm text-[#374151] leading-relaxed">{review.body}</p>}
         </div>
-
-        {/* Draft editor */}
         <div className="px-6 py-4">
           <label className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide block mb-2">Your Reply</label>
-          <textarea
-            value={text}
-            onChange={e => setText(e.target.value)}
-            rows={5}
+          <textarea value={text} onChange={e => setText(e.target.value)} rows={5}
             className="w-full text-sm text-[#374151] border border-[#D1D5DB] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0D4C3C] resize-none"
-            placeholder="Write your reply…"
-          />
+            placeholder="Write your reply…"/>
           {error && <p className="mt-1.5 text-xs text-red-600">{error}</p>}
         </div>
-
-        {/* Actions */}
         <div className="px-6 py-4 border-t border-[#E5EAE8] flex items-center justify-end gap-2">
-          <button onClick={onClose} className="text-sm text-[#6B7280] font-medium px-4 py-2 rounded-lg hover:bg-[#F3F4F6] transition-colors">
-            Cancel
-          </button>
-          <button
-            onClick={handle}
-            disabled={publishing || !text.trim()}
-            className="bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors disabled:opacity-50"
-          >
+          <button onClick={onClose} className="text-sm text-[#6B7280] font-medium px-4 py-2 rounded-lg hover:bg-[#F3F4F6] transition-colors">Cancel</button>
+          <button onClick={handle} disabled={publishing || !text.trim()}
+            className="bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors disabled:opacity-50">
             {publishing ? 'Publishing…' : 'Approve & Publish'}
           </button>
         </div>
@@ -215,34 +295,52 @@ function PublishModal({ review, locationName, onClose, onPublish }: {
   );
 }
 
-// ── Date Range Picker ────────────────────────────────────────────────────────
+// ── Bulk Action Bar ───────────────────────────────────────────────────────────
+
+function BulkActionBar({ count, generating, onGenerate, onClear }: {
+  count: number; generating: boolean;
+  onGenerate: () => void; onClear: () => void;
+}) {
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#111827] text-white rounded-xl px-5 py-3 shadow-xl">
+      <span className="text-sm font-medium">{count} selected</span>
+      <div className="w-px h-4 bg-white/20"/>
+      <button onClick={onGenerate} disabled={generating}
+        className="flex items-center gap-1.5 text-sm font-semibold text-[#0D4C3C] bg-white hover:bg-[#F0F7F5] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+        <svg className={`w-3.5 h-3.5 ${generating ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+        </svg>
+        {generating ? 'Generating…' : `Generate Drafts (${count})`}
+      </button>
+      <button onClick={onClear} className="text-sm text-white/60 hover:text-white transition-colors">Clear</button>
+    </div>
+  );
+}
+
+// ── Date Range Picker ─────────────────────────────────────────────────────────
 
 function isoToDate(s: string) { return s ? new Date(s + 'T00:00:00') : null; }
-function dateToIso(d: Date) { return d.toISOString().split('T')[0]; }
+function dateToIso(d: Date): string { return d.toISOString().split('T')[0] ?? ''; }
 function sameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
 function CalMonth({ year, month, from, to, hovered, onDay, onHover }: {
-  year: number; month: number;
-  from: Date | null; to: Date | null; hovered: Date | null;
+  year: number; month: number; from: Date | null; to: Date | null; hovered: Date | null;
   onDay: (d: Date) => void; onHover: (d: Date | null) => void;
 }) {
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const today = new Date();
   const rangeEnd = to ?? hovered;
-
   function inRange(d: Date) {
     if (!from || !rangeEnd) return false;
     const [lo, hi] = from <= rangeEnd ? [from, rangeEnd] : [rangeEnd, from];
     return d > lo && d < hi;
   }
-
   const cells: (Date | null)[] = Array(firstDay).fill(null);
   for (let i = 1; i <= daysInMonth; i++) cells.push(new Date(year, month, i));
   while (cells.length % 7 !== 0) cells.push(null);
-
   return (
     <div className="w-[216px]">
       <p className="text-xs font-semibold text-[#111827] text-center mb-3">{MONTHS_LONG[month]} {year}</p>
@@ -256,14 +354,12 @@ function CalMonth({ year, month, from, to, hovered, onDay, onHover }: {
           const isToday = sameDay(d, today);
           return (
             <div key={d.getTime()} onMouseEnter={() => onHover(d)} onMouseLeave={() => onHover(null)} onClick={() => onDay(d)}
-              className={[
-                'h-7 flex items-center justify-center text-xs cursor-pointer select-none transition-colors',
+              className={['h-7 flex items-center justify-center text-xs cursor-pointer select-none transition-colors',
                 isStart || isEnd ? 'bg-[#0D4C3C] text-white font-semibold rounded-md' : '',
                 range ? 'bg-[#E6F2EE] text-[#0D4C3C]' : '',
                 !isStart && !isEnd && !range ? 'text-[#374151] hover:bg-[#F3F4F6] rounded-md' : '',
                 isToday && !isStart && !isEnd ? 'font-bold underline decoration-dotted' : '',
-              ].join(' ')}
-            >
+              ].join(' ')}>
               {d.getDate()}
             </div>
           );
@@ -281,37 +377,23 @@ function DateRangePicker({ from, to, onChange }: { from: string; to: string; onC
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
   const ref = useRef<HTMLDivElement>(null);
-  const fromDate = isoToDate(from);
-  const toDate = isoToDate(to);
+  const fromDate = isoToDate(from); const toDate = isoToDate(to);
   const hasValue = !!(from || to);
-
-  const label = from && to
-    ? `${fmtDate(from)} – ${fmtDate(to)}`
-    : from ? `From ${fmtDate(from)}` : 'Date range';
-
+  const label = from && to ? `${fmtDate(from)} – ${fmtDate(to)}` : from ? `From ${fmtDate(from)}` : 'Date range';
   useEffect(() => {
     const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener('mousedown', fn);
-    return () => document.removeEventListener('mousedown', fn);
+    document.addEventListener('mousedown', fn); return () => document.removeEventListener('mousedown', fn);
   }, []);
-
   function handleDay(d: Date) {
     if (selecting === 'from' || !fromDate) { onChange(dateToIso(d), ''); setSelecting('to'); }
     else {
       const [lo, hi] = d >= fromDate ? [fromDate, d] : [d, fromDate];
-      onChange(dateToIso(lo), dateToIso(hi));
-      setSelecting('from'); setOpen(false);
+      onChange(dateToIso(lo), dateToIso(hi)); setSelecting('from'); setOpen(false);
     }
   }
-
-  function prevMonth() { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y-1); } else setViewMonth(m => m-1); }
-  function nextMonth() { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y+1); } else setViewMonth(m => m+1); }
-
+  function preset(f: Date, t: Date) { onChange(dateToIso(f), dateToIso(t)); setSelecting('from'); setOpen(false); }
   const nextM = viewMonth === 11 ? 0 : viewMonth + 1;
   const nextY = viewMonth === 11 ? viewYear + 1 : viewYear;
-
-  function preset(f: Date, t: Date) { onChange(dateToIso(f), dateToIso(t)); setSelecting('from'); setOpen(false); }
-
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(o => !o)}
@@ -320,20 +402,19 @@ function DateRangePicker({ from, to, onChange }: { from: string; to: string; onC
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
         <span>{label}</span>
-        {hasValue && (
-          <span onClick={e => { e.stopPropagation(); onChange('',''); setSelecting('from'); }} className="ml-0.5 hover:text-red-500">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-          </span>
-        )}
+        {hasValue && <span onClick={e => { e.stopPropagation(); onChange('',''); setSelecting('from'); }} className="ml-0.5 hover:text-red-500">
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+        </span>}
       </button>
-
       {open && (
         <div className="absolute top-full mt-2 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg p-4 min-w-max">
           <div className="flex items-center justify-between mb-3">
-            <button onClick={prevMonth} className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
+            <button onClick={() => { if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y-1); } else setViewMonth(m => m-1); }}
+              className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
             </button>
-            <button onClick={nextMonth} className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
+            <button onClick={() => { if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y+1); } else setViewMonth(m => m+1); }}
+              className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
             </button>
           </div>
@@ -347,7 +428,7 @@ function DateRangePicker({ from, to, onChange }: { from: string; to: string; onC
             <div className="flex items-center gap-3">
               <button onClick={() => { const t = new Date(); preset(t, t); }} className="text-xs text-[#0D4C3C] font-medium hover:underline">Today</button>
               <button onClick={() => { const t = new Date(); preset(new Date(t.getFullYear(), t.getMonth(), 1), t); }} className="text-xs text-[#0D4C3C] font-medium hover:underline">This month</button>
-              <button onClick={() => { const t = new Date(); const ago = new Date(t); ago.setDate(t.getDate()-29); preset(ago, t); }} className="text-xs text-[#0D4C3C] font-medium hover:underline">Last 30 days</button>
+              <button onClick={() => { const t = new Date(); const a = new Date(t); a.setDate(t.getDate()-29); preset(a, t); }} className="text-xs text-[#0D4C3C] font-medium hover:underline">Last 30 days</button>
               {hasValue && <button onClick={() => { onChange('',''); setSelecting('from'); }} className="text-xs text-[#9CA3AF] hover:text-red-500">Clear</button>}
             </div>
           </div>
@@ -357,36 +438,55 @@ function DateRangePicker({ from, to, onChange }: { from: string; to: string; onC
   );
 }
 
-// ── Review Row ───────────────────────────────────────────────────────────────
+// ── Review Row ────────────────────────────────────────────────────────────────
 
-function ReviewRow({ review, locationName, expanded, onToggle, onGenerateDraft, onPublish, onDiscard }: {
+function ReviewRow({ review, locationName, expanded, selected, focused, onToggle, onSelect,
+  onGenerateDraft, onPublish, onDiscard, onSaveNote }: {
   review: Review; locationName: string; expanded: boolean;
-  onToggle: () => void;
+  selected: boolean; focused: boolean;
+  onToggle: () => void; onSelect: (e: React.MouseEvent) => void;
   onGenerateDraft: (id: string) => void;
   onPublish: (id: string, draft: string) => Promise<{ error?: string }>;
   onDiscard: (id: string) => Promise<void>;
+  onSaveNote: (id: string, note: string) => Promise<void>;
 }) {
   const uiStatus = toUiStatus(review.status);
   const s = STATUS_CFG[uiStatus];
   const [modalOpen, setModalOpen] = useState(false);
+  const [historyTab, setHistoryTab] = useState(false);
+  const [note, setNote] = useState(review.notes ?? '');
+  const [savingNote, setSavingNote] = useState(false);
   const isDrafting = review.status === 'DRAFTING';
   const isPublishing = review.status === 'PUBLISHING';
   const initials = (review.reviewer_name ?? '?').split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
+  const age = fmtAge(review.published_at, uiStatus);
+  const sentiment = getSentiment(review.rating);
+
+  useEffect(() => { setNote(review.notes ?? ''); }, [review.notes]);
+
+  async function handleNoteSave() {
+    if (note === (review.notes ?? '')) return;
+    setSavingNote(true);
+    await onSaveNote(review.id, note);
+    setSavingNote(false);
+  }
 
   return (
     <>
-      {modalOpen && (
-        <PublishModal
-          review={review}
-          locationName={locationName}
-          onClose={() => setModalOpen(false)}
-          onPublish={onPublish}
-        />
-      )}
+      {modalOpen && <PublishModal review={review} locationName={locationName} onClose={() => setModalOpen(false)} onPublish={onPublish}/>}
 
-      <tr onClick={onToggle} className={`group cursor-pointer border-b border-[#F3F4F6] transition-colors ${expanded ? 'bg-[#F8FAF9]' : 'hover:bg-[#FAFAFA]'}`}>
+      <tr onClick={onToggle}
+        className={`group cursor-pointer border-b border-[#F3F4F6] transition-colors ${focused ? 'ring-1 ring-inset ring-[#0D4C3C]/30' : ''} ${expanded ? 'bg-[#F8FAF9]' : 'hover:bg-[#FAFAFA]'} ${selected ? 'bg-[#F0F7F5]' : ''}`}>
+
+        {/* Checkbox */}
+        <td className="pl-10 pr-2 py-3 w-10" onClick={e => { e.stopPropagation(); onSelect(e); }}>
+          <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${selected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] group-hover:border-[#0D4C3C]'}`}>
+            {selected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
+          </div>
+        </td>
+
         {/* Date */}
-        <td className="pl-10 pr-3 py-3 w-36 text-xs text-[#6B7280] whitespace-nowrap font-mono">{fmtDate(review.published_at)}</td>
+        <td className="px-3 py-3 w-32 text-xs text-[#6B7280] whitespace-nowrap font-mono">{fmtDate(review.published_at)}</td>
 
         {/* Reviewer */}
         <td className="px-3 py-3 w-44">
@@ -400,31 +500,32 @@ function ReviewRow({ review, locationName, expanded, onToggle, onGenerateDraft, 
         </td>
 
         {/* Location */}
-        <td className="px-3 py-3 w-36">
-          <span className="text-xs text-[#6B7280] truncate block max-w-[130px]">{locationName || '—'}</span>
-        </td>
-
-        {/* Review snippet */}
-        <td className="px-3 py-3">
-          <p className="text-sm text-[#6B7280] truncate max-w-xs">{review.body || <span className="italic text-[#9CA3AF]">No text</span>}</p>
-        </td>
-
-        {/* Status */}
         <td className="px-3 py-3 w-32">
+          <span className="text-xs text-[#6B7280] truncate block max-w-[120px]">{locationName || '—'}</span>
+        </td>
+
+        {/* Review + sentiment */}
+        <td className="px-3 py-3">
+          <div className="flex items-center gap-2">
+            <span className={`text-[10px] font-medium flex-shrink-0 ${sentiment.cls}`}>{sentiment.label}</span>
+            <p className="text-sm text-[#6B7280] truncate max-w-xs">{review.body || <span className="italic text-[#9CA3AF]">No text</span>}</p>
+          </div>
+        </td>
+
+        {/* Status + age */}
+        <td className="px-3 py-3 w-28">
           <span className="inline-flex items-center gap-1.5 text-xs text-[#6B7280]">
             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${s.dot}`}/>
             {isPublishing ? 'Publishing…' : isDrafting ? 'Generating…' : s.label}
           </span>
+          {age && <p className={`text-[10px] mt-0.5 ml-3 ${age.urgency}`}>{age.label}</p>}
         </td>
 
         {/* Inline action */}
-        <td className="px-3 py-3 pr-10 w-44" onClick={e => e.stopPropagation()}>
+        <td className="px-3 py-3 w-44 pr-10" onClick={e => e.stopPropagation()}>
           {uiStatus === 'pending' && (
-            <button
-              onClick={() => onGenerateDraft(review.id)}
-              disabled={isDrafting}
-              className="flex items-center gap-1.5 text-xs font-medium text-[#0D4C3C] hover:text-[#083F32] border border-[#0D4C3C]/30 hover:border-[#0D4C3C] bg-white hover:bg-[#F0F7F5] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
-            >
+            <button onClick={() => onGenerateDraft(review.id)} disabled={isDrafting}
+              className="flex items-center gap-1.5 text-xs font-medium text-[#0D4C3C] hover:text-[#083F32] border border-[#0D4C3C]/30 hover:border-[#0D4C3C] bg-white hover:bg-[#F0F7F5] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap">
               <svg className={`w-3.5 h-3.5 ${isDrafting ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
               </svg>
@@ -432,67 +533,90 @@ function ReviewRow({ review, locationName, expanded, onToggle, onGenerateDraft, 
             </button>
           )}
           {uiStatus === 'draft_ready' && (
-            <button
-              onClick={() => setModalOpen(true)}
-              disabled={isPublishing}
-              className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
-              </svg>
+            <button onClick={() => setModalOpen(true)} disabled={isPublishing}
+              className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
               Approve & Publish
             </button>
           )}
-          {uiStatus === 'replied' && (
-            <span className="text-xs text-[#9CA3AF]">Published</span>
-          )}
+          {uiStatus === 'replied' && <span className="text-xs text-[#9CA3AF]">Published</span>}
         </td>
 
         {/* Chevron */}
-        <td className="pl-2 pr-10 py-3 w-6">
+        <td className="px-2 py-3 w-6">
           <svg className={`w-4 h-4 text-[#C4C9D4] transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
           </svg>
         </td>
       </tr>
 
-      {/* Expanded detail */}
+      {/* Expanded */}
       {expanded && (
         <tr className="bg-[#F8FAF9] border-b border-[#E5EAE8]">
-          <td colSpan={7} className="pl-10 pr-10 py-4">
-            <div className="max-w-2xl">
+          <td colSpan={8} className="pl-10 pr-10 py-4">
+            <div className="max-w-2xl space-y-4">
+              {/* Full review */}
               {review.body && (
-                <div className="mb-3">
+                <div>
                   <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-1.5">Full Review</p>
                   <p className="text-sm text-[#374151] leading-relaxed">{review.body}</p>
                 </div>
               )}
-              {uiStatus === 'draft_ready' && review.reply_draft && (
+
+              {/* Draft area */}
+              {uiStatus === 'draft_ready' && (
                 <div>
-                  <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-1.5">AI Draft</p>
-                  <p className="text-sm text-[#374151] bg-white border border-[#E5EAE8] rounded-lg px-3 py-2.5 leading-relaxed mb-2">{review.reply_draft}</p>
-                  <div className="flex gap-2">
-                    <button onClick={e => { e.stopPropagation(); setModalOpen(true); }}
-                      className="text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-3 py-1.5 rounded-lg transition-colors">
-                      Approve & Publish
+                  <div className="flex items-center gap-3 mb-2">
+                    <button onClick={() => setHistoryTab(false)}
+                      className={`text-xs font-semibold pb-0.5 border-b-2 transition-colors ${!historyTab ? 'border-[#0D4C3C] text-[#0D4C3C]' : 'border-transparent text-[#9CA3AF] hover:text-[#6B7280]'}`}>
+                      Draft
                     </button>
-                    <button onClick={async e => { e.stopPropagation(); await onDiscard(review.id); }}
-                      className="text-xs text-[#6B7280] hover:text-red-600 font-medium px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
-                      Discard
-                    </button>
-                    <button onClick={e => { e.stopPropagation(); onGenerateDraft(review.id); }}
-                      className="text-xs text-[#6B7280] hover:text-[#0D4C3C] font-medium px-3 py-1.5 rounded-lg hover:bg-[#F0F7F5] transition-colors ml-auto">
-                      Regenerate
-                    </button>
+                    {review.draft_history.length > 0 && (
+                      <button onClick={() => setHistoryTab(true)}
+                        className={`text-xs font-semibold pb-0.5 border-b-2 transition-colors ${historyTab ? 'border-[#0D4C3C] text-[#0D4C3C]' : 'border-transparent text-[#9CA3AF] hover:text-[#6B7280]'}`}>
+                        History ({review.draft_history.length})
+                      </button>
+                    )}
                   </div>
+
+                  {!historyTab ? (
+                    <>
+                      <p className="text-sm text-[#374151] bg-white border border-[#E5EAE8] rounded-lg px-3 py-2.5 leading-relaxed mb-2">{review.reply_draft}</p>
+                      <div className="flex gap-2">
+                        <button onClick={e => { e.stopPropagation(); setModalOpen(true); }}
+                          className="text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-3 py-1.5 rounded-lg transition-colors">
+                          Approve & Publish
+                        </button>
+                        <button onClick={e => { e.stopPropagation(); onGenerateDraft(review.id); }}
+                          className="text-xs text-[#6B7280] hover:text-[#0D4C3C] font-medium px-3 py-1.5 rounded-lg hover:bg-[#F0F7F5] transition-colors">
+                          Regenerate
+                        </button>
+                        <button onClick={async e => { e.stopPropagation(); await onDiscard(review.id); }}
+                          className="text-xs text-[#6B7280] hover:text-red-600 font-medium px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors ml-auto">
+                          Discard
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="space-y-2">
+                      {[...review.draft_history].reverse().map((h, i) => (
+                        <div key={i} className="bg-white border border-[#E5EAE8] rounded-lg px-3 py-2.5">
+                          <p className="text-[10px] text-[#9CA3AF] mb-1">{fmtDate(h.created_at)}</p>
+                          <p className="text-sm text-[#374151] leading-relaxed">{h.draft}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
+
               {uiStatus === 'replied' && (review.reply_text || review.reply_draft) && (
                 <div>
                   <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-1.5">Published Reply</p>
                   <p className="text-sm text-[#374151] bg-white border border-[#E5EAE8] rounded-lg px-3 py-2.5 leading-relaxed">{review.reply_text ?? review.reply_draft}</p>
                 </div>
               )}
+
               {uiStatus === 'pending' && (
                 <button onClick={e => { e.stopPropagation(); onGenerateDraft(review.id); }} disabled={isDrafting}
                   className="flex items-center gap-2 text-sm font-medium text-[#0D4C3C] hover:text-[#083F32] transition-colors disabled:opacity-50">
@@ -502,6 +626,15 @@ function ReviewRow({ review, locationName, expanded, onToggle, onGenerateDraft, 
                   {isDrafting ? 'Generating…' : 'Generate AI Draft'}
                 </button>
               )}
+
+              {/* Internal notes */}
+              <div>
+                <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-1.5">Internal Note <span className="normal-case font-normal">(private, not published)</span></p>
+                <textarea value={note} onChange={e => setNote(e.target.value)} onBlur={handleNoteSave} rows={2}
+                  placeholder="Add a note for your team…"
+                  className="w-full text-sm text-[#374151] border border-[#D1D5DB] rounded-lg px-3 py-2 focus:outline-none focus:border-[#0D4C3C] resize-none transition-colors"/>
+                {savingNote && <p className="text-xs text-[#9CA3AF] mt-1">Saving…</p>}
+              </div>
             </div>
           </td>
         </tr>
@@ -510,7 +643,7 @@ function ReviewRow({ review, locationName, expanded, onToggle, onGenerateDraft, 
   );
 }
 
-// ── Main Page ────────────────────────────────────────────────────────────────
+// ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function ReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -520,21 +653,34 @@ export function ReviewsPage() {
   const [syncing, setSyncing] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
+  // Filters
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | UiStatus>('all');
   const [ratingFilter, setRatingFilter] = useState(0);
   const [locationFilter, setLocationFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [sortBy, setSortBy] = useState<SortKey>('newest');
+
+  // Presets
+  const [presets, setPresets] = useState<FilterPreset[]>(loadPresets);
+  const [presetName, setPresetName] = useState('');
+  const [showPresetInput, setShowPresetInput] = useState(false);
+
+  // UI state
   const [page, setPage] = useState(1);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [focusedIdx, setFocusedIdx] = useState(-1);
+  const [bulkGenerating, setBulkGenerating] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   async function loadReviews() {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('reviews')
-      .select('id, reviewer_name, rating, published_at, body, status, reply_draft, reply_text, location_id')
+      .select('id, reviewer_name, rating, published_at, body, status, reply_draft, reply_text, location_id, notes, draft_history')
       .order('published_at', { ascending: false });
-    if (!error) setReviews((data as Review[]) ?? []);
+    if (data) setReviews(data as Review[]);
     setLoading(false);
   }
 
@@ -543,27 +689,99 @@ export function ReviewsPage() {
     if (data) setLocations(data as Location[]);
   }
 
-  async function checkConnection() {
-    const { data } = await supabase.from('google_connections').select('state').eq('state','CONNECTED').maybeSingle();
-    setIsConnected(!!data);
-  }
+  useEffect(() => {
+    supabase.from('google_connections').select('state').eq('state','CONNECTED').maybeSingle()
+      .then(({ data }) => setIsConnected(!!data));
+    loadReviews(); loadLocations();
+  }, []);
 
-  useEffect(() => { loadReviews(); loadLocations(); checkConnection(); }, []);
+  // Keyboard shortcuts
+  const filteredRef = useRef<Review[]>([]);
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key === '?') { setShowShortcuts(s => !s); return; }
+      if (e.key === 'Escape') { setFocusedIdx(-1); setShowShortcuts(false); return; }
+      const list = filteredRef.current;
+      if (e.key === 'j' || e.key === 'ArrowDown') { e.preventDefault(); setFocusedIdx(i => Math.min(i + 1, list.length - 1)); return; }
+      if (e.key === 'k' || e.key === 'ArrowUp')   { e.preventDefault(); setFocusedIdx(i => Math.max(i - 1, 0)); return; }
+      if (focusedIdx < 0 || focusedIdx >= list.length) return;
+      const r = list[focusedIdx];
+      if (!r) return;
+      if (e.key === 'Enter') { setExpandedId(id => id === r.id ? null : r.id); return; }
+      if (e.key === 'x' || e.key === 'X') {
+        setSelectedIds(prev => { const s = new Set(prev); s.has(r.id) ? s.delete(r.id) : s.add(r.id); return s; }); return;
+      }
+      if (e.key === 'g' || e.key === 'G') { if (toUiStatus(r.status) === 'pending') handleGenerateDraft(r.id); return; }
+      if (e.key === 'a' || e.key === 'A') { if (toUiStatus(r.status) === 'draft_ready') setExpandedId(r.id); return; }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [focusedIdx]);
 
-  function locationName(id: string | null) {
-    if (!id) return '';
-    return locations.find(l => l.id === id)?.display_name ?? '';
-  }
+  // Filtering + sorting
+  const filtered = useMemo(() => {
+    let list = reviews.filter(r => {
+      if (statusFilter !== 'all' && toUiStatus(r.status) !== statusFilter) return false;
+      if (ratingFilter > 0 && r.rating !== ratingFilter) return false;
+      if (locationFilter && r.location_id !== locationFilter) return false;
+      if (search) { const q = search.toLowerCase(); if (!r.reviewer_name?.toLowerCase().includes(q) && !r.body?.toLowerCase().includes(q)) return false; }
+      if (dateFrom && r.published_at && r.published_at < dateFrom) return false;
+      if (dateTo && r.published_at && r.published_at > dateTo + 'T23:59:59') return false;
+      return true;
+    });
+    if (sortBy === 'oldest')     list = [...list].sort((a,b) => (a.published_at ?? '') < (b.published_at ?? '') ? -1 : 1);
+    if (sortBy === 'highest')    list = [...list].sort((a,b) => b.rating - a.rating);
+    if (sortBy === 'lowest')     list = [...list].sort((a,b) => a.rating - b.rating);
+    if (sortBy === 'unanswered') list = [...list].sort((a,b) => {
+      const aU = toUiStatus(a.status) !== 'replied' ? 0 : 1;
+      const bU = toUiStatus(b.status) !== 'replied' ? 0 : 1;
+      if (aU !== bU) return aU - bU;
+      return (a.published_at ?? '') < (b.published_at ?? '') ? -1 : 1;
+    });
+    return list;
+  }, [reviews, statusFilter, ratingFilter, locationFilter, search, dateFrom, dateTo, sortBy]);
+
+  useEffect(() => { filteredRef.current = filtered; }, [filtered]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
+
+  const counts = {
+    all: reviews.length,
+    pending:    reviews.filter(r => toUiStatus(r.status) === 'pending').length,
+    draft_ready:reviews.filter(r => toUiStatus(r.status) === 'draft_ready').length,
+    replied:    reviews.filter(r => toUiStatus(r.status) === 'replied').length,
+  };
+  const avgRating = reviews.length ? (reviews.reduce((s,r) => s + r.rating, 0) / reviews.length).toFixed(1) : '—';
+  const hasFilters = !!(search || statusFilter !== 'all' || ratingFilter > 0 || locationFilter || dateFrom || dateTo);
+
+  function locationName(id: string | null) { return id ? (locations.find(l => l.id === id)?.display_name ?? '') : ''; }
+  function clearAll() { setSearch(''); setStatusFilter('all'); setRatingFilter(0); setLocationFilter(''); setDateFrom(''); setDateTo(''); setSortBy('newest'); setPage(1); }
 
   async function handleSync() {
     setSyncing(true);
     const { synced, error } = await googleService.syncReviews();
-    if (error) setToast({ message: error, type: 'error' });
-    else { setToast({ message: `Synced ${synced} review${synced !== 1 ? 's' : ''}.`, type: 'success' }); await loadReviews(); }
+    if (error) { setToast({ message: error, type: 'error' }); setSyncing(false); return; }
+    setToast({ message: `Synced ${synced} review${synced !== 1 ? 's' : ''}.`, type: 'success' });
+    await loadReviews();
+    // Auto-generate drafts for new reviews
+    const newReviews = reviews.filter(r => r.status === 'NEW');
+    if (newReviews.length > 0) {
+      for (const r of newReviews) { await googleService.generateDraft(r.id); }
+      await loadReviews();
+    }
     setSyncing(false);
   }
 
   async function handleGenerateDraft(id: string) {
+    const review = reviews.find(r => r.id === id);
+    // Save current draft to history before regenerating
+    if (review?.reply_draft) {
+      const newHistory = [...(review.draft_history ?? []), { draft: review.reply_draft, created_at: new Date().toISOString() }];
+      await supabase.from('reviews').update({ draft_history: newHistory }).eq('id', id);
+    }
     setReviews(p => p.map(r => r.id === id ? { ...r, status: 'DRAFTING' as const } : r));
     const { error } = await googleService.generateDraft(id);
     if (error) { setReviews(p => p.map(r => r.id === id ? { ...r, status: 'NEW' as const } : r)); setToast({ message: error, type: 'error' }); }
@@ -572,64 +790,117 @@ export function ReviewsPage() {
 
   async function handlePublish(id: string, draft: string): Promise<{ error?: string }> {
     const r = await googleService.publishReply(id, draft);
-    if (!r.error) await loadReviews();
+    if (!r.error) { await loadReviews(); setToast({ message: 'Reply published to Google.', type: 'success' }); }
     return r;
   }
 
   async function handleDiscard(id: string) {
     await supabase.from('reviews').update({ status: 'NEW', reply_draft: null }).eq('id', id);
-    await loadReviews();
-    setExpandedId(null);
+    await loadReviews(); setExpandedId(null);
   }
 
-  const filtered = reviews.filter(r => {
-    if (statusFilter !== 'all' && toUiStatus(r.status) !== statusFilter) return false;
-    if (ratingFilter > 0 && r.rating !== ratingFilter) return false;
-    if (locationFilter && r.location_id !== locationFilter) return false;
-    if (search) { const q = search.toLowerCase(); if (!r.reviewer_name?.toLowerCase().includes(q) && !r.body?.toLowerCase().includes(q)) return false; }
-    if (dateFrom && r.published_at && r.published_at < dateFrom) return false;
-    if (dateTo && r.published_at && r.published_at > dateTo + 'T23:59:59') return false;
-    return true;
-  });
+  async function handleSaveNote(id: string, note: string) {
+    await supabase.from('reviews').update({ notes: note || null }).eq('id', id);
+    setReviews(p => p.map(r => r.id === id ? { ...r, notes: note || null } : r));
+  }
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
+  async function handleBulkGenerate() {
+    setBulkGenerating(true);
+    const ids = [...selectedIds];
+    for (const id of ids) { await handleGenerateDraft(id); }
+    setSelectedIds(new Set()); setBulkGenerating(false);
+    setToast({ message: `Generated drafts for ${ids.length} review${ids.length !== 1 ? 's' : ''}.`, type: 'success' });
+  }
 
-  const counts = {
-    all: reviews.length,
-    pending: reviews.filter(r => toUiStatus(r.status) === 'pending').length,
-    draft_ready: reviews.filter(r => toUiStatus(r.status) === 'draft_ready').length,
-    replied: reviews.filter(r => toUiStatus(r.status) === 'replied').length,
-  };
+  function toggleSelect(id: string) {
+    setSelectedIds(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  }
 
-  const hasFilters = !!(search || statusFilter !== 'all' || ratingFilter > 0 || locationFilter || dateFrom || dateTo);
+  function toggleSelectAll() {
+    const pageIds = paginated.map(r => r.id);
+    const allSelected = pageIds.every(id => selectedIds.has(id));
+    setSelectedIds(prev => {
+      const s = new Set(prev);
+      if (allSelected) pageIds.forEach(id => s.delete(id)); else pageIds.forEach(id => s.add(id));
+      return s;
+    });
+  }
 
-  function clearAll() { setSearch(''); setStatusFilter('all'); setRatingFilter(0); setLocationFilter(''); setDateFrom(''); setDateTo(''); setPage(1); }
+  function savePreset() {
+    if (!presetName.trim()) return;
+    const p: FilterPreset = {
+      id: Date.now().toString(), name: presetName.trim(),
+      filters: { search, statusFilter, ratingFilter, locationFilter, dateFrom, dateTo, sortBy },
+    };
+    const updated = [...presets, p];
+    setPresets(updated); savePresets(updated);
+    setPresetName(''); setShowPresetInput(false);
+  }
+
+  function applyPreset(p: FilterPreset) {
+    const f = p.filters;
+    setSearch(f.search); setStatusFilter(f.statusFilter); setRatingFilter(f.ratingFilter);
+    setLocationFilter(f.locationFilter); setDateFrom(f.dateFrom); setDateTo(f.dateTo); setSortBy(f.sortBy);
+    setPage(1);
+  }
+
+  function deletePreset(id: string) {
+    const updated = presets.filter(p => p.id !== id);
+    setPresets(updated); savePresets(updated);
+  }
+
+  const allPageSelected = paginated.length > 0 && paginated.every(r => selectedIds.has(r.id));
 
   return (
     <div className="h-full flex flex-col">
+      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)}/>}
+      {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
+      {selectedIds.size > 0 && (
+        <BulkActionBar count={selectedIds.size} generating={bulkGenerating} onGenerate={handleBulkGenerate} onClear={() => setSelectedIds(new Set())}/>
+      )}
+
       {/* Header */}
-      <div className="px-10 py-5 border-b border-[#E5EAE8] bg-white flex items-center justify-between gap-4 flex-shrink-0">
-        <div>
-          <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
-          <p className="text-xs text-[#9CA3AF] mt-0.5">{reviews.length} total</p>
+      <div className="px-10 py-4 border-b border-[#E5EAE8] bg-white flex items-center justify-between gap-4 flex-shrink-0">
+        <div className="flex items-end gap-6">
+          <div>
+            <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
+            <p className="text-xs text-[#9CA3AF] mt-0.5">{reviews.length} total · avg {avgRating}★</p>
+          </div>
+          {/* Sparkline — last 8 weeks */}
+          <div className="pb-1">
+            <p className="text-[10px] text-[#9CA3AF] mb-1">Last 8 weeks</p>
+            <Sparkline reviews={reviews}/>
+          </div>
         </div>
-        <button onClick={handleSync} disabled={syncing || !isConnected}
-          title={!isConnected ? 'Connect Google Business Profile first' : 'Sync latest reviews'}
-          className="flex items-center gap-2 bg-[#0D4C3C] disabled:opacity-40 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:bg-[#083F32] disabled:cursor-not-allowed">
-          <svg className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-          </svg>
-          {syncing ? 'Syncing…' : 'Sync Reviews'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowShortcuts(true)} title="Keyboard shortcuts"
+            className="p-2 rounded-lg text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </button>
+          <button onClick={() => exportCSV(filtered, locations)} title="Export filtered reviews as CSV"
+            className="flex items-center gap-1.5 text-sm text-[#6B7280] hover:text-[#111827] border border-[#D1D5DB] hover:border-[#374151] px-3 py-1.5 rounded-lg transition-colors">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+            </svg>
+            Export
+          </button>
+          <button onClick={handleSync} disabled={syncing || !isConnected}
+            title={!isConnected ? 'Connect Google Business Profile first' : 'Sync latest reviews'}
+            className="flex items-center gap-2 bg-[#0D4C3C] disabled:opacity-40 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:bg-[#083F32] disabled:cursor-not-allowed">
+            <svg className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            {syncing ? 'Syncing…' : 'Sync Reviews'}
+          </button>
+        </div>
       </div>
 
-      {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
-
       {/* Filters */}
-      <div className="px-10 py-3 border-b border-[#E5EAE8] bg-white flex-shrink-0">
+      <div className="px-10 py-3 border-b border-[#E5EAE8] bg-white flex-shrink-0 space-y-2">
         {/* Status tabs */}
-        <div className="flex items-center gap-1 mb-3">
+        <div className="flex items-center gap-1">
           {(['all','pending','draft_ready','replied'] as const).map(key => {
             const labels = { all:'All', pending:'Pending', draft_ready:'Draft Ready', replied:'Replied' };
             return (
@@ -642,6 +913,7 @@ export function ReviewsPage() {
           })}
         </div>
 
+        {/* Filter controls */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Search */}
           <div className="relative">
@@ -653,42 +925,62 @@ export function ReviewsPage() {
               className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-lg focus:outline-none focus:border-[#0D4C3C] w-56 transition-colors"/>
           </div>
 
-          {/* Rating */}
-          <FilterDropdown
-            label="Rating"
-            value={String(ratingFilter)}
+          <FilterDropdown label="Rating" value={String(ratingFilter)}
             onChange={v => { setRatingFilter(Number(v)); setPage(1); }}
             icon={<svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>}
-            options={[
-              { value: '0', label: 'All ratings' },
-              { value: '5', label: '5 stars' },
-              { value: '4', label: '4 stars' },
-              { value: '3', label: '3 stars' },
-              { value: '2', label: '2 stars' },
-              { value: '1', label: '1 star' },
-            ]}
+            options={[{value:'0',label:'All ratings'},{value:'5',label:'5 stars'},{value:'4',label:'4 stars'},{value:'3',label:'3 stars'},{value:'2',label:'2 stars'},{value:'1',label:'1 star'}]}
           />
 
-          {/* Location filter */}
           {locations.length > 0 && (
-            <FilterDropdown
-              label="Location"
-              value={locationFilter}
+            <FilterDropdown label="Location" value={locationFilter}
               onChange={v => { setLocationFilter(v); setPage(1); }}
               icon={<svg className="w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>}
-              options={[
-                { value: '', label: 'All locations' },
-                ...locations.map(l => ({ value: l.id, label: l.display_name ?? l.id })),
-              ]}
+              options={[{value:'',label:'All locations'},...locations.map(l => ({value:l.id,label:l.display_name??l.id}))]}
             />
           )}
 
-          {/* Date range */}
           <DateRangePicker from={dateFrom} to={dateTo} onChange={(f,t) => { setDateFrom(f); setDateTo(t); setPage(1); }}/>
+
+          <FilterDropdown label="Sort" value={sortBy}
+            onChange={v => { setSortBy(v as SortKey); setPage(1); }}
+            icon={<svg className="w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>}
+            options={[{value:'newest',label:'Newest first'},{value:'oldest',label:'Oldest first'},{value:'unanswered',label:'Unanswered first'},{value:'highest',label:'Highest rated'},{value:'lowest',label:'Lowest rated'}]}
+          />
 
           {hasFilters && <button onClick={clearAll} className="text-xs text-[#9CA3AF] hover:text-red-500 font-medium transition-colors">Clear all</button>}
           {hasFilters && <span className="text-xs text-[#9CA3AF] ml-auto">{filtered.length} result{filtered.length!==1?'s':''}</span>}
+
+          {/* Save preset */}
+          {hasFilters && !showPresetInput && (
+            <button onClick={() => setShowPresetInput(true)}
+              className="text-xs text-[#0D4C3C] font-medium hover:underline transition-colors">
+              Save preset
+            </button>
+          )}
+          {showPresetInput && (
+            <div className="flex items-center gap-1.5">
+              <input autoFocus type="text" value={presetName} onChange={e => setPresetName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') setShowPresetInput(false); }}
+                placeholder="Preset name…"
+                className="text-xs border border-[#D1D5DB] rounded-lg px-2 py-1 focus:outline-none focus:border-[#0D4C3C] w-32"/>
+              <button onClick={savePreset} className="text-xs text-white bg-[#0D4C3C] px-2 py-1 rounded-lg hover:bg-[#083F32]">Save</button>
+              <button onClick={() => setShowPresetInput(false)} className="text-xs text-[#9CA3AF] hover:text-red-500">✕</button>
+            </div>
+          )}
         </div>
+
+        {/* Presets row */}
+        {presets.length > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+            <span className="text-xs text-[#9CA3AF]">Presets:</span>
+            {presets.map(p => (
+              <div key={p.id} className="flex items-center gap-0.5 bg-[#F3F4F6] rounded-md px-2 py-0.5">
+                <button onClick={() => applyPreset(p)} className="text-xs text-[#374151] hover:text-[#0D4C3C] font-medium">{p.name}</button>
+                <button onClick={() => deletePreset(p.id)} className="text-[#9CA3AF] hover:text-red-500 ml-1 text-xs leading-none">×</button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -709,26 +1001,36 @@ export function ReviewsPage() {
           <table className="w-full">
             <thead className="bg-[#FAFAFA] border-b border-[#E5EAE8] sticky top-0 z-10">
               <tr>
-                <th className="pl-10 pr-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-36">Date</th>
+                <th className="pl-10 pr-2 py-2.5 w-10">
+                  <div onClick={toggleSelectAll}
+                    className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${allPageSelected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] hover:border-[#0D4C3C]'}`}>
+                    {allPageSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
+                  </div>
+                </th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-32">Date</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-44">Reviewer</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-36">Location</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-32">Location</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Review</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-32">Status</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-28">Status</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-44 pr-10">Action</th>
-                <th className="w-6 pr-10"/>
+                <th className="w-6"/>
               </tr>
             </thead>
             <tbody className="bg-white">
-              {paginated.map(review => (
+              {paginated.map((review, idx) => (
                 <ReviewRow
                   key={`${review.id}-${review.status}-${review.reply_draft??''}`}
                   review={review}
                   locationName={locationName(review.location_id)}
                   expanded={expandedId === review.id}
+                  selected={selectedIds.has(review.id)}
+                  focused={focusedIdx === idx + (page-1)*PAGE_SIZE}
                   onToggle={() => setExpandedId(expandedId === review.id ? null : review.id)}
+                  onSelect={e => { e.stopPropagation(); toggleSelect(review.id); }}
                   onGenerateDraft={handleGenerateDraft}
                   onPublish={handlePublish}
                   onDiscard={handleDiscard}
+                  onSaveNote={handleSaveNote}
                 />
               ))}
             </tbody>
@@ -741,7 +1043,8 @@ export function ReviewsPage() {
         <div className="px-10 py-3 border-t border-[#E5EAE8] bg-white flex items-center justify-between flex-shrink-0">
           <p className="text-xs text-[#9CA3AF]">Showing {(page-1)*PAGE_SIZE+1}–{Math.min(page*PAGE_SIZE,filtered.length)} of {filtered.length}</p>
           <div className="flex items-center gap-1">
-            <button onClick={() => setPage(p=>Math.max(1,p-1))} disabled={page===1} className="p-1.5 rounded-md text-[#6B7280] hover:bg-[#F3F4F6] disabled:opacity-40 disabled:cursor-not-allowed">
+            <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1}
+              className="p-1.5 rounded-md text-[#6B7280] hover:bg-[#F3F4F6] disabled:opacity-40 disabled:cursor-not-allowed">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
             </button>
             {Array.from({length:totalPages},(_,i)=>i+1).filter(n=>n===1||n===totalPages||Math.abs(n-page)<=1).reduce<(number|'...')[]>((acc,n,i,arr)=>{
@@ -749,9 +1052,11 @@ export function ReviewsPage() {
               acc.push(n); return acc;
             },[]).map((n,i)=>
               n==='...'?<span key={`e${i}`} className="px-1 text-xs text-[#9CA3AF]">…</span>:
-              <button key={n} onClick={()=>setPage(n as number)} className={`w-7 h-7 rounded-md text-xs font-medium ${page===n?'bg-[#0D4C3C] text-white':'text-[#6B7280] hover:bg-[#F3F4F6]'}`}>{n}</button>
+              <button key={n} onClick={()=>setPage(n as number)}
+                className={`w-7 h-7 rounded-md text-xs font-medium ${page===n?'bg-[#0D4C3C] text-white':'text-[#6B7280] hover:bg-[#F3F4F6]'}`}>{n}</button>
             )}
-            <button onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages} className="p-1.5 rounded-md text-[#6B7280] hover:bg-[#F3F4F6] disabled:opacity-40 disabled:cursor-not-allowed">
+            <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages}
+              className="p-1.5 rounded-md text-[#6B7280] hover:bg-[#F3F4F6] disabled:opacity-40 disabled:cursor-not-allowed">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
             </button>
           </div>
