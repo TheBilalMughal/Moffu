@@ -368,7 +368,7 @@ function ReviewRow({ review, locationName, expanded, onToggle, onGenerateDraft, 
         </td>
 
         {/* Chevron */}
-        <td className="px-2 py-3 w-6">
+        <td className="pl-2 pr-10 py-3 w-6">
           <svg className={`w-4 h-4 text-[#C4C9D4] transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
           </svg>
@@ -642,7 +642,7 @@ export function ReviewsPage() {
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Review</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-32">Status</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-44 pr-10">Action</th>
-                <th className="w-6"/>
+                <th className="w-6 pr-10"/>
               </tr>
             </thead>
             <tbody className="bg-white">
