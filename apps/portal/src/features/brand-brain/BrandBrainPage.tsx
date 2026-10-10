@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { brandBrainService } from './brandBrain.service';
 
 const TONE_PRESETS = [
   { key: 'professional', label: 'Professional', desc: 'Formal, polished, brand-forward.' },
@@ -87,6 +88,30 @@ export function BrandBrainPage() {
   const [exampleReply, setExampleReply] = useState('');
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [saveError, setSaveError] = useState('');
+
+  useEffect(() => {
+    brandBrainService.load().then(({ data, error }) => {
+      if (error) { setLoadError(error.message); }
+      if (data) {
+        setBusinessName(data.business_name);
+        setBusinessType(data.business_type);
+        setBusinessDesc(data.business_desc);
+        setTone(data.tone);
+        setReplyLength(data.reply_length);
+        setUseCustomerName(data.use_customer_name);
+        setUseEmoji(data.use_emoji);
+        setPrimaryLanguage(data.primary_language);
+        setReviewerLang(data.reviewer_lang_behaviour);
+        setNegativeRule(data.negative_rule);
+        setProhibitedPhrases(data.prohibited_phrases);
+        setExampleReply(data.example_reply);
+      }
+      setLoading(false);
+    });
+  }, []);
 
   function addPhrase() {
     const trimmed = prohibitedInput.trim();
@@ -98,11 +123,40 @@ export function BrandBrainPage() {
 
   async function handleSave() {
     setSaving(true);
-    // TODO: persist to brand_brain table via Supabase (Phase 3 backend)
-    await new Promise((r) => setTimeout(r, 800));
+    setSaveError('');
+    const { error } = await brandBrainService.save({
+      business_name: businessName,
+      business_type: businessType,
+      business_desc: businessDesc,
+      tone,
+      reply_length: replyLength,
+      use_customer_name: useCustomerName,
+      use_emoji: useEmoji,
+      primary_language: primaryLanguage,
+      reviewer_lang_behaviour: reviewerLang,
+      negative_rule: negativeRule,
+      prohibited_phrases: prohibitedPhrases,
+      example_reply: exampleReply,
+    });
     setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    if (error) {
+      setSaveError(error.message);
+    } else {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="px-8 py-8">
+        <div className="h-8 w-48 bg-[#F3F4F6] rounded-lg animate-pulse mb-2" />
+        <div className="h-4 w-80 bg-[#F3F4F6] rounded-lg animate-pulse mb-8" />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-white rounded-xl border border-[#E5EAE8] h-32 mb-5 animate-pulse" />
+        ))}
+      </div>
+    );
   }
 
   return (
@@ -113,6 +167,11 @@ export function BrandBrainPage() {
         <p className="text-sm text-[#6B7280] mt-0.5">
           Define your business identity and voice so AI writes replies that sound like you.
         </p>
+        {loadError && (
+          <p className="mt-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2.5">
+            Could not load saved settings: {loadError}
+          </p>
+        )}
       </div>
 
       {/* Business info */}
@@ -378,6 +437,9 @@ export function BrandBrainPage() {
             </svg>
             Saved
           </span>
+        )}
+        {saveError && (
+          <span className="text-sm text-red-600">{saveError}</span>
         )}
       </div>
     </div>

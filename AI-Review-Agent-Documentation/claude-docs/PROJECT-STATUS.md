@@ -1,7 +1,7 @@
 # Project Status
 
 ## Current milestone
-PHASE 3 — Brand Brain Setup UI (NEXT)
+PHASE 4 — Google Business Profile Integration (BLOCKED: needs Google OAuth credentials)
 
 ## Completed
 
@@ -45,7 +45,7 @@ PHASE 3 — Brand Brain Setup UI (NEXT)
 - `PORTAL_URL` set in web's Vercel env (server-side); `VITE_WEB_URL` needs to be set in portalmoffu Vercel env
 
 ## Phase 3 — Brand Brain Setup UI
-**UI: COMPLETE** | Backend persistence: PENDING
+**COMPLETE** ✅
 
 `apps/portal/src/features/brand-brain/BrandBrainPage.tsx`
 - Business info (name, type, short description)
@@ -58,7 +58,15 @@ PHASE 3 — Brand Brain Setup UI (NEXT)
 - Save button with loading + success state
 - Route `/brand-brain`, sidebar nav item (sliders icon)
 
-**Still needed:** Supabase `brand_brain` table migration + RLS + service write (Phase 3 backend)
+**Supabase migrations applied to project `kgttncfkzdrgswfkkdji`:**
+- Migration 001 (extensions + ref_ids) ✅
+- Migration 002 (regions/countries/currencies) ✅
+- Migration 003 (profiles/organizations/members) ✅
+- Migration 004 (RBAC — permissions, role_permissions, user_permission_overrides, platform_members) ✅
+- Migration 005 (audit_events + security_events) ✅
+- Migration 006 (brand_brain table + RLS) ✅
+
+**Service layer:** `brandBrain.service.ts` — load (maybeSingle) + save (upsert onConflict user_id)
 
 ## Phase 4 — Google Business Profile Integration
 - **BLOCKED**: Requires Google OAuth credentials (Client ID + Secret)
