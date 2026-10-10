@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { googleService } from '@/features/google/google.service';
 
-type DbStatus = 'NEW' | 'PENDING_REPLY' | 'DRAFT_READY' | 'AWAITING_APPROVAL' | 'PUBLISHING' | 'PUBLISHED' | 'PUBLISH_FAILED';
+type DbStatus = 'NEW' | 'DRAFTING' | 'DRAFT_READY' | 'AWAITING_APPROVAL' | 'NEEDS_ATTENTION' | 'PUBLISHING' | 'PUBLISHED' | 'PUBLISH_FAILED';
 type UiStatus = 'pending' | 'draft_ready' | 'replied';
 type FilterTab = 'all' | 'pending' | 'draft_ready' | 'replied';
 
@@ -19,7 +19,7 @@ interface Review {
 
 function toUiStatus(s: DbStatus): UiStatus {
   if (s === 'PUBLISHED') return 'replied';
-  if (s === 'DRAFT_READY' || s === 'AWAITING_APPROVAL' || s === 'PUBLISHING' || s === 'PUBLISH_FAILED') return 'draft_ready';
+  if (s === 'DRAFTING' || s === 'DRAFT_READY' || s === 'AWAITING_APPROVAL' || s === 'NEEDS_ATTENTION' || s === 'PUBLISHING' || s === 'PUBLISH_FAILED') return 'draft_ready';
   return 'pending';
 }
 
@@ -246,7 +246,7 @@ export function ReviewsPage() {
   async function handleDiscard(id: string) {
     await supabase
       .from('reviews')
-      .update({ status: 'PENDING_REPLY', reply_draft: null })
+      .update({ status: 'NEW', reply_draft: null })
       .eq('id', id);
     await loadReviews();
   }
