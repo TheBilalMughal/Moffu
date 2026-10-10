@@ -748,38 +748,38 @@ export function InsightsPage() {
         </div>
       </div>
 
+      {/* Filter bar — sticky, outside scroll area */}
+      {tab !== 'agent' && (
+        <div className="px-8 py-3 flex-shrink-0 bg-[#F8FAF9] border-b border-[#E5EAE8] flex items-center gap-2.5 flex-wrap">
+          <FilterDropdown value={dateRange} onChange={setDateRange} options={dateOptions}/>
+          {locations.length > 0 && (
+            <FilterDropdown value={locationId} onChange={setLocationId} options={locationOptions}/>
+          )}
+          <FilterDropdown value={starFilter} onChange={setStarFilter} options={starOptions}/>
+          {tab === 'keywords' && (
+            <button
+              onClick={() => setShowBigrams(b => !b)}
+              className={`flex items-center gap-1.5 text-xs font-medium border rounded-lg px-3 py-1.5 transition-colors ${
+                showBigrams
+                  ? 'border-[#0D4C3C] text-[#0D4C3C] bg-[#E6F2EE]'
+                  : 'border-[#D1D5DB] text-[#374151] bg-white hover:border-[#9CA3AF]'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+              {showBigrams ? 'Phrases (2-word)' : 'Single words'}
+            </button>
+          )}
+          {(dateRange !== '30d' || locationId !== 'all' || starFilter !== 'all') && (
+            <button onClick={() => { setDateRange('30d'); setLocationId('all'); setStarFilter('all'); }}
+              className="text-xs text-[#9CA3AF] hover:text-[#374151] transition-colors underline">
+              Reset filters
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-8 py-5">
-
-        {/* Filter bar — shown on keywords + trends tabs */}
-        {tab !== 'agent' && (
-          <div className="flex items-center gap-2.5 mb-5 flex-wrap">
-            <FilterDropdown value={dateRange} onChange={setDateRange} options={dateOptions}/>
-            {locations.length > 0 && (
-              <FilterDropdown value={locationId} onChange={setLocationId} options={locationOptions}/>
-            )}
-            <FilterDropdown value={starFilter} onChange={setStarFilter} options={starOptions}/>
-            {tab === 'keywords' && (
-              <button
-                onClick={() => setShowBigrams(b => !b)}
-                className={`flex items-center gap-1.5 text-xs font-medium border rounded-lg px-3 py-1.5 transition-colors ${
-                  showBigrams
-                    ? 'border-[#0D4C3C] text-[#0D4C3C] bg-[#E6F2EE]'
-                    : 'border-[#D1D5DB] text-[#374151] bg-white hover:border-[#9CA3AF]'
-                }`}
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-                {showBigrams ? 'Phrases (2-word)' : 'Single words'}
-              </button>
-            )}
-            {(dateRange !== '30d' || locationId !== 'all' || starFilter !== 'all') && (
-              <button onClick={() => { setDateRange('30d'); setLocationId('all'); setStarFilter('all'); }}
-                className="text-xs text-[#9CA3AF] hover:text-[#374151] transition-colors underline">
-                Reset filters
-              </button>
-            )}
-          </div>
-        )}
 
         {/* ── Keywords tab ── */}
         {tab === 'keywords' && (
