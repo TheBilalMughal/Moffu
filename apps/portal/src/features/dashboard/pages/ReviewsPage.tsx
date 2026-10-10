@@ -51,6 +51,63 @@ const STATUS_CFG: Record<UiStatus, { dot: string; label: string }> = {
   replied:    { dot: 'bg-[#0D4C3C]', label: 'Replied'    },
 };
 
+// ── Filter Dropdown ──────────────────────────────────────────────────────────
+
+function FilterDropdown({ label, icon, options, value, onChange }: {
+  label: string;
+  icon: React.ReactNode;
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const active = value !== '' && value !== '0';
+  const selectedLabel = options.find(o => o.value === value)?.label ?? label;
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', fn);
+    return () => document.removeEventListener('mousedown', fn);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}
+      >
+        <span className="flex-shrink-0">{icon}</span>
+        <span className="text-xs">{active ? selectedLabel : label}</span>
+        {active
+          ? <span onClick={e => { e.stopPropagation(); onChange(''); setOpen(false); }} className="ml-0.5 hover:text-red-500 transition-colors">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+            </span>
+          : <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+        }
+      </button>
+
+      {open && (
+        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 min-w-[160px]">
+          {options.map(opt => {
+            const selected = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() => { onChange(opt.value); setOpen(false); }}
+                className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${selected ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
+              >
+                <span>{opt.label}</span>
+                {selected && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Toast ────────────────────────────────────────────────────────────────────
 
 function Toast({ message, type, onDone }: { message: string; type: 'success' | 'error'; onDone: () => void }) {
@@ -597,30 +654,33 @@ export function ReviewsPage() {
           </div>
 
           {/* Rating */}
-          <div className={`flex items-center gap-1.5 border rounded-lg px-3 py-1.5 transition-colors ${ratingFilter > 0 ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#D1D5DB]'}`}>
-            <svg className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-            </svg>
-            <select value={ratingFilter} onChange={e => { setRatingFilter(Number(e.target.value)); setPage(1); }}
-              className={`text-xs bg-transparent focus:outline-none cursor-pointer ${ratingFilter > 0 ? 'text-[#0D4C3C] font-medium' : 'text-[#6B7280]'}`}>
-              <option value={0}>All ratings</option>
-              {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} star{n!==1?'s':''}</option>)}
-            </select>
-          </div>
+          <FilterDropdown
+            label="Rating"
+            value={String(ratingFilter)}
+            onChange={v => { setRatingFilter(Number(v)); setPage(1); }}
+            icon={<svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>}
+            options={[
+              { value: '0', label: 'All ratings' },
+              { value: '5', label: '5 stars' },
+              { value: '4', label: '4 stars' },
+              { value: '3', label: '3 stars' },
+              { value: '2', label: '2 stars' },
+              { value: '1', label: '1 star' },
+            ]}
+          />
 
           {/* Location filter */}
           {locations.length > 0 && (
-            <div className={`flex items-center gap-1.5 border rounded-lg px-3 py-1.5 transition-colors ${locationFilter ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#D1D5DB]'}`}>
-              <svg className="w-3.5 h-3.5 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-              </svg>
-              <select value={locationFilter} onChange={e => { setLocationFilter(e.target.value); setPage(1); }}
-                className={`text-xs bg-transparent focus:outline-none cursor-pointer max-w-[140px] ${locationFilter ? 'text-[#0D4C3C] font-medium' : 'text-[#6B7280]'}`}>
-                <option value="">All locations</option>
-                {locations.map(l => <option key={l.id} value={l.id}>{l.display_name ?? l.id}</option>)}
-              </select>
-            </div>
+            <FilterDropdown
+              label="Location"
+              value={locationFilter}
+              onChange={v => { setLocationFilter(v); setPage(1); }}
+              icon={<svg className="w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>}
+              options={[
+                { value: '', label: 'All locations' },
+                ...locations.map(l => ({ value: l.id, label: l.display_name ?? l.id })),
+              ]}
+            />
           )}
 
           {/* Date range */}
