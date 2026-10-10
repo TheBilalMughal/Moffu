@@ -1167,6 +1167,7 @@ export function ReviewsPage() {
 
   // UI state
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [focusedIdx, setFocusedIdx] = useState(-1);
@@ -1244,8 +1245,8 @@ export function ReviewsPage() {
 
   useEffect(() => { filteredRef.current = filtered; }, [filtered]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const paginated = filtered.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paginated = filtered.slice((page-1)*pageSize, page*pageSize);
 
   const counts = {
     all: reviews.length,
@@ -1574,7 +1575,7 @@ export function ReviewsPage() {
                   locationName={locationName(review.location_id)}
                   expanded={expandedId === review.id}
                   selected={selectedIds.has(review.id)}
-                  focused={focusedIdx === idx + (page-1)*PAGE_SIZE}
+                  focused={focusedIdx === idx + (page-1)*pageSize}
                   onToggle={() => setExpandedId(expandedId === review.id ? null : review.id)}
                   onSelect={e => { e.stopPropagation(); toggleSelect(review.id); }}
                   onGenerateDraft={handleGenerateDraft}
@@ -1591,11 +1592,21 @@ export function ReviewsPage() {
 
       {/* Pagination */}
       <div className="px-10 py-2.5 border-t border-[#E5EAE8] bg-white flex items-center justify-between flex-shrink-0">
-        <p className="text-xs text-[#9CA3AF]">
-          {filtered.length === 0
-            ? 'No results'
-            : `${(page-1)*PAGE_SIZE+1}–${Math.min(page*PAGE_SIZE,filtered.length)} of ${filtered.length} reviews`}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-[#9CA3AF]">
+            {filtered.length === 0
+              ? 'No results'
+              : `${(page-1)*pageSize+1}–${Math.min(page*pageSize,filtered.length)} of ${filtered.length} reviews`}
+          </p>
+          <div className="flex items-center gap-1">
+            {[25,50,75,100].map(n => (
+              <button key={n} onClick={() => { setPageSize(n); setPage(1); }}
+                className={`w-8 h-6 rounded text-xs font-medium transition-colors ${pageSize===n ? 'bg-[#0D4C3C] text-white' : 'text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6]'}`}>
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="flex items-center gap-1">
           <button onClick={() => setPage(1)} disabled={page===1}
             className="p-1.5 rounded-md text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed">
