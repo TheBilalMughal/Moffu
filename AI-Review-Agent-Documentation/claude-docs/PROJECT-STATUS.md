@@ -69,8 +69,28 @@ PHASE 4 — Google Business Profile Integration (BLOCKED: needs Google OAuth cre
 **Service layer:** `brandBrain.service.ts` — load (maybeSingle) + save (upsert onConflict user_id)
 
 ## Phase 4 — Google Business Profile Integration
-- **BLOCKED**: Requires Google OAuth credentials (Client ID + Secret)
-- Connect GBP account, sync reviews to DB, RLS per org
+**Backend: COMPLETE** | **UI: COMPLETE** | Secrets: PENDING (manual Supabase dashboard step)
+
+**DB migration 007 applied (`kgttncfkzdrgswfkkdji`):**
+- `google_connections` (state machine: PENDING/CONNECTED/REFRESH_FAILED/REVOKED/DISCONNECTED/ERROR)
+- `google_connection_tokens` (service-role only — no authenticated RLS policies)
+- `google_locations` (per-connection, user-selectable)
+- `reviews` (synced from Google, full status machine: NEW→PUBLISHED)
+
+**Edge Functions deployed (all ACTIVE):**
+- `google-oauth-start` — generates state, returns Google auth URL
+- `google-oauth-callback` — exchanges code for tokens, fetches locations
+- `google-sync-reviews` — syncs reviews from Google (with token refresh)
+- `google-publish-reply` — publishes approved reply to Google (idempotent)
+- `google-disconnect` — revokes tokens, marks DISCONNECTED
+
+**Portal UI:**
+- `SettingsPage` — Connect/Disconnect/Sync now buttons, location toggles, last synced timestamp
+- `GoogleCallbackPage` — handles `/auth/google/callback` redirect from Google
+- `google.service.ts` — client wrapper for all edge function calls
+
+**Pending (1 manual step):** Set secrets in Supabase dashboard:
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
 
 ## Phase 5 — AI Response Generation
 - **BLOCKED on Phase 4**: needs real reviews

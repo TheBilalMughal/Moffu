@@ -13,6 +13,7 @@ import { OverviewPage } from '@/features/dashboard/pages/OverviewPage';
 import { ReviewsPage } from '@/features/dashboard/pages/ReviewsPage';
 import { SettingsPage } from '@/features/dashboard/pages/SettingsPage';
 import { BrandBrainPage } from '@/features/brand-brain/BrandBrainPage';
+import { GoogleCallbackPage } from '@/features/google/GoogleCallbackPage';
 
 export function App() {
   const initialize = useAuthStore((s) => s.initialize);
@@ -53,6 +54,15 @@ export function App() {
         {/* Supabase redirect handlers — no guard */}
         <Route path="/auth/verify" element={<VerifyEmailPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+        {/* Google OAuth callback — requires auth session */}
+        <Route
+          path="/auth/google/callback"
+          element={
+            <AuthGuard>
+              <GoogleCallbackPage />
+            </AuthGuard>
+          }
+        />
 
         {/* Protected dashboard routes */}
         <Route
