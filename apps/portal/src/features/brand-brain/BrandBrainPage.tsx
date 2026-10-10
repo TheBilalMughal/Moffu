@@ -522,62 +522,69 @@ function Step4({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
   ];
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-5 max-w-4xl">
       <div>
         <h2 className="text-lg font-bold text-[#111827] mb-1">Language & Rules</h2>
         <p className="text-sm text-[#6B7280]">Language settings, negative handling, and per-star overrides.</p>
       </div>
 
-      {/* Language */}
-      <div className="space-y-4 p-4 bg-[#F8FAF9] rounded-xl border border-[#E5EAE8]">
-        <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide">Language</h3>
-        <div>
-          <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">Primary language</label>
-          <SelectField value={data.primary_language} onChange={v => onChange({ primary_language: v })} options={LANGUAGES}/>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-[#6B7280] mb-2">When reviewer writes in a different language</label>
-          <div className="space-y-2">
-            {[
-              { key: 'primary' as const, label: 'Always reply in my primary language' },
-              { key: 'match'   as const, label: "Match the reviewer's language" },
-            ].map(opt => (
-              <label key={opt.key} className="flex items-center gap-3 cursor-pointer" onClick={() => onChange({ reviewer_lang_behaviour: opt.key })}>
-                <Radio checked={data.reviewer_lang_behaviour === opt.key} onClick={() => onChange({ reviewer_lang_behaviour: opt.key })}/>
-                <span className="text-sm text-[#374151]">{opt.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      </div>
+      <div className="flex gap-5 items-start">
+        {/* Left column — Language + Negative handling */}
+        <div className="flex-1 min-w-0 space-y-5">
 
-      {/* Negative handling */}
-      <div className="space-y-2.5">
-        <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide">Negative review handling (1–2 stars)</h3>
-        {NEGATIVE_OPTS.map(opt => (
-          <div key={opt.key} onClick={() => onChange({ negative_rule: opt.key })}
-            className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${data.negative_rule === opt.key ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#E5EAE8] hover:border-[#0D4C3C]/40'}`}>
-            <div className="mt-0.5"><Radio checked={data.negative_rule === opt.key} onClick={() => onChange({ negative_rule: opt.key })}/></div>
+          {/* Language */}
+          <div className="space-y-4 p-4 bg-[#F8FAF9] rounded-xl border border-[#E5EAE8]">
+            <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide">Language</h3>
             <div>
-              <p className={`text-sm font-bold ${data.negative_rule === opt.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>{opt.label}</p>
-              <p className="text-xs text-[#6B7280] mt-0.5">{opt.desc}</p>
+              <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">Primary language</label>
+              <SelectField value={data.primary_language} onChange={v => onChange({ primary_language: v })} options={LANGUAGES}/>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-[#6B7280] mb-2">When reviewer writes in a different language</label>
+              <div className="space-y-2">
+                {[
+                  { key: 'primary' as const, label: 'Always reply in my primary language' },
+                  { key: 'match'   as const, label: "Match the reviewer's language" },
+                ].map(opt => (
+                  <label key={opt.key} className="flex items-center gap-3 cursor-pointer" onClick={() => onChange({ reviewer_lang_behaviour: opt.key })}>
+                    <Radio checked={data.reviewer_lang_behaviour === opt.key} onClick={() => onChange({ reviewer_lang_behaviour: opt.key })}/>
+                    <span className="text-sm text-[#374151]">{opt.label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Per-star rules */}
-      <div>
-        <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide mb-2">Per-star tone & length overrides</h3>
-        <p className="text-xs text-[#9CA3AF] mb-3">Optionally use a different tone or length for specific star ratings. Leave blank to use defaults.</p>
-        <div className="grid grid-cols-3 gap-3">
+          {/* Negative handling */}
+          <div className="space-y-2.5">
+            <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide">Negative review handling (1–2 stars)</h3>
+            {NEGATIVE_OPTS.map(opt => (
+              <div key={opt.key} onClick={() => onChange({ negative_rule: opt.key })}
+                className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${data.negative_rule === opt.key ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#E5EAE8] hover:border-[#0D4C3C]/40'}`}>
+                <div className="mt-0.5"><Radio checked={data.negative_rule === opt.key} onClick={() => onChange({ negative_rule: opt.key })}/></div>
+                <div>
+                  <p className={`text-sm font-bold ${data.negative_rule === opt.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>{opt.label}</p>
+                  <p className="text-xs text-[#6B7280] mt-0.5">{opt.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+
+        {/* Right column — Per-star overrides */}
+        <div className="w-64 flex-shrink-0 space-y-3">
+          <div>
+            <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide mb-1">Per-star tone & length</h3>
+            <p className="text-[11px] text-[#9CA3AF] leading-snug">Override tone or length per rating bucket. Leave blank to use defaults.</p>
+          </div>
           {starBuckets.map(bucket => {
             const rule = data.star_rating_rules[bucket.key];
             return (
-              <div key={bucket.key} className="p-3.5 bg-[#FAFAFA] rounded-xl border border-[#E5EAE8] space-y-3">
-                <div>
-                  <p className={`text-base font-semibold leading-none ${bucket.color}`}>{bucket.stars}</p>
-                  <p className="text-xs text-[#6B7280] font-medium mt-1">{bucket.label}</p>
+              <div key={bucket.key} className="p-3.5 bg-[#FAFAFA] rounded-xl border border-[#E5EAE8] space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <p className={`text-sm font-semibold leading-none ${bucket.color}`}>{bucket.stars}</p>
+                  <p className="text-xs text-[#6B7280] font-medium">{bucket.label}</p>
                 </div>
                 <div>
                   <label className="text-[10px] text-[#9CA3AF] mb-1 block font-medium">Tone</label>
