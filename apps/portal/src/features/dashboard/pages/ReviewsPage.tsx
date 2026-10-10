@@ -918,17 +918,17 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
         className={`group cursor-pointer border-b border-[#F3F4F6] transition-colors ${focused ? 'ring-1 ring-inset ring-[#0D4C3C]/30' : ''} ${expanded ? 'bg-[#F8FAF9]' : 'hover:bg-[#FAFAFA]'} ${selected ? 'bg-[#F0F7F5]' : ''}`}>
 
         {/* Checkbox */}
-        <td className="pl-10 pr-2 py-3 w-10" onClick={e => { e.stopPropagation(); onSelect(e); }}>
+        <td className="pl-10 pr-2 py-1.5 w-10" onClick={e => { e.stopPropagation(); onSelect(e); }}>
           <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${selected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] group-hover:border-[#0D4C3C]'}`}>
             {selected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
           </div>
         </td>
 
         {/* Date */}
-        <td className="px-3 py-3 w-32 text-xs text-[#6B7280] whitespace-nowrap font-mono">{fmtDate(review.published_at)}</td>
+        <td className="px-3 py-1.5 w-32 text-xs text-[#6B7280] whitespace-nowrap font-mono">{fmtDate(review.published_at)}</td>
 
         {/* Reviewer */}
-        <td className="px-3 py-3 w-44">
+        <td className="px-3 py-1.5 w-44">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-7 h-7 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-xs font-semibold flex-shrink-0">{initials}</div>
             <div className="min-w-0">
@@ -939,12 +939,12 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
         </td>
 
         {/* Location */}
-        <td className="px-3 py-3 w-32">
+        <td className="px-3 py-1.5 w-32">
           <span className="text-xs text-[#6B7280] truncate block max-w-[120px]">{locationName || '—'}</span>
         </td>
 
         {/* Review + sentiment */}
-        <td className="px-3 py-3">
+        <td className="px-3 py-1.5">
           <div className="flex items-center gap-2">
             <span className={`text-[10px] font-medium flex-shrink-0 ${sentiment.cls}`}>{sentiment.label}</span>
             <p className="text-sm text-[#6B7280] truncate max-w-xs">{review.body || <span className="italic text-[#9CA3AF]">No text</span>}</p>
@@ -952,7 +952,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
         </td>
 
         {/* Status + age + response time */}
-        <td className="px-3 py-3 w-28">
+        <td className="px-3 py-1.5 w-28">
           <span className="inline-flex items-center gap-1.5 text-xs text-[#6B7280]">
             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot}`}/>
             {statusLabel}
@@ -966,7 +966,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
         </td>
 
         {/* Inline action + flag */}
-        <td className="px-3 py-3 w-44 pr-10" onClick={e => e.stopPropagation()}>
+        <td className="px-3 py-1.5 w-44 pr-4" onClick={e => e.stopPropagation()}>
           <div className="flex items-center gap-2">
             {uiStatus === 'pending' && (
               <button onClick={() => onGenerateDraft(review.id)} disabled={isDrafting}
@@ -998,7 +998,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
         </td>
 
         {/* Chevron */}
-        <td className="px-2 py-3 w-6">
+        <td className="pl-2 pr-6 py-1.5 w-6">
           <svg className={`w-4 h-4 text-[#C4C9D4] transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
           </svg>
@@ -1009,7 +1009,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
       {expanded && (
         <tr className="bg-[#F8FAF9] border-b border-[#E5EAE8]">
           <td colSpan={8} className="pl-10 pr-10 py-4">
-            <div className="max-w-2xl space-y-4">
+            <div className="space-y-4">
               {/* Full review */}
               {review.body && (
                 <div>
@@ -1158,6 +1158,7 @@ export function ReviewsPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [sortBy, setSortBy] = useState<SortKey>('newest');
+  const [flagFilter, setFlagFilter] = useState(false);
 
   // Presets
   const [presets, setPresets] = useState<FilterPreset[]>(loadPresets);
@@ -1226,6 +1227,7 @@ export function ReviewsPage() {
       if (search) { const q = search.toLowerCase(); if (!r.reviewer_name?.toLowerCase().includes(q) && !r.body?.toLowerCase().includes(q)) return false; }
       if (dateFrom && r.published_at && r.published_at < dateFrom) return false;
       if (dateTo && r.published_at && r.published_at > dateTo + 'T23:59:59') return false;
+      if (flagFilter && r.status !== 'NEEDS_ATTENTION') return false;
       return true;
     });
     if (sortBy === 'oldest')     list = [...list].sort((a,b) => (a.published_at ?? '') < (b.published_at ?? '') ? -1 : 1);
@@ -1238,7 +1240,7 @@ export function ReviewsPage() {
       return (a.published_at ?? '') < (b.published_at ?? '') ? -1 : 1;
     });
     return list;
-  }, [reviews, statusFilter, ratingFilter, locationFilter, search, dateFrom, dateTo, sortBy]);
+  }, [reviews, statusFilter, ratingFilter, locationFilter, search, dateFrom, dateTo, sortBy, flagFilter]);
 
   useEffect(() => { filteredRef.current = filtered; }, [filtered]);
 
@@ -1252,7 +1254,7 @@ export function ReviewsPage() {
     replied:    reviews.filter(r => toUiStatus(r.status) === 'replied').length,
   };
   const avgRating = reviews.length ? (reviews.reduce((s,r) => s + r.rating, 0) / reviews.length).toFixed(1) : '—';
-  const hasFilters = !!(search || statusFilter !== 'all' || ratingFilter > 0 || locationFilter || dateFrom || dateTo);
+  const hasFilters = !!(search || statusFilter !== 'all' || ratingFilter > 0 || locationFilter || dateFrom || dateTo || flagFilter);
 
   // Stats bar computations
   const repliedCount = reviews.filter(r => r.status === 'PUBLISHED').length;
@@ -1263,7 +1265,7 @@ export function ReviewsPage() {
     : '—';
 
   function locationName(id: string | null) { return id ? (locations.find(l => l.id === id)?.display_name ?? '') : ''; }
-  function clearAll() { setSearch(''); setStatusFilter('all'); setRatingFilter(0); setLocationFilter(''); setDateFrom(''); setDateTo(''); setSortBy('newest'); setPage(1); }
+  function clearAll() { setSearch(''); setStatusFilter('all'); setRatingFilter(0); setLocationFilter(''); setDateFrom(''); setDateTo(''); setSortBy('newest'); setFlagFilter(false); setPage(1); }
 
   async function handleSync() {
     setSyncing(true);
@@ -1482,6 +1484,16 @@ export function ReviewsPage() {
               icon={<svg className="w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>}
               options={[{value:'newest',label:'Newest first'},{value:'oldest',label:'Oldest first'},{value:'unanswered',label:'Unanswered first'},{value:'highest',label:'Highest rated'},{value:'lowest',label:'Lowest rated'}]}
             />
+
+            <button
+              onClick={() => { setFlagFilter(f => !f); setPage(1); }}
+              title="Show flagged only"
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${flagFilter ? 'bg-amber-50 border-amber-300 text-amber-600' : 'border-[#D1D5DB] text-[#6B7280] hover:border-amber-300 hover:text-amber-500'}`}>
+              <svg className="w-3.5 h-3.5" fill={flagFilter ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21V5a2 2 0 012-2h14l-3 5 3 5H5v8"/>
+              </svg>
+              Flagged
+            </button>
 
             {reviews.length > 0 && (
               <>
