@@ -32,48 +32,48 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | ONBOARD-006 | Synthetic Test Agent | PENDING | - | - |
 | ONBOARD-007 | Server-derived READY | PENDING | - | - |
 | ONBOARD-008 | Resume incomplete onboarding | PENDING | - | - |
-| GOOGLE-001 | OAuth state/PKCE | PENDING | - | REQUIRES EXTERNAL SETUP: Google Cloud project + GBP API access |
-| GOOGLE-002 | Secure token storage | PENDING | - | - |
-| GOOGLE-003 | Accounts/locations fetch | PENDING | - | - |
-| GOOGLE-004 | Explicit location mapping | PENDING | - | - |
-| GOOGLE-005 | Initial sync | PENDING | - | - |
-| GOOGLE-006 | Connection health | PENDING | - | - |
-| GOOGLE-007 | Reconnect | PENDING | - | - |
-| GOOGLE-008 | Disconnect/revoke cleanup | PENDING | - | - |
-| GOOGLE-009 | Quota/backoff | PENDING | - | - |
+| GOOGLE-001 | OAuth state/PKCE | IMPLEMENTED | - | `google-oauth-start` edge function v7 — generates state, returns Google auth URL; `GoogleCallbackPage` handles redirect |
+| GOOGLE-002 | Secure token storage | IMPLEMENTED | - | `google_connection_tokens` table; service-role only (no authenticated RLS policy); stored server-side in edge function only |
+| GOOGLE-003 | Accounts/locations fetch | IMPLEMENTED | - | `google-oauth-callback` v4 — exchanges code, fetches GBP locations, inserts into `google_locations` |
+| GOOGLE-004 | Explicit location mapping | IMPLEMENTED | - | `google_locations.is_selected` toggle in SettingsPage; only selected locations propagate to Reviews/Insights/sidebar |
+| GOOGLE-005 | Initial sync | IMPLEMENTED | - | `google-sync-reviews` v4 edge function; "Sync now" button in SettingsPage |
+| GOOGLE-006 | Connection health | IMPLEMENTED | - | `google_connections` state machine: PENDING/CONNECTED/REFRESH_FAILED/REVOKED/DISCONNECTED/ERROR; shown in SettingsPage |
+| GOOGLE-007 | Reconnect | IMPLEMENTED | - | Re-running OAuth flow reconnects; status resets to CONNECTED |
+| GOOGLE-008 | Disconnect/revoke cleanup | IMPLEMENTED | - | `google-disconnect` v4 — revokes Google token, sets DISCONNECTED, clears is_selected |
+| GOOGLE-009 | Quota/backoff | PENDING | - | Retry/backoff logic not yet added to edge functions |
 | GOOGLE-010 | Ambiguous write reconciliation | PENDING | - | - |
-| REVIEWS-001 | Inbox filters/pagination | PENDING | - | - |
-| REVIEWS-002 | Review detail | PENDING | - | - |
-| REVIEWS-003 | Generate draft | PENDING | - | - |
-| REVIEWS-004 | Regenerate/version | PENDING | - | - |
-| REVIEWS-005 | Edit draft | PENDING | - | - |
-| REVIEWS-006 | Approve exact version | PENDING | - | - |
-| REVIEWS-007 | Publish checks | PENDING | - | - |
+| REVIEWS-001 | Inbox filters/pagination | IMPLEMENTED | - | ReviewsPage: filter tabs (All/Pending/Draft Ready/Replied), star filter, date range, search; scoped to is_selected locations |
+| REVIEWS-002 | Review detail | IMPLEMENTED | - | Review cards with reviewer name, rating stars, date, review text, location label |
+| REVIEWS-003 | Generate draft | IMPLEMENTED | - | "Generate Draft" button → `ai-generate-draft` edge function → populates editable textarea; records ai_draft usage event |
+| REVIEWS-004 | Regenerate/version | PENDING | - | Single draft only; no version history yet |
+| REVIEWS-005 | Edit draft | IMPLEMENTED | - | Editable textarea pre-filled with AI draft; user can modify before approving |
+| REVIEWS-006 | Approve exact version | IMPLEMENTED | - | "Approve & Publish" button sends current textarea value to `google-publish-reply` |
+| REVIEWS-007 | Publish checks | IMPLEMENTED | - | `google-publish-reply` v4 — idempotent, checks review status before writing; records published_reply usage event |
 | REVIEWS-008 | Stale handling | PENDING | - | - |
 | REVIEWS-009 | Needs Attention | PENDING | - | - |
 | REVIEWS-010 | Existing Google reply handling | PENDING | - | - |
 | REVIEWS-011 | Direct Google edits win | PENDING | - | - |
 | REVIEWS-012 | History/provider merge | PENDING | - | - |
-| AI-001 | Provider abstraction | PENDING | - | TBD: LLM provider selection not locked |
-| AI-002 | Context builder | PENDING | - | - |
-| AI-003 | Language detection | PENDING | - | - |
+| AI-001 | Provider abstraction | IMPLEMENTED | - | Gemini API via `ai-generate-draft` edge function; `GEMINI_API_KEY` in Supabase secrets; locked: D-015 |
+| AI-002 | Context builder | IMPLEMENTED | - | Edge function assembles: review text + star rating + brand_brain (tone, length, language, prohibited phrases, example reply) |
+| AI-003 | Language detection | IN_PROGRESS | - | Gemini instructed to match reviewer language; explicit detection/fallback logic not separately implemented |
 | AI-004 | Risk classifier | PENDING | - | - |
-| AI-005 | Brand Brain load | PENDING | - | - |
-| AI-006 | Structured output | PENDING | - | - |
-| AI-007 | Schema validator | PENDING | - | - |
+| AI-005 | Brand Brain load | IMPLEMENTED | - | Edge function fetches brand_brain row for auth user before building prompt |
+| AI-006 | Structured output | IMPLEMENTED | - | Draft text returned as JSON `{ draft: string }`; stored in `reviews.ai_draft` |
+| AI-007 | Schema validator | PENDING | - | No explicit Zod/JSON schema validation on AI output yet |
 | AI-008 | Promise/hallucination guard | PENDING | - | - |
 | AI-009 | Repetition guard | PENDING | - | - |
 | AI-010 | Preference confirmation | PENDING | - | - |
 | AI-011 | Roman Urdu/mixed language | PENDING | - | - |
 | AI-012 | Telemetry minimization | PENDING | - | - |
-| CUSTOMER-001 | Dashboard | PENDING | AUTH-001 | Placeholder exists; real dashboard Phase 6 |
-| CUSTOMER-002 | Reviews navigation | PENDING | - | - |
-| CUSTOMER-003 | Brand Brain pages | PENDING | - | - |
-| CUSTOMER-004 | Locations | PENDING | - | - |
-| CUSTOMER-005 | Reports | PENDING | - | - |
-| CUSTOMER-006 | Team | PENDING | - | - |
-| CUSTOMER-007 | Billing | PENDING | - | REQUIRES EXTERNAL SETUP: Stripe not configured; TBD pricing |
-| CUSTOMER-008 | Integrations | PENDING | - | - |
+| CUSTOMER-001 | Dashboard | IN_PROGRESS | AUTH-001 | OverviewPage exists with stat cards; wired to real review data via activeReviews. Full reports/charts TBD Phase 7 |
+| CUSTOMER-002 | Reviews navigation | IMPLEMENTED | - | ReviewsPage at `/reviews` — filter tabs, search, star/date filters, AI draft, publish flow |
+| CUSTOMER-003 | Brand Brain pages | IMPLEMENTED | - | BrandBrainPage at `/brand-brain` — full settings form, save/load via brandBrain.service.ts |
+| CUSTOMER-004 | Locations | IMPLEMENTED | - | Location toggles in SettingsPage (is_selected); global location store (Zustand); sidebar selector for 2+ locations |
+| CUSTOMER-005 | Reports | PENDING | - | InsightsPage exists with keyword/sentiment analysis; formal Reports section TBD |
+| CUSTOMER-006 | Team | PENDING | - | Team seats meter shown in BillingPage; invite/manage team UI TBD Phase 7 |
+| CUSTOMER-007 | Billing | IN_PROGRESS | - | BillingPage at `/billing` — plan cards, usage meters, history chart, add-on UI, compare modal. Stripe integration pending |
+| CUSTOMER-008 | Integrations | IMPLEMENTED | - | SettingsPage — Google OAuth connect/disconnect, location toggles, sync now |
 | CUSTOMER-009 | Notifications | PENDING | - | - |
 | CUSTOMER-010 | Organization settings | PENDING | - | - |
 | CUSTOMER-011 | Profile/security | PENDING | - | - |
@@ -93,13 +93,13 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | ADMIN-012 | Refund workflow | PENDING | - | - |
 | ADMIN-013 | Regions/countries/currencies | PENDING | - | Reference tables seeded (all inactive); admin UI TBD |
 | ADMIN-014 | Feature/config controls | PENDING | - | - |
-| BILLING-001 | Versioned plans | PENDING | - | TBD: plan names and pricing not decided |
-| BILLING-002 | Versioned prices | PENDING | - | TBD: prices, markets, currencies not decided |
-| BILLING-003 | Entitlements | PENDING | - | D-014: Free weekly; paid monthly, including annual subscriptions. Documentation approved 2026-10-11; runtime unverified. |
-| BILLING-004 | Add-on catalog | PENDING | - | TBD: add-on names/prices not decided |
-| BILLING-005 | Add-on quantities | PENDING | - | - |
-| BILLING-006 | Effective entitlement service | PENDING | - | - |
-| BILLING-007 | Checkout server validation | PENDING | - | - |
+| BILLING-001 | Versioned plans | IMPLEMENTED | - | `plans` table seeded: Free/Starter/Growth/Scale; migration 008 applied to `kgttncfkzdrgswfkkdji` |
+| BILLING-002 | Versioned prices | IMPLEMENTED | - | `plan_prices`: monthly + annual per plan; USD only V1 |
+| BILLING-003 | Entitlements | IMPLEMENTED | - | `plan_entitlements`: LIMIT/UNLIMITED/BOOLEAN/ENUM per plan; usage_reset weekly (Free) or monthly (paid). D-014 runtime-verified via billingService.getUsage() |
+| BILLING-004 | Add-on catalog | IMPLEMENTED | - | `plan_location_addons`: Starter $5/loc, Growth $10/loc, Scale $15/loc |
+| BILLING-005 | Add-on quantities | IMPLEMENTED | - | `subscription_addons` table with quantity column; UI shows line items + add location dialog |
+| BILLING-006 | Effective entitlement service | IMPLEMENTED | - | `billingService.checkLimit()` — period window + usage_events count vs plan entitlement; `recordUsage()` inserts events |
+| BILLING-007 | Checkout server validation | PENDING | - | Client-side recording only; server-side limit check in edge functions NOT yet implemented — gap: limits bypassable via direct API call |
 | BILLING-008 | Verified webhooks | PENDING | - | REQUIRES EXTERNAL SETUP: Stripe webhook endpoint |
 | BILLING-009 | Subscription lifecycle | PENDING | - | - |
 | BILLING-010 | Invoices/payments | PENDING | - | - |
@@ -224,7 +224,7 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | BACKUP-009 | Restore tests | PENDING | - | - |
 | BACKUP-010 | Backup health monitoring | PENDING | - | - |
 | BACKUP-011 | RPO/RTO documentation | PENDING | - | TBD: RPO/RTO not decided |
-| TEST-001 | Static checks | TESTED | - | `pnpm typecheck` passed 6/6 packages 2026-10-09. Fixed: vite/client types in portal/admin tsconfigs; async onAuthStateChange callback. pnpm install exits 1 (esbuild approve-builds pending) but all 424 packages installed and functional. |
+| TEST-001 | Static checks | TESTED | - | `pnpm typecheck` passed 6/6 packages 2026-10-09. `npx tsc --noEmit` passes clean on apps/portal as of 2026-10-11 (Phase 6 billing code included). |
 | TEST-002 | Unit tests | PENDING | - | - |
 | TEST-003 | API contracts | PENDING | - | - |
 | TEST-004 | RLS/tenant tests | PENDING | Docker/Supabase | Migrations written; tests blocked on Supabase local stack |
@@ -235,7 +235,7 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | TEST-009 | Visual regression | PENDING | - | - |
 | TEST-010 | Accessibility/responsive tests | PENDING | - | - |
 | TEST-011 | CI gates | PENDING | - | - |
-| DEPLOY-001 | Migrations as code | IMPLEMENTED | - | supabase/migrations/ — 5 migration files with sequential naming |
+| DEPLOY-001 | Migrations as code | IMPLEMENTED | - | supabase/migrations/ — 8 migration files; 001–008 applied to `kgttncfkzdrgswfkkdji`; 006 brand_brain, 007 google/reviews, 008 billing |
 | DEPLOY-002 | Staging/production promotion | PENDING | - | - |
 | DEPLOY-003 | Secrets/env validation | IMPLEMENTED | - | requireEnv() in portal/admin lib/env.ts; .env.example in all apps |
 | DEPLOY-004 | Observability | PENDING | - | - |

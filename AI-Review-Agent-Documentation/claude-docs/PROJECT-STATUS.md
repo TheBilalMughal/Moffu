@@ -1,7 +1,7 @@
 # Project Status
 
 ## Current milestone
-PHASE 4 — Google Business Profile Integration (BLOCKED: needs Google OAuth credentials)
+PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Stripe integration + server-side limit enforcement pending)
 
 ## Completed
 
@@ -94,12 +94,54 @@ PHASE 4 — Google Business Profile Integration (BLOCKED: needs Google OAuth cre
 **Verified working:** bilalxmughal@gmail.com connected successfully. "No locations" expected — account has no verified Google Business Profile. Real customers with verified profiles will see locations list.
 
 ## Phase 5 — AI Response Generation
-- **BLOCKED on Phase 4**: needs real reviews
-- OpenAI/Claude API key required (server-side only)
+**COMPLETE** ✅
+
+**Edge function:** `ai-generate-draft` (Supabase, ACTIVE)
+- Loads brand_brain profile for authenticated user
+- Builds context: review text + rating + brand tone/language/reply settings
+- Calls Gemini API (`GEMINI_API_KEY` set in Supabase secrets)
+- Returns structured draft text; stored on `reviews.ai_draft`
+
+**Portal UI:** ReviewsPage — "Generate Draft" button calls edge function, populates editable textarea; "Approve & Publish" calls `google-publish-reply`
+
+**Usage tracking:** `billingService.recordUsage('ai_draft')` called after successful draft generation; `recordUsage('published_reply')` after successful publish.
 
 ## Phase 6 — Billing & Subscription (Stripe)
-- Stripe keys required
-- Plans TBD
+**PARTIAL** — schema + UI + client-side usage tracking COMPLETE; Stripe + server-side enforcement PENDING
+
+**DB migration 008 applied (`kgttncfkzdrgswfkkdji`):**
+- `plans` — Free / Starter / Growth / Scale (seeded)
+- `plan_prices` — monthly + annual prices per plan (USD)
+- `plan_entitlements` — LIMIT / UNLIMITED / BOOLEAN / ENUM values with usage_reset cadence
+- `plan_location_addons` — $5/$10/$15 per extra location (Starter/Growth/Scale)
+- `subscriptions` — one active row per user; trigger auto-assigns Free on signup; existing users backfilled
+- `subscription_addons` — extra location add-ons per subscription
+- `usage_events` — ai_draft + published_reply events; user-scoped RLS
+
+**Service layer:** `billing.service.ts`
+- `getPlans()` — catalog from DB
+- `getSubscription()` — user's active subscription + addon_items
+- `getUsage()` — period window (7-day rolling for Free, subscription period for paid)
+- `getUsageHistory()` — last 30 days grouped by date for chart
+- `checkLimit()` — entitlement lookup + usage count
+- `recordUsage()` — inserts usage_events row (client-side only)
+
+**Portal BillingPage** (`/billing`):
+- Current plan card with team seats meter (1/N)
+- Usage meters (AI drafts + replies) with alert banners at ≥80% / ≥90%
+- Overage protection toggle (disabled, Stripe pending)
+- 14-day usage history bar chart
+- Add extra location button → dialog with cost breakdown (disabled confirm)
+- Active add-on line items with cancel (disabled)
+- Annual savings banner (shown when on monthly paid plan)
+- Compare all plans modal — full feature matrix
+- Monthly/annual toggle with –20% label
+- 4-column plan cards (Scale card dark); upgrade buttons disabled with truthful "coming soon"
+- Nav item in DashboardLayout
+
+**Pending (needs Stripe or further work):**
+- Server-side limit enforcement in `ai-generate-draft` + `google-publish-reply` edge functions
+- Stripe Checkout, webhooks, subscription lifecycle, invoices, upgrade/downgrade flow
 
 ## Phase 7 — Admin Portal
 - Internal platform management
