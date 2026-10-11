@@ -12,6 +12,13 @@ export interface Plan {
   location_addon_cents: number | null;
 }
 
+export interface AddonItem {
+  id: string;
+  addon_type: string;
+  quantity: number;
+  unit_price_cents: number;
+}
+
 export interface Subscription {
   id: string;
   plan_id: string;
@@ -23,6 +30,7 @@ export interface Subscription {
   current_period_end: string;
   cancel_at_period_end: boolean;
   extra_locations: number;
+  addon_items: AddonItem[];
 }
 
 export interface UsageSummary {
@@ -33,6 +41,12 @@ export interface UsageSummary {
   reset_label: string;
   period_start: string;
   period_end: string;
+}
+
+export interface UsageDay {
+  date: string; // YYYY-MM-DD
+  ai_drafts: number;
+  published_replies: number;
 }
 
 function periodWindow(sub: Subscription, resetCadence: 'weekly' | 'monthly'): { start: Date; end: Date } {
@@ -81,7 +95,7 @@ export const billingService = {
 
     const { data } = await supabase
       .from('subscriptions')
-      .select('id, plan_id, status, billing_interval, current_period_start, current_period_end, cancel_at_period_end, plans(slug, name), subscription_addons(addon_type, quantity)')
+      .select('id, plan_id, status, billing_interval, current_period_start, current_period_end, cancel_at_period_end, plans(slug, name), subscription_addons(id, addon_type, quantity, unit_price_cents)')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .maybeSingle();
@@ -89,8 +103,8 @@ export const billingService = {
     if (!data) return null;
 
     const plan = (Array.isArray(data.plans) ? data.plans[0] : data.plans) as { slug: string; name: string } | null;
-    const addons = (data.subscription_addons as { addon_type: string; quantity: number }[] | null) ?? [];
-    const extraLocations = addons.filter(a => a.addon_type === 'extra_location').reduce((s, a) => s + a.quantity, 0);
+    const rawAddons = (data.subscription_addons as { id: string; addon_type: string; quantity: number; unit_price_cents: number }[] | null) ?? [];
+    const extraLocations = rawAddons.filter(a => a.addon_type === 'extra_location').reduce((s, a) => s + a.quantity, 0);
 
     return {
       id: data.id,
@@ -103,6 +117,7 @@ export const billingService = {
       current_period_end: data.current_period_end,
       cancel_at_period_end: data.cancel_at_period_end,
       extra_locations: extraLocations,
+      addon_items: rawAddons.map(a => ({ id: a.id, addon_type: a.addon_type, quantity: a.quantity, unit_price_cents: a.unit_price_cents })),
     };
   },
 
@@ -123,17 +138,49 @@ export const billingService = {
     const draftsUsed = evts.filter(e => e.event_type === 'ai_draft').length;
     const repliesUsed = evts.filter(e => e.event_type === 'published_reply').length;
 
-    const resetLabel = resetCadence === 'weekly' ? 'Resets weekly' : 'Resets monthly';
-
     return {
       ai_drafts_used: draftsUsed,
       ai_drafts_limit: draftEnt?.value_type === 'UNLIMITED' ? null : (draftEnt?.limit_value ?? null),
       published_replies_used: repliesUsed,
       published_replies_limit: replyEnt?.value_type === 'UNLIMITED' ? null : (replyEnt?.limit_value ?? null),
-      reset_label: resetLabel,
+      reset_label: resetCadence === 'weekly' ? 'Resets weekly' : 'Resets monthly',
       period_start: start.toISOString(),
       period_end: end.toISOString(),
     };
+  },
+
+  async getUsageHistory(): Promise<UsageDay[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const since = new Date();
+    since.setDate(since.getDate() - 29);
+
+    const { data } = await supabase
+      .from('usage_events')
+      .select('event_type, created_at')
+      .eq('user_id', user.id)
+      .gte('created_at', since.toISOString())
+      .order('created_at');
+
+    const map = new Map<string, UsageDay>();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      map.set(key, { date: key, ai_drafts: 0, published_replies: 0 });
+    }
+
+    for (const e of data ?? []) {
+      const key = (e.created_at as string).slice(0, 10);
+      const day = map.get(key);
+      if (day) {
+        if (e.event_type === 'ai_draft') day.ai_drafts++;
+        else if (e.event_type === 'published_reply') day.published_replies++;
+      }
+    }
+
+    return Array.from(map.values());
   },
 
   async checkLimit(eventType: 'ai_draft' | 'published_reply'): Promise<{ allowed: boolean; used: number; limit: number | null }> {
