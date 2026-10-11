@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { googleService } from '@/features/google/google.service';
 import { useLocationStore } from '@/features/location/location.store';
+import { billingService } from '@/features/billing/billing.service';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -1331,12 +1332,12 @@ export function ReviewsPage() {
     setReviews(p => p.map(r => r.id === id ? { ...r, status: 'DRAFTING' as const } : r));
     const { error } = await googleService.generateDraft(id);
     if (error) { setReviews(p => p.map(r => r.id === id ? { ...r, status: 'NEW' as const } : r)); setToast({ message: error, type: 'error' }); }
-    else await loadReviews();
+    else { billingService.recordUsage('ai_draft', id); await loadReviews(); }
   }
 
   async function handlePublish(id: string, draft: string): Promise<{ error?: string }> {
     const r = await googleService.publishReply(id, draft);
-    if (!r.error) { await loadReviews(); setToast({ message: 'Reply published to Google.', type: 'success' }); }
+    if (!r.error) { billingService.recordUsage('published_reply', id); await loadReviews(); setToast({ message: 'Reply published to Google.', type: 'success' }); }
     return r;
   }
 

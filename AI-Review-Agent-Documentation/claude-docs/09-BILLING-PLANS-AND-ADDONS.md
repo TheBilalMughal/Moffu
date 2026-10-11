@@ -14,3 +14,28 @@ Verified webhook/provider reconciliation activates subscription, never success r
 
 ## Tax
 Tax architecture supports inclusive/exclusive and TaxService/provider adapter. Never hard-code GST legal conclusions. Billing profiles support legal business data/ABN where applicable. Preserve historical pricing/FX snapshots.
+
+## Approved usage reset cadence - 2026-10-11
+| Plan | Allowance period |
+| --- | --- |
+| Free | Weekly: every 7 days |
+| Starter | Monthly |
+| Growth | Monthly |
+| Scale | Monthly |
+| Custom paid | Monthly; quantities defined in the agreed plan |
+
+Free includes 7 published replies and 14 AI drafts per weekly period. Paid quantities belong to the versioned plan configuration, not a weekly subdivision. Annual payment keeps monthly allowances; do not release 12 months of credits upfront.
+
+Reset renews usage allowance without deleting stored reviews, drafts, Brand Brain data or historical usage events. Locations, team members and Brand Brain profiles are capacity entitlements, not resettable counters. Show the period and next reset date beside usage in the UI.
+
+This section records an approved product requirement, not an implemented or tested reset mechanism. Exact period anchors/timezone, rollover, transition handling and final paid quantities/prices must be documented before implementation. In particular, the suggested Scale increase from 1,000 to 2,000 AI drafts is not approved by this cadence-only decision.
+
+## Pricing table reset labels - 2026-10-11
+Cadence-only display correction requested by the user. Preserve all existing prices, quantities, Brand Brain values, seats and support levels.
+- Rename the shared row label Published replies / weekly to Published replies.
+- Rename the shared row label AI drafts / weekly to AI drafts.
+- Append / week to the existing Free reply and AI-draft quantities.
+- Append / month to the existing Starter, Growth and Scale reply and AI-draft quantities.
+- Add a Usage reset row: Free Weekly; Starter Monthly; Growth Monthly; Scale Monthly.
+- Annual paid billing still uses monthly allowances.
+This documents presentation requirements only; it does not implement reset enforcement or approve other entitlement changes.

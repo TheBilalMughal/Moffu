@@ -95,7 +95,7 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | ADMIN-014 | Feature/config controls | PENDING | - | - |
 | BILLING-001 | Versioned plans | PENDING | - | TBD: plan names and pricing not decided |
 | BILLING-002 | Versioned prices | PENDING | - | TBD: prices, markets, currencies not decided |
-| BILLING-003 | Entitlements | PENDING | - | - |
+| BILLING-003 | Entitlements | PENDING | - | D-014: Free weekly; paid monthly, including annual subscriptions. Documentation approved 2026-10-11; runtime unverified. |
 | BILLING-004 | Add-on catalog | PENDING | - | TBD: add-on names/prices not decided |
 | BILLING-005 | Add-on quantities | PENDING | - | - |
 | BILLING-006 | Effective entitlement service | PENDING | - | - |

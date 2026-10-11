@@ -114,3 +114,6 @@ PHASE 4 — Google Business Profile Integration (BLOCKED: needs Google OAuth cre
 
 ## Rule
 When asked "pending kya hai?" inspect actual code/database/config/tests; never guess from chat history.
+
+## Documentation update - 2026-10-11: usage reset cadence
+Free weekly and paid monthly usage renewal is approved (including monthly allowances on annual subscriptions). See DECISIONS.md D-014 and 09-BILLING-PLANS-AND-ADDONS.md. Documentation only: runtime reset enforcement has not been implemented or verified in this task. Billing implementation remains pending.

@@ -13,3 +13,8 @@
 - D-011 Australia-first billing architecture; intended Stripe subject to verified configuration; multi-market core.
 - D-012 Durable master checklist/status files are project memory; Claude maintains them after work.
 - D-013 No Dead UI and no fake completion/configuration/compliance claims.
+
+## Usage reset decision - 2026-10-11
+- D-014 Free plan usage renews weekly (every 7 days); paid plan usage renews monthly.
+- Annual paid subscriptions also receive monthly usage allowances; annual payment does not grant the full year's allowance upfront.
+- Reset applies to published-reply and AI-draft usage only. Locations, seats, Brand Brain profiles and saved customer content are not reset or deleted.
