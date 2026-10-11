@@ -99,7 +99,7 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | BILLING-004 | Add-on catalog | IMPLEMENTED | - | `plan_location_addons`: Starter $5/loc, Growth $10/loc, Scale $15/loc |
 | BILLING-005 | Add-on quantities | IMPLEMENTED | - | `subscription_addons` table with quantity column; UI shows line items + add location dialog |
 | BILLING-006 | Effective entitlement service | IMPLEMENTED | - | `billingService.checkLimit()` — period window + usage_events count vs plan entitlement; `recordUsage()` inserts events |
-| BILLING-007 | Checkout server validation | PENDING | - | Client-side recording only; server-side limit check in edge functions NOT yet implemented — gap: limits bypassable via direct API call |
+| BILLING-007 | Checkout server validation | IMPLEMENTED | - | `_shared/billing.ts` — `checkAndRecordUsage()` checks entitlement before Gemini/Google calls; records usage after success; returns 429 on limit exceeded; client-side `recordUsage()` calls removed (server-side is authoritative); deployed v17/v13 |
 | BILLING-008 | Verified webhooks | PENDING | - | REQUIRES EXTERNAL SETUP: Stripe webhook endpoint |
 | BILLING-009 | Subscription lifecycle | PENDING | - | - |
 | BILLING-010 | Invoices/payments | PENDING | - | - |
