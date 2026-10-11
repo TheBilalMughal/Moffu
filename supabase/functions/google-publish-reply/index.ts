@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkAndRecordUsage } from '../_shared/billing.ts';
 
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')!;
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')!;
@@ -59,6 +60,16 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Review is not awaiting approval' }), { status: 400 });
     }
 
+    // Check published_reply limit before hitting Google
+    const limitCheck = await checkAndRecordUsage(supabase, user.id, 'published_reply', review_id);
+    if (!limitCheck.allowed) {
+      return new Response(JSON.stringify({
+        error: 'Published reply limit reached for this period',
+        used: limitCheck.used,
+        limit: limitCheck.limit,
+      }), { status: 429, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    }
+
     const location = review.google_locations as { google_location_name: string; connection_id: string } | null;
     if (!location) return new Response(JSON.stringify({ error: 'Location not found' }), { status: 400 });
 
@@ -111,12 +122,15 @@ Deno.serve(async (req) => {
     }
 
     const now = new Date().toISOString();
-    await supabase.from('reviews').update({
-      status: 'PUBLISHED',
-      reply_text: reply_text.trim(),
-      reply_published_at: now,
-      reply_draft: null,
-    }).eq('id', review_id);
+    await Promise.all([
+      supabase.from('reviews').update({
+        status: 'PUBLISHED',
+        reply_text: reply_text.trim(),
+        reply_published_at: now,
+        reply_draft: null,
+      }).eq('id', review_id),
+      supabase.from('usage_events').insert({ user_id: user.id, event_type: 'published_reply', review_id }),
+    ]);
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },

@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { checkAndRecordUsage } from '../_shared/billing.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -42,6 +43,16 @@ Deno.serve(async (req) => {
       .single();
 
     if (reviewError || !review) return json({ error: 'Review not found' }, 404);
+
+    // Check AI draft limit before calling Gemini
+    const limitCheck = await checkAndRecordUsage(supabase, user.id, 'ai_draft', review_id);
+    if (!limitCheck.allowed) {
+      return json({
+        error: 'AI draft limit reached for this period',
+        used: limitCheck.used,
+        limit: limitCheck.limit,
+      }, 429);
+    }
 
     // Fetch brand brain settings
     const { data: brain } = await supabase
@@ -113,12 +124,17 @@ Reply (output the reply text only, nothing else):`;
 
     if (!draft) return json({ error: 'Empty response from AI' }, 500);
 
-    // Save draft to DB and set status DRAFT_READY
-    await supabase
-      .from('reviews')
-      .update({ reply_draft: draft, status: 'DRAFT_READY' })
-      .eq('id', review_id)
-      .eq('user_id', user.id);
+    // Save draft + record usage atomically after success
+    await Promise.all([
+      supabase
+        .from('reviews')
+        .update({ reply_draft: draft, status: 'DRAFT_READY' })
+        .eq('id', review_id)
+        .eq('user_id', user.id),
+      supabase
+        .from('usage_events')
+        .insert({ user_id: user.id, event_type: 'ai_draft', review_id }),
+    ]);
 
     return json({ draft });
   } catch (err) {
