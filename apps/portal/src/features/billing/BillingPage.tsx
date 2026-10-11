@@ -115,7 +115,7 @@ export function BillingPage() {
 
       {/* Current plan + usage — full width banner */}
       <div className="bg-white border border-[#E5EAE8] rounded-2xl p-6 mb-6">
-        <div className="grid grid-cols-[1fr_auto] gap-6 items-start">
+        <div className="grid grid-cols-2 gap-6 items-start">
           {/* Left: plan info */}
           <div className="flex items-start gap-5">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${planColor.bg}`}>
@@ -153,7 +153,7 @@ export function BillingPage() {
 
           {/* Right: usage meters */}
           {usage && (
-            <div className="min-w-[320px] bg-[#F8FAF9] border border-[#E5EAE8] rounded-xl p-4 space-y-4">
+            <div className="bg-[#F8FAF9] border border-[#E5EAE8] rounded-xl p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-[#374151]">Usage this period</span>
                 <span className="text-[10px] text-[#9CA3AF] bg-white border border-[#E5EAE8] px-2 py-0.5 rounded-md">{usage.reset_label}</span>
@@ -166,15 +166,9 @@ export function BillingPage() {
       </div>
 
       {/* Stripe coming soon notice */}
-      <div className="flex items-start gap-3 bg-[#FFFBEB] border border-amber-200 rounded-xl px-5 py-3.5 mb-8">
-        <svg className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-        </svg>
-        <p className="text-xs text-amber-700">
-          <span className="font-semibold text-amber-800">Payments coming soon — </span>
-          Stripe integration is in progress. Upgrades and billing management will be available shortly.
-        </p>
-      </div>
+      <p className="text-xs text-[#9CA3AF] mb-8">
+        Payments coming soon — Stripe integration is in progress. Upgrades and billing management will be available shortly.
+      </p>
 
       {/* Plans section header + toggle */}
       <div className="flex items-center justify-between mb-6">
@@ -273,7 +267,7 @@ export function BillingPage() {
                 {/* Features */}
                 <ul className="space-y-2.5 text-xs flex-1 mb-6">
                   {[
-                    isScale ? '1,000 locations' : `${ents['locations']?.limit_value ?? 1} location${(ents['locations']?.limit_value ?? 1) !== 1 ? 's' : ''}`,
+                    `${ents['locations']?.limit_value ?? 1} location${(ents['locations']?.limit_value ?? 1) !== 1 ? 's' : ''}`,
                     ents['published_replies']?.value_type === 'UNLIMITED' ? 'Unlimited replies' : `${ents['published_replies']?.limit_value ?? 0} replies/${ents['published_replies']?.usage_reset === 'weekly' ? 'week' : 'mo'}`,
                     ents['ai_drafts']?.value_type === 'UNLIMITED' ? 'Unlimited AI drafts' : `${ents['ai_drafts']?.limit_value ?? 0} AI drafts/${ents['ai_drafts']?.usage_reset === 'weekly' ? 'week' : 'mo'}`,
                     `${ents['team_members']?.limit_value ?? 1} team member${(ents['team_members']?.limit_value ?? 1) !== 1 ? 's' : ''}`,

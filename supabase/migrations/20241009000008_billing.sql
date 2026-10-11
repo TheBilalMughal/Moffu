@@ -171,7 +171,7 @@ INSERT INTO plan_entitlements (plan_id, key, value_type, enum_value, usage_reset
 
 -- Scale
 INSERT INTO plan_entitlements (plan_id, key, value_type, limit_value, usage_reset) VALUES
-  ((SELECT id FROM plans WHERE slug='scale'), 'locations',         'LIMIT', 1000, 'never'),
+  ((SELECT id FROM plans WHERE slug='scale'), 'locations',         'LIMIT', 10,   'never'),
   ((SELECT id FROM plans WHERE slug='scale'), 'team_members',      'LIMIT', 10,   'never'),
   ((SELECT id FROM plans WHERE slug='scale'), 'published_replies', 'LIMIT', 1000, 'monthly'),
   ((SELECT id FROM plans WHERE slug='scale'), 'ai_drafts',         'LIMIT', 2000, 'monthly');
