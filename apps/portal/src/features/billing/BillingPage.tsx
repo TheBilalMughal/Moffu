@@ -626,12 +626,12 @@ export function BillingPage() {
             >
               {isCurrent && (
                 <div className="absolute -top-3 inset-x-0 flex justify-center">
-                  <span className="text-[10px] font-bold text-white bg-[#0D4C3C] px-3 py-0.5 rounded-full whitespace-nowrap">Current plan</span>
+                  <span className="text-[10px] font-bold text-white bg-[#0D4C3C] px-3 py-0.5 rounded whitespace-nowrap">Current plan</span>
                 </div>
               )}
               {isGrowth && !isCurrent && (
                 <div className="absolute -top-3 inset-x-0 flex justify-center">
-                  <span className="text-[10px] font-bold text-white bg-[#374151] px-3 py-0.5 rounded-full whitespace-nowrap">Most popular</span>
+                  <span className="text-[10px] font-bold text-white bg-[#374151] px-3 py-0.5 rounded whitespace-nowrap">Most popular</span>
                 </div>
               )}
 
