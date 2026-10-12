@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { authService } from '@/features/auth/auth.service';
-import { AuthGuard, GuestGuard } from '@/components/AuthGuard';
+import { AuthGuard, GuestGuard, OnboardingGuard } from '@/components/AuthGuard';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
@@ -15,6 +15,7 @@ import { BrandBrainPage } from '@/features/brand-brain/BrandBrainPage';
 import { InsightsPage } from '@/features/insights/InsightsPage';
 import { BillingPage } from '@/features/billing/BillingPage';
 import { GoogleCallbackPage } from '@/features/google/GoogleCallbackPage';
+import { OnboardingPage } from '@/features/onboarding/OnboardingPage';
 
 export function App() {
   const initialize = useAuthStore((s) => s.initialize);
@@ -45,9 +46,11 @@ export function App() {
             </GuestGuard>
           }
         />
+
         {/* Supabase redirect handlers — no guard */}
         <Route path="/auth/verify" element={<VerifyEmailPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+
         {/* Google OAuth callback — requires auth session */}
         <Route
           path="/auth/google/callback"
@@ -58,12 +61,22 @@ export function App() {
           }
         />
 
-        {/* Protected dashboard routes */}
+        {/* Onboarding wizard — auth required, no org required */}
         <Route
+          path="/onboard"
           element={
             <AuthGuard>
-              <DashboardLayout />
+              <OnboardingPage />
             </AuthGuard>
+          }
+        />
+
+        {/* Protected dashboard routes — auth + org required */}
+        <Route
+          element={
+            <OnboardingGuard>
+              <DashboardLayout />
+            </OnboardingGuard>
           }
         >
           <Route path="/dashboard" element={<OverviewPage />} />
