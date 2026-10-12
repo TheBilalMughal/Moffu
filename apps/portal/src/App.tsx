@@ -16,6 +16,8 @@ import { BrandBrainPage } from '@/features/brand-brain/BrandBrainPage';
 import { InsightsPage } from '@/features/insights/InsightsPage';
 import { BillingPage } from '@/features/billing/BillingPage';
 import { GoogleCallbackPage } from '@/features/google/GoogleCallbackPage';
+import { TeamPage } from '@/features/team/TeamPage';
+import { AcceptInvitePage } from '@/features/team/AcceptInvitePage';
 
 export function App() {
   const initialize  = useAuthStore((s) => s.initialize);
@@ -58,7 +60,11 @@ export function App() {
           <Route path="/brand-brain" element={<BrandBrainPage />} />
           <Route path="/billing"   element={<BillingPage />} />
           <Route path="/settings"  element={<SettingsPage />} />
+          <Route path="/team"      element={<TeamPage />} />
         </Route>
+
+        {/* Invite acceptance — no auth required to view */}
+        <Route path="/invite/:token" element={<AcceptInvitePage />} />
 
         {/* Default redirects */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
