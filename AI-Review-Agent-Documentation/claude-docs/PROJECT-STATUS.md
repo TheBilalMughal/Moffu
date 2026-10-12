@@ -143,6 +143,29 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 - Server-side limit enforcement in `ai-generate-draft` + `google-publish-reply` edge functions
 - Stripe Checkout, webhooks, subscription lifecycle, invoices, upgrade/downgrade flow
 
+## Phase 8 — Onboarding Flow
+**COMPLETE** ✅
+
+**DB migration 009 applied (`kgttncfkzdrgswfkkdji`):**
+- `create_organization(name, slug, country_id?, timezone?)` — security definer RPC; creates org + owner membership + activates profile atomically
+- `update_org_location(org_id, country_id?, timezone?)` — owner/admin only
+- `complete_onboarding(org_id)` — sets org.status = 'active'
+
+**Portal UI:** `OnboardingPage` at `/onboard` — 4-step wizard:
+- Step 1: Create org (name + auto-slug; slug uniqueness error handling)
+- Step 2: Country (from DB) + timezone (browser auto-detect; skippable)
+- Step 3: Connect Google Business Profile (skippable; sessionStorage flag routes OAuth callback back to /onboard)
+- Step 4: Done — calls complete_onboarding, redirects to dashboard
+
+**Guard:** `OnboardingGuard` — checks org_members after auth; no-org users always land at /onboard; resumes onboarding on return from Google OAuth.
+
+**App routing:** `/onboard` uses AuthGuard only; dashboard routes use OnboardingGuard (auth + org).
+
+**Pending:**
+- ONBOARD-004: Dedicated location selection step (SettingsPage covers it for now)
+- ONBOARD-005: Brand Brain quick-setup step in wizard
+- ONBOARD-006: Synthetic test review (FUTURE)
+
 ## Phase 7 — Admin Portal
 - Internal platform management
 - Depends on core feature set being stable

@@ -24,14 +24,14 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | RBAC-005 | Sole owner/final super admin protection | IMPLEMENTED | - | migration 000003: check_sole_owner() trigger; migration 000004: check_last_super_admin() trigger |
 | RBAC-006 | RLS isolation tests | PENDING | Docker/Supabase creds | RLS policies written; tests not yet run — blocked on Supabase setup |
 | RBAC-007 | Impersonation controls | PENDING | - | Pending Phase 7 admin work |
-| ONBOARD-001 | Create org | PENDING | AUTH-001 | organizations table exists; create-org UI not yet built |
-| ONBOARD-002 | Country/timezone | PENDING | ONBOARD-001 | countries/regions tables exist; UI TBD |
-| ONBOARD-003 | Google connect | PENDING | - | REQUIRES EXTERNAL SETUP: Google Cloud OAuth not configured |
-| ONBOARD-004 | Location selection | PENDING | ONBOARD-003 | - |
-| ONBOARD-005 | Brand Brain steps | PENDING | - | - |
-| ONBOARD-006 | Synthetic Test Agent | PENDING | - | - |
-| ONBOARD-007 | Server-derived READY | PENDING | - | - |
-| ONBOARD-008 | Resume incomplete onboarding | PENDING | - | - |
+| ONBOARD-001 | Create org | IMPLEMENTED | AUTH-001 | `create_organization` RPC (migration 009); OnboardingPage Step 1 — name + slug; slug uniqueness error handled |
+| ONBOARD-002 | Country/timezone | IMPLEMENTED | ONBOARD-001 | `update_org_location` RPC; OnboardingPage Step 2 — country from DB, tz auto-detected from browser; skippable |
+| ONBOARD-003 | Google connect | IMPLEMENTED | - | OnboardingPage Step 3 — Connect Google button; sessionStorage flag routes callback back to /onboard?connected=1 |
+| ONBOARD-004 | Location selection | PENDING | ONBOARD-003 | Locations shown in SettingsPage; dedicated onboarding step TBD |
+| ONBOARD-005 | Brand Brain steps | PENDING | - | BrandBrainPage exists at /brand-brain; dedicated onboarding step TBD |
+| ONBOARD-006 | Synthetic Test Agent | PENDING | - | FUTURE |
+| ONBOARD-007 | Server-derived READY | IMPLEMENTED | - | `complete_onboarding` RPC sets org.status='active'; called on Step 4 Done |
+| ONBOARD-008 | Resume incomplete onboarding | IMPLEMENTED | - | OnboardingGuard checks org_members; users with no org always land at /onboard; org_id persisted in sessionStorage across OAuth redirect |
 | GOOGLE-001 | OAuth state/PKCE | IMPLEMENTED | - | `google-oauth-start` edge function v7 — generates state, returns Google auth URL; `GoogleCallbackPage` handles redirect |
 | GOOGLE-002 | Secure token storage | IMPLEMENTED | - | `google_connection_tokens` table; service-role only (no authenticated RLS policy); stored server-side in edge function only |
 | GOOGLE-003 | Accounts/locations fetch | IMPLEMENTED | - | `google-oauth-callback` v4 — exchanges code, fetches GBP locations, inserts into `google_locations` |
