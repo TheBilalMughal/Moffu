@@ -30,13 +30,7 @@ export function GoogleCallbackPage() {
         setErrorMsg(err);
         setStatus('error');
       } else {
-        const fromOnboarding = sessionStorage.getItem('onboarding_in_progress');
-        if (fromOnboarding) {
-          sessionStorage.removeItem('onboarding_in_progress');
-          navigate('/onboard?connected=1', { replace: true });
-        } else {
-          navigate('/settings?google=connected', { replace: true });
-        }
+        navigate('/settings?google=connected', { replace: true });
       }
     });
   }, []);
@@ -52,8 +46,6 @@ export function GoogleCallbackPage() {
     );
   }
 
-  const fromOnboarding = sessionStorage.getItem('onboarding_in_progress');
-
   return (
     <div className="flex h-screen items-center justify-center bg-[#F8FAF9]">
       <div className="bg-white rounded-sm border border-[#E5EAE8] p-8 max-w-sm w-full text-center">
@@ -65,10 +57,10 @@ export function GoogleCallbackPage() {
         <h2 className="text-sm font-semibold text-[#111827] mb-1">Connection failed</h2>
         <p className="text-xs text-[#6B7280] mb-5">{errorMsg}</p>
         <button
-          onClick={() => navigate(fromOnboarding ? '/onboard' : '/settings', { replace: true })}
+          onClick={() => navigate('/settings', { replace: true })}
           className="text-sm font-medium text-[#0D4C3C] hover:underline"
         >
-          {fromOnboarding ? 'Back to setup' : 'Back to Settings'}
+          Back to Settings
         </button>
       </div>
     </div>

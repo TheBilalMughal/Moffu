@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { authService } from '@/features/auth/auth.service';
-import { AuthGuard, GuestGuard, OnboardingGuard } from '@/components/AuthGuard';
+import { AuthGuard, GuestGuard } from '@/components/AuthGuard';
+import { useOrgStore } from '@/features/onboarding/org.store';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
@@ -15,76 +16,48 @@ import { BrandBrainPage } from '@/features/brand-brain/BrandBrainPage';
 import { InsightsPage } from '@/features/insights/InsightsPage';
 import { BillingPage } from '@/features/billing/BillingPage';
 import { GoogleCallbackPage } from '@/features/google/GoogleCallbackPage';
-import { OnboardingPage } from '@/features/onboarding/OnboardingPage';
 
 export function App() {
-  const initialize = useAuthStore((s) => s.initialize);
+  const initialize  = useAuthStore((s) => s.initialize);
+  const authStatus  = useAuthStore((s) => s.status);
+  const user        = useAuthStore((s) => s.user);
+  const ensureOrg   = useOrgStore((s) => s.ensureOrg);
 
   useEffect(() => {
     const unsub = initialize();
     return unsub;
   }, [initialize]);
 
+  // Silently create org for new users on first authenticated load
+  useEffect(() => {
+    if (authStatus === 'authenticated' && user) {
+      ensureOrg(user);
+    }
+  }, [authStatus, user, ensureOrg]);
+
   return (
     <BrowserRouter>
       <Routes>
         {/* Auth routes — guests only */}
-        <Route
-          path="/auth/login"
-          element={
-            <GuestGuard>
-              <LoginPage />
-            </GuestGuard>
-          }
-        />
+        <Route path="/auth/login" element={<GuestGuard><LoginPage /></GuestGuard>} />
         <Route path="/auth/signup" element={<Navigate to="/auth/login" replace />} />
-        <Route
-          path="/auth/forgot-password"
-          element={
-            <GuestGuard>
-              <ForgotPasswordPage />
-            </GuestGuard>
-          }
-        />
+        <Route path="/auth/forgot-password" element={<GuestGuard><ForgotPasswordPage /></GuestGuard>} />
 
-        {/* Supabase redirect handlers — no guard */}
+        {/* Supabase redirect handlers */}
         <Route path="/auth/verify" element={<VerifyEmailPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
 
-        {/* Google OAuth callback — requires auth session */}
-        <Route
-          path="/auth/google/callback"
-          element={
-            <AuthGuard>
-              <GoogleCallbackPage />
-            </AuthGuard>
-          }
-        />
+        {/* Google OAuth callback */}
+        <Route path="/auth/google/callback" element={<AuthGuard><GoogleCallbackPage /></AuthGuard>} />
 
-        {/* Onboarding wizard — auth required, no org required */}
-        <Route
-          path="/onboard"
-          element={
-            <AuthGuard>
-              <OnboardingPage />
-            </AuthGuard>
-          }
-        />
-
-        {/* Protected dashboard routes — auth + org required */}
-        <Route
-          element={
-            <OnboardingGuard>
-              <DashboardLayout />
-            </OnboardingGuard>
-          }
-        >
+        {/* Protected dashboard routes */}
+        <Route element={<AuthGuard><DashboardLayout /></AuthGuard>}>
           <Route path="/dashboard" element={<OverviewPage />} />
-          <Route path="/reviews" element={<ReviewsPage />} />
-          <Route path="/insights" element={<InsightsPage />} />
+          <Route path="/reviews"   element={<ReviewsPage />} />
+          <Route path="/insights"  element={<InsightsPage />} />
           <Route path="/brand-brain" element={<BrandBrainPage />} />
-          <Route path="/billing" element={<BillingPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/billing"   element={<BillingPage />} />
+          <Route path="/settings"  element={<SettingsPage />} />
         </Route>
 
         {/* Default redirects */}
