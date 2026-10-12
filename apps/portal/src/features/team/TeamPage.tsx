@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useOrgStore } from '@/features/onboarding/org.store';
 import { useAuthStore } from '@/features/auth/auth.store';
+import { supabase } from '@/lib/supabase';
 import { teamService, TeamMember, TeamInvitation, MemberRole } from './team.service';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -93,8 +95,11 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           {atLimit && (
-            <div className="bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
-              Your plan has no remaining seats. Upgrade to invite more members.
+            <div className="bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800 flex items-center justify-between gap-4">
+              <span>Your plan has no remaining seats.</span>
+              <Link to="/billing" onClick={onClose} className="font-semibold underline whitespace-nowrap">
+                Upgrade plan
+              </Link>
             </div>
           )}
 
@@ -220,13 +225,24 @@ export function TeamPage() {
   const [loading,     setLoading]     = useState(true);
   const [showInvite,  setShowInvite]  = useState(false);
   const [actionErr,   setActionErr]   = useState('');
+  const [myRole,      setMyRole]      = useState<MemberRole | null>(null);
 
-  const myRole = members.find((m) => m.user_id === user?.id)?.role;
   const canManage = myRole === 'owner' || myRole === 'admin';
 
   async function load() {
-    if (!orgId) return;
+    if (!orgId || !user) return;
     setLoading(true);
+
+    // Fetch own role directly first — canManage must not depend on members RPC
+    const { data: ownRow } = await supabase
+      .from('org_members')
+      .select('role')
+      .eq('org_id', orgId)
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    setMyRole((ownRow?.role as MemberRole) ?? null);
+
     const [membRes, invRes, seatRes] = await Promise.all([
       teamService.getMembers(orgId),
       teamService.getPendingInvitations(orgId),
@@ -239,7 +255,7 @@ export function TeamPage() {
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, [orgId]);
+  useEffect(() => { load(); }, [orgId, user]);
 
   async function handleRemove(memberId: string) {
     if (!orgId) return;
@@ -301,7 +317,9 @@ export function TeamPage() {
         </div>
       )}
 
-      {loading ? (
+      {!orgId ? (
+        <div className="py-12 text-sm text-[#9CA3AF]">Setting up your organisation…</div>
+      ) : loading ? (
         <div className="flex items-center gap-3 py-12">
           <div className="w-5 h-5 border-2 border-[#0D4C3C] border-t-transparent rounded-full animate-spin" />
           <span className="text-sm text-[#6B7280]">Loading team…</span>
