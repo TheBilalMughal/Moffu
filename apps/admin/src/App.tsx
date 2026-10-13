@@ -1,39 +1,14 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
-import { adminAuthService } from '@/features/auth/auth.service';
 import { AdminAuthGuard } from '@/components/AuthGuard';
 import { AdminLoginPage } from '@/features/auth/pages/AdminLoginPage';
-
-/** Placeholder — replaced in Phase 7 */
-function AdminDashboardPlaceholder() {
-  const { user, platformRole } = useAdminAuthStore();
-
-  async function handleLogout() {
-    await adminAuthService.logout();
-    window.location.replace('/auth/login');
-  }
-
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-neutral-100 p-4">
-      <div className="space-y-1 rounded-md bg-white px-4 py-3 text-sm shadow-sm">
-        <div className="text-neutral-600">
-          Signed in as <strong>{user?.email}</strong>
-        </div>
-        <div className="text-neutral-400">
-          Platform role: <strong>{platformRole ?? '—'}</strong>
-        </div>
-      </div>
-      <p className="text-neutral-400 text-sm">Admin Dashboard — Phase 7 (not yet implemented)</p>
-      <button
-        onClick={handleLogout}
-        className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100"
-      >
-        Sign out
-      </button>
-    </div>
-  );
-}
+import { AdminLayout } from '@/features/admin/AdminLayout';
+import { DashboardPage } from '@/features/dashboard/DashboardPage';
+import { OrgsPage } from '@/features/orgs/OrgsPage';
+import { PlatformMembersPage } from '@/features/platform-members/PlatformMembersPage';
+import { RolesPage } from '@/features/roles/RolesPage';
+import { AuditPage } from '@/features/audit/AuditPage';
 
 export function App() {
   const initialize = useAdminAuthStore((s) => s.initialize);
@@ -51,10 +26,16 @@ export function App() {
           path="/"
           element={
             <AdminAuthGuard>
-              <AdminDashboardPlaceholder />
+              <AdminLayout />
             </AdminAuthGuard>
           }
-        />
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="organizations" element={<OrgsPage />} />
+          <Route path="platform-team" element={<PlatformMembersPage />} />
+          <Route path="roles" element={<RolesPage />} />
+          <Route path="audit" element={<AuditPage />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
