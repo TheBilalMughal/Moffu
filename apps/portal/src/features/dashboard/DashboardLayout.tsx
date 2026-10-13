@@ -345,7 +345,7 @@ export function DashboardLayout() {
         </div>
 
         {/* Scrollable page area */}
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0 bg-[#F8FAF9]">
           <Outlet />
         </div>
       </main>

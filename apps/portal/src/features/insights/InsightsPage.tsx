@@ -99,7 +99,7 @@ function TrendChart({ reviews }: { reviews: Review[] }) {
   if (weeks.length < 2) {
     return (
       <div className="flex items-center justify-center h-48 border border-[#E5EAE8] rounded-xl bg-[#FAFAFA]">
-        <p className="text-xs text-[#9CA3AF]">Not enough data for trend chart â€” need at least 2 weeks of reviews.</p>
+        <p className="text-xs text-[#9CA3AF]">Not enough data for trend chart – need at least 2 weeks of reviews.</p>
       </div>
     );
   }
@@ -218,9 +218,9 @@ function WeeklyTable({ reviews }: { reviews: Review[] }) {
           <tr className="border-b border-[#F3F4F6] bg-[#FAFAFA]">
             <th className="text-left px-5 py-2 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Week of</th>
             <th className="text-right px-4 py-2 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Total</th>
-            <th className="text-right px-4 py-2 text-[10px] font-semibold text-emerald-600 uppercase tracking-wide">4â€“5â˜…</th>
-            <th className="text-right px-4 py-2 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">3â˜…</th>
-            <th className="text-right px-4 py-2 text-[10px] font-semibold text-red-400 uppercase tracking-wide">1â€“2â˜…</th>
+            <th className="text-right px-4 py-2 text-[10px] font-semibold text-emerald-600 uppercase tracking-wide">4–5★</th>
+            <th className="text-right px-4 py-2 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">3★</th>
+            <th className="text-right px-4 py-2 text-[10px] font-semibold text-red-400 uppercase tracking-wide">1–2★</th>
             <th className="text-right px-5 py-2 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Sentiment</th>
           </tr>
         </thead>
@@ -293,7 +293,7 @@ function ContextModal({ keyword, onConfirm, onClose }: {
           <button onClick={handleSave} disabled={saving || !context.trim()}
             className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2 rounded-xl disabled:opacity-50 transition-colors">
             {saving ? <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> : null}
-            {saving ? 'Savingâ€¦' : 'Add to Agent'}
+            {saving ? 'Saving…' : 'Add to Agent'}
           </button>
         </div>
       </div>
@@ -336,7 +336,7 @@ function ReviewDrawer({ keyword, reviews, onClose }: { keyword: string; reviews:
               <div key={r.id} className="border border-[#E5EAE8] rounded-xl p-4 bg-[#FAFAFA]">
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg ${color}`}>
-                    {'â˜…'.repeat(stars)}{'â˜†'.repeat(5 - stars)} {stars}â˜…
+                    {'★'.repeat(stars)}{'☆'.repeat(5 - stars)} {stars}★
                   </span>
                   {r.published_at && (
                     <span className="text-[10px] text-[#9CA3AF] ml-auto">{new Date(r.published_at).toLocaleDateString()}</span>
@@ -456,7 +456,7 @@ function AgentKeywordsTab({
                       disabled={savingId === kc.id}
                       className="text-[10px] font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-2.5 py-1 rounded-lg disabled:opacity-50 transition-colors"
                     >
-                      {savingId === kc.id ? 'â€¦' : 'Save'}
+                      {savingId === kc.id ? '…' : 'Save'}
                     </button>
                     <button onClick={() => setEditingId(null)} className="text-[10px] font-medium text-[#6B7280] hover:text-[#374151] px-2 py-1 rounded-lg hover:bg-[#F3F4F6] transition-colors">Cancel</button>
                   </>
@@ -662,11 +662,11 @@ export function InsightsPage() {
 
   const starOptions = [
     { value: 'all', label: 'All ratings' },
-    { value: '5', label: '5â˜… only' },
-    { value: '4', label: '4â˜… only' },
-    { value: '3', label: '3â˜… only' },
-    { value: '2', label: '2â˜… only' },
-    { value: '1', label: '1â˜… only' },
+    { value: '5', label: '5★ only' },
+    { value: '4', label: '4★ only' },
+    { value: '3', label: '3★ only' },
+    { value: '2', label: '2★ only' },
+    { value: '1', label: '1★ only' },
   ];
 
   const TABS: { id: Tab; label: string }[] = [
@@ -703,12 +703,12 @@ export function InsightsPage() {
             <div className="w-px h-9 bg-[#E5EAE8] flex-shrink-0"/>
             <div className="text-center flex-shrink-0">
               <p className="text-xl font-bold text-emerald-600">{posCount}</p>
-              <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide mt-0.5">Positive (4â€“5â˜…)</p>
+              <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide mt-0.5">Positive (4–5★)</p>
             </div>
             <div className="w-px h-9 bg-[#E5EAE8] flex-shrink-0"/>
             <div className="text-center flex-shrink-0">
               <p className="text-xl font-bold text-red-500">{negCount}</p>
-              <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide mt-0.5">Negative (1â€“2â˜…)</p>
+              <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide mt-0.5">Negative (1–2★)</p>
             </div>
             <div className="w-px h-9 bg-[#E5EAE8] flex-shrink-0"/>
             <div className="flex-1 min-w-0">
@@ -741,7 +741,7 @@ export function InsightsPage() {
         </div>
       </div>
 
-      {/* Filter bar â€” sticky, outside scroll area */}
+      {/* Filter bar – sticky, outside scroll area */}
       {tab !== 'agent' && (
         <div className="px-8 py-3 flex-shrink-0 bg-[#F8FAF9] border-b border-[#E5EAE8] flex items-center gap-2.5 flex-wrap">
           <FilterDropdown value={dateRange} onChange={setDateRange} options={dateOptions}/>
