@@ -36,9 +36,9 @@ serve(async (req) => {
       return json({ error: 'Forbidden — super_admin or admin role required' }, 403);
     }
 
-    const { email, role } = await req.json();
+    const { email, role, name, phone } = await req.json();
 
-    if (!email || !role) return json({ error: 'Missing required fields: email, role' }, 400);
+    if (!email || !role || !name) return json({ error: 'Missing required fields: email, role, name' }, 400);
     if (!VALID_ROLES.includes(role)) return json({ error: `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}` }, 400);
 
     // Non-super_admin cannot create super_admins
@@ -62,14 +62,15 @@ serve(async (req) => {
     let userId: string;
 
     if (existing) {
-      // User already has an account — just add to platform_members
       userId = existing.id;
     } else {
-      // Create new user + send invite email (Supabase sends magic link to set password)
       const adminUrl = Deno.env.get('ADMIN_URL') ?? 'https://adminmoffu.vercel.app';
       const { data: newUser, error: createErr } = await adminClient.auth.admin.inviteUserByEmail(
         email.trim().toLowerCase(),
-        { redirectTo: `${adminUrl}/auth/login` },
+        {
+          redirectTo: `${adminUrl}/auth/login`,
+          data: { display_name: name.trim(), full_name: name.trim() },
+        },
       );
 
       if (createErr || !newUser.user) {
@@ -78,6 +79,16 @@ serve(async (req) => {
 
       userId = newUser.user.id;
     }
+
+    // Update profile with name and phone
+    await adminClient
+      .from('profiles')
+      .update({
+        display_name: name.trim(),
+        ...(phone?.trim() ? { phone: phone.trim() } : {}),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
 
     // Add to platform_members (upsert in case already exists)
     const { error: memberErr } = await adminClient

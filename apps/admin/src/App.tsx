@@ -6,7 +6,9 @@ import { AdminLoginPage } from '@/features/auth/pages/AdminLoginPage';
 import { AdminLayout } from '@/features/admin/AdminLayout';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { OrgsPage } from '@/features/orgs/OrgsPage';
+import { OrgDetailPage } from '@/features/orgs/OrgDetailPage';
 import { PlatformMembersPage } from '@/features/platform-members/PlatformMembersPage';
+import { TeamMemberDetailPage } from '@/features/platform-members/TeamMemberDetailPage';
 import { RolesPage } from '@/features/roles/RolesPage';
 import { AuditPage } from '@/features/audit/AuditPage';
 
@@ -32,9 +34,13 @@ export function App() {
         >
           <Route index element={<DashboardPage />} />
           <Route path="organizations" element={<OrgsPage />} />
-          <Route path="platform-team" element={<PlatformMembersPage />} />
+          <Route path="organizations/:id" element={<OrgDetailPage />} />
+          <Route path="team" element={<PlatformMembersPage />} />
+          <Route path="team/:id" element={<TeamMemberDetailPage />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="audit" element={<AuditPage />} />
+          {/* Legacy redirect */}
+          <Route path="platform-team" element={<Navigate to="/team" replace />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

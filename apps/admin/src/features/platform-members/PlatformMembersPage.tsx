@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 
@@ -23,141 +24,159 @@ const ROLE_COLOR: Record<PlatformRole, string> = {
   viewer: 'bg-[#F3F4F6] text-[#374151]',
 };
 
+type ContactStatus = 'active' | 'pending_verification' | 'suspended';
+
 interface Member {
   id: string;
   user_id: string;
+  display_id: number | null;
+  display_name: string;
   email: string;
+  phone: string | null;
+  contact_status: ContactStatus;
   role: PlatformRole;
   is_active: boolean;
   created_at: string;
-}
-
-type ModalMode = 'add' | 'edit' | null;
-
-interface MemberModal {
-  mode: ModalMode;
-  member: Member | null;
 }
 
 function canManage(platformRole: string | null) {
   return platformRole === 'super_admin' || platformRole === 'admin';
 }
 
+const STATUS_LABEL: Record<ContactStatus, string> = {
+  active: 'Active',
+  pending_verification: 'Pending',
+  suspended: 'Suspended',
+};
+
+const STATUS_COLOR: Record<ContactStatus, string> = {
+  active: 'bg-[#ECFDF5] text-[#065F46]',
+  pending_verification: 'bg-[#FFF7ED] text-[#9A3412]',
+  suspended: 'bg-[#FEF2F2] text-[#991B1B]',
+};
+
 export function PlatformMembersPage() {
   const { platformRole } = useAdminAuthStore();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [modal, setModal] = useState<MemberModal>({ mode: null, member: null });
+  const [showAddModal, setShowAddModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<Member | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  // Form state
+  const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
+  const [formPhone, setFormPhone] = useState('');
   const [formRole, setFormRole] = useState<PlatformRole>('viewer');
 
   async function loadMembers() {
     setLoading(true);
-    const { data } = await supabase
+    const { data: rows } = await supabase
       .from('platform_members')
       .select('id, user_id, role, is_active, created_at')
       .order('created_at', { ascending: false });
 
-    if (!data) { setLoading(false); return; }
+    if (!rows) { setLoading(false); return; }
 
-    // Get emails from profiles
-    const userIds = data.map((m: { user_id: string }) => m.user_id);
+    const userIds = rows.map((m: { user_id: string }) => m.user_id);
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, email')
+      .select('id, display_id, display_name, email, phone, status')
       .in('id', userIds);
 
-    const emailById = new Map((profiles ?? []).map((p: { id: string; email: string }) => [p.id, p.email]));
+    type ProfileRow = { id: string; display_id: number | null; display_name: string; email: string | null; phone: string | null; status: string };
+    const profileById = new Map<string, ProfileRow>(
+      (profiles ?? []).map((p: ProfileRow) => [p.id, p]),
+    );
 
-    setMembers(data.map((m: { id: string; user_id: string; role: PlatformRole; is_active: boolean; created_at: string }) => ({
-      ...m,
-      email: emailById.get(m.user_id) ?? m.user_id,
-    })));
+    type RawRow = { id: string; user_id: string; role: PlatformRole; is_active: boolean; created_at: string };
+    const enriched: Member[] = (rows as RawRow[]).map((m) => {
+      const p = profileById.get(m.user_id);
+      return {
+        id: m.id,
+        user_id: m.user_id,
+        display_id: p?.display_id ?? null,
+        display_name: p?.display_name ?? '—',
+        email: p?.email ?? m.user_id,
+        phone: p?.phone ?? null,
+        contact_status: (p?.status as ContactStatus) ?? 'pending_verification',
+        role: m.role,
+        is_active: m.is_active,
+        created_at: m.created_at,
+      };
+    });
+
+    setMembers(enriched);
     setLoading(false);
   }
 
   useEffect(() => { loadMembers(); }, []);
 
   function openAdd() {
+    setFormName('');
     setFormEmail('');
+    setFormPhone('');
     setFormRole('viewer');
     setError(null);
-    setModal({ mode: 'add', member: null });
+    setShowAddModal(true);
   }
 
-  function openEdit(m: Member) {
-    setFormRole(m.role);
-    setError(null);
-    setModal({ mode: 'edit', member: m });
-  }
-
-  function closeModal() {
-    setModal({ mode: null, member: null });
+  function closeAdd() {
+    setShowAddModal(false);
     setError(null);
   }
 
-  async function handleSave() {
+  async function handleAdd() {
     setError(null);
     setSaving(true);
 
-    if (modal.mode === 'add') {
-      // Call Edge Function — creates user if new, sends invite email, adds to platform_members
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-create-user`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token}`,
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({ email: formEmail.trim().toLowerCase(), role: formRole }),
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-create-user`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         },
-      );
+        body: JSON.stringify({
+          email: formEmail.trim().toLowerCase(),
+          role: formRole,
+          name: formName.trim(),
+          phone: formPhone.trim() || undefined,
+        }),
+      },
+    );
 
-      const result = await res.json();
+    const result = await res.json();
+    setSaving(false);
 
-      if (!res.ok || !result.success) {
-        setError(result.error ?? 'Failed to create user.');
-        setSaving(false);
-        return;
-      }
-    } else if (modal.mode === 'edit' && modal.member) {
-      const { error: updateErr } = await supabase
-        .from('platform_members')
-        .update({ role: formRole })
-        .eq('id', modal.member.id);
-
-      if (updateErr) {
-        setError(updateErr.message);
-        setSaving(false);
-        return;
-      }
+    if (!res.ok || !result.success) {
+      setError(result.error ?? 'Failed to create user.');
+      return;
     }
 
-    setSaving(false);
-    closeModal();
+    closeAdd();
     loadMembers();
   }
 
-  async function handleToggleActive(m: Member) {
-    if (!canManage(platformRole)) return;
-    const { error: err } = await supabase
-      .from('platform_members')
-      .update({ is_active: !m.is_active })
-      .eq('id', m.id);
-
-    if (!err) loadMembers();
+  async function handleDelete() {
+    if (!deleteConfirm) return;
+    setDeleting(true);
+    await supabase.from('platform_members').delete().eq('id', deleteConfirm.id);
+    setDeleting(false);
+    setDeleteConfirm(null);
+    loadMembers();
   }
 
   const filtered = members.filter(
-    (m) => search.trim() === '' || m.email.toLowerCase().includes(search.toLowerCase())
+    (m) =>
+      search.trim() === '' ||
+      m.display_name.toLowerCase().includes(search.toLowerCase()) ||
+      m.email.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -180,48 +199,45 @@ export function PlatformMembersPage() {
         )}
       </div>
 
-      {/* Search */}
       <div className="relative max-w-xs mb-5">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <input
           type="search"
-          placeholder="Search by email…"
+          placeholder="Search by name or email…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
         />
       </div>
 
-      {/* Table */}
       <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Member</th>
+              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
+              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Name</th>
+              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Email</th>
+              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Contact Status</th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Role</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Status</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Added</th>
-              {canManage(platformRole) && (
-                <th className="px-5 py-3 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Actions</th>
-              )}
+              <th className="px-5 py-3 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F3F4F6]">
             {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
+              Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i}>
-                  {Array.from({ length: 5 }).map((_, j) => (
+                  {Array.from({ length: 6 }).map((_, j) => (
                     <td key={j} className="px-5 py-4">
-                      <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-28" />
+                      <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-24" />
                     </td>
                   ))}
                 </tr>
               ))
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
+                <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
                   {search ? 'No members match your search.' : 'No team members yet.'}
                 </td>
               </tr>
@@ -229,39 +245,50 @@ export function PlatformMembersPage() {
               filtered.map((m) => (
                 <tr key={m.id} className="hover:bg-[#F8FAF9] transition-colors">
                   <td className="px-5 py-4">
-                    <p className="font-medium text-[#111827]">{m.email}</p>
-                    <p className="text-xs text-[#9CA3AF] mt-0.5 font-mono">{m.user_id.slice(0, 8)}…</p>
+                    <span className="font-mono text-xs text-[#6B7280]">
+                      {m.display_id != null ? `#${m.display_id}` : '—'}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <p className="font-medium text-[#111827]">{m.display_name}</p>
+                    {m.phone && <p className="text-xs text-[#9CA3AF] mt-0.5">{m.phone}</p>}
+                  </td>
+                  <td className="px-5 py-4 text-[#374151]">{m.email}</td>
+                  <td className="px-5 py-4">
+                    <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLOR[m.contact_status]}`}>
+                      {STATUS_LABEL[m.contact_status]}
+                    </span>
                   </td>
                   <td className="px-5 py-4">
                     <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold ${ROLE_COLOR[m.role] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
                       {ROLE_LABEL[m.role] ?? m.role}
                     </span>
                   </td>
-                  <td className="px-5 py-4">
-                    <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold ${m.is_active ? 'bg-[#ECFDF5] text-[#065F46]' : 'bg-[#FEF2F2] text-[#991B1B]'}`}>
-                      {m.is_active ? 'Active' : 'Deactivated'}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4 text-[#9CA3AF]">{new Date(m.created_at).toLocaleDateString()}</td>
-                  {canManage(platformRole) && (
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => openEdit(m)}
+                  <td className="px-5 py-4 text-right">
+                    <div className="flex items-center justify-end gap-3">
+                      {m.display_id != null ? (
+                        <Link
+                          to={`/team/${m.display_id}`}
                           className="text-xs font-medium text-[#0D4C3C] hover:underline"
                         >
-                          Edit role
-                        </button>
-                        <span className="text-[#E5EAE8]">|</span>
-                        <button
-                          onClick={() => handleToggleActive(m)}
-                          className={`text-xs font-medium hover:underline ${m.is_active ? 'text-red-600' : 'text-[#0D4C3C]'}`}
-                        >
-                          {m.is_active ? 'Deactivate' : 'Reactivate'}
-                        </button>
-                      </div>
-                    </td>
-                  )}
+                          View
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-[#9CA3AF]">View</span>
+                      )}
+                      {canManage(platformRole) && (
+                        <>
+                          <span className="text-[#E5EAE8]">|</span>
+                          <button
+                            onClick={() => setDeleteConfirm(m)}
+                            className="text-xs font-medium text-red-600 hover:underline"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))
             )}
@@ -269,65 +296,112 @@ export function PlatformMembersPage() {
         </table>
       </div>
 
-      {/* Modal */}
-      {modal.mode && (
+      {/* Add Member Modal */}
+      {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white w-full max-w-md p-6 shadow-xl rounded-xl">
-            <h2 className="text-base font-bold text-[#111827] mb-5">
-              {modal.mode === 'add' ? 'Add platform member' : 'Edit member role'}
-            </h2>
+            <h2 className="text-base font-bold text-[#111827] mb-5">Add platform member</h2>
 
-            {modal.mode === 'add' && (
-              <div className="mb-4">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">Full name</label>
+                <input
+                  type="text"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  placeholder="Jane Smith"
+                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+                />
+              </div>
+
+              <div>
                 <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">Email address</label>
                 <input
                   type="email"
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
-                  placeholder="user@example.com"
+                  placeholder="jane@example.com"
                   className="w-full px-3 py-2 text-sm border border-[#E5EAE8] text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
                 />
-                <p className="text-xs text-[#9CA3AF] mt-1">New users will receive an email to set their password. Existing accounts will be added directly.</p>
               </div>
-            )}
 
-            {modal.mode === 'edit' && modal.member && (
-              <div className="mb-4 p-3 bg-[#F8FAF9] border border-[#E5EAE8] text-sm text-[#374151]">
-                {modal.member.email}
+              <div>
+                <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">
+                  Phone <span className="normal-case font-normal text-[#9CA3AF]">(optional)</span>
+                </label>
+                <input
+                  type="tel"
+                  value={formPhone}
+                  onChange={(e) => setFormPhone(e.target.value)}
+                  placeholder="+1 555 000 0000"
+                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+                />
               </div>
-            )}
 
-            <div className="mb-5">
-              <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">Platform role</label>
-              <select
-                value={formRole}
-                onChange={(e) => setFormRole(e.target.value as PlatformRole)}
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] text-[#111827] bg-white focus:outline-none focus:border-[#0D4C3C]"
-              >
-                {ROLES.map((r) => (
-                  <option key={r} value={r}>{ROLE_LABEL[r]}</option>
-                ))}
-              </select>
+              <div>
+                <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">Platform role</label>
+                <select
+                  value={formRole}
+                  onChange={(e) => setFormRole(e.target.value as PlatformRole)}
+                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] text-[#111827] bg-white focus:outline-none focus:border-[#0D4C3C]"
+                >
+                  {ROLES.map((r) => (
+                    <option key={r} value={r}>{ROLE_LABEL[r]}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
+            <p className="text-xs text-[#9CA3AF] mt-3">
+              New users receive an email to set their password. Existing accounts are added directly.
+            </p>
+
             {error && (
-              <p className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2">{error}</p>
+              <p className="mt-4 text-sm text-red-600 bg-red-50 border border-red-200 px-3 py-2">{error}</p>
             )}
 
-            <div className="flex items-center justify-end gap-3">
+            <div className="flex items-center justify-end gap-3 mt-5">
               <button
-                onClick={closeModal}
+                onClick={closeAdd}
                 disabled={saving}
                 className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5EAE8] hover:bg-[#F3F4F6] disabled:opacity-50 transition-colors"
               >
                 Cancel
               </button>
               <button
-                onClick={handleSave}
-                disabled={saving || (modal.mode === 'add' && !formEmail.trim())}
+                onClick={handleAdd}
+                disabled={saving || !formName.trim() || !formEmail.trim()}
                 className="px-4 py-2 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-50 transition-colors"
               >
-                {saving ? 'Saving…' : modal.mode === 'add' ? 'Add member' : 'Save changes'}
+                {saving ? 'Adding…' : 'Add member'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirm Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white w-full max-w-sm p-6 shadow-xl rounded-xl">
+            <h2 className="text-base font-bold text-[#111827] mb-2">Remove member?</h2>
+            <p className="text-sm text-[#6B7280] mb-5">
+              <span className="font-medium text-[#111827]">{deleteConfirm.display_name}</span> ({deleteConfirm.email}) will lose all platform access. This cannot be undone.
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                disabled={deleting}
+                className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5EAE8] hover:bg-[#F3F4F6] disabled:opacity-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {deleting ? 'Removing…' : 'Remove member'}
               </button>
             </div>
           </div>

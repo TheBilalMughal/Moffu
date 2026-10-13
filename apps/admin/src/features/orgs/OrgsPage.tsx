@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
 interface Org {
   id: string;
+  display_id: number | null;
   name: string;
   created_at: string;
   plan: string | null;
@@ -30,7 +32,7 @@ export function OrgsPage() {
 
       const { data: orgRows } = await supabase
         .from('organizations')
-        .select('id, name, created_at')
+        .select('id, display_id, name, created_at')
         .order('created_at', { ascending: false });
 
       if (!orgRows) { setLoading(false); return; }
@@ -68,10 +70,11 @@ export function OrgsPage() {
         if (!ownerEmailByOrg.has(orgId)) ownerEmailByOrg.set(orgId, emailById.get(userId) ?? '—');
       });
 
-      const enriched: Org[] = orgRows.map((o: { id: string; name: string; created_at: string }) => {
+      const enriched: Org[] = orgRows.map((o: { id: string; display_id: number | null; name: string; created_at: string }) => {
         const sub = subsByOrg.get(o.id);
         return {
           id: o.id,
+          display_id: o.display_id ?? null,
           name: o.name,
           created_at: o.created_at,
           plan: sub?.plan ?? null,
@@ -136,6 +139,7 @@ export function OrgsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
+              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Organization</th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Owner</th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Plan</th>
@@ -147,7 +151,7 @@ export function OrgsPage() {
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
                 <tr key={i}>
-                  {Array.from({ length: 5 }).map((_, j) => (
+                  {Array.from({ length: 6 }).map((_, j) => (
                     <td key={j} className="px-5 py-4">
                       <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-24" />
                     </td>
@@ -156,7 +160,7 @@ export function OrgsPage() {
               ))
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
+                <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
                   {search || planFilter !== 'all' ? 'No orgs match your filters.' : 'No organizations yet.'}
                 </td>
               </tr>
@@ -164,8 +168,21 @@ export function OrgsPage() {
               filtered.map((org) => (
                 <tr key={org.id} className="hover:bg-[#F8FAF9] transition-colors">
                   <td className="px-5 py-4">
-                    <p className="font-medium text-[#111827]">{org.name}</p>
-                    <p className="text-xs text-[#9CA3AF] mt-0.5 font-mono">{org.id.slice(0, 8)}…</p>
+                    <span className="font-mono text-xs text-[#6B7280]">
+                      {org.display_id != null ? `#${org.display_id}` : '—'}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    {org.display_id != null ? (
+                      <Link
+                        to={`/organizations/${org.display_id}`}
+                        className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline"
+                      >
+                        {org.name}
+                      </Link>
+                    ) : (
+                      <p className="font-medium text-[#111827]">{org.name}</p>
+                    )}
                   </td>
                   <td className="px-5 py-4 text-[#374151]">{org.owner_email ?? '—'}</td>
                   <td className="px-5 py-4">
