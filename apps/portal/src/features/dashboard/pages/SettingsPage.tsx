@@ -312,7 +312,7 @@ function PhoneInput({
     ? COUNTRIES.filter(c => c.name.toLowerCase().includes(query.toLowerCase()) || c.dial.includes(query))
     : COUNTRIES;
 
-  const isValid = national === '' || country.pattern.test(national.replace(/[\s\-().]/g, ''));
+  const isValid = national === '' || country.pattern.test(national);
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -370,7 +370,7 @@ function PhoneInput({
         <input
           type="tel"
           value={national}
-          onChange={e => onNationalChange(e.target.value)}
+          onChange={e => onNationalChange(e.target.value.replace(/\D/g, ''))}
           placeholder={country.placeholder}
           className={`w-full text-sm text-[#111827] border rounded-lg px-4 py-3 focus:outline-none transition-colors bg-white ${
             !isValid && national !== '' ? 'border-red-400 focus:border-red-500' : 'border-[#E5EAE8] focus:border-[#0D4C3C]'
@@ -463,13 +463,13 @@ export function SettingsPage() {
   // Account
   const currentDisplayName = user?.user_metadata?.display_name ?? user?.user_metadata?.full_name ?? '';
   const [displayName, setDisplayName] = useState(currentDisplayName);
+  const [savedDisplayName, setSavedDisplayName] = useState(currentDisplayName);
   const [phoneCountry, setPhoneCountry] = useState('PK');
   const [phoneNational, setPhoneNational] = useState('');
   const [origPhoneCountry, setOrigPhoneCountry] = useState('PK');
   const [origPhoneNational, setOrigPhoneNational] = useState('');
-  const [phoneEditOpen, setPhoneEditOpen] = useState(false);
+  const [accountEditOpen, setAccountEditOpen] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
-  const [savingPhone, setSavingPhone] = useState(false);
 
   // Preferences
   const [timezone, setTimezone] = useState('');
@@ -504,13 +504,16 @@ export function SettingsPage() {
     setDisplayName(name);
     supabase.from('profiles').select('phone, timezone').eq('id', user.id).maybeSingle().then(({ data }) => {
       if (data) {
+        const name2 = user?.user_metadata?.display_name ?? user?.user_metadata?.full_name ?? '';
+        setSavedDisplayName(name2);
         const stored = (data as { phone?: string | null }).phone ?? '';
         if (stored) {
           const parsed = parseStoredPhone(stored);
+          const digits = parsed.national.replace(/\D/g, '');
           setPhoneCountry(parsed.countryIso);
-          setPhoneNational(parsed.national);
+          setPhoneNational(digits);
           setOrigPhoneCountry(parsed.countryIso);
-          setOrigPhoneNational(parsed.national);
+          setOrigPhoneNational(digits);
         }
         const tz = (data as { timezone?: string | null }).timezone ?? '';
         setTimezone(tz);
@@ -527,33 +530,32 @@ export function SettingsPage() {
       .then(({ data }) => setIsOwner(!!data));
   }, [user?.id]);
 
-  async function handleSaveProfile() {
+  async function handleSaveAccount() {
     const trimmed = displayName.trim();
-    if (!trimmed) return;
+    if (!trimmed) { showToast('Display name is required.', 'error'); return; }
+    const digits = phoneNational.replace(/\D/g, '');
+    const country = (COUNTRIES.find(c => c.code === phoneCountry) ?? COUNTRIES[0]) as Country;
+    if (digits && !country.pattern.test(digits)) {
+      showToast(`Invalid phone number for ${country.name}.`, 'error');
+      return;
+    }
     setSavingProfile(true);
+    const combined = digits ? `${country.dial} ${digits}` : null;
     const [authRes, profileRes] = await Promise.all([
       supabase.auth.updateUser({ data: { display_name: trimmed } }),
-      supabase.from('profiles').update({ display_name: trimmed }).eq('id', user!.id),
+      supabase.from('profiles').update({ display_name: trimmed, phone: combined }).eq('id', user!.id),
     ]);
     if (authRes.error) { showToast(authRes.error.message, 'error'); }
     else if (profileRes.error) { showToast(profileRes.error.message, 'error'); }
-    else { showToast('Account details updated.', 'success'); }
-    setSavingProfile(false);
-  }
-
-  async function handleSavePhone() {
-    setSavingPhone(true);
-    const dial = COUNTRIES.find(c => c.code === phoneCountry)?.dial ?? '';
-    const combined = phoneNational.trim() ? `${dial} ${phoneNational.trim()}` : null;
-    const { error } = await supabase.from('profiles').update({ phone: combined }).eq('id', user!.id);
-    if (error) { showToast(error.message, 'error'); }
     else {
+      setSavedDisplayName(trimmed);
       setOrigPhoneCountry(phoneCountry);
-      setOrigPhoneNational(phoneNational);
-      setPhoneEditOpen(false);
-      showToast('Phone number saved.', 'success');
+      setOrigPhoneNational(digits);
+      setPhoneNational(digits);
+      setAccountEditOpen(false);
+      showToast('Account updated.', 'success');
     }
-    setSavingPhone(false);
+    setSavingProfile(false);
   }
 
   async function handleSaveTimezone() {
@@ -695,76 +697,87 @@ export function SettingsPage() {
 
         {/* Account */}
         <div className="bg-white rounded-xl border border-[#E5EAE8]">
-          <div className="px-6 py-4 border-b border-[#F3F4F6]">
+          <div className="px-6 py-4 border-b border-[#F3F4F6] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Account</h2>
+            {!accountEditOpen && (
+              <button
+                type="button"
+                onClick={() => setAccountEditOpen(true)}
+                className="text-xs font-medium text-[#0D4C3C] hover:underline"
+              >
+                Edit
+              </button>
+            )}
           </div>
           <div className="px-6 py-5 space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Display Name</label>
-              <input
-                type="text"
-                value={displayName}
-                onChange={e => setDisplayName(e.target.value)}
-                placeholder="Your name"
-                className={inputCls}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Email</label>
-              <p className="text-sm text-[#111827] bg-[#F8FAF9] border border-[#E5EAE8] rounded-lg px-4 py-3">{user?.email ?? '—'}</p>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Phone Number</label>
-              {!phoneEditOpen ? (
-                <div className="flex items-center justify-between text-sm bg-[#F8FAF9] border border-[#E5EAE8] rounded-lg px-4 py-3">
-                  <span className={origPhoneNational ? 'text-[#111827]' : 'text-[#9CA3AF]'}>
+            {!accountEditOpen ? (
+              <>
+                <div>
+                  <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1">Display Name</p>
+                  <p className="text-sm text-[#111827]">{savedDisplayName || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1">Email</p>
+                  <p className="text-sm text-[#111827]">{user?.email ?? '—'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1">Phone Number</p>
+                  <p className={`text-sm ${origPhoneNational ? 'text-[#111827]' : 'text-[#9CA3AF]'}`}>
                     {origPhoneNational
                       ? `${countryFlag(origPhoneCountry)} ${COUNTRIES.find(c => c.code === origPhoneCountry)?.dial ?? ''} ${origPhoneNational}`
                       : 'Not set'}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setPhoneEditOpen(true)}
-                    className="text-xs font-medium text-[#0D4C3C] hover:underline ml-3 flex-shrink-0"
-                  >
-                    Edit
-                  </button>
+                  </p>
                 </div>
-              ) : (
-                <div className="space-y-3">
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Display Name</label>
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={e => setDisplayName(e.target.value)}
+                    placeholder="Your name"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Email</label>
+                  <p className="text-sm text-[#111827] bg-[#F8FAF9] border border-[#E5EAE8] rounded-lg px-4 py-3">{user?.email ?? '—'}</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Phone Number</label>
                   <PhoneInput
                     countryIso={phoneCountry}
                     national={phoneNational}
                     onCountryChange={setPhoneCountry}
-                    onNationalChange={setPhoneNational}
+                    onNationalChange={v => setPhoneNational(v.replace(/\D/g, ''))}
                   />
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={handleSavePhone}
-                      disabled={savingPhone}
-                      className="text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-4 py-2 rounded-lg disabled:opacity-40 transition-colors"
-                    >
-                      {savingPhone ? 'Saving...' : 'Save'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setPhoneCountry(origPhoneCountry); setPhoneNational(origPhoneNational); setPhoneEditOpen(false); }}
-                      className="text-sm font-medium text-[#6B7280] hover:text-[#374151] px-4 py-2 rounded-lg border border-[#E5EAE8] transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
                 </div>
-              )}
-            </div>
-            <button
-              onClick={handleSaveProfile}
-              disabled={savingProfile || !displayName.trim()}
-              className="mt-2 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
-            >
-              {savingProfile ? 'Saving...' : 'Save changes'}
-            </button>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleSaveAccount}
+                    disabled={savingProfile || !displayName.trim()}
+                    className="text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
+                  >
+                    {savingProfile ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDisplayName(savedDisplayName);
+                      setPhoneCountry(origPhoneCountry);
+                      setPhoneNational(origPhoneNational);
+                      setAccountEditOpen(false);
+                    }}
+                    className="text-sm font-medium text-[#6B7280] hover:text-[#374151] px-5 py-2.5 rounded-lg border border-[#E5EAE8] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
