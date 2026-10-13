@@ -5,16 +5,20 @@ import { useAdminAuthStore } from '@/features/auth/auth.store';
 // ── Role config ───────────────────────────────────────────────────────────────
 
 const ROLES = [
-  { key: 'owner',   label: 'Owner',   desc: 'Full access, billing included' },
-  { key: 'admin',   label: 'Admin',   desc: 'All except billing management' },
-  { key: 'manager', label: 'Manager', desc: 'Reviews, reports, team view' },
-  { key: 'viewer',  label: 'Viewer',  desc: 'Read-only access' },
+  { key: 'owner',      label: 'Owner',      desc: 'Full access, billing included' },
+  { key: 'super_admin',label: 'Super Admin', desc: 'All permissions, no billing delete' },
+  { key: 'admin',      label: 'Admin',      desc: 'All except billing management' },
+  { key: 'manager',    label: 'Manager',    desc: 'Reviews, reports, team view' },
+  { key: 'operations', label: 'Ops',        desc: 'Review ops, locations, reports' },
+  { key: 'live',       label: 'Live',       desc: 'Live response, limited access' },
+  { key: 'finance',    label: 'Finance',    desc: 'Billing and reports only' },
+  { key: 'accounts',   label: 'Accounts',   desc: 'Billing view and reports view' },
 ] as const;
 
-type CustomerRole = typeof ROLES[number]['key'];
+type RoleKey = typeof ROLES[number]['key'];
 
 // ── Permission modules (CRUD per feature) ─────────────────────────────────────
-// null = action does not exist for this module (show dash)
+// null = action does not exist for this module
 
 const MODULES = [
   {
@@ -117,27 +121,49 @@ function canManage(platformRole: string | null) {
   return platformRole === 'super_admin' || platformRole === 'admin';
 }
 
-function isGranted(rolePerms: Set<string>, keys: readonly string[] | null): boolean | null {
+function setsEqual(a: Set<string>, b: Set<string>) {
+  if (a.size !== b.size) return false;
+  for (const x of a) if (!b.has(x)) return false;
+  return true;
+}
+
+function cellGranted(perms: Set<string>, keys: readonly string[] | null): boolean | null {
   if (!keys) return null;
-  return keys.every((k) => rolePerms.has(k));
+  return keys.every((k) => perms.has(k));
 }
 
 // ── Checkbox cell ─────────────────────────────────────────────────────────────
 
 function CrudCell({
-  granted,
+  localGranted,
+  savedGranted,
   saving,
   canEdit,
   onToggle,
 }: {
-  granted: boolean | null;
+  localGranted: boolean | null;
+  savedGranted: boolean | null;
   saving: boolean;
   canEdit: boolean;
   onToggle: () => void;
 }) {
-  if (granted === null) {
-    return <td className="px-4 py-2 text-center"><span className="text-[#D1D5DB] text-xs">—</span></td>;
+  if (localGranted === null) {
+    return (
+      <td className="px-4 py-2 text-center">
+        <span className="text-[#D1D5DB] text-xs">—</span>
+      </td>
+    );
   }
+
+  const isPending = localGranted !== savedGranted;
+
+  const boxClass = localGranted
+    ? isPending
+      ? 'bg-amber-500 border-amber-500'
+      : 'bg-[#0D4C3C] border-[#0D4C3C]'
+    : isPending
+    ? 'bg-white border-amber-400 ring-1 ring-amber-300'
+    : 'bg-white border-[#D1D5DB] hover:border-[#0D4C3C]';
 
   return (
     <td className="px-4 py-2 text-center">
@@ -145,21 +171,19 @@ function CrudCell({
         <button
           onClick={onToggle}
           disabled={saving}
-          className={`w-[18px] h-[18px] border-2 flex items-center justify-center mx-auto transition-colors disabled:opacity-50 ${
-            granted ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'bg-white border-[#D1D5DB] hover:border-[#0D4C3C]'
-          }`}
+          className={`w-[18px] h-[18px] border-2 flex items-center justify-center mx-auto transition-colors disabled:opacity-50 ${boxClass}`}
         >
           {saving ? (
             <span className="w-2 h-2 border border-white border-t-transparent rounded-full animate-spin block" />
-          ) : granted ? (
+          ) : localGranted ? (
             <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
             </svg>
           ) : null}
         </button>
       ) : (
-        <span className={`inline-flex w-[18px] h-[18px] border-2 items-center justify-center mx-auto ${granted ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'bg-white border-[#D1D5DB]'}`}>
-          {granted && (
+        <span className={`inline-flex w-[18px] h-[18px] border-2 items-center justify-center mx-auto ${localGranted ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'bg-white border-[#D1D5DB]'}`}>
+          {localGranted && (
             <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
             </svg>
@@ -172,69 +196,88 @@ function CrudCell({
 
 // ── RolesPage ─────────────────────────────────────────────────────────────────
 
+const EMPTY_PERMS: Record<string, Set<string>> = Object.fromEntries(
+  ROLES.map((r) => [r.key, new Set<string>()])
+);
+
 export function RolesPage() {
   const { platformRole } = useAdminAuthStore();
-  const [selectedRole, setSelectedRole] = useState<CustomerRole>('owner');
-  const [rolePerms, setRolePerms] = useState<Record<CustomerRole, Set<string>>>({
-    owner: new Set(), admin: new Set(), manager: new Set(), viewer: new Set(),
-  });
+  const [selectedRole, setSelectedRole] = useState<RoleKey>('owner');
+  const [rolePerms, setRolePerms] = useState<Record<string, Set<string>>>(EMPTY_PERMS);
+  // localPerms = user's pending edits for selected role (not yet saved)
+  const [localPerms, setLocalPerms] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const canEdit = canManage(platformRole);
+  const savedPerms = rolePerms[selectedRole] ?? new Set<string>();
+  const isDirty = !setsEqual(localPerms, savedPerms);
+  const pendingCount = [
+    ...[...localPerms].filter((k) => !savedPerms.has(k)),
+    ...[...savedPerms].filter((k) => !localPerms.has(k)),
+  ].length;
 
   async function loadAll() {
+    setLoading(true);
     const { data } = await supabase
       .from('role_permissions')
       .select('role, permission');
 
-    const rp: Record<CustomerRole, Set<string>> = {
-      owner: new Set(), admin: new Set(), manager: new Set(), viewer: new Set(),
-    };
-
+    const rp: Record<string, Set<string>> = Object.fromEntries(
+      ROLES.map((r) => [r.key, new Set<string>()])
+    );
     for (const row of (data ?? [])) {
-      const r = row.role as CustomerRole;
-      if (rp[r]) rp[r].add(row.permission as string);
+      if (rp[row.role]) rp[row.role].add(row.permission as string);
     }
 
     setRolePerms(rp);
+    setLocalPerms(new Set(rp[selectedRole] ?? []));
     setLoading(false);
   }
 
   useEffect(() => { loadAll(); }, []);
 
-  async function handleToggle(role: CustomerRole, action: CrudAction, keys: readonly string[]) {
-    const saveId = `${role}:${action}`;
-    setSavingKey(saveId);
-
-    const currentPerms = rolePerms[role];
-    const allGranted = keys.every((k) => currentPerms.has(k));
-
-    if (allGranted) {
-      // Revoke all keys
-      for (const key of keys) {
-        await supabase.from('role_permissions').delete()
-          .eq('role', role).eq('permission', key);
-      }
-    } else {
-      // Grant missing keys
-      const missing = keys.filter((k) => !currentPerms.has(k));
-      for (const key of missing) {
-        await supabase.from('role_permissions').upsert({ role, permission: key }, { onConflict: 'role,permission' });
-      }
-    }
-
-    setRolePerms((prev) => {
-      const next = { ...prev, [role]: new Set(prev[role]) };
-      if (allGranted) keys.forEach((k) => next[role].delete(k));
-      else keys.forEach((k) => next[role].add(k));
-      return next;
-    });
-
-    setSavingKey(null);
+  function handleSelectRole(role: RoleKey) {
+    // Switching role discards unsaved changes (same as page refresh)
+    setSelectedRole(role);
+    setLocalPerms(new Set(rolePerms[role] ?? []));
   }
 
-  const currentPerms = rolePerms[selectedRole];
+  function handleToggle(keys: readonly string[]) {
+    const allGranted = keys.every((k) => localPerms.has(k));
+    setLocalPerms((prev) => {
+      const next = new Set(prev);
+      if (allGranted) keys.forEach((k) => next.delete(k));
+      else keys.forEach((k) => next.add(k));
+      return next;
+    });
+  }
+
+  async function handleSave() {
+    setSaving(true);
+
+    const toAdd = [...localPerms].filter((k) => !savedPerms.has(k));
+    const toRemove = [...savedPerms].filter((k) => !localPerms.has(k));
+
+    if (toAdd.length) {
+      await supabase.from('role_permissions').upsert(
+        toAdd.map((k) => ({ role: selectedRole, permission: k })),
+        { onConflict: 'role,permission' }
+      );
+    }
+    for (const key of toRemove) {
+      await supabase.from('role_permissions').delete()
+        .eq('role', selectedRole).eq('permission', key);
+    }
+
+    setRolePerms((prev) => ({ ...prev, [selectedRole]: new Set(localPerms) }));
+    setSaving(false);
+  }
+
+  function handleDiscard() {
+    setLocalPerms(new Set(savedPerms));
+  }
+
   const selectedRoleConfig = ROLES.find((r) => r.key === selectedRole)!;
 
   return (
@@ -246,14 +289,16 @@ export function RolesPage() {
           {ROLES.map((r) => (
             <button
               key={r.key}
-              onClick={() => setSelectedRole(r.key)}
+              onClick={() => handleSelectRole(r.key)}
               className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors ${
                 selectedRole === r.key
                   ? 'bg-[#E6F2EE] text-[#0D4C3C]'
                   : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
               }`}
             >
-              <p className={`text-sm font-semibold ${selectedRole === r.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>{r.label}</p>
+              <p className={`text-sm font-semibold ${selectedRole === r.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>
+                {r.label}
+              </p>
               <p className="text-[11px] text-[#9CA3AF] mt-0.5 leading-tight">{r.desc}</p>
             </button>
           ))}
@@ -262,9 +307,37 @@ export function RolesPage() {
 
       {/* Right: Permission matrix */}
       <main className="flex-1 overflow-y-auto px-8 py-6">
-        <div className="mb-5">
-          <h1 className="text-xl font-bold text-[#111827]">{selectedRoleConfig.label} Permissions</h1>
-          <p className="text-sm text-[#6B7280] mt-0.5">{selectedRoleConfig.desc}</p>
+        {/* Header row */}
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-[#111827]">{selectedRoleConfig.label} Permissions</h1>
+            <p className="text-sm text-[#6B7280] mt-0.5">{selectedRoleConfig.desc}</p>
+          </div>
+
+          {canEdit && isDirty && (
+            <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
+              <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded">
+                {pendingCount} unsaved {pendingCount === 1 ? 'change' : 'changes'}
+              </span>
+              <button
+                onClick={handleDiscard}
+                disabled={saving}
+                className="px-3 py-1.5 text-xs font-medium text-[#374151] bg-white border border-[#D1D5DB] hover:bg-[#F3F4F6] transition-colors disabled:opacity-50"
+              >
+                Discard
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-3 py-1.5 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#0a3d30] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {saving && (
+                  <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
+                )}
+                {saving ? 'Saving…' : 'Save Changes'}
+              </button>
+            </div>
+          )}
         </div>
 
         {loading ? (
@@ -292,29 +365,24 @@ export function RolesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F3F4F6]">
-                {MODULES.map((mod) => {
-                  const actions: CrudAction[] = ['view', 'add', 'edit', 'delete'];
-                  return (
-                    <tr key={mod.label} className="hover:bg-[#F8FAF9] transition-colors">
-                      <td className="px-5 py-2 font-medium text-[#111827]">{mod.label}</td>
-                      {actions.map((action) => {
-                        const keys = mod.crud[action] as readonly string[] | null;
-                        const granted = isGranted(currentPerms, keys);
-                        const saveId = `${selectedRole}:${action}:${mod.label}`;
-                        const isSaving = savingKey === `${selectedRole}:${action}`;
-                        return (
-                          <CrudCell
-                            key={action}
-                            granted={granted}
-                            saving={isSaving && keys != null}
-                            canEdit={canEdit}
-                            onToggle={() => keys && handleToggle(selectedRole, action, keys)}
-                          />
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
+                {MODULES.map((mod) => (
+                  <tr key={mod.label} className="hover:bg-[#F8FAF9] transition-colors">
+                    <td className="px-5 py-2 font-medium text-[#111827]">{mod.label}</td>
+                    {(['view', 'add', 'edit', 'delete'] as CrudAction[]).map((action) => {
+                      const keys = mod.crud[action] as readonly string[] | null;
+                      return (
+                        <CrudCell
+                          key={action}
+                          localGranted={cellGranted(localPerms, keys)}
+                          savedGranted={cellGranted(savedPerms, keys)}
+                          saving={saving && keys != null}
+                          canEdit={canEdit}
+                          onToggle={() => keys && handleToggle(keys)}
+                        />
+                      );
+                    })}
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
