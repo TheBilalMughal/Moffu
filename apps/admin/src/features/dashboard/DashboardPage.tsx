@@ -168,8 +168,8 @@ export function DashboardPage() {
           </div>
           <div className="p-4 grid grid-cols-2 gap-3">
             {[
-              { to: '/organizations', label: 'View all orgs', desc: 'Browse & manage organizations' },
-              { to: '/platform-team', label: 'Platform team', desc: 'Manage admin team members' },
+              { to: '/clients', label: 'View all clients', desc: 'Browse & manage clients' },
+              { to: '/user-management', label: 'User management', desc: 'Manage admin team members' },
               { to: '/roles', label: 'Roles & permissions', desc: 'Edit permission matrix' },
               { to: '/audit', label: 'Audit logs', desc: 'Review recent platform activity' },
             ].map((link) => (

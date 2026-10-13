@@ -156,8 +156,8 @@ export function PlatformMembersPage() {
     <div className="px-8 py-8">
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#111827]">Platform Team</h1>
-          <p className="text-sm text-[#6B7280] mt-0.5">{members.length} team members with platform access.</p>
+          <h1 className="text-2xl font-bold text-[#111827]">User Management</h1>
+          <p className="text-sm text-[#6B7280] mt-0.5">{members.length} users with platform access.</p>
         </div>
         {canManage(platformRole) && (
           <button
@@ -210,7 +210,7 @@ export function PlatformMembersPage() {
             ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
-                  {search ? 'No members match your search.' : 'No team members yet.'}
+                  {search ? 'No users match your search.' : 'No users yet.'}
                 </td>
               </tr>
             ) : (
@@ -234,7 +234,7 @@ export function PlatformMembersPage() {
                   <td className="px-5 py-4 text-right">
                     {m.display_id != null ? (
                       <Link
-                        to={`/team/${m.display_id}`}
+                        to={`/user-management/${m.display_id}`}
                         className="text-xs font-medium text-[#0D4C3C] hover:underline"
                       >
                         View

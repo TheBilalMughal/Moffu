@@ -35,12 +35,14 @@ export function App() {
           <Route index element={<DashboardPage />} />
           <Route path="clients" element={<ClientsPage />} />
           <Route path="clients/:id" element={<ClientDetailPage />} />
-          <Route path="team" element={<PlatformMembersPage />} />
-          <Route path="team/:id" element={<TeamMemberDetailPage />} />
+          <Route path="user-management" element={<PlatformMembersPage />} />
+          <Route path="user-management/:id" element={<TeamMemberDetailPage />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="audit" element={<AuditPage />} />
-          {/* Legacy redirect */}
-          <Route path="platform-team" element={<Navigate to="/team" replace />} />
+          {/* Legacy redirects */}
+          <Route path="team" element={<Navigate to="/user-management" replace />} />
+          <Route path="team/:id" element={<Navigate to="/user-management" replace />} />
+          <Route path="platform-team" element={<Navigate to="/user-management" replace />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

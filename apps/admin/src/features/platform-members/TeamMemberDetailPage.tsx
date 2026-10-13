@@ -171,7 +171,7 @@ export function TeamMemberDetailPage() {
   if (notFound) {
     return (
       <div className="px-8 py-8">
-        <Link to="/team" className="flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#111827] mb-6">
+        <Link to="/user-management" className="flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#111827] mb-6">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
@@ -190,11 +190,11 @@ export function TeamMemberDetailPage() {
   return (
     <div className="px-8 py-8 max-w-2xl">
       {/* Back */}
-      <Link to="/team" className="flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#111827] mb-6 transition-colors">
+      <Link to="/user-management" className="flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#111827] mb-6 transition-colors">
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        Back to Platform Team
+        Back to User Management
       </Link>
 
       {/* Header */}
