@@ -147,65 +147,6 @@ function SidebarProfile() {
   );
 }
 
-function LocationSelector() {
-  const { locations, selectedId, setSelectedId } = useLocationStore();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener('mousedown', fn);
-    return () => document.removeEventListener('mousedown', fn);
-  }, []);
-
-  if (locations.length < 2) return null;
-
-  const current = selectedId ? locations.find(l => l.id === selectedId) : null;
-  const label = current?.display_name ?? 'All Locations';
-
-  return (
-    <div ref={ref} className="relative px-3 pb-3">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-[#E5EAE8] hover:border-[#0D4C3C]/30 bg-[#F8FAF9] transition-colors text-left"
-      >
-        <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-        <span className="flex-1 text-xs font-medium text-[#374151] truncate">{label}</span>
-        <svg className={`w-3 h-3 text-[#9CA3AF] flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
-        </svg>
-      </button>
-
-      {open && (
-        <div className="absolute top-full left-3 right-3 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1 mt-1">
-          <button
-            onClick={() => { setSelectedId(null); setOpen(false); }}
-            className={`w-full text-left px-3.5 py-2 text-xs transition-colors ${!selectedId ? 'text-[#0D4C3C] font-semibold bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F3F4F6]'}`}
-          >
-            All Locations
-          </button>
-          {locations.map(l => (
-            <button
-              key={l.id}
-              onClick={() => { setSelectedId(l.id); setOpen(false); }}
-              className={`w-full text-left px-3.5 py-2 text-xs transition-colors flex items-center justify-between gap-2 ${selectedId === l.id ? 'text-[#0D4C3C] font-semibold bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F3F4F6]'}`}
-            >
-              <span className="truncate">{l.display_name ?? l.id}</span>
-              {selectedId === l.id && (
-                <svg className="w-3 h-3 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
-                </svg>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function DashboardLayout() {
   const { setLocations } = useLocationStore();
 
@@ -222,11 +163,6 @@ export function DashboardLayout() {
         {/* Logo */}
         <div className="px-5 py-5 border-b border-[#E5EAE8]">
           <span className="text-[#0D4C3C] font-bold text-lg tracking-tight select-none">Moffu</span>
-        </div>
-
-        {/* Location selector — only shown when 2+ locations */}
-        <div className="pt-3">
-          <LocationSelector />
         </div>
 
         {/* Nav */}
