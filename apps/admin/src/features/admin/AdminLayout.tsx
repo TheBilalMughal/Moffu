@@ -351,14 +351,9 @@ export function AdminLayout() {
       {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 bg-white border-r border-[#E5EAE8] flex flex-col">
         {/* Logo */}
-        <div className="px-5 py-4 border-b border-[#E5EAE8] flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-[#0D4C3C] flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-bold text-white">M</span>
-          </div>
-          <div className="leading-none">
-            <p className="text-sm font-bold text-[#111827]">Moffu</p>
-            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-widest mt-0.5">Admin</p>
-          </div>
+        <div className="px-5 py-4 border-b border-[#E5EAE8] flex flex-col gap-0.5">
+          <img src="/logo.png" alt="Moffu" className="h-7 w-auto" />
+          <p className="text-[10px] text-[#9CA3AF] uppercase tracking-widest">Admin</p>
         </div>
 
         {/* Nav */}

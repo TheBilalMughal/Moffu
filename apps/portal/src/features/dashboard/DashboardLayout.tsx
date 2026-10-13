@@ -586,7 +586,7 @@ export function DashboardLayout() {
       <aside className="w-[220px] flex-shrink-0 bg-white border-r border-[#E5EAE8] flex flex-col">
         {/* Logo */}
         <div className="px-5 py-5 border-b border-[#E5EAE8]">
-          <span className="text-[#0D4C3C] font-bold text-lg tracking-tight select-none">Moffu</span>
+          <img src="/logo.png" alt="Moffu" className="h-7 w-auto" />
         </div>
 
         {/* Nav */}

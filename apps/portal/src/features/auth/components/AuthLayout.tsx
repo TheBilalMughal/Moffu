@@ -3,13 +3,8 @@ import { env } from '@/lib/env';
 
 function LogoMark({ href }: { href: string }) {
   return (
-    <a href={href} className="flex items-center gap-2.5 w-fit">
-      <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-        <svg width="18" height="14" viewBox="0 0 18 14" fill="none" aria-hidden="true">
-          <path d="M1 13V1l8 8L17 1v12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </div>
-      <span className="font-semibold text-white text-[15px]">Moffu</span>
+    <a href={href} className="flex items-center w-fit">
+      <img src="/logo.png" alt="Moffu" className="h-8 w-auto" />
     </a>
   );
 }
@@ -48,13 +43,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       <div className="flex-1 flex flex-col bg-white overflow-y-auto">
         <header className="flex items-center justify-between px-8 py-5 lg:justify-end">
           {/* Mobile logo */}
-          <div className="flex items-center gap-2 lg:hidden">
-            <div className="w-7 h-7 bg-[#0D4C3C] rounded-md flex items-center justify-center">
-              <svg width="14" height="11" viewBox="0 0 18 14" fill="none" aria-hidden="true">
-                <path d="M1 13V1l8 8L17 1v12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <span className="font-semibold text-[#111827] text-sm">Moffu</span>
+          <div className="flex items-center lg:hidden">
+            <img src="/logo.png" alt="Moffu" className="h-7 w-auto" />
           </div>
           <a
             href={env.webUrl}

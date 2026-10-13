@@ -46,14 +46,9 @@ export function AdminLoginPage() {
       <div className="w-full max-w-sm">
 
         {/* Logo */}
-        <div className="mb-8 flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-[#0D4C3C] rounded-lg flex items-center justify-center">
-            <span className="text-sm font-bold text-white">M</span>
-          </div>
-          <div className="leading-none">
-            <p className="text-sm font-bold text-[#111827]">Moffu</p>
-            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-widest mt-0.5">Admin</p>
-          </div>
+        <div className="mb-8 flex flex-col gap-0.5">
+          <img src="/logo.png" alt="Moffu" className="h-8 w-auto" />
+          <p className="text-[10px] text-[#9CA3AF] uppercase tracking-widest">Admin</p>
         </div>
 
         <div className="bg-white border border-[#E5EAE8] rounded-xl p-8">
