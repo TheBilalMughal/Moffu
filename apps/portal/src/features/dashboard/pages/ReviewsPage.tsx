@@ -546,20 +546,23 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
       </div>}
 
       {/* Stat cards — full width single row */}
-      <div className="grid grid-cols-4 gap-3 mt-4">
-        <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
+      <div className="flex items-center bg-[#F9FAFB] rounded-lg mt-4">
+        <div className="flex-1 px-4 py-3">
           <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Total Reviews</p>
           <p className="text-lg font-bold text-[#111827]">{totalReviews}</p>
         </div>
-        <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
+        <div className="w-px h-8 bg-[#E5EAE8] flex-shrink-0"/>
+        <div className="flex-1 px-4 py-3">
           <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Rating</p>
           <p className="text-lg font-bold text-amber-500">{avgRatingStr}</p>
         </div>
-        <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
+        <div className="w-px h-8 bg-[#E5EAE8] flex-shrink-0"/>
+        <div className="flex-1 px-4 py-3">
           <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Reply Rate</p>
           <p className="text-lg font-bold text-[#111827]">{replyRateProp}</p>
         </div>
-        <div className="bg-[#F9FAFB] rounded-lg px-4 py-3">
+        <div className="w-px h-8 bg-[#E5EAE8] flex-shrink-0"/>
+        <div className="flex-1 px-4 py-3">
           <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Response Time</p>
           <p className="text-lg font-bold text-[#111827]">{avgResponseTimeProp}</p>
         </div>
