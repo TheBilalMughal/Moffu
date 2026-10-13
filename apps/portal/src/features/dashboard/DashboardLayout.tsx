@@ -212,10 +212,8 @@ function GlobalSearch() {
 
   return (
     <div ref={wrapRef} className="relative">
-      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 ${
-        focused
-          ? 'border-[#0D4C3C] bg-white shadow-sm w-56'
-          : 'border-[#D1D5DB] bg-transparent w-40 hover:border-[#9CA3AF]'
+      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-0 transition-all duration-200 ${
+        focused ? 'bg-[#F3F4F6] w-56' : 'bg-transparent w-40 hover:bg-[#F3F4F6]'
       }`}>
         {loading
           ? <svg className="w-3.5 h-3.5 text-[#9CA3AF] animate-spin flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -623,6 +621,7 @@ export function DashboardLayout() {
             <QuickStatsPill />
           </div>
           <div className="flex items-center gap-1.5">
+            <div className="w-px h-5 bg-[#E5EAE8] mx-0.5 flex-shrink-0"/>
             <GlobalSearch />
             <div className="w-px h-5 bg-[#E5EAE8] mx-0.5 flex-shrink-0"/>
             <NotificationsBell />
