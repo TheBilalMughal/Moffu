@@ -85,14 +85,6 @@ const STATUS_CFG: Record<UiStatus, { dot: string; label: string }> = {
   replied:    { dot: 'bg-[#0D4C3C]', label: 'Replied'    },
 };
 
-// ── Reply Templates ───────────────────────────────────────────────────────────
-
-const REPLY_TEMPLATES = [
-  { label: 'Thank You',   text: 'Thank you so much for your kind words! We truly appreciate your support and look forward to serving you again.' },
-  { label: 'Apology',     text: 'We sincerely apologize for your experience. Your feedback is very important to us and we are working to make things right.' },
-  { label: 'Follow Up',   text: 'Thank you for your review. We would love to connect with you directly to learn more about your experience.' },
-  { label: 'Invite Back', text: 'We appreciate your honest feedback. We hope to have the opportunity to serve you better on your next visit.' },
-];
 
 // ── FilterDropdown ────────────────────────────────────────────────────────────
 
@@ -677,16 +669,6 @@ function PublishModal({ review, locationName, onClose, onPublish, initialText }:
         </div>
         <div className="px-6 py-4">
           <label className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide block mb-2">Your Reply</label>
-          {/* Template chips */}
-          <div className="flex flex-wrap gap-1 mb-2">
-            <span className="text-xs text-[#9CA3AF] self-center mr-0.5">Templates:</span>
-            {REPLY_TEMPLATES.map(tpl => (
-              <button key={tpl.label} onClick={() => setText(tpl.text)}
-                className="text-xs px-2 py-1 rounded-md bg-[#F3F4F6] text-[#374151] hover:bg-[#E6F2EE] hover:text-[#0D4C3C] border border-[#E5E7EB] transition-colors cursor-pointer">
-                {tpl.label}
-              </button>
-            ))}
-          </div>
           <textarea value={text} onChange={e => setText(e.target.value)} rows={5}
             className="w-full text-sm text-[#374151] border border-[#D1D5DB] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0D4C3C] resize-none"
             placeholder="Write your reply…"/>
@@ -1072,21 +1054,6 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
 
                   {!historyTab ? (
                     <>
-                      {/* Template chips for draft_ready */}
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        <span className="text-xs text-[#9CA3AF] self-center mr-0.5">Templates:</span>
-                        {REPLY_TEMPLATES.map(tpl => (
-                          <button key={tpl.label}
-                            onClick={e => {
-                              e.stopPropagation();
-                              setModalInitialText(tpl.text + (review.reply_draft ? '\n\n' + review.reply_draft : ''));
-                              setModalOpen(true);
-                            }}
-                            className="text-xs px-2 py-1 rounded-md bg-[#F3F4F6] text-[#374151] hover:bg-[#E6F2EE] hover:text-[#0D4C3C] border border-[#E5E7EB] transition-colors cursor-pointer">
-                            {tpl.label}
-                          </button>
-                        ))}
-                      </div>
                       <p className="text-sm text-[#374151] bg-white border border-[#E5EAE8] rounded-lg px-3 py-2.5 leading-relaxed mb-2">{review.reply_draft}</p>
                       <div className="flex gap-2">
                         <button onClick={e => { e.stopPropagation(); setModalInitialText(undefined); setModalOpen(true); }}
@@ -1139,15 +1106,6 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
                   </button>
                   {showManual && (
                     <div onClick={e => e.stopPropagation()}>
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        <span className="text-xs text-[#9CA3AF] self-center mr-0.5">Templates:</span>
-                        {REPLY_TEMPLATES.map(tpl => (
-                          <button key={tpl.label} onClick={() => setManualText(tpl.text)}
-                            className="text-xs px-2 py-1 rounded-md bg-[#F3F4F6] text-[#374151] hover:bg-[#E6F2EE] hover:text-[#0D4C3C] border border-[#E5E7EB] transition-colors cursor-pointer">
-                            {tpl.label}
-                          </button>
-                        ))}
-                      </div>
                       <textarea value={manualText} onChange={e => setManualText(e.target.value)} rows={4}
                         placeholder="Write your reply…"
                         className="w-full text-sm text-[#374151] border border-[#D1D5DB] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0D4C3C] resize-none transition-colors"/>
