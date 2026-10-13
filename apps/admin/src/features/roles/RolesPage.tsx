@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 
@@ -17,8 +17,7 @@ const ROLES = [
 
 type RoleKey = typeof ROLES[number]['key'];
 
-// ── Permission modules (CRUD per feature) ─────────────────────────────────────
-// null = action does not exist for this module
+// ── Permission modules ────────────────────────────────────────────────────────
 
 const MODULES = [
   {
@@ -111,14 +110,35 @@ const MODULES = [
       delete: null,
     },
   },
+  {
+    label: 'Privacy',
+    crud: {
+      view:   null,
+      add:    ['privacy.request'],
+      edit:   null,
+      delete: null,
+    },
+  },
 ] as const;
 
 type CrudAction = 'view' | 'add' | 'edit' | 'delete';
+type ModuleType = typeof MODULES[number];
+
+// ── Audit entry type ──────────────────────────────────────────────────────────
+
+interface AuditEntry {
+  id: number;
+  role: string;
+  permission: string;
+  action: 'grant' | 'revoke';
+  changed_by: string | null;
+  changed_at: string;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function canManage(platformRole: string | null) {
-  return platformRole === 'super_admin' || platformRole === 'admin';
+function canManage(r: string | null) {
+  return r === 'super_admin' || r === 'admin';
 }
 
 function setsEqual(a: Set<string>, b: Set<string>) {
@@ -132,14 +152,44 @@ function cellGranted(perms: Set<string>, keys: readonly string[] | null): boolea
   return keys.every((k) => perms.has(k));
 }
 
-// ── Checkbox cell ─────────────────────────────────────────────────────────────
+function moduleAllKeys(mod: ModuleType): string[] {
+  return (
+    [...(mod.crud.view ?? []), ...(mod.crud.add ?? []), ...(mod.crud.edit ?? []), ...(mod.crud.delete ?? [])]
+  );
+}
+
+function permLabel(key: string) {
+  const map: Record<string, string> = {
+    'reviews.view': 'View reviews', 'reviews.generate': 'Generate drafts',
+    'reviews.edit': 'Edit drafts', 'reviews.approve': 'Approve drafts',
+    'reviews.publish': 'Publish replies', 'reviews.reject': 'Reject drafts',
+    'brand_brain.view': 'View Brand Brain', 'brand_brain.edit': 'Edit Brand Brain',
+    'reports.view': 'View reports', 'reports.export': 'Export reports',
+    'google.connect': 'Connect Google', 'google.disconnect': 'Disconnect Google',
+    'locations.view': 'View locations', 'locations.manage': 'Manage locations',
+    'team.view': 'View team', 'team.invite': 'Invite members', 'team.manage': 'Manage team',
+    'billing.view': 'View billing', 'billing.manage': 'Manage billing',
+    'settings.view': 'View settings', 'settings.manage': 'Manage settings',
+    'notifications.manage': 'Manage notifications', 'support.create': 'Create support tickets',
+    'privacy.request': 'Privacy requests',
+  };
+  return map[key] ?? key;
+}
+
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+// ── CrudCell ──────────────────────────────────────────────────────────────────
 
 function CrudCell({
-  localGranted,
-  savedGranted,
-  saving,
-  canEdit,
-  onToggle,
+  localGranted, savedGranted, saving, canEdit, onToggle,
 }: {
   localGranted: boolean | null;
   savedGranted: boolean | null;
@@ -148,22 +198,19 @@ function CrudCell({
   onToggle: () => void;
 }) {
   if (localGranted === null) {
-    return (
-      <td className="px-4 py-2 text-center">
-        <span className="text-[#D1D5DB] text-xs">—</span>
-      </td>
-    );
+    return <td className="px-4 py-2 text-center"><span className="text-[#D1D5DB] text-xs">—</span></td>;
   }
 
   const isPending = localGranted !== savedGranted;
-
   const boxClass = localGranted
     ? isPending
       ? 'bg-amber-500 border-amber-500'
       : 'bg-[#0D4C3C] border-[#0D4C3C]'
     : isPending
     ? 'bg-white border-amber-400 ring-1 ring-amber-300'
-    : 'bg-white border-[#D1D5DB] hover:border-[#0D4C3C]';
+    : canEdit
+    ? 'bg-white border-[#D1D5DB] hover:border-[#0D4C3C]'
+    : 'bg-white border-[#D1D5DB]';
 
   return (
     <td className="px-4 py-2 text-center">
@@ -173,9 +220,7 @@ function CrudCell({
           disabled={saving}
           className={`w-[18px] h-[18px] border-2 flex items-center justify-center mx-auto transition-colors disabled:opacity-50 ${boxClass}`}
         >
-          {saving ? (
-            <span className="w-2 h-2 border border-white border-t-transparent rounded-full animate-spin block" />
-          ) : localGranted ? (
+          {localGranted ? (
             <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
             </svg>
@@ -194,70 +239,311 @@ function CrudCell({
   );
 }
 
+// ── SavePreviewModal ──────────────────────────────────────────────────────────
+
+function SavePreviewModal({
+  role,
+  toAdd,
+  toRemove,
+  saving,
+  onConfirm,
+  onCancel,
+}: {
+  role: string;
+  toAdd: string[];
+  toRemove: string[];
+  saving: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const roleLabel = ROLES.find((r) => r.key === role)?.label ?? role;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onCancel()}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+        <div className="px-6 py-4 border-b border-[#E5EAE8]">
+          <h2 className="text-base font-bold text-[#111827]">Review changes — {roleLabel}</h2>
+          <p className="text-xs text-[#6B7280] mt-0.5">These will be applied immediately and logged.</p>
+        </div>
+        <div className="px-6 py-4 max-h-72 overflow-y-auto space-y-1.5">
+          {toAdd.map((k) => (
+            <div key={k} className="flex items-center gap-2.5 text-sm">
+              <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">+</span>
+              <span className="text-[#111827]">{permLabel(k)}</span>
+              <span className="text-[10px] text-[#9CA3AF] ml-auto font-mono">{k}</span>
+            </div>
+          ))}
+          {toRemove.map((k) => (
+            <div key={k} className="flex items-center gap-2.5 text-sm">
+              <span className="w-4 h-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">−</span>
+              <span className="text-[#111827]">{permLabel(k)}</span>
+              <span className="text-[10px] text-[#9CA3AF] ml-auto font-mono">{k}</span>
+            </div>
+          ))}
+        </div>
+        <div className="px-6 py-4 border-t border-[#E5EAE8] flex justify-end gap-2">
+          <button onClick={onCancel} disabled={saving} className="px-4 py-1.5 text-sm text-[#374151] bg-white border border-[#D1D5DB] hover:bg-[#F3F4F6] transition-colors disabled:opacity-50">
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={saving}
+            className="px-4 py-1.5 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#0a3d30] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+          >
+            {saving && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />}
+            {saving ? 'Saving…' : `Apply ${toAdd.length + toRemove.length} change${toAdd.length + toRemove.length !== 1 ? 's' : ''}`}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── RoleDiffModal ─────────────────────────────────────────────────────────────
+
+function RoleDiffModal({
+  baseRole,
+  compareRole,
+  onChangeCompare,
+  rolePerms,
+  onClose,
+}: {
+  baseRole: RoleKey;
+  compareRole: RoleKey;
+  onChangeCompare: (r: RoleKey) => void;
+  rolePerms: Record<string, Set<string>>;
+  onClose: () => void;
+}) {
+  const baseLabel = ROLES.find((r) => r.key === baseRole)?.label ?? baseRole;
+  const cmpLabel  = ROLES.find((r) => r.key === compareRole)?.label ?? compareRole;
+  const base = rolePerms[baseRole] ?? new Set<string>();
+  const cmp  = rolePerms[compareRole] ?? new Set<string>();
+
+  const actions: CrudAction[] = ['view', 'add', 'edit', 'delete'];
+
+  const hasDiff = MODULES.some((mod) =>
+    actions.some((a) => {
+      const keys = mod.crud[a] as readonly string[] | null;
+      if (!keys) return false;
+      return keys.every((k) => base.has(k)) !== keys.every((k) => cmp.has(k));
+    })
+  );
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
+        <div className="px-6 py-4 border-b border-[#E5EAE8] flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-bold text-[#111827]">Role Comparison</h2>
+            {!hasDiff && <p className="text-xs text-emerald-600 mt-0.5">No differences between these roles.</p>}
+            {hasDiff && <p className="text-xs text-amber-600 mt-0.5">Highlighted rows differ between roles.</p>}
+          </div>
+          <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#374151] p-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Compare role picker */}
+        <div className="px-6 pt-4 pb-2 flex items-center gap-3 text-sm">
+          <span className="font-semibold text-[#0D4C3C] w-28">{baseLabel}</span>
+          <span className="text-[#9CA3AF]">vs</span>
+          <select
+            value={compareRole}
+            onChange={(e) => onChangeCompare(e.target.value as RoleKey)}
+            className="border border-[#D1D5DB] px-2 py-1 text-sm text-[#111827] focus:outline-none focus:border-[#0D4C3C]"
+          >
+            {ROLES.filter((r) => r.key !== baseRole).map((r) => (
+              <option key={r.key} value={r.key}>{r.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="overflow-y-auto max-h-[calc(80vh-140px)]">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 bg-[#F8FAF9] border-b border-[#E5EAE8]">
+              <tr>
+                <th className="px-5 py-2 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Module</th>
+                <th className="px-3 py-2 text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-16">View</th>
+                <th className="px-3 py-2 text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-16">Add</th>
+                <th className="px-3 py-2 text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-16">Edit</th>
+                <th className="px-3 py-2 text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-16">Delete</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F3F4F6]">
+              {MODULES.map((mod) => {
+                const rowDiff = actions.some((a) => {
+                  const keys = mod.crud[a] as readonly string[] | null;
+                  if (!keys) return false;
+                  return keys.every((k) => base.has(k)) !== keys.every((k) => cmp.has(k));
+                });
+
+                return (
+                  <tr key={mod.label} className={rowDiff ? 'bg-amber-50' : ''}>
+                    <td className="px-5 py-2 font-medium text-[#111827]">{mod.label}</td>
+                    {actions.map((a) => {
+                      const keys = mod.crud[a] as readonly string[] | null;
+                      if (!keys) return <td key={a} className="px-3 py-2 text-center"><span className="text-[#D1D5DB] text-xs">—</span></td>;
+
+                      const bGrant = keys.every((k) => base.has(k));
+                      const cGrant = keys.every((k) => cmp.has(k));
+                      const diff   = bGrant !== cGrant;
+
+                      return (
+                        <td key={a} className="px-3 py-2">
+                          <div className={`flex items-center justify-center gap-1 ${diff ? 'font-semibold' : ''}`}>
+                            <span className={`text-xs ${bGrant ? 'text-emerald-600' : 'text-[#D1D5DB]'}`} title={baseLabel}>
+                              {bGrant ? '✓' : '✗'}
+                            </span>
+                            <span className="text-[10px] text-[#D1D5DB]">/</span>
+                            <span className={`text-xs ${cGrant ? 'text-emerald-600' : diff ? 'text-red-400' : 'text-[#D1D5DB]'}`} title={cmpLabel}>
+                              {cGrant ? '✓' : '✗'}
+                            </span>
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <p className="px-5 py-2 text-[10px] text-[#9CA3AF] border-t border-[#F3F4F6]">
+            Left value = {baseLabel} &nbsp;·&nbsp; Right value = {cmpLabel} &nbsp;·&nbsp; Amber rows have differences
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── RolesPage ─────────────────────────────────────────────────────────────────
 
-const EMPTY_PERMS: Record<string, Set<string>> = Object.fromEntries(
+const INIT_PERMS: Record<string, Set<string>> = Object.fromEntries(
   ROLES.map((r) => [r.key, new Set<string>()])
 );
 
 export function RolesPage() {
-  const { platformRole } = useAdminAuthStore();
+  const { user, platformRole } = useAdminAuthStore();
+
+  // Core state
   const [selectedRole, setSelectedRole] = useState<RoleKey>('owner');
-  const [rolePerms, setRolePerms] = useState<Record<string, Set<string>>>(EMPTY_PERMS);
-  // localPerms = user's pending edits for selected role (not yet saved)
+  const [rolePerms, setRolePerms] = useState<Record<string, Set<string>>>(INIT_PERMS);
   const [localPerms, setLocalPerms] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading]  = useState(true);
+  const [saving, setSaving]    = useState(false);
+
+  // Tab
+  const [tab, setTab] = useState<'permissions' | 'audit'>('permissions');
+
+  // Search filter
+  const [search, setSearch] = useState('');
+
+  // Diff modal
+  const [showDiff, setShowDiff]       = useState(false);
+  const [diffRole, setDiffRole]       = useState<RoleKey>('admin');
+
+  // Save preview modal
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Audit log
+  const [auditLog, setAuditLog]       = useState<AuditEntry[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+
+  // Override counts per permission key
+  const [overrideCounts, setOverrideCounts] = useState<Map<string, number>>(new Map());
 
   const canEdit = canManage(platformRole);
   const savedPerms = rolePerms[selectedRole] ?? new Set<string>();
-  const isDirty = !setsEqual(localPerms, savedPerms);
-  const pendingCount = [
-    ...[...localPerms].filter((k) => !savedPerms.has(k)),
-    ...[...savedPerms].filter((k) => !localPerms.has(k)),
-  ].length;
+  const isDirty    = !setsEqual(localPerms, savedPerms);
+  const toAdd      = useMemo(() => [...localPerms].filter((k) => !savedPerms.has(k)), [localPerms, savedPerms]);
+  const toRemove   = useMemo(() => [...savedPerms].filter((k) => !localPerms.has(k)), [localPerms, savedPerms]);
+  const pendingCount = toAdd.length + toRemove.length;
+
+  // Filter modules by search
+  const filteredModules = useMemo(() =>
+    MODULES.filter((m) =>
+      search.trim() === '' || m.label.toLowerCase().includes(search.toLowerCase())
+    ),
+    [search]
+  );
+
+  // ── Load permissions ────────────────────────────────────────────────────────
 
   async function loadAll() {
     setLoading(true);
-    const { data } = await supabase
-      .from('role_permissions')
-      .select('role, permission');
+
+    const [permsRes, overridesRes] = await Promise.all([
+      supabase.from('role_permissions').select('role, permission'),
+      supabase.from('user_permission_overrides').select('permission'),
+    ]);
 
     const rp: Record<string, Set<string>> = Object.fromEntries(
       ROLES.map((r) => [r.key, new Set<string>()])
     );
-    for (const row of (data ?? [])) {
-      if (rp[row.role]) rp[row.role].add(row.permission as string);
+    for (const row of (permsRes.data ?? [])) {
+      const s = rp[row.role];
+      if (s) s.add(row.permission as string);
+    }
+
+    const oc = new Map<string, number>();
+    for (const row of (overridesRes.data ?? [])) {
+      oc.set(row.permission as string, (oc.get(row.permission as string) ?? 0) + 1);
     }
 
     setRolePerms(rp);
     setLocalPerms(new Set(rp[selectedRole] ?? []));
+    setOverrideCounts(oc);
     setLoading(false);
   }
 
   useEffect(() => { loadAll(); }, []);
 
+  // ── Load audit log ──────────────────────────────────────────────────────────
+
+  async function loadAudit(role: string) {
+    setAuditLoading(true);
+    const { data } = await supabase
+      .from('role_permission_audit')
+      .select('id, role, permission, action, changed_by, changed_at')
+      .eq('role', role)
+      .order('changed_at', { ascending: false })
+      .limit(100);
+
+    setAuditLog((data ?? []) as AuditEntry[]);
+    setAuditLoading(false);
+  }
+
+  useEffect(() => {
+    if (tab === 'audit') loadAudit(selectedRole);
+  }, [tab, selectedRole]);
+
+  // ── Role selection ──────────────────────────────────────────────────────────
+
   function handleSelectRole(role: RoleKey) {
-    // Switching role discards unsaved changes (same as page refresh)
     setSelectedRole(role);
     setLocalPerms(new Set(rolePerms[role] ?? []));
+    setSearch('');
+    if (tab === 'audit') loadAudit(role);
   }
+
+  // ── Toggle permission ───────────────────────────────────────────────────────
 
   function handleToggle(keys: readonly string[]) {
     const allGranted = keys.every((k) => localPerms.has(k));
     setLocalPerms((prev) => {
       const next = new Set(prev);
       if (allGranted) keys.forEach((k) => next.delete(k));
-      else keys.forEach((k) => next.add(k));
+      else            keys.forEach((k) => next.add(k));
       return next;
     });
   }
 
-  async function handleSave() {
-    setSaving(true);
+  // ── Save ────────────────────────────────────────────────────────────────────
 
-    const toAdd = [...localPerms].filter((k) => !savedPerms.has(k));
-    const toRemove = [...savedPerms].filter((k) => !localPerms.has(k));
+  async function executeSave() {
+    setSaving(true);
 
     if (toAdd.length) {
       await supabase.from('role_permissions').upsert(
@@ -270,7 +556,19 @@ export function RolesPage() {
         .eq('role', selectedRole).eq('permission', key);
     }
 
+    // Audit log — fire and forget; don't block save on failure
+    const auditRows = [
+      ...toAdd.map((k) => ({ role: selectedRole, permission: k, action: 'grant', changed_by: user?.id ?? null })),
+      ...toRemove.map((k) => ({ role: selectedRole, permission: k, action: 'revoke', changed_by: user?.id ?? null })),
+    ];
+    if (auditRows.length) {
+      supabase.from('role_permission_audit').insert(auditRows).then(() => {
+        if (tab === 'audit') loadAudit(selectedRole);
+      });
+    }
+
     setRolePerms((prev) => ({ ...prev, [selectedRole]: new Set(localPerms) }));
+    setShowPreview(false);
     setSaving(false);
   }
 
@@ -278,120 +576,283 @@ export function RolesPage() {
     setLocalPerms(new Set(savedPerms));
   }
 
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+
+  function getModuleOverrideCount(mod: ModuleType) {
+    return moduleAllKeys(mod).reduce((sum, k) => sum + (overrideCounts.get(k) ?? 0), 0);
+  }
+
   const selectedRoleConfig = ROLES.find((r) => r.key === selectedRole)!;
 
+  // ── Render ──────────────────────────────────────────────────────────────────
+
   return (
-    <div className="flex h-full">
-      {/* Left: Roles sidebar */}
-      <aside className="w-52 flex-shrink-0 border-r border-[#E5EAE8] bg-white px-3 py-6">
-        <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest px-3 mb-3">Roles</p>
-        <div className="space-y-0.5">
-          {ROLES.map((r) => (
-            <button
-              key={r.key}
-              onClick={() => handleSelectRole(r.key)}
-              className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors ${
-                selectedRole === r.key
-                  ? 'bg-[#E6F2EE] text-[#0D4C3C]'
-                  : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
-              }`}
-            >
-              <p className={`text-sm font-semibold ${selectedRole === r.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>
-                {r.label}
-              </p>
-              <p className="text-[11px] text-[#9CA3AF] mt-0.5 leading-tight">{r.desc}</p>
-            </button>
-          ))}
-        </div>
-      </aside>
-
-      {/* Right: Permission matrix */}
-      <main className="flex-1 overflow-y-auto px-8 py-6">
-        {/* Header row */}
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-bold text-[#111827]">{selectedRoleConfig.label} Permissions</h1>
-            <p className="text-sm text-[#6B7280] mt-0.5">{selectedRoleConfig.desc}</p>
-          </div>
-
-          {canEdit && isDirty && (
-            <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
-              <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded">
-                {pendingCount} unsaved {pendingCount === 1 ? 'change' : 'changes'}
-              </span>
+    <>
+      <div className="flex h-full">
+        {/* Left: Roles sidebar */}
+        <aside className="w-52 flex-shrink-0 border-r border-[#E5EAE8] bg-white px-3 py-6">
+          <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest px-3 mb-3">Roles</p>
+          <div className="space-y-0.5">
+            {ROLES.map((r) => (
               <button
-                onClick={handleDiscard}
-                disabled={saving}
-                className="px-3 py-1.5 text-xs font-medium text-[#374151] bg-white border border-[#D1D5DB] hover:bg-[#F3F4F6] transition-colors disabled:opacity-50"
+                key={r.key}
+                onClick={() => handleSelectRole(r.key)}
+                className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors ${
+                  selectedRole === r.key
+                    ? 'bg-[#E6F2EE] text-[#0D4C3C]'
+                    : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
+                }`}
               >
-                Discard
+                <p className={`text-sm font-semibold ${selectedRole === r.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>
+                  {r.label}
+                </p>
+                <p className="text-[11px] text-[#9CA3AF] mt-0.5 leading-tight">{r.desc}</p>
               </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="px-3 py-1.5 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#0a3d30] transition-colors disabled:opacity-50 flex items-center gap-1.5"
-              >
-                {saving && (
-                  <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
-                )}
-                {saving ? 'Saving…' : 'Save Changes'}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {loading ? (
-          <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden animate-pulse">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 px-5 py-2.5 border-b border-[#F3F4F6]">
-                <div className="h-3 bg-[#E5EAE8] rounded w-24" />
-                {Array.from({ length: 4 }).map((_, j) => (
-                  <div key={j} className="w-[18px] h-[18px] bg-[#E5EAE8] rounded mx-auto" />
-                ))}
-              </div>
             ))}
           </div>
-        ) : (
-          <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
-                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Permission</th>
-                  {(['view', 'add', 'edit', 'delete'] as CrudAction[]).map((action) => (
-                    <th key={action} className="px-4 py-2.5 text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-20">
-                      {action.charAt(0).toUpperCase() + action.slice(1)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#F3F4F6]">
-                {MODULES.map((mod) => (
-                  <tr key={mod.label} className="hover:bg-[#F8FAF9] transition-colors">
-                    <td className="px-5 py-2 font-medium text-[#111827]">{mod.label}</td>
-                    {(['view', 'add', 'edit', 'delete'] as CrudAction[]).map((action) => {
-                      const keys = mod.crud[action] as readonly string[] | null;
-                      return (
-                        <CrudCell
-                          key={action}
-                          localGranted={cellGranted(localPerms, keys)}
-                          savedGranted={cellGranted(savedPerms, keys)}
-                          saving={saving && keys != null}
-                          canEdit={canEdit}
-                          onToggle={() => keys && handleToggle(keys)}
-                        />
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        </aside>
 
-        {!canEdit && (
-          <p className="mt-4 text-xs text-[#9CA3AF]">You need super_admin or admin role to edit permissions.</p>
-        )}
-      </main>
-    </div>
+        {/* Right content */}
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {/* Header */}
+          <div className="px-8 pt-6 pb-4 border-b border-[#E5EAE8] bg-white flex items-start justify-between gap-4 flex-shrink-0">
+            <div>
+              <h1 className="text-xl font-bold text-[#111827]">{selectedRoleConfig.label} Permissions</h1>
+              <p className="text-sm text-[#6B7280] mt-0.5">{selectedRoleConfig.desc}</p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
+              <button
+                onClick={() => { setDiffRole(selectedRole === 'owner' ? 'admin' : 'owner'); setShowDiff(true); }}
+                className="px-3 py-1.5 text-xs font-medium text-[#374151] bg-white border border-[#D1D5DB] hover:bg-[#F3F4F6] transition-colors flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Compare roles
+              </button>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="px-8 pt-0 flex-shrink-0 bg-white border-b border-[#E5EAE8]">
+            <div className="flex gap-0">
+              {(['permissions', 'audit'] as const).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors capitalize ${
+                    tab === t
+                      ? 'border-[#0D4C3C] text-[#0D4C3C]'
+                      : 'border-transparent text-[#6B7280] hover:text-[#374151]'
+                  }`}
+                >
+                  {t === 'audit' ? 'Audit Log' : 'Permissions'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto px-8 py-5">
+
+            {/* ── Permissions tab ── */}
+            {tab === 'permissions' && (
+              <>
+                {/* Search + unsaved bar */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="relative flex-1 max-w-xs">
+                    <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                      type="search"
+                      placeholder="Filter modules…"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="w-full pl-9 pr-3 py-1.5 text-sm border border-[#E5EAE8] bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+                    />
+                  </div>
+
+                  {canEdit && isDirty && (
+                    <div className="flex items-center gap-2 ml-auto">
+                      <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded">
+                        {pendingCount} unsaved {pendingCount === 1 ? 'change' : 'changes'}
+                      </span>
+                      <button
+                        onClick={handleDiscard}
+                        disabled={saving}
+                        className="px-3 py-1.5 text-xs font-medium text-[#374151] bg-white border border-[#D1D5DB] hover:bg-[#F3F4F6] transition-colors disabled:opacity-50"
+                      >
+                        Discard
+                      </button>
+                      <button
+                        onClick={() => setShowPreview(true)}
+                        disabled={saving}
+                        className="px-3 py-1.5 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#0a3d30] transition-colors disabled:opacity-50"
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Permission table */}
+                {loading ? (
+                  <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden animate-pulse">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-4 px-5 py-2.5 border-b border-[#F3F4F6]">
+                        <div className="h-3 bg-[#E5EAE8] rounded w-24" />
+                        {Array.from({ length: 4 }).map((_, j) => (
+                          <div key={j} className="w-[18px] h-[18px] bg-[#E5EAE8] rounded mx-auto" />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
+                          <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Module</th>
+                          {(['view', 'add', 'edit', 'delete'] as CrudAction[]).map((a) => (
+                            <th key={a} className="px-4 py-2.5 text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-20">
+                              {a.charAt(0).toUpperCase() + a.slice(1)}
+                            </th>
+                          ))}
+                          <th className="px-4 py-2.5 text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-24">Overrides</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#F3F4F6]">
+                        {filteredModules.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="px-5 py-8 text-center text-sm text-[#9CA3AF]">
+                              No modules match "{search}".
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredModules.map((mod) => {
+                            const overrideCount = getModuleOverrideCount(mod);
+                            return (
+                              <tr key={mod.label} className="hover:bg-[#F8FAF9] transition-colors">
+                                <td className="px-5 py-2 font-medium text-[#111827]">{mod.label}</td>
+                                {(['view', 'add', 'edit', 'delete'] as CrudAction[]).map((a) => {
+                                  const keys = mod.crud[a] as readonly string[] | null;
+                                  return (
+                                    <CrudCell
+                                      key={a}
+                                      localGranted={cellGranted(localPerms, keys)}
+                                      savedGranted={cellGranted(savedPerms, keys)}
+                                      saving={saving && keys != null}
+                                      canEdit={canEdit}
+                                      onToggle={() => keys && handleToggle(keys)}
+                                    />
+                                  );
+                                })}
+                                <td className="px-4 py-2 text-center">
+                                  {overrideCount > 0 ? (
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                                      {overrideCount} override{overrideCount !== 1 ? 's' : ''}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[#D1D5DB] text-xs">—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {!canEdit && (
+                  <p className="mt-4 text-xs text-[#9CA3AF]">You need super_admin or admin role to edit permissions.</p>
+                )}
+              </>
+            )}
+
+            {/* ── Audit log tab ── */}
+            {tab === 'audit' && (
+              <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+                {auditLoading ? (
+                  <div className="animate-pulse divide-y divide-[#F3F4F6]">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="px-5 py-3 flex items-center gap-4">
+                        <div className="w-12 h-3 bg-[#E5EAE8] rounded" />
+                        <div className="flex-1 h-3 bg-[#E5EAE8] rounded" />
+                        <div className="w-20 h-3 bg-[#E5EAE8] rounded" />
+                      </div>
+                    ))}
+                  </div>
+                ) : auditLog.length === 0 ? (
+                  <div className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
+                    No changes recorded yet for {selectedRoleConfig.label}.
+                  </div>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
+                        <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Action</th>
+                        <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Permission</th>
+                        <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Changed by</th>
+                        <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">When</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F3F4F6]">
+                      {auditLog.map((entry) => (
+                        <tr key={entry.id} className="hover:bg-[#F8FAF9] transition-colors">
+                          <td className="px-5 py-2.5">
+                            <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded ${
+                              entry.action === 'grant'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-red-50 text-red-600 border border-red-200'
+                            }`}>
+                              {entry.action === 'grant' ? '+' : '−'} {entry.action}
+                            </span>
+                          </td>
+                          <td className="px-5 py-2.5">
+                            <p className="text-[#111827]">{permLabel(entry.permission)}</p>
+                            <p className="text-[10px] text-[#9CA3AF] font-mono">{entry.permission}</p>
+                          </td>
+                          <td className="px-5 py-2.5 text-[#6B7280] text-xs font-mono">
+                            {entry.changed_by ? entry.changed_by.slice(0, 8) + '…' : 'system'}
+                          </td>
+                          <td className="px-5 py-2.5 text-[#9CA3AF] text-xs">
+                            {timeAgo(entry.changed_at)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* Modals */}
+      {showPreview && (
+        <SavePreviewModal
+          role={selectedRole}
+          toAdd={toAdd}
+          toRemove={toRemove}
+          saving={saving}
+          onConfirm={executeSave}
+          onCancel={() => setShowPreview(false)}
+        />
+      )}
+
+      {showDiff && (
+        <RoleDiffModal
+          baseRole={selectedRole}
+          compareRole={diffRole}
+          onChangeCompare={setDiffRole}
+          rolePerms={rolePerms}
+          onClose={() => setShowDiff(false)}
+        />
+      )}
+    </>
   );
 }
