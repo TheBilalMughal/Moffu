@@ -169,7 +169,7 @@ export function DashboardPage() {
           <div className="p-4 grid grid-cols-2 gap-3">
             {[
               { to: '/clients', label: 'View all clients', desc: 'Browse & manage clients' },
-              { to: '/user-management', label: 'User management', desc: 'Manage admin team members' },
+              { to: '/users', label: 'Users', desc: 'Manage admin team members' },
               { to: '/roles', label: 'Roles & permissions', desc: 'Edit permission matrix' },
               { to: '/audit', label: 'Audit logs', desc: 'Review recent platform activity' },
             ].map((link) => (
