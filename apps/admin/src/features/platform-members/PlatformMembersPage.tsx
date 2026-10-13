@@ -35,6 +35,7 @@ interface Member {
   role: PlatformRole;
   is_active: boolean;
   created_at: string;
+  last_sign_in_at: string | null;
 }
 
 function canManage(platformRole: string | null) {
@@ -64,29 +65,37 @@ export function PlatformMembersPage() {
     if (!rows) { setLoading(false); return; }
 
     const userIds = rows.map((m: { user_id: string }) => m.user_id);
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, display_id, display_name, email, phone')
-      .in('id', userIds);
 
-    type ProfileRow = { id: string; display_id: number | null; display_name: string; email: string | null; phone: string | null };
+    const [profilesRes, authRes] = await Promise.all([
+      supabase.from('profiles').select('id, display_id, display_name, phone').in('id', userIds),
+      supabase.rpc('get_platform_members_auth'),
+    ]);
+
+    type ProfileRow = { id: string; display_id: number | null; display_name: string; phone: string | null };
     const profileById = new Map<string, ProfileRow>(
-      (profiles ?? []).map((p: ProfileRow) => [p.id, p]),
+      (profilesRes.data ?? []).map((p: ProfileRow) => [p.id, p]),
+    );
+
+    type AuthRow = { user_id: string; email: string; last_sign_in_at: string | null };
+    const authById = new Map<string, AuthRow>(
+      (authRes.data ?? []).map((a: AuthRow) => [a.user_id, a]),
     );
 
     type RawRow = { id: string; user_id: string; role: PlatformRole; is_active: boolean; created_at: string };
     const enriched: Member[] = (rows as RawRow[]).map((m) => {
       const p = profileById.get(m.user_id);
+      const a = authById.get(m.user_id);
       return {
         id: m.id,
         user_id: m.user_id,
         display_id: p?.display_id ?? null,
         display_name: p?.display_name ?? '—',
-        email: p?.email ?? m.user_id,
+        email: a?.email ?? '—',
         phone: p?.phone ?? null,
         role: m.role,
         is_active: m.is_active,
         created_at: m.created_at,
+        last_sign_in_at: a?.last_sign_in_at ?? null,
       };
     });
 
@@ -193,6 +202,7 @@ export function PlatformMembersPage() {
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Name</th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Email</th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Role</th>
+              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Last Login</th>
               <th className="px-5 py-3 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Actions</th>
             </tr>
           </thead>
@@ -200,7 +210,7 @@ export function PlatformMembersPage() {
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i}>
-                  {Array.from({ length: 5 }).map((_, j) => (
+                  {Array.from({ length: 6 }).map((_, j) => (
                     <td key={j} className="px-5 py-4">
                       <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-24" />
                     </td>
@@ -209,7 +219,7 @@ export function PlatformMembersPage() {
               ))
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
+                <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
                   {search ? 'No users match your search.' : 'No users yet.'}
                 </td>
               </tr>
@@ -230,6 +240,11 @@ export function PlatformMembersPage() {
                     <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${ROLE_COLOR[m.role] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
                       {ROLE_LABEL[m.role] ?? m.role}
                     </span>
+                  </td>
+                  <td className="px-5 py-4 text-[#9CA3AF] text-xs">
+                    {m.last_sign_in_at
+                      ? new Date(m.last_sign_in_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                      : '—'}
                   </td>
                   <td className="px-5 py-4 text-right">
                     {m.display_id != null ? (

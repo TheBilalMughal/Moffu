@@ -73,7 +73,7 @@ export function TeamMemberDetailPage() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, display_id, display_name, email, phone, status')
+      .select('id, display_id, display_name, phone, status')
       .eq('display_id', displayId)
       .maybeSingle();
 
@@ -87,12 +87,17 @@ export function TeamMemberDetailPage() {
 
     if (!pm) { setNotFound(true); setLoading(false); return; }
 
+    // Get real email from auth.users via security-definer RPC
+    const { data: authRows } = await supabase.rpc('get_platform_members_auth');
+    type AuthRow = { user_id: string; email: string; last_sign_in_at: string | null };
+    const authRow = (authRows as AuthRow[] ?? []).find((a) => a.user_id === profile.id);
+
     const detail: MemberDetail = {
       memberId: pm.id,
       userId: profile.id,
       displayId: profile.display_id,
       displayName: profile.display_name ?? '—',
-      email: profile.email ?? '—',
+      email: authRow?.email ?? '—',
       phone: profile.phone ?? null,
       status: profile.status ?? 'pending_verification',
       role: pm.role as PlatformRole,
