@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
+import { Dropdown } from '@/components/Dropdown';
 
 // ── Role config ───────────────────────────────────────────────────────────────
 
@@ -349,15 +350,11 @@ function RoleDiffModal({
         <div className="px-6 pt-4 pb-2 flex items-center gap-3 text-sm">
           <span className="font-semibold text-[#0D4C3C] w-28">{baseLabel}</span>
           <span className="text-[#9CA3AF]">vs</span>
-          <select
+          <Dropdown
             value={compareRole}
-            onChange={(e) => onChangeCompare(e.target.value as RoleKey)}
-            className="border border-[#D1D5DB] px-2 py-1 text-sm text-[#111827] focus:outline-none focus:border-[#0D4C3C]"
-          >
-            {ROLES.filter((r) => r.key !== baseRole).map((r) => (
-              <option key={r.key} value={r.key}>{r.label}</option>
-            ))}
-          </select>
+            onChange={(v) => onChangeCompare(v as RoleKey)}
+            options={ROLES.filter((r) => r.key !== baseRole).map((r) => ({ value: r.key, label: r.label }))}
+          />
         </div>
 
         <div className="overflow-y-auto max-h-[calc(80vh-140px)]">

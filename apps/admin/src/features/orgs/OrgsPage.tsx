@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { Dropdown } from '@/components/Dropdown';
 
 interface Org {
   id: string;
@@ -121,17 +122,18 @@ export function OrgsPage() {
             className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
           />
         </div>
-        <select
-          value={planFilter}
-          onChange={(e) => setPlanFilter(e.target.value)}
-          className="px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-white text-[#111827] focus:outline-none focus:border-[#0D4C3C]"
-        >
-          <option value="all">All plans</option>
-          <option value="free">Free</option>
-          <option value="starter">Starter</option>
-          <option value="pro">Pro</option>
-          <option value="enterprise">Enterprise</option>
-        </select>
+        <Dropdown
+          clearable
+          placeholder="All plans"
+          value={planFilter === 'all' ? '' : planFilter}
+          onChange={(v) => setPlanFilter(v === '' ? 'all' : v)}
+          options={[
+            { value: 'free',       label: 'Free'       },
+            { value: 'starter',    label: 'Starter'    },
+            { value: 'pro',        label: 'Pro'        },
+            { value: 'enterprise', label: 'Enterprise' },
+          ]}
+        />
       </div>
 
       {/* Table */}

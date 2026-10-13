@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
+import { Dropdown } from '@/components/Dropdown';
 
 const ROLES = ['super_admin', 'admin', 'finance', 'support', 'operations', 'viewer'] as const;
 type PlatformRole = typeof ROLES[number];
@@ -340,15 +341,12 @@ export function PlatformMembersPage() {
 
               <div>
                 <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">Platform role</label>
-                <select
+                <Dropdown
+                  fullWidth
                   value={formRole}
-                  onChange={(e) => setFormRole(e.target.value as PlatformRole)}
-                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] text-[#111827] bg-white focus:outline-none focus:border-[#0D4C3C]"
-                >
-                  {ROLES.map((r) => (
-                    <option key={r} value={r}>{ROLE_LABEL[r]}</option>
-                  ))}
-                </select>
+                  onChange={(v) => setFormRole(v as PlatformRole)}
+                  options={ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
+                />
               </div>
             </div>
 

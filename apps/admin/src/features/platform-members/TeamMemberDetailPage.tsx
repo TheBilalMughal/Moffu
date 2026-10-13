@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { adminAuthService } from '@/features/auth/auth.service';
+import { Dropdown } from '@/components/Dropdown';
 
 const ROLES = ['super_admin', 'admin', 'finance', 'support', 'operations', 'viewer'] as const;
 type PlatformRole = typeof ROLES[number];
@@ -279,13 +280,12 @@ export function TeamMemberDetailPage() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">Platform role</label>
-              <select
+              <Dropdown
+                fullWidth
                 value={editRole}
-                onChange={(e) => setEditRole(e.target.value as PlatformRole)}
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] text-[#111827] bg-white focus:outline-none focus:border-[#0D4C3C]"
-              >
-                {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
-              </select>
+                onChange={(v) => setEditRole(v as PlatformRole)}
+                options={ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
+              />
             </div>
 
             {saveMsg && (
