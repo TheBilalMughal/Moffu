@@ -1,17 +1,17 @@
 ﻿import { useEffect, useState } from 'react';
 import { billingService, type Plan, type Subscription, type UsageSummary, type UsageDay } from './billing.service';
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€ Helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 function cents(amount: number) {
   return `$${(amount / 100).toFixed(amount % 100 === 0 ? 0 : 2)}`;
 }
 
 function formatEntitlement(ent: { value_type: string; limit_value: number | null; bool_value: boolean | null; enum_value: string | null; usage_reset: string | null } | undefined): string {
-  if (!ent) return 'â€”';
+  if (!ent) return 'â€"';
   if (ent.value_type === 'UNLIMITED') return 'Unlimited';
   if (ent.value_type === 'BOOLEAN') return ent.bool_value ? 'Yes' : 'No';
-  if (ent.value_type === 'ENUM') return SUPPORT_LABELS[ent.enum_value ?? ''] ?? ent.enum_value ?? 'â€”';
+  if (ent.value_type === 'ENUM') return SUPPORT_LABELS[ent.enum_value ?? ''] ?? ent.enum_value ?? 'â€"';
   const reset = ent.usage_reset === 'weekly' ? '/wk' : ent.usage_reset === 'monthly' ? '/mo' : '';
   return `${ent.limit_value}${reset}`;
 }
@@ -36,7 +36,7 @@ const PLAN_COLORS: Record<string, { bg: string; text: string }> = {
   scale:   { bg: 'bg-[#1C1917]', text: 'text-stone-100' },
 };
 
-// â”€â”€â”€ Sub-components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€ Sub-components â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 function UsageMeter({ label, used, limit }: { label: string; used: number; limit: number | null }) {
   const unlimited = limit === null;
@@ -103,7 +103,7 @@ function UsageHistoryChart({ days }: { days: UsageDay[] }) {
           );
         })}
       </div>
-      {/* Date labels â€” every 2nd */}
+      {/* Date labels â€" every 2nd */}
       <div className="flex gap-0.5 mt-1">
         {last14.map((day, i) => (
           <div key={day.date} className="flex-1 text-center">
@@ -207,7 +207,7 @@ function PlanComparisonModal({ plans, sub, billingInterval, onClose }: {
               {plans.map(plan => (
                 <div key={plan.id} className="text-center">
                   <span className="text-xs text-[#374151]">
-                    {plan.location_addon_cents ? `+${cents(plan.location_addon_cents)}/loc` : 'â€”'}
+                    {plan.location_addon_cents ? `+${cents(plan.location_addon_cents)}/loc` : 'â€"'}
                   </span>
                 </div>
               ))}
@@ -284,7 +284,7 @@ function AddLocationDialog({ plan, onClose }: { plan: Plan; onClose: () => void 
             title="Stripe integration coming soon"
             className="w-full py-2.5 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl opacity-50 cursor-not-allowed"
           >
-            Confirm & Pay â€” coming soon
+            Confirm & Pay â€" coming soon
           </button>
           <p className="text-[10px] text-[#9CA3AF] text-center">Stripe integration is in progress.</p>
         </div>
@@ -293,7 +293,7 @@ function AddLocationDialog({ plan, onClose }: { plan: Plan; onClose: () => void 
   );
 }
 
-// â”€â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€â"€ Main page â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 export function BillingPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -304,6 +304,8 @@ export function BillingPage() {
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'annual'>('monthly');
   const [showCompare, setShowCompare] = useState(false);
   const [showAddLocation, setShowAddLocation] = useState(false);
+  const [overageProtection, setOverageProtection] = useState(true);
+  const [overageToggling, setOverageToggling] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -318,10 +320,21 @@ export function BillingPage() {
         const u = await billingService.getUsage(s, ps);
         setUsage(u);
         if (s.billing_interval) setBillingInterval(s.billing_interval);
+        setOverageProtection(s.overage_protection);
       }
       setLoading(false);
     });
   }, []);
+
+  async function handleOverageToggle() {
+    if (!sub || overageToggling) return;
+    const next = !overageProtection;
+    setOverageToggling(true);
+    setOverageProtection(next);
+    await billingService.updateOverageProtection(sub.id, next);
+    setSub(s => s ? { ...s, overage_protection: next } : s);
+    setOverageToggling(false);
+  }
 
   if (loading) {
     return (
@@ -406,19 +419,19 @@ export function BillingPage() {
             </svg>
             <p className="text-xs text-[#0D4C3C]">
               <span className="font-bold">Switch to annual and save {cents(annualSavings)}/year</span>
-              {' '}on your {currentPlan?.name} plan â€” that's {cents(annualSavings / 12)}/mo off.
+              {' '}on your {currentPlan?.name} plan â€" that's {cents(annualSavings / 12)}/mo off.
             </p>
           </div>
           <button
             disabled
             className="flex-shrink-0 text-[11px] font-bold text-white bg-[#0D4C3C] px-3 py-1.5 rounded-lg opacity-50 cursor-not-allowed"
           >
-            Switch â€” coming soon
+            Switch â€" coming soon
           </button>
         </div>
       )}
 
-      {/* Current plan + usage â€” 2 equal columns */}
+      {/* Current plan + usage â€" 2 equal columns */}
       <div className="grid grid-cols-2 gap-5 mb-5">
         {/* Current plan card */}
         <div className="bg-white border border-[#E5EAE8] rounded-2xl p-6">
@@ -497,23 +510,45 @@ export function BillingPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-[#374151]">Overage protection</p>
-                <p className="text-[10px] text-[#9CA3AF] mt-0.5">Block actions when limit is reached</p>
+                <p className="text-[10px] text-[#9CA3AF] mt-0.5">
+                  {overageProtection
+                    ? 'Actions blocked when limit is reached'
+                    : 'Actions allowed beyond limit — charged per reply'}
+                </p>
               </div>
               <button
-                disabled
-                title="Available with Stripe"
-                className="relative inline-flex h-5 w-9 flex-shrink-0 cursor-not-allowed rounded-full border-2 border-transparent bg-[#0D4C3C] opacity-40 transition-colors"
-                aria-label="Overage protection â€” coming soon"
+                onClick={handleOverageToggle}
+                disabled={overageToggling || !sub}
+                className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ${overageToggling ? 'opacity-50 cursor-wait' : 'cursor-pointer'} ${overageProtection ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}
+                aria-label="Toggle overage protection"
               >
-                <span className="inline-block h-4 w-4 transform rounded-full bg-white shadow translate-x-4 transition-transform" />
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${overageProtection ? 'translate-x-4' : 'translate-x-0'}`} />
               </button>
             </div>
-            <p className="text-[10px] text-[#9CA3AF] mt-1">Configurable when Stripe is connected.</p>
+            {(() => {
+              const pricePerReply = sub ? billingService.getOveragePricePerReplyCents(sub, plans) : null;
+              if (!overageProtection && pricePerReply !== null) {
+                return (
+                  <div className="mt-2 flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    <svg className="w-3 h-3 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-[10px] text-amber-700">
+                      Each reply over limit costs <strong>{cents(pricePerReply)}</strong> — charged via Stripe at period end.
+                    </p>
+                  </div>
+                );
+              }
+              if (!overageProtection && pricePerReply === null) {
+                return <p className="text-[10px] text-[#9CA3AF] mt-1">Overage pricing applies when Stripe is connected.</p>;
+              }
+              return null;
+            })()}
           </div>
         </div>
       </div>
 
-      {/* Usage history + Add-ons â€” 2 columns */}
+      {/* Usage history + Add-ons â€" 2 columns */}
       <div className="grid grid-cols-2 gap-5 mb-6">
         {/* Usage history chart */}
         <div className="bg-white border border-[#E5EAE8] rounded-2xl p-6">
@@ -597,7 +632,7 @@ export function BillingPage() {
               }`}
             >
               {iv === 'monthly' ? 'Monthly' : 'Annual'}
-              {iv === 'annual' && <span className="ml-1.5 text-[10px] font-bold text-emerald-600">â€“20%</span>}
+              {iv === 'annual' && <span className="ml-1.5 text-[10px] font-bold text-emerald-600">â€"20%</span>}
             </button>
           ))}
         </div>
@@ -697,7 +732,7 @@ export function BillingPage() {
                   </button>
                 ) : (
                   <button disabled title="Coming soon" className={`w-full py-2.5 text-xs font-semibold rounded-xl cursor-not-allowed opacity-50 ${isScale ? 'bg-white text-[#1C1917]' : 'bg-[#0D4C3C] text-white'}`}>
-                    Upgrade â€” coming soon
+                    Upgrade â€" coming soon
                   </button>
                 )}
               </div>
@@ -708,7 +743,7 @@ export function BillingPage() {
 
       {/* Flat notice */}
       <p className="text-xs text-[#9CA3AF]">
-        Payments coming soon â€” Stripe integration is in progress. Upgrades and billing management will be available shortly.
+        Payments coming soon â€" Stripe integration is in progress. Upgrades and billing management will be available shortly.
       </p>
     </div>
   );

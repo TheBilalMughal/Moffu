@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Toast } from '@/components/Toast';
 import {
   brandBrainService, BrandBrainData, LocationOverride, GoogleLocation,
   StarRatingRules, KeywordContext, ApprovalRules,
@@ -163,25 +164,6 @@ function SelectField({ value, onChange, options, placeholder, disabled }: {
   );
 }
 
-function Toast({ message, type, onDone }: { message: string; type: 'success' | 'error'; onDone: () => void }) {
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    const h = setTimeout(() => setVisible(false), 3200);
-    const r = setTimeout(onDone, 3700);
-    return () => { clearTimeout(h); clearTimeout(r); };
-  }, [onDone]);
-  return (
-    <div className={`fixed top-5 right-5 z-[100] flex items-start gap-3 bg-white shadow-lg rounded-xl px-4 py-3 max-w-sm border border-[#E5EAE8] transition-all duration-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
-      <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${type === 'error' ? 'bg-red-100' : 'bg-emerald-100'}`}>
-        {type === 'error'
-          ? <svg className="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-          : <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
-        }
-      </div>
-      <p className="text-sm text-[#374151] leading-snug">{message}</p>
-    </div>
-  );
-}
 
 const inputCls = 'w-full text-sm text-[#111827] border border-[#D1D5DB] rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[#0D4C3C] transition-colors placeholder:text-[#9CA3AF] bg-white';
 
@@ -221,7 +203,7 @@ function StepIndicator({ current, steps, completed, onJump }: {
   current: number; steps: typeof WIZARD_STEPS; completed: Set<number>; onJump: (n: number) => void;
 }) {
   return (
-    <div className="flex items-center gap-0 px-10 py-4 border-b border-[#E5EAE8] bg-white overflow-x-auto flex-shrink-0">
+    <div className="flex items-center gap-0 px-10 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] overflow-x-auto flex-shrink-0">
       {steps.map((step, idx) => {
         const isActive = step.id === current;
         const isDone = completed.has(step.id) && !isActive;
@@ -1357,7 +1339,7 @@ export function BrandBrainPage() {
       {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
 
       {/* Header */}
-      <div className="px-10 py-4 border-b border-[#E5EAE8] bg-white flex items-center justify-between flex-shrink-0">
+      <div className="px-10 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-xl font-bold text-[#111827]">Brand Brain</h1>
@@ -1396,7 +1378,7 @@ export function BrandBrainPage() {
       </div>
 
       {/* Navigation footer */}
-      <div className="px-10 py-4 border-t border-[#E5EAE8] bg-white flex items-center justify-between flex-shrink-0">
+      <div className="px-10 py-4 border-t border-[#E5EAE8] bg-[#F8FAF9] flex items-center justify-between flex-shrink-0">
         <button onClick={goPrev} disabled={isFirstStep}
           className="flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#111827] px-4 py-2 rounded-xl hover:bg-[#F3F4F6] disabled:opacity-0 transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>

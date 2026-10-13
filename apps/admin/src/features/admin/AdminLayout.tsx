@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { adminAuthService } from '@/features/auth/auth.service';
+import { supabase } from '@/lib/supabase';
 
 const NAV = [
   {
@@ -61,10 +62,238 @@ const ROLE_LABEL: Record<string, string> = {
   viewer: 'Viewer',
 };
 
-export function AdminLayout() {
-  const { user, platformRole } = useAdminAuthStore();
+// ── Admin Search ──────────────────────────────────────────────────────────────
+
+interface AdminSearchResult {
+  id: string;
+  kind: 'org' | 'member';
+  title: string;
+  sub: string;
+}
+
+function AdminSearch() {
+  const [focused, setFocused] = useState(false);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<AdminSearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const open = focused && (query.trim().length > 0 || loading);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); inputRef.current?.focus(); setFocused(true); }
+      if (e.key === 'Escape') { inputRef.current?.blur(); setFocused(false); setQuery(''); setResults([]); }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setFocused(false);
+    };
+    document.addEventListener('mousedown', fn);
+    return () => document.removeEventListener('mousedown', fn);
+  }, []);
+
+  const search = useCallback(async (q: string) => {
+    if (!q.trim()) { setResults([]); return; }
+    setLoading(true);
+    const [orgs, members] = await Promise.all([
+      supabase.from('organizations').select('id, name').ilike('name', `%${q}%`).limit(5),
+      supabase.from('profiles').select('id, display_name, email').or(`display_name.ilike.%${q}%,email.ilike.%${q}%`).limit(4),
+    ]);
+    const list: AdminSearchResult[] = [
+      ...(orgs.data ?? []).map((o: any) => ({ id: o.id, kind: 'org' as const, title: o.name, sub: 'Organization' })),
+      ...(members.data ?? []).map((m: any) => ({ id: m.id, kind: 'member' as const, title: m.display_name ?? m.email, sub: m.email })),
+    ];
+    setResults(list);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => search(query), 280);
+    return () => clearTimeout(t);
+  }, [query, search]);
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-0 transition-all duration-200 ${
+        focused ? 'bg-[#F3F4F6] w-56' : 'bg-transparent w-40 hover:bg-[#F3F4F6]'
+      }`}>
+        {loading
+          ? <svg className="w-3.5 h-3.5 text-[#9CA3AF] animate-spin flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          : <svg className="w-3.5 h-3.5 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+        }
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onFocus={() => setFocused(true)}
+          placeholder={focused ? 'Search orgs, members…' : 'Search anything'}
+          className="flex-1 text-xs text-[#111827] placeholder-[#9CA3AF] focus:outline-none bg-transparent min-w-0"
+        />
+        {query && (
+          <button onClick={() => { setQuery(''); setResults([]); inputRef.current?.focus(); }}
+            className="text-[#9CA3AF] hover:text-[#374151] transition-colors flex-shrink-0">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        )}
+      </div>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1.5 w-72 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-[200]"
+          style={{ animation: 'slideDown 0.15s ease' }}>
+          <style>{`@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}`}</style>
+          {results.length > 0 ? (
+            <div className="max-h-64 overflow-y-auto divide-y divide-[#F9FAFB]">
+              {results.map(r => (
+                <button key={r.id}
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => {
+                    navigate(r.kind === 'org' ? '/organizations' : '/team');
+                    setFocused(false); setQuery(''); setResults([]);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F8FAF9] transition-colors text-left">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${r.kind === 'org' ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'bg-[#EDE9FE] text-[#5B21B6]'}`}>
+                    {r.title[0]?.toUpperCase() ?? '?'}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-[#111827] truncate">{r.title}</p>
+                    <p className="text-xs text-[#9CA3AF] truncate">{r.sub}</p>
+                  </div>
+                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${r.kind === 'org' ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'bg-[#EDE9FE] text-[#5B21B6]'}`}>
+                    {r.kind === 'org' ? 'Org' : 'Member'}
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : query.trim() && !loading ? (
+            <div className="px-4 py-6 text-center text-xs text-[#9CA3AF]">No results for "{query}"</div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Admin Notifications Bell ──────────────────────────────────────────────────
+
+interface AdminNotif {
+  id: string;
+  text: string;
+  sub: string;
+  time: string;
+  color: string;
+}
+
+function AdminNotificationsBell() {
+  const [open, setOpen] = useState(false);
+  const [notifs, setNotifs] = useState<AdminNotif[]>([]);
+  const ref = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', fn);
+    return () => document.removeEventListener('mousedown', fn);
+  }, []);
+
+  useEffect(() => {
+    async function load() {
+      const [recentOrgs, recentMembers] = await Promise.all([
+        supabase.from('organizations').select('id, name, created_at').order('created_at', { ascending: false }).limit(3),
+        supabase.from('platform_members').select('id, created_at, profiles(display_name, email)').order('created_at', { ascending: false }).limit(3),
+      ]);
+      const list: AdminNotif[] = [];
+      (recentOrgs.data ?? []).forEach((o: any) => {
+        list.push({ id: o.id, text: o.name, sub: 'New organization', time: new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'bg-[#E6F2EE] text-[#0D4C3C]' });
+      });
+      (recentMembers.data ?? []).forEach((m: any) => {
+        const name = m.profiles?.display_name ?? m.profiles?.email ?? 'Unknown';
+        list.push({ id: m.id, text: name, sub: 'New platform member', time: new Date(m.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'bg-[#EDE9FE] text-[#5B21B6]' });
+      });
+      setNotifs(list.sort((a, b) => b.time.localeCompare(a.time)).slice(0, 6));
+    }
+    load();
+  }, []);
+
+  const unread = notifs.length;
+
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={() => setOpen(o => !o)}
+        className="relative p-2 rounded-lg text-[#6B7280] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors"
+        title="Notifications">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+        {unread > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-1">
+            {unread > 9 ? '9+' : unread}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-50">
+          <div className="px-4 py-3 border-b border-[#F3F4F6] flex items-center justify-between">
+            <p className="text-sm font-semibold text-[#111827]">Notifications</p>
+            {unread > 0 && <span className="text-xs text-[#9CA3AF]">{unread} recent</span>}
+          </div>
+          {notifs.length === 0 ? (
+            <div className="px-4 py-8 text-center text-sm text-[#9CA3AF]">All caught up!</div>
+          ) : (
+            <div className="divide-y divide-[#F9FAFB] max-h-72 overflow-y-auto">
+              {notifs.map(n => (
+                <button key={n.id}
+                  onClick={() => { navigate(n.sub.includes('org') ? '/organizations' : '/team'); setOpen(false); }}
+                  className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#F8FAF9] transition-colors text-left">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5 ${n.color}`}>
+                    {n.text[0]?.toUpperCase() ?? '?'}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-[#111827] truncate">{n.text}</p>
+                    <p className="text-xs text-[#6B7280] mt-0.5">{n.sub}</p>
+                  </div>
+                  <span className="text-[10px] text-[#9CA3AF] flex-shrink-0 mt-1">{n.time}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Admin Profile ─────────────────────────────────────────────────────────────
+
+function AdminProfile() {
+  const { user, platformRole } = useAdminAuthStore();
+  const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  const displayName = user?.user_metadata?.display_name ?? user?.user_metadata?.full_name ?? '';
+  const email = user?.email ?? '';
+  const initials = displayName
+    ? displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+    : email.slice(0, 2).toUpperCase();
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    : null;
+  const roleLabel = ROLE_LABEL[platformRole ?? ''] ?? platformRole ?? '';
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', fn);
+    return () => document.removeEventListener('mousedown', fn);
+  }, []);
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -72,8 +301,51 @@ export function AdminLayout() {
     navigate('/auth/login', { replace: true });
   }
 
-  const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : '??';
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+        title={displayName || email}>
+        <div className="w-8 h-8 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+          {initials}
+        </div>
+        {displayName && (
+          <span className="text-sm font-medium text-[#374151] hidden sm:block">{displayName}</span>
+        )}
+      </button>
 
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-50">
+          <div className="px-4 py-4 bg-[#F8FAF9] border-b border-[#E5EAE8] flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[#111827] truncate">{displayName || email}</p>
+              {displayName && <p className="text-xs text-[#6B7280] truncate mt-0.5">{email}</p>}
+              {roleLabel && (
+                <span className="inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#E6F2EE] text-[#0D4C3C]">{roleLabel}</span>
+              )}
+              {memberSince && <p className="text-[10px] text-[#9CA3AF] mt-1">Member since {memberSince}</p>}
+            </div>
+          </div>
+          <div className="border-t border-[#F3F4F6]"/>
+          <button onClick={handleSignOut} disabled={signingOut}
+            className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
+            </svg>
+            {signingOut ? 'Signing out…' : 'Sign out'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Layout ────────────────────────────────────────────────────────────────────
+
+export function AdminLayout() {
   return (
     <div className="flex h-screen bg-[#F8FAF9] overflow-hidden">
       {/* Sidebar */}
@@ -109,34 +381,26 @@ export function AdminLayout() {
             </NavLink>
           ))}
         </nav>
-
-        {/* User */}
-        <div className="px-3 py-3 border-t border-[#E5EAE8]">
-          <div className="flex items-center gap-2.5 px-2 py-2">
-            <div className="w-7 h-7 bg-[#0D4C3C] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-              {initials}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-[#111827] truncate">{user?.email}</p>
-              <p className="text-[10px] text-[#9CA3AF]">{ROLE_LABEL[platformRole ?? ''] ?? platformRole}</p>
-            </div>
-          </div>
-          <button
-            onClick={handleSignOut}
-            disabled={signingOut}
-            className="w-full mt-1 flex items-center gap-2 px-3 py-2 text-xs font-medium text-[#6B7280] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            {signingOut ? 'Signing out…' : 'Sign out'}
-          </button>
-        </div>
       </aside>
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto">
-        <Outlet />
+      <main className="flex-1 overflow-hidden flex flex-col">
+        {/* Topbar */}
+        <div className="flex-shrink-0 flex items-center justify-between px-8 py-3 gap-4">
+          <div />
+          <div className="flex items-center gap-1.5">
+            <div className="w-px h-5 bg-[#E5EAE8] mx-0.5 flex-shrink-0"/>
+            <AdminSearch />
+            <div className="w-px h-5 bg-[#E5EAE8] mx-0.5 flex-shrink-0"/>
+            <AdminNotificationsBell />
+            <AdminProfile />
+          </div>
+        </div>
+
+        {/* Scrollable page area */}
+        <div className="flex-1 overflow-y-auto min-h-0 bg-[#F8FAF9]">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

@@ -31,6 +31,7 @@ export interface Subscription {
   cancel_at_period_end: boolean;
   extra_locations: number;
   addon_items: AddonItem[];
+  overage_protection: boolean;
 }
 
 export interface UsageSummary {
@@ -51,10 +52,13 @@ export interface UsageDay {
 
 function periodWindow(sub: Subscription, resetCadence: 'weekly' | 'monthly'): { start: Date; end: Date } {
   if (resetCadence === 'weekly') {
+    const anchor = new Date(sub.current_period_start);
     const now = new Date();
-    const start = new Date(now);
-    start.setDate(now.getDate() - 7);
-    return { start, end: now };
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    const weeksSinceAnchor = Math.floor((now.getTime() - anchor.getTime()) / msPerWeek);
+    const start = new Date(anchor.getTime() + weeksSinceAnchor * msPerWeek);
+    const end = new Date(start.getTime() + msPerWeek);
+    return { start, end };
   }
   return {
     start: new Date(sub.current_period_start),
@@ -106,7 +110,7 @@ export const billingService = {
     const rawAddons = (data.subscription_addons as { id: string; addon_type: string; quantity: number; unit_price_cents: number }[] | null) ?? [];
     const extraLocations = rawAddons.filter(a => a.addon_type === 'extra_location').reduce((s, a) => s + a.quantity, 0);
 
-    return {
+    const result: Subscription = {
       id: data.id,
       plan_id: data.plan_id,
       plan_slug: (plan?.slug ?? 'free') as PlanSlug,
@@ -118,7 +122,38 @@ export const billingService = {
       cancel_at_period_end: data.cancel_at_period_end,
       extra_locations: extraLocations,
       addon_items: rawAddons.map(a => ({ id: a.id, addon_type: a.addon_type, quantity: a.quantity, unit_price_cents: a.unit_price_cents })),
+      overage_protection: true,
     };
+
+    // Fetch overage_protection separately so a missing column (pre-migration) doesn't break the main query
+    try {
+      const { data: op } = await supabase
+        .from('subscriptions')
+        .select('overage_protection')
+        .eq('id', result.id)
+        .maybeSingle();
+      if (op && typeof (op as { overage_protection?: boolean }).overage_protection === 'boolean') {
+        result.overage_protection = (op as { overage_protection: boolean }).overage_protection;
+      }
+    } catch { /* column may not exist yet — default true stays */ }
+
+    return result;
+  },
+
+  async updateOverageProtection(subId: string, enabled: boolean): Promise<void> {
+    await supabase.from('subscriptions').update({ overage_protection: enabled }).eq('id', subId);
+  },
+
+  getOveragePricePerReplyCents(sub: Subscription, plans: Plan[]): number | null {
+    const plan = plans.find(p => p.id === sub.plan_id);
+    if (!plan) return null;
+    const replyEnt = plan.entitlements['published_replies'];
+    if (!replyEnt || replyEnt.value_type === 'UNLIMITED' || !replyEnt.limit_value) return null;
+    const monthlyPrice = sub.billing_interval === 'annual'
+      ? (plan.prices.find(p => p.interval === 'annual')?.amount_cents ?? 0) / 12
+      : (plan.prices.find(p => p.interval === 'monthly')?.amount_cents ?? 0);
+    if (monthlyPrice === 0) return null;
+    return Math.ceil(monthlyPrice / replyEnt.limit_value);
   },
 
   async getUsage(sub: Subscription, plans: Plan[]): Promise<UsageSummary> {
@@ -143,7 +178,13 @@ export const billingService = {
       ai_drafts_limit: draftEnt?.value_type === 'UNLIMITED' ? null : (draftEnt?.limit_value ?? null),
       published_replies_used: repliesUsed,
       published_replies_limit: replyEnt?.value_type === 'UNLIMITED' ? null : (replyEnt?.limit_value ?? null),
-      reset_label: resetCadence === 'weekly' ? 'Resets weekly' : 'Resets monthly',
+      reset_label: (() => {
+        const msLeft = end.getTime() - Date.now();
+        const daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 0) return 'Resets today';
+        if (daysLeft === 1) return 'Resets tomorrow';
+        return `${daysLeft} days remaining`;
+      })(),
       period_start: start.toISOString(),
       period_end: end.toISOString(),
     };

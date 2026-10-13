@@ -528,7 +528,7 @@ function FilterDropdown<T extends string>({ value, onChange, options }: {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 text-xs font-medium text-[#374151] border border-[#D1D5DB] hover:border-[#9CA3AF] bg-white rounded-lg px-3 py-1.5 transition-colors">
+        className="flex items-center gap-1.5 text-xs font-medium text-[#374151] border border-[#D1D5DB] hover:border-[#9CA3AF] bg-white rounded-xl px-3 py-1.5 transition-colors">
         <span>{current?.label}</span>
         <svg className="w-3 h-3 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
       </button>
@@ -886,7 +886,7 @@ export function InsightsPage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed top-5 right-5 z-[100] flex items-start gap-3 bg-white shadow-lg rounded-xl px-4 py-3 max-w-sm border border-[#E5EAE8]">
+        <div className="fixed bottom-5 left-5 z-[100] flex items-start gap-3 bg-white shadow-lg rounded-xl px-4 py-3 max-w-sm border border-[#E5EAE8]">
           <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${toast.type === 'error' ? 'bg-red-100' : 'bg-emerald-100'}`}>
             {toast.type === 'error'
               ? <svg className="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>

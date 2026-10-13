@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { googleService } from '@/features/google/google.service';
 import { useLocationStore } from '@/features/location/location.store';
+import { Toast } from '@/components/Toast';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -107,7 +108,7 @@ function FilterDropdown({ label, icon, options, value, onChange }: {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-xl border transition-colors ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
         <span className="flex-shrink-0">{icon}</span>
         <span className="text-xs">{active ? selectedLabel : label}</span>
         {active
@@ -153,7 +154,7 @@ function StarDistributionDropdown({ reviews }: { reviews: Review[] }) {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${open ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-xl border transition-colors ${open ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
         <svg className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
         </svg>
@@ -563,27 +564,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
   );
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
-
-function Toast({ message, type, onDone }: { message: string; type: 'success' | 'error'; onDone: () => void }) {
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    const h = setTimeout(() => setVisible(false), 3200);
-    const r = setTimeout(onDone, 3700);
-    return () => { clearTimeout(h); clearTimeout(r); };
-  }, [onDone]);
-  return (
-    <div className={`fixed top-5 right-5 z-[100] flex items-start gap-3 bg-white shadow-lg rounded-xl px-4 py-3 max-w-sm border border-[#E5EAE8] transition-all duration-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
-      <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${type === 'error' ? 'bg-red-100' : 'bg-emerald-100'}`}>
-        {type === 'error'
-          ? <svg className="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-          : <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
-        }
-      </div>
-      <p className="text-sm text-[#374151] leading-snug">{message}</p>
-    </div>
-  );
-}
+// ── Shortcuts Modal ───────────────────────────────────────────────────────────
 
 // ── Shortcuts Modal ───────────────────────────────────────────────────────────
 
@@ -805,7 +786,7 @@ function DateRangePicker({ from, to, onChange, pill = false, alignRight = false 
       <button onClick={() => setOpen(o => !o)}
         className={pill
           ? `px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${hasValue ? 'bg-white text-[#111827] shadow-sm' : 'text-[#6B7280] hover:text-[#374151]'}`
-          : `flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border transition-colors ${hasValue ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+          : `flex items-center gap-2 text-sm px-3 py-1.5 rounded-xl border transition-colors ${hasValue ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
         <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
@@ -1494,7 +1475,7 @@ export function ReviewsPage() {
               </svg>
               <input type="text" placeholder="Search reviewer or review…" value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1); }}
-                className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-lg focus:outline-none focus:border-[#0D4C3C] w-56 transition-colors"/>
+                className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-xl focus:outline-none focus:border-[#0D4C3C] w-56 transition-colors"/>
             </div>
 
             <FilterDropdown label="Rating" value={String(ratingFilter)}
@@ -1515,7 +1496,7 @@ export function ReviewsPage() {
             <button
               onClick={() => { setFlagFilter(f => !f); setPage(1); }}
               title="Show flagged only"
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${flagFilter ? 'bg-amber-50 border-amber-300 text-amber-600' : 'border-[#D1D5DB] text-[#6B7280] hover:border-amber-300 hover:text-amber-500'}`}>
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium border transition-colors ${flagFilter ? 'bg-amber-50 border-amber-300 text-amber-600' : 'border-[#D1D5DB] text-[#6B7280] hover:border-amber-300 hover:text-amber-500'}`}>
               <svg className="w-3.5 h-3.5" fill={flagFilter ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21V5a2 2 0 012-2h14l-3 5 3 5H5v8"/>
               </svg>

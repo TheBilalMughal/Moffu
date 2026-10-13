@@ -47,7 +47,7 @@ export function AdminLoginPage() {
 
         {/* Logo */}
         <div className="mb-8 flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-[#0D4C3C] flex items-center justify-center">
+          <div className="w-8 h-8 bg-[#0D4C3C] rounded-lg flex items-center justify-center">
             <span className="text-sm font-bold text-white">M</span>
           </div>
           <div className="leading-none">
@@ -64,7 +64,7 @@ export function AdminLoginPage() {
               <p className="text-sm text-[#9CA3AF] mb-6">Platform team sign in.</p>
 
               {error && (
-                <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 text-sm text-red-700">
+                <div className="mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
                   {error}
                 </div>
               )}
@@ -83,7 +83,7 @@ export function AdminLoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
-                    className="w-full px-3 py-2.5 text-sm border border-[#E5EAE8] text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] disabled:opacity-50"
+                    className="w-full px-3 py-2.5 text-sm border border-[#E5EAE8] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] disabled:opacity-50"
                     placeholder="admin@example.com"
                   />
                 </div>
@@ -111,7 +111,7 @@ export function AdminLoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={loading}
-                      className="w-full px-3 py-2.5 pr-10 text-sm border border-[#E5EAE8] text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] disabled:opacity-50"
+                      className="w-full px-3 py-2.5 pr-10 text-sm border border-[#E5EAE8] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] disabled:opacity-50"
                       placeholder="••••••••"
                     />
                     <button
@@ -148,7 +148,7 @@ export function AdminLoginPage() {
                 <button
                   type="submit"
                   disabled={loading || !email || !password}
-                  className="w-full py-2.5 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold transition-colors disabled:opacity-50 mt-1"
+                  className="w-full py-2.5 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 mt-1"
                 >
                   {loading ? 'Signing in…' : 'Sign in'}
                 </button>
@@ -171,13 +171,13 @@ export function AdminLoginPage() {
               <p className="text-sm text-[#9CA3AF] mb-6">Enter your email and we'll send a reset link.</p>
 
               {forgotSent ? (
-                <div className="px-4 py-4 bg-[#E6F2EE] border border-[#A7D7C5] text-sm text-[#0D4C3C]">
+                <div className="px-4 py-4 bg-[#E6F2EE] border border-[#A7D7C5] rounded-lg text-sm text-[#0D4C3C]">
                   Reset link sent to <strong>{forgotEmail}</strong>. Check your inbox.
                 </div>
               ) : (
                 <form onSubmit={handleForgot} noValidate className="space-y-4">
                   {forgotError && (
-                    <div className="px-4 py-3 bg-red-50 border border-red-200 text-sm text-red-700">
+                    <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
                       {forgotError}
                     </div>
                   )}
@@ -192,14 +192,14 @@ export function AdminLoginPage() {
                       onChange={(e) => setForgotEmail(e.target.value)}
                       required
                       disabled={forgotLoading}
-                      className="w-full px-3 py-2.5 text-sm border border-[#E5EAE8] text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] disabled:opacity-50"
+                      className="w-full px-3 py-2.5 text-sm border border-[#E5EAE8] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] disabled:opacity-50"
                       placeholder="admin@example.com"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={forgotLoading || !forgotEmail}
-                    className="w-full py-2.5 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold transition-colors disabled:opacity-50"
+                    className="w-full py-2.5 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
                   >
                     {forgotLoading ? 'Sending…' : 'Send reset link'}
                   </button>

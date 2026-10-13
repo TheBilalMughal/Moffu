@@ -212,7 +212,7 @@ function GlobalSearch() {
 
   return (
     <div ref={wrapRef} className="relative">
-      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border-0 transition-all duration-200 ${
+      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border-0 transition-all duration-200 ${
         focused ? 'bg-[#F3F4F6] w-56' : 'bg-transparent w-40 hover:bg-[#F3F4F6]'
       }`}>
         {loading

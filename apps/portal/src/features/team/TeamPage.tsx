@@ -5,7 +5,7 @@ import { useAuthStore } from '@/features/auth/auth.store';
 import { supabase } from '@/lib/supabase';
 import { teamService, TeamMember, TeamInvitation, MemberRole } from './team.service';
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ Helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 function initials(name: string | null, email: string) {
   if (name) {
@@ -43,7 +43,7 @@ function RoleBadge({ role }: { role: MemberRole }) {
   );
 }
 
-// â”€â”€ Invite Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ Invite Modal â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 interface InviteModalProps {
   orgId: string;
@@ -52,14 +52,27 @@ interface InviteModalProps {
   onSuccess: () => void;
 }
 
+const INVITE_ROLES: { value: MemberRole; label: string; desc: string }[] = [
+  { value: 'viewer',  label: 'Viewer',  desc: 'Read-only access' },
+  { value: 'manager', label: 'Manager', desc: 'Can reply to reviews' },
+  { value: 'admin',   label: 'Admin',   desc: 'Full access except billing' },
+];
+
 function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps) {
-  const [email,   setEmail]   = useState('');
-  const [role,    setRole]    = useState<MemberRole>('viewer');
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [email,      setEmail]      = useState('');
+  const [role,       setRole]       = useState<MemberRole>('viewer');
+  const [roleOpen,   setRoleOpen]   = useState(false);
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState('');
+  const inputRef  = useRef<HTMLInputElement>(null);
+  const roleRef   = useRef<HTMLDivElement>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (roleRef.current && !roleRef.current.contains(e.target as Node)) setRoleOpen(false); };
+    document.addEventListener('mousedown', fn);
+    return () => document.removeEventListener('mousedown', fn);
+  }, []);
 
   const atLimit = seatsLeft !== null && seatsLeft <= 0;
 
@@ -88,7 +101,7 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           {atLimit && (
-            <div className="bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800 flex items-center justify-between gap-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-xs text-amber-800 flex items-center justify-between gap-4">
               <span>Your plan has no remaining seats.</span>
               <Link to="/billing" onClick={onClose} className="font-semibold underline whitespace-nowrap">
                 Upgrade plan
@@ -106,26 +119,39 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
               onChange={(e) => setEmail(e.target.value)}
               placeholder="teammate@example.com"
               disabled={atLimit}
-              className="w-full border border-[#D1D5DB] px-3 py-2 text-sm text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]"
+              className="w-full border border-[#D1D5DB] rounded-lg px-3 py-2 text-sm text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]"
             />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-[#374151] mb-1.5">Role</label>
-            <div className="relative">
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value as MemberRole)}
+            <div className="relative" ref={roleRef}>
+              <button
+                type="button"
                 disabled={atLimit}
-                className="w-full appearance-none border border-[#D1D5DB] px-3 py-2 text-sm text-[#111827] bg-white focus:outline-none focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] pr-8"
+                onClick={() => setRoleOpen(o => !o)}
+                className={`w-full flex items-center justify-between px-3 py-2 text-sm border rounded-lg transition-colors ${atLimit ? 'bg-[#F9FAFB] text-[#9CA3AF] border-[#D1D5DB] cursor-not-allowed' : 'bg-white text-[#111827] border-[#D1D5DB] hover:border-[#0D4C3C]'}`}
               >
-                <option value="viewer">Viewer â€” read-only access</option>
-                <option value="manager">Manager â€” can reply to reviews</option>
-                <option value="admin">Admin â€” full access except billing</option>
-              </select>
-              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+                <span>{INVITE_ROLES.find(r => r.value === role)?.label ?? 'Viewer'}</span>
+                <svg className="w-4 h-4 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {roleOpen && !atLimit && (
+                <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1 overflow-hidden">
+                  {INVITE_ROLES.map(r => (
+                    <button
+                      key={r.value}
+                      type="button"
+                      onClick={() => { setRole(r.value); setRoleOpen(false); }}
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 text-sm transition-colors ${r.value === role ? 'bg-[#F0F7F5] text-[#0D4C3C] font-medium' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
+                    >
+                      <span>{r.label}</span>
+                      <span className="text-xs text-[#9CA3AF]">{r.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -138,9 +164,9 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
             <button
               type="submit"
               disabled={loading || atLimit}
-              className="px-5 py-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-5 py-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Sendingâ€¦' : 'Send invitation'}
+              {loading ? 'Sending…' : 'Send invitation'}
             </button>
           </div>
         </form>
@@ -149,7 +175,7 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
   );
 }
 
-// â”€â”€ Role Change Dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ Role Change Dropdown â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 function RoleMenu({ orgId, memberId, current, onDone }: {
   orgId: string; memberId: string; current: MemberRole; onDone: () => void;
@@ -186,7 +212,7 @@ function RoleMenu({ orgId, memberId, current, onDone }: {
         </svg>
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-[#E5EAE8] rounded-lg shadow-sm z-20 min-w-[110px] overflow-hidden">
+        <div className="absolute top-full left-0 mt-1 bg-white border border-[#E5EAE8] rounded-xl shadow-sm z-20 min-w-[110px] overflow-hidden">
           {(['admin', 'manager', 'viewer'] as MemberRole[]).map((r) => (
             <button
               key={r}
@@ -202,7 +228,7 @@ function RoleMenu({ orgId, memberId, current, onDone }: {
   );
 }
 
-// â”€â”€ TeamPage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// â"€â"€ TeamPage â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 
 export function TeamPage() {
   const orgId = useOrgStore((s) => s.orgId);
@@ -217,10 +243,18 @@ export function TeamPage() {
   const [actionErr,   setActionErr]   = useState('');
   const [myRole,      setMyRole]      = useState<MemberRole | null>(null);
 
-  // â”€â”€ Filters â”€â”€
-  const [search,     setSearch]     = useState('');
-  const [roleFilter, setRoleFilter] = useState<MemberRole | 'all'>('all');
-  const [tab,        setTab]        = useState<'members' | 'invitations'>('members');
+  // ── Filters ──
+  const [search,          setSearch]          = useState('');
+  const [roleFilter,      setRoleFilter]      = useState<MemberRole | 'all'>('all');
+  const [tab,             setTab]             = useState<'members' | 'invitations'>('members');
+  const [roleFilterOpen,  setRoleFilterOpen]  = useState(false);
+  const roleFilterRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (roleFilterRef.current && !roleFilterRef.current.contains(e.target as Node)) setRoleFilterOpen(false); };
+    document.addEventListener('mousedown', fn);
+    return () => document.removeEventListener('mousedown', fn);
+  }, []);
 
   const canManage = myRole === 'owner' || myRole === 'admin';
 
@@ -228,7 +262,7 @@ export function TeamPage() {
     if (!orgId || !user) return;
     setLoading(true);
 
-    // Fetch own role independently â€” canManage must not wait for full members list
+    // Fetch own role independently â€" canManage must not wait for full members list
     const { data: ownRow } = await supabase
       .from('org_members')
       .select('role')
@@ -267,7 +301,7 @@ export function TeamPage() {
     load();
   }
 
-  // â”€â”€ Filtered data â”€â”€
+  // â"€â"€ Filtered data â"€â"€
   const filteredMembers = members.filter((m) => {
     const term = search.toLowerCase();
     const matchesSearch = !term ||
@@ -286,7 +320,7 @@ export function TeamPage() {
 
   const seatsLeft = seatLimit !== null ? seatLimit - seatUsed : null;
 
-  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â"€â"€ Render â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   return (
     <div className="px-8 py-8">
 
@@ -299,7 +333,7 @@ export function TeamPage() {
         {canManage && (
           <button
             onClick={() => setShowInvite(true)}
-            className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-4 py-2.5 transition-colors"
+            className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -339,7 +373,7 @@ export function TeamPage() {
       )}
 
       {actionErr && (
-        <div className="mb-4 bg-red-50 border border-red-200 px-4 py-3 text-xs text-red-700">{actionErr}</div>
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-xs text-red-700">{actionErr}</div>
       )}
 
       {!orgId ? (
@@ -382,7 +416,7 @@ export function TeamPage() {
                   placeholder="Search name or emailâ€¦"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] focus:outline-none focus:border-[#0D4C3C] w-52 placeholder-[#9CA3AF]"
+                  className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-xl focus:outline-none focus:border-[#0D4C3C] w-52 placeholder-[#9CA3AF]"
                 />
                 {search && (
                   <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151]">
@@ -394,25 +428,36 @@ export function TeamPage() {
               </div>
 
               {/* Role filter */}
-              <div className="relative">
-                <select
-                  value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value as MemberRole | 'all')}
-                  className="appearance-none border border-[#D1D5DB] pl-3 pr-7 py-1.5 text-sm text-[#374151] bg-white focus:outline-none focus:border-[#0D4C3C]"
+              <div className="relative" ref={roleFilterRef}>
+                <button
+                  type="button"
+                  onClick={() => setRoleFilterOpen(o => !o)}
+                  className={`flex items-center gap-1.5 pl-3 pr-2.5 py-1.5 text-sm border rounded-xl transition-colors ${roleFilter !== 'all' ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#374151] hover:border-[#0D4C3C] bg-white'}`}
                 >
-                  <option value="all">All roles</option>
-                  {ALL_ROLES.map((r) => (
-                    <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                  ))}
-                </select>
-                <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                  <span>{roleFilter === 'all' ? 'All roles' : ROLE_LABELS[roleFilter]}</span>
+                  <svg className="w-3.5 h-3.5 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {roleFilterOpen && (
+                  <div className="absolute top-full right-0 mt-1.5 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1 min-w-[130px]">
+                    {(['all' as const, ...ALL_ROLES]).map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => { setRoleFilter(r); setRoleFilterOpen(false); }}
+                        className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${r === roleFilter ? 'bg-[#F0F7F5] text-[#0D4C3C] font-medium' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
+                      >
+                        {r === 'all' ? 'All roles' : ROLE_LABELS[r as MemberRole]}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* â”€â”€ Members tab â”€â”€ */}
+          {/* â"€â"€ Members tab â"€â"€ */}
           {tab === 'members' && (
             <div className="bg-white border border-[#E5EAE8]">
               {/* Table header */}
@@ -462,7 +507,7 @@ export function TeamPage() {
 
                         {/* Joined */}
                         <span className="text-xs text-[#9CA3AF]">
-                          {m.joined_at ? timeAgo(m.joined_at) : 'â€”'}
+                          {m.joined_at ? timeAgo(m.joined_at) : 'â€"'}
                         </span>
 
                         {/* Actions */}
@@ -487,7 +532,7 @@ export function TeamPage() {
             </div>
           )}
 
-          {/* â”€â”€ Invitations tab â”€â”€ */}
+          {/* â"€â"€ Invitations tab â"€â"€ */}
           {tab === 'invitations' && (
             <div className="bg-white border border-[#E5EAE8]">
               {/* Table header */}
