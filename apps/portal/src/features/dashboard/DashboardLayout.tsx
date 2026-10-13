@@ -144,35 +144,38 @@ interface SearchResult {
 }
 
 function GlobalSearch() {
-  const [open, setOpen] = useState(false);
+  const [focused, setFocused] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [visible, setVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const open = focused && (query.trim().length > 0 || loading);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openSearch(); }
-      if (e.key === 'Escape') closeSearch();
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setFocused(true);
+      }
+      if (e.key === 'Escape') { inputRef.current?.blur(); setFocused(false); setQuery(''); setResults([]); }
     }
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
-  function openSearch() {
-    setOpen(true);
-    requestAnimationFrame(() => {
-      setVisible(true);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    });
-  }
-
-  function closeSearch() {
-    setVisible(false);
-    setTimeout(() => { setOpen(false); setQuery(''); setResults([]); }, 200);
-  }
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', fn);
+    return () => document.removeEventListener('mousedown', fn);
+  }, []);
 
   const search = useCallback(async (q: string) => {
     if (!q.trim()) { setResults([]); return; }
@@ -199,105 +202,77 @@ function GlobalSearch() {
     return () => clearTimeout(t);
   }, [query, search]);
 
-  function highlight(text: string, q: string) {
-    if (!q.trim()) return text;
+  function snippet(text: string, q: string) {
+    if (!q.trim()) return text.slice(0, 80);
     const idx = text.toLowerCase().indexOf(q.toLowerCase());
-    if (idx === -1) return text.slice(0, 80);
+    if (idx === -1) return text.slice(0, 80) + (text.length > 80 ? '…' : '');
     const start = Math.max(0, idx - 20);
-    const snippet = (start > 0 ? '…' : '') + text.slice(start, idx + q.length + 40) + (start + idx + q.length + 40 < text.length ? '…' : '');
-    return snippet;
+    return (start > 0 ? '…' : '') + text.slice(start, idx + q.length + 40) + (idx + q.length + 40 < text.length ? '…' : '');
   }
 
   return (
-    <>
-      <button
-        onClick={openSearch}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#D1D5DB] text-[#9CA3AF] hover:border-[#0D4C3C] hover:text-[#0D4C3C] transition-colors text-xs group"
-      >
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
-        </svg>
-        <span className="hidden md:block w-28 text-left">Search anything</span>
-        <kbd className="hidden md:block text-[10px] bg-[#F3F4F6] text-[#9CA3AF] px-1.5 py-0.5 rounded font-mono group-hover:bg-[#E6F2EE] group-hover:text-[#0D4C3C] transition-colors">⌘K</kbd>
-      </button>
+    <div ref={wrapRef} className="relative">
+      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 ${
+        focused
+          ? 'border-[#0D4C3C] bg-white shadow-sm w-56'
+          : 'border-[#D1D5DB] bg-transparent w-40 hover:border-[#9CA3AF]'
+      }`}>
+        {loading
+          ? <svg className="w-3.5 h-3.5 text-[#9CA3AF] animate-spin flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          : <svg className="w-3.5 h-3.5 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+        }
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onFocus={() => setFocused(true)}
+          placeholder={focused ? 'Search reviews, reviewers…' : 'Search anything'}
+          className="flex-1 text-xs text-[#111827] placeholder-[#9CA3AF] focus:outline-none bg-transparent min-w-0"
+        />
+        {query && (
+          <button onClick={() => { setQuery(''); setResults([]); inputRef.current?.focus(); }}
+            className="text-[#9CA3AF] hover:text-[#374151] transition-colors flex-shrink-0">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        )}
+      </div>
 
+      {/* Suggestions dropdown */}
       {open && (
         <div
-          className="fixed inset-0 z-[300] flex items-start justify-center pt-[12vh]"
-          style={{ background: `rgba(17,24,39,${visible ? 0.45 : 0})`, transition: 'background 0.2s' }}
-          onClick={closeSearch}
+          className="absolute right-0 top-full mt-1.5 w-80 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-[200]"
+          style={{ animation: 'slideDown 0.15s ease' }}
         >
-          <div
-            className="w-full max-w-xl mx-4 bg-white rounded-2xl shadow-2xl border border-[#E5EAE8] overflow-hidden"
-            style={{
-              opacity: visible ? 1 : 0,
-              transform: visible ? 'translateY(0) scale(1)' : 'translateY(-12px) scale(0.97)',
-              transition: 'opacity 0.2s ease, transform 0.2s ease',
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Input row */}
-            <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#F3F4F6]">
-              <svg className="w-4 h-4 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
-              </svg>
-              <input
-                ref={inputRef}
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                placeholder="Search reviews, reviewers…"
-                className="flex-1 text-sm text-[#111827] placeholder-[#9CA3AF] focus:outline-none bg-transparent"
-              />
-              {loading && (
-                <svg className="w-4 h-4 text-[#9CA3AF] animate-spin flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-              )}
-              <kbd className="text-[10px] bg-[#F3F4F6] text-[#9CA3AF] px-1.5 py-0.5 rounded font-mono flex-shrink-0">Esc</kbd>
+          <style>{`@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}`}</style>
+          {results.length > 0 ? (
+            <div className="max-h-72 overflow-y-auto divide-y divide-[#F9FAFB]">
+              {results.map(r => (
+                <button
+                  key={r.id}
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => { navigate('/reviews'); setFocused(false); setQuery(''); setResults([]); }}
+                  className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#F8FAF9] transition-colors text-left"
+                >
+                  <div className="w-6 h-6 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">
+                    {r.reviewer_name?.[0]?.toUpperCase() ?? '?'}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-medium text-[#111827] truncate">{r.reviewer_name ?? 'Anonymous'}</span>
+                      <span className="text-[10px] text-amber-500 flex-shrink-0">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                    </div>
+                    {r.body && <p className="text-xs text-[#6B7280] mt-0.5 line-clamp-1">{snippet(r.body, query)}</p>}
+                    {r.location_name && <p className="text-[10px] text-[#9CA3AF] mt-0.5">{r.location_name}</p>}
+                  </div>
+                </button>
+              ))}
             </div>
-
-            {/* Results */}
-            {results.length > 0 ? (
-              <div className="max-h-80 overflow-y-auto divide-y divide-[#F9FAFB]">
-                {results.map(r => (
-                  <button
-                    key={r.id}
-                    onClick={() => { navigate('/reviews'); closeSearch(); }}
-                    className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#F8FAF9] transition-colors text-left"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-xs font-semibold flex-shrink-0 mt-0.5">
-                      {r.reviewer_name?.[0]?.toUpperCase() ?? '?'}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-[#111827] truncate">{r.reviewer_name ?? 'Anonymous'}</span>
-                        <span className="text-xs text-amber-500 flex-shrink-0">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
-                      </div>
-                      {r.body && (
-                        <p className="text-xs text-[#6B7280] mt-0.5 line-clamp-1">{highlight(r.body, query)}</p>
-                      )}
-                      {r.location_name && (
-                        <p className="text-[10px] text-[#9CA3AF] mt-0.5">{r.location_name}</p>
-                      )}
-                    </div>
-                    <svg className="w-3.5 h-3.5 text-[#D1D5DB] flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
-                    </svg>
-                  </button>
-                ))}
-              </div>
-            ) : query.trim() && !loading ? (
-              <div className="px-4 py-8 text-center text-sm text-[#9CA3AF]">No results for "{query}"</div>
-            ) : !query.trim() ? (
-              <div className="px-4 py-5 flex items-center gap-2 text-xs text-[#9CA3AF]">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Type to search across reviews and reviewers
-              </div>
-            ) : null}
-          </div>
+          ) : query.trim() && !loading ? (
+            <div className="px-4 py-6 text-center text-xs text-[#9CA3AF]">No results for "{query}"</div>
+          ) : null}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -649,6 +624,7 @@ export function DashboardLayout() {
           </div>
           <div className="flex items-center gap-1.5">
             <GlobalSearch />
+            <div className="w-px h-5 bg-[#E5EAE8] mx-0.5 flex-shrink-0"/>
             <NotificationsBell />
             <TopbarProfile />
           </div>
