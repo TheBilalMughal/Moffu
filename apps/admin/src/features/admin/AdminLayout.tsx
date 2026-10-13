@@ -352,7 +352,7 @@ export function AdminLayout() {
       <aside className="w-56 flex-shrink-0 bg-white border-r border-[#E5EAE8] flex flex-col">
         {/* Logo */}
         <div className="px-5 py-4 border-b border-[#E5EAE8] flex flex-col gap-0.5">
-          <img src="/logo.png" alt="Moffu" className="h-7 w-auto" />
+          <img src="/images/logo.png" alt="Moffu" className="h-7 w-auto" />
           <p className="text-[10px] text-[#9CA3AF] uppercase tracking-widest">Admin</p>
         </div>
 

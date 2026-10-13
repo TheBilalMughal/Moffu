@@ -4,7 +4,7 @@ import { env } from '@/lib/env';
 function LogoMark({ href }: { href: string }) {
   return (
     <a href={href} className="flex items-center w-fit">
-      <img src="/logo.png" alt="Moffu" className="h-8 w-auto" />
+      <img src="/images/logo.png" alt="Moffu" className="h-8 w-auto" />
     </a>
   );
 }
@@ -44,7 +44,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         <header className="flex items-center justify-between px-8 py-5 lg:justify-end">
           {/* Mobile logo */}
           <div className="flex items-center lg:hidden">
-            <img src="/logo.png" alt="Moffu" className="h-7 w-auto" />
+            <img src="/images/logo.png" alt="Moffu" className="h-7 w-auto" />
           </div>
           <a
             href={env.webUrl}
