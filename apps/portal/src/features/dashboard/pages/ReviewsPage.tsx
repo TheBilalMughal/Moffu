@@ -1204,6 +1204,7 @@ export function ReviewsPage() {
   const [focusedIdx, setFocusedIdx] = useState(-1);
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showChart, setShowChart] = useState(true);
 
   async function loadReviews() {
     const { data } = await supabase
@@ -1460,6 +1461,12 @@ export function ReviewsPage() {
           <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => setShowChart(s => !s)} title={showChart ? 'Hide chart' : 'Show chart'}
+            className={`p-2 rounded-lg transition-colors ${showChart ? 'text-[#0D4C3C] bg-[#E6F2EE]' : 'text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6]'}`}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+            </svg>
+          </button>
           <button onClick={() => setShowShortcuts(true)} title="Keyboard shortcuts"
             className="p-2 rounded-lg text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1485,7 +1492,7 @@ export function ReviewsPage() {
       </div>
 
       {/* Chart — full width */}
-      <div className="px-10 pt-4 pb-5 flex-shrink-0">
+      {showChart && <div className="px-10 pt-4 pb-5 flex-shrink-0">
         <ReviewsLineChart
           reviews={activeReviews}
           totalReviews={activeReviews.length}
@@ -1493,7 +1500,7 @@ export function ReviewsPage() {
           replyRate={replyRate}
           avgResponseTime={avgResponseTime}
         />
-      </div>
+      </div>}
 
       {/* Filter bar + Table */}
       <div className="flex-1 flex flex-col min-h-0">
