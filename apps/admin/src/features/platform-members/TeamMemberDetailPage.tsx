@@ -201,7 +201,7 @@ export function TeamMemberDetailPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h1 className="text-2xl font-bold text-[#111827]">{member.displayName}</h1>
-            <span className={`inline-block px-2 py-0.5 text-xs font-semibold ${statusColor}`}>{statusLabel}</span>
+            <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${statusColor}`}>{statusLabel}</span>
           </div>
           <p className="text-sm text-[#9CA3AF] font-mono">#{member.displayId}</p>
         </div>
@@ -210,7 +210,7 @@ export function TeamMemberDetailPage() {
             <button
               onClick={handleToggleActive}
               disabled={toggling}
-              className={`px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded transition-colors disabled:opacity-50 ${
                 member.isActive
                   ? 'bg-[#FEF2F2] text-red-700 hover:bg-red-100'
                   : 'bg-[#ECFDF5] text-[#065F46] hover:bg-green-100'
@@ -235,7 +235,7 @@ export function TeamMemberDetailPage() {
           <div className="px-6 py-3.5 flex items-center gap-4">
             <dt className="w-32 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Role</dt>
             <dd>
-              <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold ${ROLE_COLOR[member.role]}`}>
+              <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${ROLE_COLOR[member.role]}`}>
                 {ROLE_LABEL[member.role]}
               </span>
             </dd>

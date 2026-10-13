@@ -208,7 +208,7 @@ export function PlatformMembersPage() {
           placeholder="Search by name or email…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+          className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
         />
       </div>
 
@@ -255,12 +255,12 @@ export function PlatformMembersPage() {
                   </td>
                   <td className="px-5 py-4 text-[#374151]">{m.email}</td>
                   <td className="px-5 py-4">
-                    <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLOR[m.contact_status]}`}>
+                    <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${STATUS_COLOR[m.contact_status]}`}>
                       {STATUS_LABEL[m.contact_status]}
                     </span>
                   </td>
                   <td className="px-5 py-4">
-                    <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold ${ROLE_COLOR[m.role] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
+                    <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${ROLE_COLOR[m.role] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
                       {ROLE_LABEL[m.role] ?? m.role}
                     </span>
                   </td>

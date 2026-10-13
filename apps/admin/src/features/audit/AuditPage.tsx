@@ -86,7 +86,7 @@ export function AuditPage() {
           placeholder="Filter events…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+          className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
         />
       </div>
 
@@ -128,7 +128,7 @@ export function AuditPage() {
                     {e.actor_email ?? (e.actor_id ? e.actor_id.slice(0, 8) + '…' : '—')}
                   </td>
                   <td className="px-5 py-3">
-                    <span className="font-mono text-xs text-[#111827] bg-[#F3F4F6] px-2 py-0.5">{e.action}</span>
+                    <span className="font-mono text-xs text-[#111827] bg-[#F3F4F6] rounded px-2 py-0.5">{e.action}</span>
                   </td>
                   <td className="px-5 py-3 text-xs text-[#374151]">
                     {e.resource_type && (

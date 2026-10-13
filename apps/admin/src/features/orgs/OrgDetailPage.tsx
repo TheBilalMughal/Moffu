@@ -124,7 +124,7 @@ export function OrgDetailPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h1 className="text-2xl font-bold text-[#111827]">{org.name}</h1>
-            <span className={`inline-block px-2 py-0.5 text-xs font-semibold capitalize ${orgStatusColor}`}>{org.status}</span>
+            <span className={`inline-block px-2 py-0.5 text-xs font-semibold capitalize rounded ${orgStatusColor}`}>{org.status}</span>
           </div>
           <p className="text-sm text-[#9CA3AF] font-mono">#{org.displayId}</p>
         </div>
@@ -141,7 +141,7 @@ export function OrgDetailPage() {
               label: 'Plan',
               value: (
                 org.plan
-                  ? <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold capitalize ${PLAN_COLOR[org.plan] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>{org.plan}</span>
+                  ? <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold capitalize rounded ${PLAN_COLOR[org.plan] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>{org.plan}</span>
                   : '—'
               ),
             },

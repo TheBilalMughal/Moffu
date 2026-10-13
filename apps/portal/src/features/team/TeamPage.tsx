@@ -37,7 +37,7 @@ const ALL_ROLES: MemberRole[] = ['owner', 'admin', 'manager', 'viewer'];
 
 function RoleBadge({ role }: { role: MemberRole }) {
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium ${ROLE_COLORS[role]}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded ${ROLE_COLORS[role]}`}>
       {ROLE_LABELS[role]}
     </span>
   );
@@ -76,7 +76,7 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4" onClick={onClose}>
-      <div className="bg-white border border-[#E5EAE8] w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white border border-[#E5EAE8] rounded-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5EAE8]">
           <h2 className="text-sm font-semibold text-[#111827]">Invite team member</h2>
           <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#374151] p-1">
@@ -186,7 +186,7 @@ function RoleMenu({ orgId, memberId, current, onDone }: {
         </svg>
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-[#E5EAE8] shadow-sm z-20 min-w-[110px]">
+        <div className="absolute top-full left-0 mt-1 bg-white border border-[#E5EAE8] rounded-lg shadow-sm z-20 min-w-[110px] overflow-hidden">
           {(['admin', 'manager', 'viewer'] as MemberRole[]).map((r) => (
             <button
               key={r}
@@ -319,7 +319,7 @@ export function TeamPage() {
               ? `${seatsLeft! > 0 ? seatsLeft : 0} left`
               : seatUsed },
         ].map(({ label, value }) => (
-          <div key={label} className="bg-white border border-[#E5EAE8] px-5 py-4">
+          <div key={label} className="bg-white border border-[#E5EAE8] rounded-xl px-5 py-4">
             <p className="text-xs text-[#6B7280] font-medium">{label}</p>
             <p className="mt-1 text-xl font-bold text-[#111827]">{value}</p>
           </div>

@@ -118,13 +118,13 @@ export function OrgsPage() {
             placeholder="Search orgs or owner…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
           />
         </div>
         <select
           value={planFilter}
           onChange={(e) => setPlanFilter(e.target.value)}
-          className="px-3 py-2 text-sm border border-[#E5EAE8] bg-white text-[#111827] focus:outline-none focus:border-[#0D4C3C]"
+          className="px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-white text-[#111827] focus:outline-none focus:border-[#0D4C3C]"
         >
           <option value="all">All plans</option>
           <option value="free">Free</option>
@@ -187,7 +187,7 @@ export function OrgsPage() {
                   <td className="px-5 py-4 text-[#374151]">{org.owner_email ?? '—'}</td>
                   <td className="px-5 py-4">
                     {org.plan ? (
-                      <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold ${PLAN_COLOR[org.plan] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
+                      <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${PLAN_COLOR[org.plan] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
                         {org.plan}
                       </span>
                     ) : (

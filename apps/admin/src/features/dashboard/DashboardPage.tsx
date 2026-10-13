@@ -22,7 +22,7 @@ function StatCard({ label, value, icon }: { label: string; value: number | strin
     <div className="bg-white border border-[#E5EAE8] rounded-xl px-6 py-5">
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide">{label}</p>
-        <div className="w-8 h-8 bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center">{icon}</div>
+        <div className="w-8 h-8 bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center rounded-lg">{icon}</div>
       </div>
       <p className="text-3xl font-bold text-[#111827]">{value}</p>
     </div>
@@ -132,7 +132,7 @@ export function DashboardPage() {
           <div className="px-6 py-4 border-b border-[#E5EAE8] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Action Required</h2>
             {actions.length > 0 && (
-              <span className="text-xs font-semibold text-white bg-red-500 px-2 py-0.5">{actions.length}</span>
+              <span className="text-xs font-semibold text-white bg-red-500 px-2 py-0.5 rounded">{actions.length}</span>
             )}
           </div>
           {loading ? (
@@ -176,7 +176,7 @@ export function DashboardPage() {
               <Link
                 key={link.to}
                 to={link.to}
-                className="border border-[#E5EAE8] p-4 hover:bg-[#F8FAF9] hover:border-[#0D4C3C] transition-colors group"
+                className="border border-[#E5EAE8] rounded-lg p-4 hover:bg-[#F8FAF9] hover:border-[#0D4C3C] transition-colors group"
               >
                 <p className="text-sm font-semibold text-[#111827] group-hover:text-[#0D4C3C]">{link.label}</p>
                 <p className="text-xs text-[#9CA3AF] mt-0.5">{link.desc}</p>
