@@ -305,12 +305,13 @@ function smoothPath(pts: { x: number; y: number }[]): string {
   return d;
 }
 
-function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: replyRateProp, avgResponseTime: avgResponseTimeProp }: {
+function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: replyRateProp, avgResponseTime: avgResponseTimeProp, showLines = true }: {
   reviews: Review[];
   totalReviews: number;
   avgRatingStr: string;
   replyRate: string;
   avgResponseTime: string;
+  showLines?: boolean;
 }) {
   const [period, setPeriod] = useState<ChartPeriod>('week');
   const [chartFrom, setChartFrom] = useState('');
@@ -383,6 +384,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
 
   return (
     <div>
+      {showLines && <div>
       {/* Top row: summary+legend left, controls right */}
       <div className="flex items-start justify-between gap-4 mb-3 flex-wrap">
         <div>
@@ -541,6 +543,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
           );
         })()}
         </div>
+      </div>}
 
       {/* Stat cards — full width single row */}
       <div className="grid grid-cols-4 gap-3 mt-4">
@@ -1492,15 +1495,16 @@ export function ReviewsPage() {
       </div>
 
       {/* Chart — full width */}
-      {showChart && <div className="px-10 pt-4 pb-5 flex-shrink-0">
+      <div className="px-10 pt-4 pb-5 flex-shrink-0">
         <ReviewsLineChart
           reviews={activeReviews}
           totalReviews={activeReviews.length}
           avgRatingStr={activeReviews.length ? `${(activeReviews.reduce((s,r) => s + r.rating, 0) / activeReviews.length).toFixed(1)} ★` : '—'}
           replyRate={replyRate}
           avgResponseTime={avgResponseTime}
+          showLines={showChart}
         />
-      </div>}
+      </div>
 
       {/* Filter bar + Table */}
       <div className="flex-1 flex flex-col min-h-0">
