@@ -134,7 +134,7 @@ function PhoneInput({
         <button
           type="button"
           onClick={() => { setOpen(o => !o); setQuery(''); }}
-          className="flex items-center gap-1.5 h-full text-sm border border-[#E5EAE8] rounded-lg px-3 py-3 focus:outline-none focus:border-[#0D4C3C] transition-colors bg-white text-[#111827] whitespace-nowrap"
+          className="flex items-center gap-1.5 text-sm border border-[#E5EAE8] rounded-lg px-3 py-3 focus:outline-none focus:border-[#0D4C3C] transition-colors bg-white text-[#111827] whitespace-nowrap"
         >
           <span className="text-base leading-none">{countryFlag(country.flag)}</span>
           <span className="text-[#374151]">{country.dial}</span>
@@ -480,7 +480,7 @@ export function SettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
 
         {/* Account */}
-        <div className="bg-white rounded-xl border border-[#E5EAE8] overflow-hidden">
+        <div className="bg-white rounded-xl border border-[#E5EAE8]">
           <div className="px-6 py-4 border-b border-[#F3F4F6]">
             <h2 className="text-sm font-semibold text-[#111827]">Account</h2>
           </div>
