@@ -5,8 +5,8 @@ import { AdminAuthGuard } from '@/components/AuthGuard';
 import { AdminLoginPage } from '@/features/auth/pages/AdminLoginPage';
 import { AdminLayout } from '@/features/admin/AdminLayout';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
-import { OrgsPage } from '@/features/orgs/OrgsPage';
-import { OrgDetailPage } from '@/features/orgs/OrgDetailPage';
+import { ClientsPage } from '@/features/orgs/ClientsPage';
+import { ClientDetailPage } from '@/features/orgs/ClientDetailPage';
 import { PlatformMembersPage } from '@/features/platform-members/PlatformMembersPage';
 import { TeamMemberDetailPage } from '@/features/platform-members/TeamMemberDetailPage';
 import { RolesPage } from '@/features/roles/RolesPage';
@@ -33,8 +33,8 @@ export function App() {
           }
         >
           <Route index element={<DashboardPage />} />
-          <Route path="organizations" element={<OrgsPage />} />
-          <Route path="organizations/:id" element={<OrgDetailPage />} />
+          <Route path="clients" element={<ClientsPage />} />
+          <Route path="clients/:id" element={<ClientDetailPage />} />
           <Route path="team" element={<PlatformMembersPage />} />
           <Route path="team/:id" element={<TeamMemberDetailPage />} />
           <Route path="roles" element={<RolesPage />} />

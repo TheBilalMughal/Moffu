@@ -16,8 +16,8 @@ const NAV = [
     ),
   },
   {
-    to: '/organizations',
-    label: 'Organizations',
+    to: '/clients',
+    label: 'Clients',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -107,7 +107,7 @@ function AdminSearch() {
       supabase.from('profiles').select('id, display_name, email').or(`display_name.ilike.%${q}%,email.ilike.%${q}%`).limit(4),
     ]);
     const list: AdminSearchResult[] = [
-      ...(orgs.data ?? []).map((o: any) => ({ id: o.id, kind: 'org' as const, title: o.name, sub: 'Organization' })),
+      ...(orgs.data ?? []).map((o: any) => ({ id: o.id, kind: 'org' as const, title: o.name, sub: 'Client' })),
       ...(members.data ?? []).map((m: any) => ({ id: m.id, kind: 'member' as const, title: m.display_name ?? m.email, sub: m.email })),
     ];
     setResults(list);
@@ -154,7 +154,7 @@ function AdminSearch() {
                 <button key={r.id}
                   onMouseDown={e => e.preventDefault()}
                   onClick={() => {
-                    navigate(r.kind === 'org' ? '/organizations' : '/team');
+                    navigate(r.kind === 'org' ? '/clients' : '/team');
                     setFocused(false); setQuery(''); setResults([]);
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F8FAF9] transition-colors text-left">
@@ -210,7 +210,7 @@ function AdminNotificationsBell() {
       ]);
       const list: AdminNotif[] = [];
       (recentOrgs.data ?? []).forEach((o: any) => {
-        list.push({ id: o.id, text: o.name, sub: 'New organization', time: new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'bg-[#E6F2EE] text-[#0D4C3C]' });
+        list.push({ id: o.id, text: o.name, sub: 'New client', time: new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'bg-[#E6F2EE] text-[#0D4C3C]' });
       });
       (recentMembers.data ?? []).forEach((m: any) => {
         const name = m.profiles?.display_name ?? m.profiles?.email ?? 'Unknown';
@@ -250,7 +250,7 @@ function AdminNotificationsBell() {
             <div className="divide-y divide-[#F9FAFB] max-h-72 overflow-y-auto">
               {notifs.map(n => (
                 <button key={n.id}
-                  onClick={() => { navigate(n.sub.includes('org') ? '/organizations' : '/team'); setOpen(false); }}
+                  onClick={() => { navigate(n.sub.includes('client') ? '/clients' : '/team'); setOpen(false); }}
                   className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#F8FAF9] transition-colors text-left">
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5 ${n.color}`}>
                     {n.text[0]?.toUpperCase() ?? '?'}

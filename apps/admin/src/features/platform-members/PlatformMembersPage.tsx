@@ -25,8 +25,6 @@ const ROLE_COLOR: Record<PlatformRole, string> = {
   viewer: 'bg-[#F3F4F6] text-[#374151]',
 };
 
-type ContactStatus = 'active' | 'pending_verification' | 'suspended';
-
 interface Member {
   id: string;
   user_id: string;
@@ -34,7 +32,6 @@ interface Member {
   display_name: string;
   email: string;
   phone: string | null;
-  contact_status: ContactStatus;
   role: PlatformRole;
   is_active: boolean;
   created_at: string;
@@ -44,18 +41,6 @@ function canManage(platformRole: string | null) {
   return platformRole === 'super_admin' || platformRole === 'admin';
 }
 
-const STATUS_LABEL: Record<ContactStatus, string> = {
-  active: 'Active',
-  pending_verification: 'Pending',
-  suspended: 'Suspended',
-};
-
-const STATUS_COLOR: Record<ContactStatus, string> = {
-  active: 'bg-[#ECFDF5] text-[#065F46]',
-  pending_verification: 'bg-[#FFF7ED] text-[#9A3412]',
-  suspended: 'bg-[#FEF2F2] text-[#991B1B]',
-};
-
 export function PlatformMembersPage() {
   const { platformRole } = useAdminAuthStore();
   const [members, setMembers] = useState<Member[]>([]);
@@ -64,9 +49,6 @@ export function PlatformMembersPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<Member | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formPhone, setFormPhone] = useState('');
@@ -84,10 +66,10 @@ export function PlatformMembersPage() {
     const userIds = rows.map((m: { user_id: string }) => m.user_id);
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, display_id, display_name, email, phone, status')
+      .select('id, display_id, display_name, email, phone')
       .in('id', userIds);
 
-    type ProfileRow = { id: string; display_id: number | null; display_name: string; email: string | null; phone: string | null; status: string };
+    type ProfileRow = { id: string; display_id: number | null; display_name: string; email: string | null; phone: string | null };
     const profileById = new Map<string, ProfileRow>(
       (profiles ?? []).map((p: ProfileRow) => [p.id, p]),
     );
@@ -102,7 +84,6 @@ export function PlatformMembersPage() {
         display_name: p?.display_name ?? '—',
         email: p?.email ?? m.user_id,
         phone: p?.phone ?? null,
-        contact_status: (p?.status as ContactStatus) ?? 'pending_verification',
         role: m.role,
         is_active: m.is_active,
         created_at: m.created_at,
@@ -164,15 +145,6 @@ export function PlatformMembersPage() {
     loadMembers();
   }
 
-  async function handleDelete() {
-    if (!deleteConfirm) return;
-    setDeleting(true);
-    await supabase.from('platform_members').delete().eq('id', deleteConfirm.id);
-    setDeleting(false);
-    setDeleteConfirm(null);
-    loadMembers();
-  }
-
   const filtered = members.filter(
     (m) =>
       search.trim() === '' ||
@@ -220,7 +192,6 @@ export function PlatformMembersPage() {
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Name</th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Email</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Contact Status</th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Role</th>
               <th className="px-5 py-3 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Actions</th>
             </tr>
@@ -229,7 +200,7 @@ export function PlatformMembersPage() {
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i}>
-                  {Array.from({ length: 6 }).map((_, j) => (
+                  {Array.from({ length: 5 }).map((_, j) => (
                     <td key={j} className="px-5 py-4">
                       <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-24" />
                     </td>
@@ -238,7 +209,7 @@ export function PlatformMembersPage() {
               ))
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
+                <td colSpan={5} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
                   {search ? 'No members match your search.' : 'No team members yet.'}
                 </td>
               </tr>
@@ -256,39 +227,21 @@ export function PlatformMembersPage() {
                   </td>
                   <td className="px-5 py-4 text-[#374151]">{m.email}</td>
                   <td className="px-5 py-4">
-                    <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${STATUS_COLOR[m.contact_status]}`}>
-                      {STATUS_LABEL[m.contact_status]}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4">
                     <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${ROLE_COLOR[m.role] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
                       {ROLE_LABEL[m.role] ?? m.role}
                     </span>
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      {m.display_id != null ? (
-                        <Link
-                          to={`/team/${m.display_id}`}
-                          className="text-xs font-medium text-[#0D4C3C] hover:underline"
-                        >
-                          View
-                        </Link>
-                      ) : (
-                        <span className="text-xs text-[#9CA3AF]">View</span>
-                      )}
-                      {canManage(platformRole) && (
-                        <>
-                          <span className="text-[#E5EAE8]">|</span>
-                          <button
-                            onClick={() => setDeleteConfirm(m)}
-                            className="text-xs font-medium text-red-600 hover:underline"
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </div>
+                    {m.display_id != null ? (
+                      <Link
+                        to={`/team/${m.display_id}`}
+                        className="text-xs font-medium text-[#0D4C3C] hover:underline"
+                      >
+                        View
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-[#9CA3AF]">View</span>
+                    )}
                   </td>
                 </tr>
               ))
@@ -378,33 +331,6 @@ export function PlatformMembersPage() {
         </div>
       )}
 
-      {/* Delete Confirm Modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white w-full max-w-sm p-6 shadow-xl rounded-xl">
-            <h2 className="text-base font-bold text-[#111827] mb-2">Remove member?</h2>
-            <p className="text-sm text-[#6B7280] mb-5">
-              <span className="font-medium text-[#111827]">{deleteConfirm.display_name}</span> ({deleteConfirm.email}) will lose all platform access. This cannot be undone.
-            </p>
-            <div className="flex items-center justify-end gap-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                disabled={deleting}
-                className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5EAE8] hover:bg-[#F3F4F6] disabled:opacity-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
-              >
-                {deleting ? 'Removing…' : 'Remove member'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
