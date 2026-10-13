@@ -106,27 +106,25 @@ export function PlatformMembersPage() {
     setSaving(true);
 
     if (modal.mode === 'add') {
-      // Look up user by email via profiles
-      const { data: profile, error: profileErr } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', formEmail.trim().toLowerCase())
-        .maybeSingle();
+      // Call Edge Function — creates user if new, sends invite email, adds to platform_members
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-create-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ email: formEmail.trim().toLowerCase(), role: formRole }),
+        },
+      );
 
-      if (profileErr || !profile) {
-        setError('No user account found with that email address.');
-        setSaving(false);
-        return;
-      }
+      const result = await res.json();
 
-      const { error: insertErr } = await supabase.from('platform_members').insert({
-        user_id: profile.id,
-        role: formRole,
-        is_active: true,
-      });
-
-      if (insertErr) {
-        setError(insertErr.message);
+      if (!res.ok || !result.success) {
+        setError(result.error ?? 'Failed to create user.');
         setSaving(false);
         return;
       }
@@ -289,7 +287,7 @@ export function PlatformMembersPage() {
                   placeholder="user@example.com"
                   className="w-full px-3 py-2 text-sm border border-[#E5EAE8] text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
                 />
-                <p className="text-xs text-[#9CA3AF] mt-1">User must already have an account on the platform.</p>
+                <p className="text-xs text-[#9CA3AF] mt-1">New users will receive an email to set their password. Existing accounts will be added directly.</p>
               </div>
             )}
 
