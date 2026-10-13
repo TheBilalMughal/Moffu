@@ -99,10 +99,11 @@ Reply (output the reply text only, nothing else):`;
     const sysInstruction = { parts: [{ text: 'You are a customer service specialist. Output ONLY the reply text — no labels, no markdown, no extra commentary.' }] };
     const contents = [{ role: 'user', parts: [{ text: prompt }] }];
 
+    const gc = { temperature: 0.7, maxOutputTokens: 300 };
     const modelConfigs = [
-      { model: 'gemini-3.8-flash', body: { system_instruction: sysInstruction, contents, generationConfig: { temperature: 0.7, maxOutputTokens: 300, thinkingConfig: { thinkingBudget: 0 } } } },
-      { model: 'gemini-3.8-flash', body: { system_instruction: sysInstruction, contents, generationConfig: { temperature: 0.7, maxOutputTokens: 300, thinkingConfig: { thinkingBudget: 0 } } } },
-      { model: 'gemini-3.5-flash-lite', body: { system_instruction: sysInstruction, contents, generationConfig: { temperature: 0.7, maxOutputTokens: 300 } } },
+      { model: 'gemini-2.0-flash',  body: { system_instruction: sysInstruction, contents, generationConfig: gc } },
+      { model: 'gemini-1.5-flash',  body: { system_instruction: sysInstruction, contents, generationConfig: gc } },
+      { model: 'gemini-1.5-flash-8b', body: { system_instruction: sysInstruction, contents, generationConfig: gc } },
     ];
 
     let draft = '';
