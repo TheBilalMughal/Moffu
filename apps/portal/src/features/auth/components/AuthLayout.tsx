@@ -4,7 +4,7 @@ import { env } from '@/lib/env';
 function LogoMark({ href }: { href: string }) {
   return (
     <a href={href} className="flex items-center w-fit">
-      <img src="/images/logo.png" alt="Moffu" className="h-8 w-auto" />
+      <img src="/images/logo.png" alt="Moffu" className="h-8 w-auto self-start" style={{ filter: 'brightness(0) invert(1)' }} />
     </a>
   );
 }

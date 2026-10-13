@@ -47,7 +47,7 @@ export function AdminLoginPage() {
 
         {/* Logo */}
         <div className="mb-8 flex flex-col gap-0.5">
-          <img src="/images/logo.png" alt="Moffu" className="h-8 w-auto" />
+          <img src="/images/logo.png" alt="Moffu" className="h-8 w-auto self-start" />
           <p className="text-[10px] text-[#9CA3AF] uppercase tracking-widest">Admin</p>
         </div>
 
