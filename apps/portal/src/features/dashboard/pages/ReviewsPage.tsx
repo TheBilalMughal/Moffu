@@ -1540,16 +1540,21 @@ export function ReviewsPage() {
 
       {/* Header */}
       <div className="px-10 py-4 bg-white flex items-center justify-between gap-4 flex-shrink-0">
-        <div className="flex items-center gap-3">
+        <div>
           <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
-          {storeLocations.length >= 2 && <LocationPicker
-            locations={storeLocations}
-            selectedId={globalLocationId}
-            onSelect={setGlobalLocationId}
-            avgByLocation={avgByLocation}
-          />}
         </div>
         <div className="flex items-center gap-2">
+          {storeLocations.length >= 2 && (
+            <>
+              <LocationPicker
+                locations={storeLocations}
+                selectedId={globalLocationId}
+                onSelect={setGlobalLocationId}
+                avgByLocation={avgByLocation}
+              />
+              <div className="w-px h-5 bg-[#E5E7EB] flex-shrink-0"/>
+            </>
+          )}
           <button onClick={() => setShowShortcuts(true)} title="Keyboard shortcuts"
             className="p-2 rounded-lg text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
