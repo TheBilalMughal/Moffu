@@ -1455,7 +1455,7 @@ export function ReviewsPage() {
       )}
 
       {/* Header */}
-      <div className="px-10 py-4 bg-white flex items-center justify-between gap-4 flex-shrink-0">
+      <div className="px-10 py-4 flex items-center justify-between gap-4 flex-shrink-0">
         <div>
           <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
         </div>
@@ -1485,7 +1485,7 @@ export function ReviewsPage() {
       </div>
 
       {/* Chart — full width */}
-      <div className="px-10 pt-4 pb-5 bg-white flex-shrink-0">
+      <div className="px-10 pt-4 pb-5 flex-shrink-0">
         <ReviewsLineChart
           reviews={activeReviews}
           totalReviews={activeReviews.length}
@@ -1499,7 +1499,7 @@ export function ReviewsPage() {
       <div className="flex-1 flex flex-col min-h-0">
 
         {/* Filter bar — outside scroll, always visible */}
-        <div className="flex-shrink-0 bg-white border-b border-[#E5EAE8] px-10 py-2.5">
+        <div className="flex-shrink-0 border-b border-[#E5EAE8] px-10 py-2.5">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Status tabs */}
             {(['all','pending','draft_ready','replied'] as const).map(key => {
