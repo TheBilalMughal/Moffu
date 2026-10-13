@@ -91,11 +91,6 @@ function SidebarProfile() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  async function handleLogout() {
-    await authService.logout();
-    window.location.replace('/auth/login');
-  }
-
   return (
     <div ref={ref} className="relative">
       <button
@@ -131,16 +126,6 @@ function SidebarProfile() {
             </svg>
             Settings
           </NavLink>
-          <div className="border-t border-[#F3F4F6]" />
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-            </svg>
-            Sign out
-          </button>
         </div>
       )}
     </div>
@@ -234,6 +219,9 @@ function TopbarProfile() {
   const initials = displayName
     ? displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
     : email.slice(0, 2).toUpperCase();
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    : null;
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -252,18 +240,31 @@ function TopbarProfile() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="w-8 h-8 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-xs font-semibold hover:opacity-90 transition-opacity flex-shrink-0"
+        className="flex items-center gap-2 hover:opacity-90 transition-opacity"
         title={displayName || email}
       >
-        {initials}
+        <div className="w-8 h-8 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+          {initials}
+        </div>
+        {displayName && (
+          <span className="text-sm font-medium text-[#374151] hidden sm:block">{displayName.split(' ')[0]}</span>
+        )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-50">
-          <div className="px-4 py-3 border-b border-[#F3F4F6]">
-            <p className="text-sm font-semibold text-[#111827] truncate">{displayName || email}</p>
-            {displayName && <p className="text-xs text-[#9CA3AF] truncate mt-0.5">{email}</p>}
+        <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-50">
+          {/* Profile card */}
+          <div className="px-4 py-4 bg-[#F8FAF9] border-b border-[#E5EAE8] flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[#111827] truncate">{displayName || email}</p>
+              {displayName && <p className="text-xs text-[#6B7280] truncate mt-0.5">{email}</p>}
+              {memberSince && <p className="text-[10px] text-[#9CA3AF] mt-1">Member since {memberSince}</p>}
+            </div>
           </div>
+          {/* Actions */}
           <NavLink
             to="/settings"
             onClick={() => setOpen(false)}
