@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+﻿import { useEffect, useRef, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { brandBrainService, KeywordContext } from '@/features/brand-brain/brandBrain.service';
 import { useLocationStore } from '@/features/location/location.store';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type Review = { id: string; body: string; rating: number; published_at: string; location_id: string | null };
 type DateRange = '7d' | '30d' | '90d' | 'all';
 type Tab = 'keywords' | 'trends' | 'agent';
 
-// ── NLP helpers ───────────────────────────────────────────────────────────────
+// â”€â”€ NLP helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const STOP_WORDS = new Set([
   'the','a','an','and','or','but','in','on','at','to','for','of','with','by','from',
@@ -55,7 +55,7 @@ function reviewsMatchingKeyword(reviews: Review[], keyword: string): Review[] {
   return reviews.filter(r => r.body?.toLowerCase().includes(lower));
 }
 
-// ── Date utilities ─────────────────────────────────────────────────────────────
+// â”€â”€ Date utilities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function cutoffDate(range: DateRange): Date | null {
   if (range === 'all') return null;
@@ -77,7 +77,7 @@ function weekKey(dateStr: string): string {
   return monday.toISOString().slice(0, 10);
 }
 
-// ── Trend chart (SVG) ─────────────────────────────────────────────────────────
+// â”€â”€ Trend chart (SVG) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function TrendChart({ reviews }: { reviews: Review[] }) {
   const W = 680, H = 180, PAD = { top: 16, right: 20, bottom: 32, left: 36 };
@@ -99,7 +99,7 @@ function TrendChart({ reviews }: { reviews: Review[] }) {
   if (weeks.length < 2) {
     return (
       <div className="flex items-center justify-center h-48 border border-[#E5EAE8] rounded-xl bg-[#FAFAFA]">
-        <p className="text-xs text-[#9CA3AF]">Not enough data for trend chart — need at least 2 weeks of reviews.</p>
+        <p className="text-xs text-[#9CA3AF]">Not enough data for trend chart â€” need at least 2 weeks of reviews.</p>
       </div>
     );
   }
@@ -134,8 +134,8 @@ function TrendChart({ reviews }: { reviews: Review[] }) {
       <div className="px-5 py-3.5 border-b border-[#E5EAE8] flex items-center gap-4">
         <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Weekly Sentiment</p>
         <div className="flex items-center gap-3 ml-auto">
-          <span className="flex items-center gap-1.5 text-[10px] text-[#6B7280]"><span className="w-3 h-2 rounded-sm bg-emerald-400/60 inline-block"/>Positive</span>
-          <span className="flex items-center gap-1.5 text-[10px] text-[#6B7280]"><span className="w-3 h-2 rounded-sm bg-red-300/60 inline-block"/>Negative</span>
+          <span className="flex items-center gap-1.5 text-[10px] text-[#6B7280]"><span className="w-3 h-2 rounded-xl bg-emerald-400/60 inline-block"/>Positive</span>
+          <span className="flex items-center gap-1.5 text-[10px] text-[#6B7280]"><span className="w-3 h-2 rounded-xl bg-red-300/60 inline-block"/>Negative</span>
         </div>
       </div>
       <div className="px-4 py-4">
@@ -188,7 +188,7 @@ function TrendChart({ reviews }: { reviews: Review[] }) {
   );
 }
 
-// ── Weekly table ──────────────────────────────────────────────────────────────
+// â”€â”€ Weekly table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function WeeklyTable({ reviews }: { reviews: Review[] }) {
   const rows = useMemo(() => {
@@ -218,9 +218,9 @@ function WeeklyTable({ reviews }: { reviews: Review[] }) {
           <tr className="border-b border-[#F3F4F6] bg-[#FAFAFA]">
             <th className="text-left px-5 py-2 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Week of</th>
             <th className="text-right px-4 py-2 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Total</th>
-            <th className="text-right px-4 py-2 text-[10px] font-semibold text-emerald-600 uppercase tracking-wide">4–5★</th>
-            <th className="text-right px-4 py-2 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">3★</th>
-            <th className="text-right px-4 py-2 text-[10px] font-semibold text-red-400 uppercase tracking-wide">1–2★</th>
+            <th className="text-right px-4 py-2 text-[10px] font-semibold text-emerald-600 uppercase tracking-wide">4â€“5â˜…</th>
+            <th className="text-right px-4 py-2 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">3â˜…</th>
+            <th className="text-right px-4 py-2 text-[10px] font-semibold text-red-400 uppercase tracking-wide">1â€“2â˜…</th>
             <th className="text-right px-5 py-2 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Sentiment</th>
           </tr>
         </thead>
@@ -246,7 +246,7 @@ function WeeklyTable({ reviews }: { reviews: Review[] }) {
   );
 }
 
-// ── Context editor modal ──────────────────────────────────────────────────────
+// â”€â”€ Context editor modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ContextModal({ keyword, onConfirm, onClose }: {
   keyword: string;
@@ -293,7 +293,7 @@ function ContextModal({ keyword, onConfirm, onClose }: {
           <button onClick={handleSave} disabled={saving || !context.trim()}
             className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2 rounded-xl disabled:opacity-50 transition-colors">
             {saving ? <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> : null}
-            {saving ? 'Saving…' : 'Add to Agent'}
+            {saving ? 'Savingâ€¦' : 'Add to Agent'}
           </button>
         </div>
       </div>
@@ -301,7 +301,7 @@ function ContextModal({ keyword, onConfirm, onClose }: {
   );
 }
 
-// ── Review drawer ─────────────────────────────────────────────────────────────
+// â”€â”€ Review drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ReviewDrawer({ keyword, reviews, onClose }: { keyword: string; reviews: Review[]; onClose: () => void }) {
   const matched = reviewsMatchingKeyword(reviews, keyword);
@@ -330,13 +330,13 @@ function ReviewDrawer({ keyword, reviews, onClose }: { keyword: string; reviews:
             const color = stars >= 4 ? 'text-emerald-600 bg-emerald-50' : stars <= 2 ? 'text-red-500 bg-red-50' : 'text-amber-600 bg-amber-50';
             const highlighted = r.body.replace(
               new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-              '<mark class="bg-yellow-100 text-yellow-900 rounded-sm px-0.5">$1</mark>'
+              '<mark class="bg-yellow-100 text-yellow-900 rounded-xl px-0.5">$1</mark>'
             );
             return (
               <div key={r.id} className="border border-[#E5EAE8] rounded-xl p-4 bg-[#FAFAFA]">
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg ${color}`}>
-                    {'★'.repeat(stars)}{'☆'.repeat(5 - stars)} {stars}★
+                    {'â˜…'.repeat(stars)}{'â˜†'.repeat(5 - stars)} {stars}â˜…
                   </span>
                   {r.published_at && (
                     <span className="text-[10px] text-[#9CA3AF] ml-auto">{new Date(r.published_at).toLocaleDateString()}</span>
@@ -352,7 +352,7 @@ function ReviewDrawer({ keyword, reviews, onClose }: { keyword: string; reviews:
   );
 }
 
-// ── Keyword row ───────────────────────────────────────────────────────────────
+// â”€â”€ Keyword row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function KeywordRow({
   word, count, max, color, addedToAgent, onAddToAgent, onDrillDown,
@@ -394,7 +394,7 @@ function KeywordRow({
   );
 }
 
-// ── Agent keywords tab ────────────────────────────────────────────────────────
+// â”€â”€ Agent keywords tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function AgentKeywordsTab({
   keywordContexts, onRemove, onUpdate,
@@ -456,7 +456,7 @@ function AgentKeywordsTab({
                       disabled={savingId === kc.id}
                       className="text-[10px] font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-2.5 py-1 rounded-lg disabled:opacity-50 transition-colors"
                     >
-                      {savingId === kc.id ? '…' : 'Save'}
+                      {savingId === kc.id ? 'â€¦' : 'Save'}
                     </button>
                     <button onClick={() => setEditingId(null)} className="text-[10px] font-medium text-[#6B7280] hover:text-[#374151] px-2 py-1 rounded-lg hover:bg-[#F3F4F6] transition-colors">Cancel</button>
                   </>
@@ -491,7 +491,7 @@ function AgentKeywordsTab({
   );
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
+// â”€â”€ Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SkeletonPanel() {
   return (
@@ -510,7 +510,7 @@ function SkeletonPanel() {
   );
 }
 
-// ── Filter dropdown ───────────────────────────────────────────────────────────
+// â”€â”€ Filter dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function FilterDropdown<T extends string>({ value, onChange, options }: {
   value: T;
@@ -546,7 +546,7 @@ function FilterDropdown<T extends string>({ value, onChange, options }: {
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function InsightsPage() {
   const [allReviews, setAllReviews] = useState<Review[]>([]);
@@ -584,7 +584,7 @@ export function InsightsPage() {
     toastTimer.current = setTimeout(() => setToast(null), 3200);
   }
 
-  // ── Filtered reviews ──────────────────────────────────────────────────────
+  // â”€â”€ Filtered reviews â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const reviews = useMemo(() => {
     const selectedIds = new Set(selectedLocations.map(l => l.id));
@@ -613,7 +613,7 @@ export function InsightsPage() {
   const negCount = negativeReviews.length;
   const sentimentPct = totalReviews > 0 ? Math.round((posCount / totalReviews) * 100) : 0;
 
-  // ── Brand Brain actions ───────────────────────────────────────────────────
+  // â”€â”€ Brand Brain actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   async function handleConfirmAddToAgent(keyword: string, context: string) {
     const { error } = await brandBrainService.addKeywordContext(keyword, context);
@@ -651,7 +651,7 @@ export function InsightsPage() {
     showToast('Keyword rule updated.', 'success');
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const dateOptions: { value: DateRange; label: string }[] = [
     { value: '7d', label: 'Last 7 days' },
@@ -662,11 +662,11 @@ export function InsightsPage() {
 
   const starOptions = [
     { value: 'all', label: 'All ratings' },
-    { value: '5', label: '5★ only' },
-    { value: '4', label: '4★ only' },
-    { value: '3', label: '3★ only' },
-    { value: '2', label: '2★ only' },
-    { value: '1', label: '1★ only' },
+    { value: '5', label: '5â˜… only' },
+    { value: '4', label: '4â˜… only' },
+    { value: '3', label: '3â˜… only' },
+    { value: '2', label: '2â˜… only' },
+    { value: '1', label: '1â˜… only' },
   ];
 
   const TABS: { id: Tab; label: string }[] = [
@@ -703,12 +703,12 @@ export function InsightsPage() {
             <div className="w-px h-9 bg-[#E5EAE8] flex-shrink-0"/>
             <div className="text-center flex-shrink-0">
               <p className="text-xl font-bold text-emerald-600">{posCount}</p>
-              <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide mt-0.5">Positive (4–5★)</p>
+              <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide mt-0.5">Positive (4â€“5â˜…)</p>
             </div>
             <div className="w-px h-9 bg-[#E5EAE8] flex-shrink-0"/>
             <div className="text-center flex-shrink-0">
               <p className="text-xl font-bold text-red-500">{negCount}</p>
-              <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide mt-0.5">Negative (1–2★)</p>
+              <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide mt-0.5">Negative (1â€“2â˜…)</p>
             </div>
             <div className="w-px h-9 bg-[#E5EAE8] flex-shrink-0"/>
             <div className="flex-1 min-w-0">
@@ -741,7 +741,7 @@ export function InsightsPage() {
         </div>
       </div>
 
-      {/* Filter bar — sticky, outside scroll area */}
+      {/* Filter bar â€” sticky, outside scroll area */}
       {tab !== 'agent' && (
         <div className="px-8 py-3 flex-shrink-0 bg-[#F8FAF9] border-b border-[#E5EAE8] flex items-center gap-2.5 flex-wrap">
           <FilterDropdown value={dateRange} onChange={setDateRange} options={dateOptions}/>
@@ -771,7 +771,7 @@ export function InsightsPage() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-8 py-5">
 
-        {/* ── Keywords tab ── */}
+        {/* â”€â”€ Keywords tab â”€â”€ */}
         {tab === 'keywords' && (
           loading ? (
             <div className="grid grid-cols-2 gap-5">
@@ -844,7 +844,7 @@ export function InsightsPage() {
           )
         )}
 
-        {/* ── Trends tab ── */}
+        {/* â”€â”€ Trends tab â”€â”€ */}
         {tab === 'trends' && (
           loading ? <SkeletonPanel/> : (
             <>
@@ -854,7 +854,7 @@ export function InsightsPage() {
           )
         )}
 
-        {/* ── Agent keywords tab ── */}
+        {/* â”€â”€ Agent keywords tab â”€â”€ */}
         {tab === 'agent' && (
           loading ? <SkeletonPanel/> : (
             <AgentKeywordsTab
@@ -899,3 +899,4 @@ export function InsightsPage() {
     </div>
   );
 }
+

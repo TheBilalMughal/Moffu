@@ -195,7 +195,7 @@ export function PlatformMembersPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-[#E5EAE8]">
+      <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
@@ -272,7 +272,7 @@ export function PlatformMembersPage() {
       {/* Modal */}
       {modal.mode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white w-full max-w-md p-6 shadow-xl">
+          <div className="bg-white w-full max-w-md p-6 shadow-xl rounded-xl">
             <h2 className="text-base font-bold text-[#111827] mb-5">
               {modal.mode === 'add' ? 'Add platform member' : 'Edit member role'}
             </h2>

@@ -1,11 +1,11 @@
-import { useEffect, useState, useRef } from 'react';
+﻿import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useOrgStore } from '@/features/onboarding/org.store';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { supabase } from '@/lib/supabase';
 import { teamService, TeamMember, TeamInvitation, MemberRole } from './team.service';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function initials(name: string | null, email: string) {
   if (name) {
@@ -43,7 +43,7 @@ function RoleBadge({ role }: { role: MemberRole }) {
   );
 }
 
-// ── Invite Modal ──────────────────────────────────────────────────────────────
+// â”€â”€ Invite Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface InviteModalProps {
   orgId: string;
@@ -119,9 +119,9 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
                 disabled={atLimit}
                 className="w-full appearance-none border border-[#D1D5DB] px-3 py-2 text-sm text-[#111827] bg-white focus:outline-none focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] pr-8"
               >
-                <option value="viewer">Viewer — read-only access</option>
-                <option value="manager">Manager — can reply to reviews</option>
-                <option value="admin">Admin — full access except billing</option>
+                <option value="viewer">Viewer â€” read-only access</option>
+                <option value="manager">Manager â€” can reply to reviews</option>
+                <option value="admin">Admin â€” full access except billing</option>
               </select>
               <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -140,7 +140,7 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
               disabled={loading || atLimit}
               className="px-5 py-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Sending…' : 'Send invitation'}
+              {loading ? 'Sendingâ€¦' : 'Send invitation'}
             </button>
           </div>
         </form>
@@ -149,7 +149,7 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
   );
 }
 
-// ── Role Change Dropdown ──────────────────────────────────────────────────────
+// â”€â”€ Role Change Dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function RoleMenu({ orgId, memberId, current, onDone }: {
   orgId: string; memberId: string; current: MemberRole; onDone: () => void;
@@ -202,7 +202,7 @@ function RoleMenu({ orgId, memberId, current, onDone }: {
   );
 }
 
-// ── TeamPage ──────────────────────────────────────────────────────────────────
+// â”€â”€ TeamPage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function TeamPage() {
   const orgId = useOrgStore((s) => s.orgId);
@@ -217,7 +217,7 @@ export function TeamPage() {
   const [actionErr,   setActionErr]   = useState('');
   const [myRole,      setMyRole]      = useState<MemberRole | null>(null);
 
-  // ── Filters ──
+  // â”€â”€ Filters â”€â”€
   const [search,     setSearch]     = useState('');
   const [roleFilter, setRoleFilter] = useState<MemberRole | 'all'>('all');
   const [tab,        setTab]        = useState<'members' | 'invitations'>('members');
@@ -228,7 +228,7 @@ export function TeamPage() {
     if (!orgId || !user) return;
     setLoading(true);
 
-    // Fetch own role independently — canManage must not wait for full members list
+    // Fetch own role independently â€” canManage must not wait for full members list
     const { data: ownRow } = await supabase
       .from('org_members')
       .select('role')
@@ -267,7 +267,7 @@ export function TeamPage() {
     load();
   }
 
-  // ── Filtered data ──
+  // â”€â”€ Filtered data â”€â”€
   const filteredMembers = members.filter((m) => {
     const term = search.toLowerCase();
     const matchesSearch = !term ||
@@ -286,7 +286,7 @@ export function TeamPage() {
 
   const seatsLeft = seatLimit !== null ? seatLimit - seatUsed : null;
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div className="px-8 py-8">
 
@@ -343,11 +343,11 @@ export function TeamPage() {
       )}
 
       {!orgId ? (
-        <div className="py-12 text-sm text-[#9CA3AF]">Setting up your organisation…</div>
+        <div className="py-12 text-sm text-[#9CA3AF]">Setting up your organisationâ€¦</div>
       ) : loading ? (
         <div className="flex items-center gap-3 py-12">
           <div className="w-5 h-5 border-2 border-[#0D4C3C] border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-[#6B7280]">Loading team…</span>
+          <span className="text-sm text-[#6B7280]">Loading teamâ€¦</span>
         </div>
       ) : (
         <>
@@ -379,7 +379,7 @@ export function TeamPage() {
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search name or email…"
+                  placeholder="Search name or emailâ€¦"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] focus:outline-none focus:border-[#0D4C3C] w-52 placeholder-[#9CA3AF]"
@@ -412,7 +412,7 @@ export function TeamPage() {
             </div>
           </div>
 
-          {/* ── Members tab ── */}
+          {/* â”€â”€ Members tab â”€â”€ */}
           {tab === 'members' && (
             <div className="bg-white border border-[#E5EAE8]">
               {/* Table header */}
@@ -439,7 +439,7 @@ export function TeamPage() {
                       <div key={m.member_id} className="grid grid-cols-[2fr_2fr_1fr_1fr_80px] gap-4 px-5 py-3.5 items-center hover:bg-[#FAFAFA]">
                         {/* Name + avatar */}
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-8 h-8 rounded-sm bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-xs font-bold flex-shrink-0">
+                          <div className="w-8 h-8 rounded-xl bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-xs font-bold flex-shrink-0">
                             {initials(m.display_name, m.email)}
                           </div>
                           <span className="text-sm font-medium text-[#111827] truncate">
@@ -462,7 +462,7 @@ export function TeamPage() {
 
                         {/* Joined */}
                         <span className="text-xs text-[#9CA3AF]">
-                          {m.joined_at ? timeAgo(m.joined_at) : '—'}
+                          {m.joined_at ? timeAgo(m.joined_at) : 'â€”'}
                         </span>
 
                         {/* Actions */}
@@ -487,7 +487,7 @@ export function TeamPage() {
             </div>
           )}
 
-          {/* ── Invitations tab ── */}
+          {/* â”€â”€ Invitations tab â”€â”€ */}
           {tab === 'invitations' && (
             <div className="bg-white border border-[#E5EAE8]">
               {/* Table header */}
@@ -508,7 +508,7 @@ export function TeamPage() {
                     <div key={inv.id} className="grid grid-cols-[3fr_1fr_1fr_80px] gap-4 px-5 py-3.5 items-center hover:bg-[#FAFAFA]">
                       {/* Email + avatar */}
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-sm bg-[#F3F4F6] text-[#9CA3AF] flex items-center justify-center text-xs font-bold flex-shrink-0">
+                        <div className="w-8 h-8 rounded-xl bg-[#F3F4F6] text-[#9CA3AF] flex items-center justify-center text-xs font-bold flex-shrink-0">
                           {inv.email.slice(0, 2).toUpperCase()}
                         </div>
                         <span className="text-sm text-[#111827] truncate">{inv.email}</span>
@@ -549,3 +549,4 @@ export function TeamPage() {
     </div>
   );
 }
+

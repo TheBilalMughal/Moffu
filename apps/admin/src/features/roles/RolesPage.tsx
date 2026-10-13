@@ -125,7 +125,7 @@ function PermissionMatrix({
         </div>
       )}
 
-      <div className="bg-white border border-[#E5EAE8] overflow-x-auto">
+      <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
@@ -282,7 +282,7 @@ function PermissionRegistry({
         {[...categories.entries()].map(([cat, perms]) => (
           <div key={cat}>
             <h3 className="text-xs font-bold text-[#0D4C3C] uppercase tracking-widest mb-2">{cat}</h3>
-            <div className="bg-white border border-[#E5EAE8]">
+            <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
               {perms.map((p, idx) => (
                 <div key={p.key} className={`flex items-start justify-between px-5 py-3.5 ${idx > 0 ? 'border-t border-[#F3F4F6]' : ''}`}>
                   <div>
@@ -409,7 +409,7 @@ function UserOverridesTab({
         <input type="search" placeholder="Filter by user or permission…" value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]" />
       </div>
 
-      <div className="bg-white border border-[#E5EAE8]">
+      <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { onboardingService, slugify, detectTimezone, type Country } from './onboarding.service';
 import { useOrgStore } from './org.store';
@@ -6,7 +6,7 @@ import { googleService } from '@/features/google/google.service';
 
 const TOTAL_STEPS = 4;
 
-// ── Step indicator ────────────────────────────────────────────────────────────
+// â”€â”€ Step indicator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function StepIndicator({ current }: { current: number }) {
   return (
@@ -18,7 +18,7 @@ function StepIndicator({ current }: { current: number }) {
         return (
           <div key={n} className="flex items-center gap-2">
             <div
-              className={`w-7 h-7 rounded-sm flex items-center justify-center text-xs font-semibold transition-colors ${
+              className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-semibold transition-colors ${
                 done   ? 'bg-[#0D4C3C] text-white' :
                 active ? 'bg-[#0D4C3C] text-white' :
                          'bg-[#E5EAE8] text-[#9CA3AF]'
@@ -40,7 +40,7 @@ function StepIndicator({ current }: { current: number }) {
   );
 }
 
-// ── Shared ────────────────────────────────────────────────────────────────────
+// â”€â”€ Shared â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Label({ children }: { children: React.ReactNode }) {
   return <label className="block text-xs font-medium text-[#374151] mb-1">{children}</label>;
@@ -50,7 +50,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className={`w-full px-3 py-2 rounded-sm border border-[#D1D5DB] bg-white text-sm text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-[#0D4C3C] focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF] ${props.className ?? ''}`}
+      className={`w-full px-3 py-2 rounded-xl border border-[#D1D5DB] bg-white text-sm text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-[#0D4C3C] focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF] ${props.className ?? ''}`}
     />
   );
 }
@@ -63,7 +63,7 @@ function PrimaryBtn({
       type="button"
       onClick={onClick}
       disabled={loading || disabled}
-      className="w-full py-2.5 px-4 bg-[#0D4C3C] text-white text-sm font-medium rounded-sm hover:bg-[#0a3d30] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="w-full py-2.5 px-4 bg-[#0D4C3C] text-white text-sm font-medium rounded-xl hover:bg-[#0a3d30] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
       {loading ? (
         <span className="flex items-center justify-center gap-2">
@@ -91,7 +91,7 @@ function ErrorMsg({ msg }: { msg: string }) {
   return <p className="text-xs text-red-600 mt-1">{msg}</p>;
 }
 
-// ── Step 1: Create Organization ───────────────────────────────────────────────
+// â”€â”€ Step 1: Create Organization â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Step1({
   onDone,
@@ -143,7 +143,7 @@ function Step1({
 
         <div>
           <Label>URL slug</Label>
-          <div className="flex items-center border border-[#D1D5DB] rounded-sm focus-within:ring-1 focus-within:ring-[#0D4C3C] focus-within:border-[#0D4C3C] bg-white overflow-hidden">
+          <div className="flex items-center border border-[#D1D5DB] rounded-xl focus-within:ring-1 focus-within:ring-[#0D4C3C] focus-within:border-[#0D4C3C] bg-white overflow-hidden">
             <span className="px-3 py-2 text-xs text-[#9CA3AF] bg-[#F9FAFB] border-r border-[#D1D5DB] select-none whitespace-nowrap">
               moffu.app/
             </span>
@@ -166,7 +166,7 @@ function Step1({
   );
 }
 
-// ── Step 2: Country & Timezone ────────────────────────────────────────────────
+// â”€â”€ Step 2: Country & Timezone â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Step2({
   orgId,
@@ -221,9 +221,9 @@ function Step2({
               const c = countries.find((x) => x.id === e.target.value);
               if (c?.default_tz) setTimezone(c.default_tz);
             }}
-            className="w-full px-3 py-2 rounded-sm border border-[#D1D5DB] bg-white text-sm text-[#111827] focus:outline-none focus:ring-1 focus:ring-[#0D4C3C] focus:border-[#0D4C3C]"
+            className="w-full px-3 py-2 rounded-xl border border-[#D1D5DB] bg-white text-sm text-[#111827] focus:outline-none focus:ring-1 focus:ring-[#0D4C3C] focus:border-[#0D4C3C]"
           >
-            <option value="">Select a country…</option>
+            <option value="">Select a countryâ€¦</option>
             {countries.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -235,7 +235,7 @@ function Step2({
           <select
             value={timezone}
             onChange={(e) => setTimezone(e.target.value)}
-            className="w-full px-3 py-2 rounded-sm border border-[#D1D5DB] bg-white text-sm text-[#111827] focus:outline-none focus:ring-1 focus:ring-[#0D4C3C] focus:border-[#0D4C3C]"
+            className="w-full px-3 py-2 rounded-xl border border-[#D1D5DB] bg-white text-sm text-[#111827] focus:outline-none focus:ring-1 focus:ring-[#0D4C3C] focus:border-[#0D4C3C]"
           >
             {allTz.map((tz) => (
               <option key={tz} value={tz}>{tz.replace(/_/g, ' ')}</option>
@@ -252,7 +252,7 @@ function Step2({
   );
 }
 
-// ── Step 3: Connect Google ────────────────────────────────────────────────────
+// â”€â”€ Step 3: Connect Google â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Step3({
   onDone,
@@ -284,8 +284,8 @@ function Step3({
         <h1 className="text-lg font-semibold text-[#111827] mb-1">Google Business Profile connected</h1>
         <p className="text-sm text-[#6B7280] mb-6">Your account is connected. You can select which locations to track in the next step.</p>
 
-        <div className="flex items-center gap-3 p-4 rounded-sm border border-[#D1FAE5] bg-[#F0FDF4] mb-6">
-          <div className="w-8 h-8 rounded-sm bg-[#D1FAE5] flex items-center justify-center flex-shrink-0">
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-[#D1FAE5] bg-[#F0FDF4] mb-6">
+          <div className="w-8 h-8 rounded-xl bg-[#D1FAE5] flex items-center justify-center flex-shrink-0">
             <svg className="w-4 h-4 text-[#059669]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
@@ -312,7 +312,7 @@ function Step3({
           'Track response rate and review trends',
         ].map((item) => (
           <div key={item} className="flex items-start gap-2.5">
-            <div className="w-4 h-4 rounded-sm bg-[#ECFDF5] flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="w-4 h-4 rounded-xl bg-[#ECFDF5] flex items-center justify-center flex-shrink-0 mt-0.5">
               <svg className="w-2.5 h-2.5 text-[#059669]" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
@@ -334,7 +334,7 @@ function Step3({
   );
 }
 
-// ── Step 4: Done ─────────────────────────────────────────────────────────────
+// â”€â”€ Step 4: Done â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function Step4({
   orgId,
@@ -368,7 +368,7 @@ function Step4({
       <div className="space-y-3 mb-8">
         {items.map(({ label, done, note }) => (
           <div key={label} className="flex items-center gap-3">
-            <div className={`w-5 h-5 rounded-sm flex items-center justify-center flex-shrink-0 ${done ? 'bg-[#0D4C3C]' : 'bg-[#E5EAE8]'}`}>
+            <div className={`w-5 h-5 rounded-xl flex items-center justify-center flex-shrink-0 ${done ? 'bg-[#0D4C3C]' : 'bg-[#E5EAE8]'}`}>
               {done ? (
                 <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -392,7 +392,7 @@ function Step4({
   );
 }
 
-// ── OnboardingPage ────────────────────────────────────────────────────────────
+// â”€â”€ OnboardingPage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export function OnboardingPage() {
   const [searchParams] = useSearchParams();
@@ -437,7 +437,7 @@ export function OnboardingPage() {
         <span className="text-xl font-bold text-[#0D4C3C] tracking-tight">moffu</span>
       </div>
 
-      <div className="w-full max-w-md bg-white border border-[#E5EAE8] rounded-sm p-8">
+      <div className="w-full max-w-md bg-white border border-[#E5EAE8] rounded-xl p-8">
         <StepIndicator current={step} />
 
         {step === 1 && (
@@ -463,3 +463,4 @@ export function OnboardingPage() {
     </div>
   );
 }
+

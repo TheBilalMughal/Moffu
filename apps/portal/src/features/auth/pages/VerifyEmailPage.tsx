@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@moffu/ui';
 import { useAuthStore } from '../auth.store';
@@ -43,9 +43,10 @@ export function VerifyEmailPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50">
       <div className="text-center space-y-3">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-sm border-2 border-brand-500 border-t-transparent" />
-        <p className="text-sm text-neutral-500">Verifying your email…</p>
+        <div className="mx-auto h-8 w-8 animate-spin rounded-xl border-2 border-brand-500 border-t-transparent" />
+        <p className="text-sm text-neutral-500">Verifying your emailâ€¦</p>
       </div>
     </div>
   );
 }
+

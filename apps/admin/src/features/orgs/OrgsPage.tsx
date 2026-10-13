@@ -132,7 +132,7 @@ export function OrgsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-[#E5EAE8]">
+      <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">

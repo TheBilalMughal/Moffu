@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { teamService, InvitationDetails } from './team.service';
 import { useAuthStore } from '@/features/auth/auth.store';
@@ -55,7 +55,7 @@ export function AcceptInvitePage() {
     navigate(`/auth/login?next=${encodeURIComponent(`/invite/${token}`)}`, { replace: true });
   }
 
-  // ── Loading ──────────────────────────────────────────────────────────────────
+  // â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (loading || authStatus === 'loading') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F8FAF9]">
@@ -64,7 +64,7 @@ export function AcceptInvitePage() {
     );
   }
 
-  // ── Shell ──────────────────────────────────────────────────────────────────
+  // â”€â”€ Shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F8FAF9] px-4">
       <div className="bg-white border border-[#E5EAE8] w-full max-w-md">
@@ -74,23 +74,23 @@ export function AcceptInvitePage() {
         </div>
 
         <div className="px-8 py-8">
-          {/* ── Done state ── */}
+          {/* â”€â”€ Done state â”€â”€ */}
           {done && (
             <div className="text-center">
-              <div className="w-12 h-12 bg-[#E6F2EE] rounded-sm flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-[#E6F2EE] rounded-xl flex items-center justify-center mx-auto mb-4">
                 <svg className="w-6 h-6 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <h2 className="text-base font-semibold text-[#111827] mb-1">You are in!</h2>
-              <p className="text-sm text-[#6B7280]">Redirecting to your dashboard…</p>
+              <p className="text-sm text-[#6B7280]">Redirecting to your dashboardâ€¦</p>
             </div>
           )}
 
-          {/* ── Error state ── */}
+          {/* â”€â”€ Error state â”€â”€ */}
           {!done && error && !details && (
             <div className="text-center">
-              <div className="w-12 h-12 bg-red-50 rounded-sm flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -106,7 +106,7 @@ export function AcceptInvitePage() {
             </div>
           )}
 
-          {/* ── Invitation card ── */}
+          {/* â”€â”€ Invitation card â”€â”€ */}
           {!done && details && (
             <>
               {details.is_valid ? (
@@ -138,7 +138,7 @@ export function AcceptInvitePage() {
                           disabled={accepting}
                           className="w-full bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold py-3 transition-colors disabled:opacity-50"
                         >
-                          {accepting ? 'Accepting…' : `Accept invitation as ${RoleCap(details.role)}`}
+                          {accepting ? 'Acceptingâ€¦' : `Accept invitation as ${RoleCap(details.role)}`}
                         </button>
                       )}
                     </>
@@ -169,3 +169,4 @@ export function AcceptInvitePage() {
     </div>
   );
 }
+

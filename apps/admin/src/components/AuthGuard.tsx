@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+﻿import { Navigate } from 'react-router-dom';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 
 export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
@@ -7,7 +7,7 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   if (status === 'loading') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-100">
-        <div className="h-8 w-8 animate-spin rounded-sm border-2 border-brand-500 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-xl border-2 border-brand-500 border-t-transparent" />
       </div>
     );
   }
@@ -37,3 +37,4 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
+

@@ -56,7 +56,7 @@ export function AdminLoginPage() {
           </div>
         </div>
 
-        <div className="bg-white border border-[#E5EAE8] p-8">
+        <div className="bg-white border border-[#E5EAE8] rounded-xl p-8">
 
           {!forgotMode ? (
             <>

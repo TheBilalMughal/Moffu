@@ -1,10 +1,10 @@
-import { Navigate, useLocation } from 'react-router-dom';
+﻿import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/auth.store';
 
 function Spinner() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-      <div className="h-8 w-8 animate-spin rounded-sm border-2 border-brand-500 border-t-transparent" />
+      <div className="h-8 w-8 animate-spin rounded-xl border-2 border-brand-500 border-t-transparent" />
     </div>
   );
 }
@@ -33,3 +33,4 @@ export function GuestGuard({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>;
 }
+
