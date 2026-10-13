@@ -465,7 +465,11 @@ export function SettingsPage() {
   const [displayName, setDisplayName] = useState(currentDisplayName);
   const [phoneCountry, setPhoneCountry] = useState('PK');
   const [phoneNational, setPhoneNational] = useState('');
+  const [origPhoneCountry, setOrigPhoneCountry] = useState('PK');
+  const [origPhoneNational, setOrigPhoneNational] = useState('');
+  const [phoneEditOpen, setPhoneEditOpen] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPhone, setSavingPhone] = useState(false);
 
   // Preferences
   const [timezone, setTimezone] = useState('');
@@ -505,6 +509,8 @@ export function SettingsPage() {
           const parsed = parseStoredPhone(stored);
           setPhoneCountry(parsed.countryIso);
           setPhoneNational(parsed.national);
+          setOrigPhoneCountry(parsed.countryIso);
+          setOrigPhoneNational(parsed.national);
         }
         const tz = (data as { timezone?: string | null }).timezone ?? '';
         setTimezone(tz);
@@ -525,16 +531,29 @@ export function SettingsPage() {
     const trimmed = displayName.trim();
     if (!trimmed) return;
     setSavingProfile(true);
-    const dial = COUNTRIES.find(c => c.code === phoneCountry)?.dial ?? '';
-    const combined = phoneNational.trim() ? `${dial} ${phoneNational.trim()}` : null;
     const [authRes, profileRes] = await Promise.all([
       supabase.auth.updateUser({ data: { display_name: trimmed } }),
-      supabase.from('profiles').update({ display_name: trimmed, phone: combined }).eq('id', user!.id),
+      supabase.from('profiles').update({ display_name: trimmed }).eq('id', user!.id),
     ]);
     if (authRes.error) { showToast(authRes.error.message, 'error'); }
     else if (profileRes.error) { showToast(profileRes.error.message, 'error'); }
     else { showToast('Account details updated.', 'success'); }
     setSavingProfile(false);
+  }
+
+  async function handleSavePhone() {
+    setSavingPhone(true);
+    const dial = COUNTRIES.find(c => c.code === phoneCountry)?.dial ?? '';
+    const combined = phoneNational.trim() ? `${dial} ${phoneNational.trim()}` : null;
+    const { error } = await supabase.from('profiles').update({ phone: combined }).eq('id', user!.id);
+    if (error) { showToast(error.message, 'error'); }
+    else {
+      setOrigPhoneCountry(phoneCountry);
+      setOrigPhoneNational(phoneNational);
+      setPhoneEditOpen(false);
+      showToast('Phone number saved.', 'success');
+    }
+    setSavingPhone(false);
   }
 
   async function handleSaveTimezone() {
@@ -696,12 +715,48 @@ export function SettingsPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Phone Number</label>
-              <PhoneInput
-                countryIso={phoneCountry}
-                national={phoneNational}
-                onCountryChange={setPhoneCountry}
-                onNationalChange={setPhoneNational}
-              />
+              {!phoneEditOpen ? (
+                <div className="flex items-center justify-between text-sm bg-[#F8FAF9] border border-[#E5EAE8] rounded-lg px-4 py-3">
+                  <span className={origPhoneNational ? 'text-[#111827]' : 'text-[#9CA3AF]'}>
+                    {origPhoneNational
+                      ? `${countryFlag(origPhoneCountry)} ${COUNTRIES.find(c => c.code === origPhoneCountry)?.dial ?? ''} ${origPhoneNational}`
+                      : 'Not set'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPhoneEditOpen(true)}
+                    className="text-xs font-medium text-[#0D4C3C] hover:underline ml-3 flex-shrink-0"
+                  >
+                    Edit
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <PhoneInput
+                    countryIso={phoneCountry}
+                    national={phoneNational}
+                    onCountryChange={setPhoneCountry}
+                    onNationalChange={setPhoneNational}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSavePhone}
+                      disabled={savingPhone}
+                      className="text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-4 py-2 rounded-lg disabled:opacity-40 transition-colors"
+                    >
+                      {savingPhone ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPhoneCountry(origPhoneCountry); setPhoneNational(origPhoneNational); setPhoneEditOpen(false); }}
+                      className="text-sm font-medium text-[#6B7280] hover:text-[#374151] px-4 py-2 rounded-lg border border-[#E5EAE8] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
             <button
               onClick={handleSaveProfile}
