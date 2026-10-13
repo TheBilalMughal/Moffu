@@ -1170,99 +1170,10 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
   );
 }
 
-// ── Location Picker ───────────────────────────────────────────────────────────
-
-interface LocPickerLocation { id: string; display_name: string | null; }
-
-function LocationPicker({ locations, selectedId, onSelect, avgByLocation }: {
-  locations: LocPickerLocation[];
-  selectedId: string | null;
-  onSelect: (id: string | null) => void;
-  avgByLocation: Map<string, { total: number; count: number }>;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener('mousedown', fn);
-    return () => document.removeEventListener('mousedown', fn);
-  }, []);
-
-  const current = selectedId ? locations.find(l => l.id === selectedId) : null;
-  const isActive = !!selectedId;
-
-  function avgStr(id: string) {
-    const d = avgByLocation.get(id);
-    if (!d || d.count === 0) return null;
-    return (d.total / d.count).toFixed(1);
-  }
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${
-          isActive
-            ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium'
-            : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'
-        }`}
-      >
-        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-        <span className="text-xs">{current?.display_name ?? 'All Locations'}</span>
-        {isActive
-          ? <span onClick={e => { e.stopPropagation(); onSelect(null); setOpen(false); }} className="ml-0.5 hover:text-red-500 transition-colors">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-            </span>
-          : <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
-        }
-      </button>
-
-      {open && (
-        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 min-w-[200px]">
-          <button
-            onClick={() => { onSelect(null); setOpen(false); }}
-            className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${!selectedId ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
-          >
-            <span>All Locations</span>
-            {!selectedId && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
-          </button>
-          {locations.map(l => {
-            const avg = avgStr(l.id);
-            const sel = selectedId === l.id;
-            return (
-              <button
-                key={l.id}
-                onClick={() => { onSelect(l.id); setOpen(false); }}
-                className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${sel ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
-              >
-                <span>{l.display_name ?? l.id}</span>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {avg && (
-                    <span className={`flex items-center gap-0.5 text-xs ${sel ? 'text-amber-500' : 'text-[#9CA3AF]'}`}>
-                      <svg className="w-3 h-3 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                      </svg>
-                      {avg}
-                    </span>
-                  )}
-                  {sel && <svg className="w-3.5 h-3.5 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function ReviewsPage() {
-  const { selectedId: globalLocationId, setSelectedId: setGlobalLocationId, locations: storeLocations } = useLocationStore();
+  const { selectedId: globalLocationId, setLocationRatings } = useLocationStore();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1339,17 +1250,22 @@ export function ReviewsPage() {
     return () => document.removeEventListener('keydown', onKey);
   }, [focusedIdx]);
 
-  // Avg rating per location — computed from all reviews for the location picker
-  const avgByLocation = useMemo(() => {
-    const map = new Map<string, { total: number; count: number }>();
+  // Avg rating per location — push to store so the topbar LocationPicker can show ratings
+  useEffect(() => {
+    const map: Record<string, number> = {};
+    const totals: Record<string, { sum: number; count: number }> = {};
     for (const r of reviews) {
       if (r.location_id && r.rating > 0) {
-        const curr = map.get(r.location_id) ?? { total: 0, count: 0 };
-        map.set(r.location_id, { total: curr.total + r.rating, count: curr.count + 1 });
+        if (!totals[r.location_id]) totals[r.location_id] = { sum: 0, count: 0 };
+        totals[r.location_id]!.sum += r.rating;
+        totals[r.location_id]!.count += 1;
       }
     }
-    return map;
-  }, [reviews]);
+    for (const [id, { sum, count }] of Object.entries(totals)) {
+      map[id] = sum / count;
+    }
+    setLocationRatings(map);
+  }, [reviews, setLocationRatings]);
 
   // Reviews scoped to is_selected locations + active global location filter — used for stats, chart, tab counts
   const activeReviews = useMemo(() => {
@@ -1544,17 +1460,6 @@ export function ReviewsPage() {
           <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
         </div>
         <div className="flex items-center gap-2">
-          {storeLocations.length >= 2 && (
-            <>
-              <LocationPicker
-                locations={storeLocations}
-                selectedId={globalLocationId}
-                onSelect={setGlobalLocationId}
-                avgByLocation={avgByLocation}
-              />
-              <div className="w-px h-5 bg-[#E5E7EB] flex-shrink-0"/>
-            </>
-          )}
           <button onClick={() => setShowShortcuts(true)} title="Keyboard shortcuts"
             className="p-2 rounded-lg text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

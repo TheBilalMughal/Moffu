@@ -8,13 +8,17 @@ export interface LocationOption {
 interface LocationState {
   locations: LocationOption[];
   selectedId: string | null; // null = all locations
+  locationRatings: Record<string, number>; // locationId → avg rating
   setLocations: (locs: LocationOption[]) => void;
   setSelectedId: (id: string | null) => void;
+  setLocationRatings: (ratings: Record<string, number>) => void;
 }
 
 export const useLocationStore = create<LocationState>((set) => ({
   locations: [],
   selectedId: null,
+  locationRatings: {},
   setLocations: (locations) => set({ locations }),
   setSelectedId: (selectedId) => set({ selectedId }),
+  setLocationRatings: (locationRatings) => set({ locationRatings }),
 }));
