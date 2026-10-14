@@ -199,7 +199,7 @@ function CrudCell({
   onToggle: () => void;
 }) {
   if (localGranted === null) {
-    return <td className="px-4 py-2 text-center"><span className="text-[#D1D5DB] text-xs">—</span></td>;
+    return <td className="px-4 py-1.5 text-center"><span className="text-[#D1D5DB] text-xs">—</span></td>;
   }
 
   const isPending = localGranted !== savedGranted;
@@ -214,7 +214,7 @@ function CrudCell({
     : 'bg-white border-[#D1D5DB]';
 
   return (
-    <td className="px-4 py-2 text-center">
+    <td className="px-4 py-1.5 text-center">
       {canEdit ? (
         <button
           onClick={onToggle}
@@ -378,17 +378,17 @@ function RoleDiffModal({
 
                 return (
                   <tr key={mod.label} className={rowDiff ? 'bg-amber-50' : ''}>
-                    <td className="px-5 py-2 font-medium text-[#111827]">{mod.label}</td>
+                    <td className="px-5 py-1.5 font-medium text-[#111827]">{mod.label}</td>
                     {actions.map((a) => {
                       const keys = mod.crud[a] as readonly string[] | null;
-                      if (!keys) return <td key={a} className="px-3 py-2 text-center"><span className="text-[#D1D5DB] text-xs">—</span></td>;
+                      if (!keys) return <td key={a} className="px-3 py-1.5 text-center"><span className="text-[#D1D5DB] text-xs">—</span></td>;
 
                       const bGrant = keys.every((k) => base.has(k));
                       const cGrant = keys.every((k) => cmp.has(k));
                       const diff   = bGrant !== cGrant;
 
                       return (
-                        <td key={a} className="px-3 py-2">
+                        <td key={a} className="px-3 py-1.5">
                           <div className={`flex items-center justify-center gap-1 ${diff ? 'font-semibold' : ''}`}>
                             <span className={`text-xs ${bGrant ? 'text-emerald-600' : 'text-[#D1D5DB]'}`} title={baseLabel}>
                               {bGrant ? '✓' : '✗'}
@@ -708,8 +708,8 @@ export function RolesPage() {
                 ) : (
                   <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
                     <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
+                      <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+                        <tr>
                           <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Module</th>
                           {(['view', 'add', 'edit', 'delete'] as CrudAction[]).map((a) => (
                             <th key={a} className="px-4 py-2.5 text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-20">
@@ -731,7 +731,7 @@ export function RolesPage() {
                             const overrideCount = getModuleOverrideCount(mod);
                             return (
                               <tr key={mod.label} className="hover:bg-[#F8FAF9] transition-colors">
-                                <td className="px-5 py-2 font-medium text-[#111827]">{mod.label}</td>
+                                <td className="px-5 py-1.5 font-medium text-[#111827]">{mod.label}</td>
                                 {(['view', 'add', 'edit', 'delete'] as CrudAction[]).map((a) => {
                                   const keys = mod.crud[a] as readonly string[] | null;
                                   return (
@@ -745,7 +745,7 @@ export function RolesPage() {
                                     />
                                   );
                                 })}
-                                <td className="px-4 py-2 text-center">
+                                <td className="px-4 py-1.5 text-center">
                                   {overrideCount > 0 ? (
                                     <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
                                       {overrideCount} override{overrideCount !== 1 ? 's' : ''}
@@ -788,8 +788,8 @@ export function RolesPage() {
                   </div>
                 ) : (
                   <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
+                    <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+                      <tr>
                         <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Action</th>
                         <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Permission</th>
                         <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Changed by</th>
@@ -799,7 +799,7 @@ export function RolesPage() {
                     <tbody className="divide-y divide-[#F3F4F6]">
                       {auditLog.map((entry) => (
                         <tr key={entry.id} className="hover:bg-[#F8FAF9] transition-colors">
-                          <td className="px-5 py-2.5">
+                          <td className="px-5 py-1.5">
                             <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded ${
                               entry.action === 'grant'
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
@@ -808,14 +808,14 @@ export function RolesPage() {
                               {entry.action === 'grant' ? '+' : '−'} {entry.action}
                             </span>
                           </td>
-                          <td className="px-5 py-2.5">
+                          <td className="px-5 py-1.5">
                             <p className="text-[#111827]">{permLabel(entry.permission)}</p>
                             <p className="text-[10px] text-[#9CA3AF] font-mono">{entry.permission}</p>
                           </td>
-                          <td className="px-5 py-2.5 text-[#6B7280] text-xs font-mono">
+                          <td className="px-5 py-1.5 text-[#6B7280] text-xs font-mono">
                             {entry.changed_by ? entry.changed_by.slice(0, 8) + '…' : 'system'}
                           </td>
-                          <td className="px-5 py-2.5 text-[#9CA3AF] text-xs">
+                          <td className="px-5 py-1.5 text-[#9CA3AF] text-xs">
                             {timeAgo(entry.changed_at)}
                           </td>
                         </tr>

@@ -652,7 +652,7 @@ export function SubscriptionsPage() {
       )}
 
       {/* Table */}
-      <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+      <div className="bg-white border border-[#E5EAE8] rounded-xl">
         <table className="w-full text-sm">
           <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
             <tr>
