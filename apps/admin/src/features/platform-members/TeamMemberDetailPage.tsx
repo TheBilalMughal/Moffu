@@ -29,7 +29,7 @@ const ROLE_COLOR: Record<PlatformRole, string> = {
 interface MemberDetail {
   memberId: string;
   userId: string;
-  displayId: number;
+  refId: string;
   displayName: string;
   email: string;
   phone: string | null;
@@ -68,13 +68,12 @@ export function TeamMemberDetailPage() {
 
   async function load() {
     setLoading(true);
-    const displayId = Number(id);
-    if (isNaN(displayId)) { setNotFound(true); setLoading(false); return; }
+    if (!id) { setNotFound(true); setLoading(false); return; }
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, display_id, display_name, phone, status')
-      .eq('display_id', displayId)
+      .select('id, ref_id, display_name, phone, status')
+      .eq('ref_id', id)
       .maybeSingle();
 
     if (!profile) { setNotFound(true); setLoading(false); return; }
@@ -95,7 +94,7 @@ export function TeamMemberDetailPage() {
     const detail: MemberDetail = {
       memberId: pm.id,
       userId: profile.id,
-      displayId: profile.display_id,
+      refId: profile.ref_id ?? '',
       displayName: profile.display_name ?? '—',
       email: authRow?.email ?? '—',
       phone: profile.phone ?? null,
@@ -209,7 +208,7 @@ export function TeamMemberDetailPage() {
             <h1 className="text-2xl font-bold text-[#111827]">{member.displayName}</h1>
             <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${statusColor}`}>{statusLabel}</span>
           </div>
-          <p className="text-sm text-[#9CA3AF] font-mono">#{member.displayId}</p>
+          <p className="text-sm text-[#9CA3AF] font-mono">{member.refId}</p>
         </div>
         <div className="flex items-center gap-2">
           {canManage(platformRole) && (

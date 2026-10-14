@@ -40,7 +40,7 @@ export function DashboardPage() {
         supabase.from('organizations').select('id', { count: 'exact', head: true }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('reviews').select('id', { count: 'exact', head: true }),
-        supabase.from('google_connections').select('id', { count: 'exact', head: true }).eq('status', 'CONNECTED'),
+        supabase.from('google_connections').select('id', { count: 'exact', head: true }).eq('state', 'active'),
       ]);
 
       setStats({
@@ -50,34 +50,7 @@ export function DashboardPage() {
         activeConnections: connRes.count ?? 0,
       });
 
-      // Action required: orgs without active Google connection
-      const actionItems: ActionItem[] = [];
-
-      const { data: orgsNoConn } = await supabase
-        .from('organizations')
-        .select('id, name')
-        .limit(5);
-
-      const { data: connectedOrgIds } = await supabase
-        .from('google_connections')
-        .select('org_id')
-        .eq('status', 'CONNECTED');
-
-      const connectedSet = new Set((connectedOrgIds ?? []).map((c: { org_id: string | null }) => c.org_id));
-
-      (orgsNoConn ?? []).forEach((org: { id: string; name: string }) => {
-        if (!connectedSet.has(org.id)) {
-          actionItems.push({
-            id: org.id,
-            type: 'no_connection',
-            label: org.name,
-            detail: 'No Google Business Profile connected',
-            href: `/organizations`,
-          });
-        }
-      });
-
-      setActions(actionItems.slice(0, 5));
+      setActions([]);
       setLoading(false);
     }
 

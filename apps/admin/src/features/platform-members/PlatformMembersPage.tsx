@@ -28,7 +28,7 @@ const ROLE_COLOR: Record<PlatformRole, string> = {
 interface Member {
   id: string;
   user_id: string;
-  display_id: number | null;
+  ref_id: string | null;
   display_name: string;
   email: string;
   phone: string | null;
@@ -67,11 +67,11 @@ export function PlatformMembersPage() {
     const userIds = rows.map((m: { user_id: string }) => m.user_id);
 
     const [profilesRes, authRes] = await Promise.all([
-      supabase.from('profiles').select('id, display_id, display_name, phone').in('id', userIds),
+      supabase.from('profiles').select('id, ref_id, display_name, phone').in('id', userIds),
       supabase.rpc('get_platform_members_auth'),
     ]);
 
-    type ProfileRow = { id: string; display_id: number | null; display_name: string; phone: string | null };
+    type ProfileRow = { id: string; ref_id: string | null; display_name: string; phone: string | null };
     const profileById = new Map<string, ProfileRow>(
       (profilesRes.data ?? []).map((p: ProfileRow) => [p.id, p]),
     );
@@ -88,7 +88,7 @@ export function PlatformMembersPage() {
       return {
         id: m.id,
         user_id: m.user_id,
-        display_id: p?.display_id ?? null,
+        ref_id: p?.ref_id ?? null,
         display_name: p?.display_name ?? '—',
         email: a?.email ?? '—',
         phone: p?.phone ?? null,
@@ -228,7 +228,7 @@ export function PlatformMembersPage() {
                 <tr key={m.id} className="hover:bg-[#F8FAF9] transition-colors">
                   <td className="px-5 py-4">
                     <span className="font-mono text-xs text-[#6B7280]">
-                      {m.display_id != null ? `#${m.display_id}` : '—'}
+                      {m.ref_id ?? '—'}
                     </span>
                   </td>
                   <td className="px-5 py-4">
@@ -247,9 +247,9 @@ export function PlatformMembersPage() {
                       : '—'}
                   </td>
                   <td className="px-5 py-4 text-right">
-                    {m.display_id != null ? (
+                    {m.ref_id != null ? (
                       <Link
-                        to={`/users/${m.display_id}`}
+                        to={`/users/${m.ref_id}`}
                         className="text-xs font-medium text-[#0D4C3C] hover:underline"
                       >
                         View

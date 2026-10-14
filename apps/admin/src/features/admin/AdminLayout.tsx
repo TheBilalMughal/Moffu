@@ -206,14 +206,23 @@ function AdminNotificationsBell() {
     async function load() {
       const [recentOrgs, recentMembers] = await Promise.all([
         supabase.from('organizations').select('id, name, created_at').order('created_at', { ascending: false }).limit(3),
-        supabase.from('platform_members').select('id, created_at, profiles(display_name, email)').order('created_at', { ascending: false }).limit(3),
+        supabase.from('platform_members').select('id, user_id, created_at').order('created_at', { ascending: false }).limit(3),
       ]);
+
+      const memberUserIds = (recentMembers.data ?? []).map((m: any) => m.user_id);
+      const profilesRes = memberUserIds.length > 0
+        ? await supabase.from('profiles').select('id, display_name').in('id', memberUserIds)
+        : { data: [] };
+      const nameById = new Map<string, string>(
+        (profilesRes.data ?? []).map((p: any) => [p.id, p.display_name ?? 'Unknown']),
+      );
+
       const list: AdminNotif[] = [];
       (recentOrgs.data ?? []).forEach((o: any) => {
         list.push({ id: o.id, text: o.name, sub: 'New client', time: new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'bg-[#E6F2EE] text-[#0D4C3C]' });
       });
       (recentMembers.data ?? []).forEach((m: any) => {
-        const name = m.profiles?.display_name ?? m.profiles?.email ?? 'Unknown';
+        const name = nameById.get(m.user_id) ?? 'Unknown';
         list.push({ id: m.id, text: name, sub: 'New platform member', time: new Date(m.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'bg-[#EDE9FE] text-[#5B21B6]' });
       });
       setNotifs(list.sort((a, b) => b.time.localeCompare(a.time)).slice(0, 6));

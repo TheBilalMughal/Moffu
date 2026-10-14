@@ -5,7 +5,7 @@ import { Dropdown } from '@/components/Dropdown';
 
 interface Client {
   id: string;
-  display_id: number | null;
+  ref_id: string | null;
   name: string;
   created_at: string;
   plan: string | null;
@@ -42,7 +42,7 @@ export function ClientsPage() {
 
     const { data: orgRows, error: orgErr } = await supabase
       .from('organizations')
-      .select('id, display_id, name, created_at, status')
+      .select('id, ref_id, name, created_at, status')
       .order('created_at', { ascending: false });
 
     if (orgErr || !orgRows || orgRows.length === 0) {
@@ -111,13 +111,13 @@ export function ClientsPage() {
       if (orgId) usageByOrg.set(orgId, (usageByOrg.get(orgId) ?? 0) + 1);
     });
 
-    const enriched: Client[] = orgRows.map((o: { id: string; display_id: number | null; name: string; created_at: string; status: string | null }) => {
+    const enriched: Client[] = orgRows.map((o: { id: string; ref_id: string | null; name: string; created_at: string; status: string | null }) => {
       const ownerUserId = ownerUserIdByOrg.get(o.id);
       const sub = ownerUserId ? subByOwner.get(ownerUserId) : null;
       const plan = sub?.plan ?? null;
       return {
         id: o.id,
-        display_id: o.display_id ?? null,
+        ref_id: o.ref_id ?? null,
         name: o.name,
         created_at: o.created_at,
         plan,
@@ -224,12 +224,12 @@ export function ClientsPage() {
                   <tr key={c.id} className="hover:bg-[#F8FAF9] transition-colors">
                     <td className="px-5 py-4">
                       <span className="font-mono text-xs text-[#6B7280]">
-                        {c.display_id != null ? `#${c.display_id}` : '—'}
+                        {c.ref_id ?? '—'}
                       </span>
                     </td>
                     <td className="px-5 py-4">
-                      {c.display_id != null ? (
-                        <Link to={`/clients/${c.display_id}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
+                      {c.ref_id != null ? (
+                        <Link to={`/clients/${c.ref_id}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
                           {c.name}
                         </Link>
                       ) : (
@@ -256,8 +256,8 @@ export function ClientsPage() {
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-3">
-                        {c.display_id != null ? (
-                          <Link to={`/clients/${c.display_id}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>
+                        {c.ref_id != null ? (
+                          <Link to={`/clients/${c.ref_id}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>
                         ) : (
                           <span className="text-xs text-[#9CA3AF]">View</span>
                         )}

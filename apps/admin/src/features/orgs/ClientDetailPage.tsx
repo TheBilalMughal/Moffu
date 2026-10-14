@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 
 interface OrgDetail {
   id: string;
-  display_id: number;
+  ref_id: string;
   name: string;
   created_at: string;
   status: string | null;
@@ -65,14 +65,13 @@ export function ClientDetailPage() {
 
   async function load() {
     setLoading(true);
-    const displayId = Number(id);
-    if (isNaN(displayId)) { setNotFound(true); setLoading(false); return; }
+    if (!id) { setNotFound(true); setLoading(false); return; }
 
     // 1. Get org
     const { data: orgRow } = await supabase
       .from('organizations')
-      .select('id, display_id, name, created_at, status')
-      .eq('display_id', displayId)
+      .select('id, ref_id, name, created_at, status')
+      .eq('ref_id', id)
       .maybeSingle();
 
     if (!orgRow) { setNotFound(true); setLoading(false); return; }
@@ -201,7 +200,7 @@ export function ClientDetailPage() {
               {isActive ? 'Active' : 'Suspended'}
             </span>
           </div>
-          <p className="text-sm text-[#9CA3AF] font-mono">#{org.display_id}</p>
+          <p className="text-sm text-[#9CA3AF] font-mono">{org.ref_id}</p>
         </div>
         {sub?.plan && (
           <span className={`inline-block px-3 py-1 text-xs font-semibold rounded ${PLAN_COLOR[sub.plan] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
@@ -251,7 +250,7 @@ export function ClientDetailPage() {
           <dl className="divide-y divide-[#F3F4F6]">
             <div className="px-6 py-3.5 flex items-center gap-4">
               <dt className="w-28 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">ID</dt>
-              <dd className="font-mono text-xs text-[#374151]">#{org.display_id}</dd>
+              <dd className="font-mono text-xs text-[#374151]">{org.ref_id}</dd>
             </div>
             <div className="px-6 py-3.5 flex items-center gap-4">
               <dt className="w-28 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Name</dt>
