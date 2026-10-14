@@ -63,8 +63,11 @@ serve(async (req) => {
     let userId: string;
 
     if (existing) {
-      // Update password for existing user
-      const { error: updateErr } = await adminClient.auth.admin.updateUserById(existing.id, { password });
+      // Update password and confirm email for existing user
+      const { error: updateErr } = await adminClient.auth.admin.updateUserById(existing.id, {
+        password,
+        email_confirm: true,
+      });
       if (updateErr) return json({ error: updateErr.message }, 500);
       userId = existing.id;
     } else {
