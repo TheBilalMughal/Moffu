@@ -474,7 +474,7 @@ export function SubscriptionsPage() {
   const hasActiveFilters = search || planFilter || statusFilter || intervalFilter;
 
   return (
-    <div className="px-8 py-8">
+    <div className="h-full overflow-y-auto px-8 py-8">
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
@@ -654,35 +654,35 @@ export function SubscriptionsPage() {
       {/* Table */}
       <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
         <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
-              <th className="px-4 py-3 w-8">
+          <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+            <tr>
+              <th className="px-4 py-2.5 w-8">
                 <input type="checkbox" checked={allOnPage} onChange={toggleAll}
                   className="rounded border-[#D1D5DB] text-[#0D4C3C] focus:ring-[#0D4C3C]"/>
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Client</th>
-              <th className="px-4 py-3 text-left">
+              <th className="px-4 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
+              <th className="px-4 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Client</th>
+              <th className="px-4 py-2.5 text-left">
                 <button onClick={() => toggleSort('plan')} className="flex items-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide hover:text-[#374151]">Plan <SortIcon col="plan"/></button>
               </th>
-              <th className="px-4 py-3 text-left">
+              <th className="px-4 py-2.5 text-left">
                 <button onClick={() => toggleSort('status')} className="flex items-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide hover:text-[#374151]">Status <SortIcon col="status"/></button>
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Interval</th>
-              <th className="px-4 py-3 text-left">
+              <th className="px-4 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Interval</th>
+              <th className="px-4 py-2.5 text-left">
                 <button onClick={() => toggleSort('amount')} className="flex items-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide hover:text-[#374151]">Amount <SortIcon col="amount"/></button>
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Usage</th>
-              <th className="px-4 py-3 text-left">
+              <th className="px-4 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Usage</th>
+              <th className="px-4 py-2.5 text-left">
                 <button onClick={() => toggleSort('period_end')} className="flex items-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide hover:text-[#374151]">Renews <SortIcon col="period_end"/></button>
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Actions</th>
+              <th className="px-4 py-2.5 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F3F4F6]">
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i}>{Array.from({ length: 10 }).map((_, j) => (<td key={j} className="px-4 py-4"><div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-16"/></td>))}</tr>
+                <tr key={i}>{Array.from({ length: 10 }).map((_, j) => (<td key={j} className="px-4 py-1.5"><div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-16"/></td>))}</tr>
               ))
             ) : pageRows.length === 0 ? (
               <tr><td colSpan={10} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
@@ -691,15 +691,15 @@ export function SubscriptionsPage() {
             ) : (
               pageRows.map((s) => (
                 <tr key={s.id} className={`hover:bg-[#F8FAF9] transition-colors ${selected.has(s.id) ? 'bg-[#F0F9F6]' : ''}`}>
-                  <td className="px-4 py-3.5">
+                  <td className="px-4 py-1.5">
                     <input type="checkbox" checked={selected.has(s.id)}
                       onChange={() => setSelected((prev) => { const n = new Set(prev); n.has(s.id) ? n.delete(s.id) : n.add(s.id); return n; })}
                       className="rounded border-[#D1D5DB] text-[#0D4C3C] focus:ring-[#0D4C3C]"/>
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td className="px-4 py-1.5">
                     <span className="font-mono text-xs text-[#9CA3AF]">{formatId(s.orgRefId)}</span>
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td className="px-4 py-1.5">
                     <div className="flex items-start gap-2">
                       <div className="min-w-0">
                         {s.orgRefId ? (
@@ -715,20 +715,20 @@ export function SubscriptionsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td className="px-4 py-1.5">
                     <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${PLAN_COLOR[s.planSlug] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>{s.planName}</span>
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td className="px-4 py-1.5">
                     <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded capitalize ${STATUS_COLOR[s.status] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>{s.status.replace('_', ' ')}</span>
                   </td>
-                  <td className="px-4 py-3.5 text-xs text-[#374151] capitalize">{s.interval ?? '—'}</td>
-                  <td className="px-4 py-3.5">
+                  <td className="px-4 py-1.5 text-xs text-[#374151] capitalize">{s.interval ?? '—'}</td>
+                  <td className="px-4 py-1.5">
                     <span className="text-sm font-medium text-[#111827]">{fmt(s.amountCents)}</span>
                     {s.interval === 'annual' && s.amountCents > 0 && (
                       <p className="text-[10px] text-[#9CA3AF]">{fmt(Math.round(s.amountCents / 12))}/mo</p>
                     )}
                   </td>
-                  <td className="px-4 py-3.5">
+                  <td className="px-4 py-1.5">
                     <div className="flex items-center gap-1.5">
                       <div className="w-14 bg-[#E5EAE8] rounded-full h-1">
                         <div className={`h-1 rounded-full ${s.usagePct >= 90 ? 'bg-red-500' : s.usagePct >= 70 ? 'bg-amber-500' : 'bg-[#0D4C3C]'}`} style={{ width: `${s.usagePct}%` }}/>
@@ -736,12 +736,12 @@ export function SubscriptionsPage() {
                       <span className="text-[10px] text-[#9CA3AF]">{s.usagePct}%</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3.5 text-xs text-[#9CA3AF]">
+                  <td className="px-4 py-1.5 text-xs text-[#9CA3AF]">
                     {s.daysUntilRenewal !== null
                       ? <span className={s.daysUntilRenewal <= 7 ? 'font-semibold text-red-600' : ''}>{s.daysUntilRenewal}d</span>
                       : '—'}
                   </td>
-                  <td className="px-4 py-3.5 text-right">
+                  <td className="px-4 py-1.5 text-right">
                     <div className="flex items-center justify-end gap-3">
                       {s.orgRefId && <Link to={`/clients/${s.orgRefId}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>}
                       {s.orgId && (

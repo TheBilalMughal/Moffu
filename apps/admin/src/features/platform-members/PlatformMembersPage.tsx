@@ -163,8 +163,9 @@ export function PlatformMembersPage() {
   );
 
   return (
-    <div className="px-8 py-8">
-      <div className="mb-6 flex items-start justify-between">
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="flex-shrink-0 px-8 pt-6 pb-4 flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#111827]">Users</h1>
           <p className="text-sm text-[#6B7280] mt-0.5">{members.length} users with platform access.</p>
@@ -182,82 +183,90 @@ export function PlatformMembersPage() {
         )}
       </div>
 
-      <div className="relative max-w-xs mb-5">
-        <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <input
-          type="search"
-          placeholder="Search by name or email…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
-        />
+      {/* Filter bar */}
+      <div className="flex-shrink-0 border-b border-[#E5EAE8] px-8 pb-3">
+        <div className="relative max-w-xs">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="search"
+            placeholder="Search by name or email…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+          />
+        </div>
       </div>
 
-      <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Name</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Email</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Role</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Last Login</th>
-              <th className="px-5 py-3 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#F3F4F6]">
-            {loading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 6 }).map((_, j) => (
-                    <td key={j} className="px-5 py-4">
-                      <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-24" />
+      {/* Scrollable table */}
+      <div className="flex-1 min-h-0 px-8 py-4">
+        <div className="h-full flex flex-col bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+          <div className="flex-1 overflow-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+                <tr>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Name</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Email</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Role</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Last Login</th>
+                  <th className="px-5 py-2.5 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F3F4F6]">
+                {loading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={i}>
+                      {Array.from({ length: 6 }).map((_, j) => (
+                        <td key={j} className="px-5 py-1.5">
+                          <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-24" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
+                      {search ? 'No users match your search.' : 'No users yet.'}
                     </td>
-                  ))}
-                </tr>
-              ))
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
-                  {search ? 'No users match your search.' : 'No users yet.'}
-                </td>
-              </tr>
-            ) : (
-              filtered.map((m) => (
-                <tr key={m.id} className="hover:bg-[#F8FAF9] transition-colors">
-                  <td className="px-5 py-4">
-                    <span className="font-mono text-xs text-[#6B7280]">{formatId(m.ref_id)}</span>
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="font-medium text-[#111827]">{m.display_name}</p>
-                    {m.phone && <p className="text-xs text-[#9CA3AF] mt-0.5">{m.phone}</p>}
-                  </td>
-                  <td className="px-5 py-4 text-[#374151]">{m.email}</td>
-                  <td className="px-5 py-4">
-                    <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${ROLE_COLOR[m.role] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
-                      {ROLE_LABEL[m.role] ?? m.role}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4 text-[#9CA3AF] text-xs">{formatDate(m.last_sign_in_at)}</td>
-                  <td className="px-5 py-4 text-right">
-                    {m.ref_id != null ? (
-                      <Link
-                        to={`/users/${m.ref_id}`}
-                        className="text-xs font-medium text-[#0D4C3C] hover:underline"
-                      >
-                        View
-                      </Link>
-                    ) : (
-                      <span className="text-xs text-[#9CA3AF]">View</span>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                  </tr>
+                ) : (
+                  filtered.map((m) => (
+                    <tr key={m.id} className="hover:bg-[#F8FAF9] transition-colors">
+                      <td className="px-5 py-1.5">
+                        <span className="font-mono text-xs text-[#6B7280]">{formatId(m.ref_id)}</span>
+                      </td>
+                      <td className="px-5 py-1.5">
+                        <p className="font-medium text-[#111827]">{m.display_name}</p>
+                        {m.phone && <p className="text-xs text-[#9CA3AF] mt-0.5">{m.phone}</p>}
+                      </td>
+                      <td className="px-5 py-1.5 text-[#374151]">{m.email}</td>
+                      <td className="px-5 py-1.5">
+                        <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${ROLE_COLOR[m.role] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
+                          {ROLE_LABEL[m.role] ?? m.role}
+                        </span>
+                      </td>
+                      <td className="px-5 py-1.5 text-[#9CA3AF] text-xs">{formatDate(m.last_sign_in_at)}</td>
+                      <td className="px-5 py-1.5 text-right">
+                        {m.ref_id != null ? (
+                          <Link
+                            to={`/users/${m.ref_id}`}
+                            className="text-xs font-medium text-[#0D4C3C] hover:underline"
+                          >
+                            View
+                          </Link>
+                        ) : (
+                          <span className="text-xs text-[#9CA3AF]">View</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       {/* Add Member Modal */}

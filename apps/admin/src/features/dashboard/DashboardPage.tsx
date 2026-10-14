@@ -58,7 +58,7 @@ export function DashboardPage() {
   }, []);
 
   return (
-    <div className="px-8 py-8">
+    <div className="h-full overflow-y-auto px-8 py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#111827]">Dashboard</h1>
         <p className="text-sm text-[#6B7280] mt-0.5">Platform overview and health.</p>

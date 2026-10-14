@@ -419,8 +419,8 @@ export function AdminLayout() {
           </div>
         </div>
 
-        {/* Scrollable page area */}
-        <div className="flex-1 overflow-y-auto min-h-0 bg-[#F8FAF9]">
+        {/* Page area — each page manages its own scroll */}
+        <div className="flex-1 overflow-hidden min-h-0 bg-[#F8FAF9]">
           <Outlet />
         </div>
       </main>

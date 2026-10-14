@@ -193,7 +193,7 @@ export function TeamMemberDetailPage() {
   const statusColor = member.status === 'active' ? 'bg-[#ECFDF5] text-[#065F46]' : member.status === 'suspended' ? 'bg-[#FEF2F2] text-[#991B1B]' : 'bg-[#FFF7ED] text-[#9A3412]';
 
   return (
-    <div className="px-8 py-8 max-w-2xl">
+    <div className="h-full overflow-y-auto px-8 py-8 max-w-2xl">
       {/* Back */}
       <Link to="/users" className="flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#111827] mb-6 transition-colors">
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

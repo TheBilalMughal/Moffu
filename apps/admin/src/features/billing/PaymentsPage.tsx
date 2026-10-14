@@ -400,7 +400,7 @@ export function PaymentsPage() {
   );
 
   return (
-    <div className="px-8 py-8">
+    <div className="h-full overflow-y-auto px-8 py-8">
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
@@ -522,33 +522,33 @@ export function PaymentsPage() {
           {/* Table */}
           <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
             <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Client</th>
-                  <th className="px-4 py-3 text-left">
+              <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+                <tr>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Client</th>
+                  <th className="px-4 py-2.5 text-left">
                     <button onClick={() => toggleSort('plan')} className="flex items-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide hover:text-[#374151]">Plan <SortIcon col="plan"/></button>
                   </th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-4 py-2.5 text-left">
                     <button onClick={() => toggleSort('status')} className="flex items-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide hover:text-[#374151]">Status <SortIcon col="status"/></button>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Interval</th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Interval</th>
+                  <th className="px-4 py-2.5 text-left">
                     <button onClick={() => toggleSort('amount')} className="flex items-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide hover:text-[#374151]">Amount <SortIcon col="amount"/></button>
                   </th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-4 py-2.5 text-left">
                     <button onClick={() => toggleSort('next_charge')} className="flex items-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide hover:text-[#374151]">Next Charge <SortIcon col="next_charge"/></button>
                   </th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-4 py-2.5 text-left">
                     <button onClick={() => toggleSort('created')} className="flex items-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide hover:text-[#374151]">Created <SortIcon col="created"/></button>
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Stripe</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Stripe</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F3F4F6]">
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => (
-                    <tr key={i}>{Array.from({ length: 9 }).map((_, j) => (<td key={j} className="px-4 py-4"><div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-16"/></td>))}</tr>
+                    <tr key={i}>{Array.from({ length: 9 }).map((_, j) => (<td key={j} className="px-4 py-1.5"><div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-16"/></td>))}</tr>
                   ))
                 ) : pageRows.length === 0 ? (
                   <tr><td colSpan={9} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
@@ -557,10 +557,10 @@ export function PaymentsPage() {
                 ) : (
                   pageRows.map((r) => (
                     <tr key={r.subId} className="hover:bg-[#F8FAF9] transition-colors">
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-1.5">
                         <span className="font-mono text-xs text-[#9CA3AF]">{formatId(r.orgRefId)}</span>
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-1.5">
                         <div className="min-w-0">
                           {r.orgRefId ? (
                             <Link to={`/clients/${r.orgRefId}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline text-sm">{r.orgName ?? '—'}</Link>
@@ -570,20 +570,20 @@ export function PaymentsPage() {
                           {r.ownerEmail && <p className="text-xs text-[#9CA3AF] mt-0.5 truncate max-w-[160px]">{r.ownerEmail}</p>}
                         </div>
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-1.5">
                         <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${PLAN_COLOR[r.planSlug] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>{r.planName}</span>
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-1.5">
                         <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded capitalize ${STATUS_COLOR[r.status] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>{r.status.replace('_', ' ')}</span>
                       </td>
-                      <td className="px-4 py-3.5 text-xs text-[#374151] capitalize">{r.interval ?? '—'}</td>
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-1.5 text-xs text-[#374151] capitalize">{r.interval ?? '—'}</td>
+                      <td className="px-4 py-1.5">
                         <span className="text-sm font-medium text-[#111827]">{r.planSlug === 'free' ? <span className="text-[#9CA3AF]">Free</span> : fmt(r.amountCents)}</span>
                         {r.interval === 'annual' && r.amountCents > 0 && (
                           <p className="text-[10px] text-[#9CA3AF]">{fmt(Math.round(r.amountCents / 12))}/mo</p>
                         )}
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className="px-4 py-1.5">
                         {r.nextChargeDate ? (
                           <div>
                             <p className="text-xs font-medium text-[#374151]">{fmt(r.nextChargeCents)}</p>
@@ -593,8 +593,8 @@ export function PaymentsPage() {
                           <span className="text-xs text-[#9CA3AF]">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3.5 text-xs text-[#9CA3AF]">{formatDate(r.createdAt)}</td>
-                      <td className="px-4 py-3.5 text-right">
+                      <td className="px-4 py-1.5 text-xs text-[#9CA3AF]">{formatDate(r.createdAt)}</td>
+                      <td className="px-4 py-1.5 text-right">
                         {r.stripeSubId ? (
                           <span className="font-mono text-[10px] text-[#9CA3AF] bg-[#F3F4F6] px-1.5 py-0.5 rounded">{r.stripeSubId.slice(0, 14)}…</span>
                         ) : (

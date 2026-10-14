@@ -148,13 +148,15 @@ export function ClientsPage() {
   });
 
   return (
-    <div className="px-8 py-8">
-      <div className="mb-6">
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="flex-shrink-0 px-8 pt-6 pb-4">
         <h1 className="text-2xl font-bold text-[#111827]">Clients</h1>
         <p className="text-sm text-[#6B7280] mt-0.5">{clients.length} clients on the platform.</p>
       </div>
 
-      <div className="flex items-center gap-3 mb-5">
+      {/* Filter bar */}
+      <div className="flex-shrink-0 border-b border-[#E5EAE8] px-8 pb-3 flex items-center gap-3">
         <div className="relative flex-1 max-w-xs">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -181,91 +183,96 @@ export function ClientsPage() {
         />
       </div>
 
-      <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Client Name</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Email</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Plan</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Members</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Created</th>
-              <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Usage</th>
-              <th className="px-5 py-3 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#F3F4F6]">
-            {loading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 8 }).map((_, j) => (
-                    <td key={j} className="px-5 py-4">
-                      <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-20" />
-                    </td>
-                  ))}
+      {/* Scrollable table */}
+      <div className="flex-1 min-h-0 px-8 py-4">
+        <div className="h-full flex flex-col bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+          <div className="flex-1 overflow-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+                <tr>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Client Name</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Email</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Plan</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Members</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Created</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Usage</th>
+                  <th className="px-5 py-2.5 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Actions</th>
                 </tr>
-              ))
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
-                  {search || planFilter !== 'all' ? 'No clients match your filters.' : 'No clients yet.'}
-                </td>
-              </tr>
-            ) : (
-              filtered.map((c) => {
-                const isSuspended = c.status === 'suspended';
-                return (
-                  <tr key={c.id} className="hover:bg-[#F8FAF9] transition-colors">
-                    <td className="px-5 py-4">
-                      <span className="font-mono text-xs text-[#6B7280]">{formatId(c.ref_id)}</span>
-                    </td>
-                    <td className="px-5 py-4">
-                      {c.ref_id != null ? (
-                        <Link to={`/clients/${c.ref_id}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
-                          {c.name}
-                        </Link>
-                      ) : (
-                        <p className="font-medium text-[#111827]">{c.name}</p>
-                      )}
-                    </td>
-                    <td className="px-5 py-4 text-[#374151] text-xs">{c.owner_email ?? '—'}</td>
-                    <td className="px-5 py-4">
-                      <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${PLAN_COLOR[c.plan ?? 'free'] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
-                        {c.plan ?? 'free'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-[#374151]">{c.member_count}</td>
-                    <td className="px-5 py-4 text-[#9CA3AF] text-xs">{formatDate(c.created_at)}</td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-xs text-[#374151]">{c.usage}</span>
-                        <span className="text-xs text-[#9CA3AF]">/ {c.plan_limit}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex items-center justify-end gap-3">
-                        {c.ref_id != null ? (
-                          <Link to={`/clients/${c.ref_id}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>
-                        ) : (
-                          <span className="text-xs text-[#9CA3AF]">View</span>
-                        )}
-                        <span className="text-[#E5EAE8]">|</span>
-                        <button
-                          onClick={() => handleDeactivate(c)}
-                          disabled={deactivating === c.id}
-                          className={`text-xs font-medium hover:underline disabled:opacity-50 ${isSuspended ? 'text-[#0D4C3C]' : 'text-red-600'}`}
-                        >
-                          {deactivating === c.id ? '…' : isSuspended ? 'Reactivate' : 'Deactivate'}
-                        </button>
-                      </div>
+              </thead>
+              <tbody className="divide-y divide-[#F3F4F6]">
+                {loading ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <tr key={i}>
+                      {Array.from({ length: 8 }).map((_, j) => (
+                        <td key={j} className="px-5 py-1.5">
+                          <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-20" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
+                      {search || planFilter !== 'all' ? 'No clients match your filters.' : 'No clients yet.'}
                     </td>
                   </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                ) : (
+                  filtered.map((c) => {
+                    const isSuspended = c.status === 'suspended';
+                    return (
+                      <tr key={c.id} className="hover:bg-[#F8FAF9] transition-colors">
+                        <td className="px-5 py-1.5">
+                          <span className="font-mono text-xs text-[#6B7280]">{formatId(c.ref_id)}</span>
+                        </td>
+                        <td className="px-5 py-1.5">
+                          {c.ref_id != null ? (
+                            <Link to={`/clients/${c.ref_id}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
+                              {c.name}
+                            </Link>
+                          ) : (
+                            <p className="font-medium text-[#111827]">{c.name}</p>
+                          )}
+                        </td>
+                        <td className="px-5 py-1.5 text-[#374151] text-xs">{c.owner_email ?? '—'}</td>
+                        <td className="px-5 py-1.5">
+                          <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${PLAN_COLOR[c.plan ?? 'free'] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
+                            {c.plan ?? 'free'}
+                          </span>
+                        </td>
+                        <td className="px-5 py-1.5 text-[#374151]">{c.member_count}</td>
+                        <td className="px-5 py-1.5 text-[#9CA3AF] text-xs">{formatDate(c.created_at)}</td>
+                        <td className="px-5 py-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-xs text-[#374151]">{c.usage}</span>
+                            <span className="text-xs text-[#9CA3AF]">/ {c.plan_limit}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-1.5 text-right">
+                          <div className="flex items-center justify-end gap-3">
+                            {c.ref_id != null ? (
+                              <Link to={`/clients/${c.ref_id}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>
+                            ) : (
+                              <span className="text-xs text-[#9CA3AF]">View</span>
+                            )}
+                            <span className="text-[#E5EAE8]">|</span>
+                            <button
+                              onClick={() => handleDeactivate(c)}
+                              disabled={deactivating === c.id}
+                              className={`text-xs font-medium hover:underline disabled:opacity-50 ${isSuspended ? 'text-[#0D4C3C]' : 'text-red-600'}`}
+                            >
+                              {deactivating === c.id ? '…' : isSuspended ? 'Reactivate' : 'Deactivate'}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );
