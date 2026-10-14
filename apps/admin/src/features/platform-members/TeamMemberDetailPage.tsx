@@ -163,31 +163,36 @@ export function TeamMemberDetailPage() {
     setResetting(true);
     setResetMsg(null);
 
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-set-password`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-set-password`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ user_id: member.userId, password: newPassword }),
         },
-        body: JSON.stringify({ user_id: member.userId, password: newPassword }),
-      },
-    );
+      );
 
-    const result = await res.json();
-    setResetting(false);
+      const result = await res.json();
 
-    if (!res.ok || !result.success) {
-      setResetMsg(`Error: ${result.error ?? 'Failed to set password.'}`);
-      return;
+      if (!res.ok || !result.success) {
+        setResetMsg(`Error: ${result.error ?? 'Failed to set password.'}`);
+        return;
+      }
+
+      setResetMsg('Password updated successfully.');
+      setNewPassword('');
+      setShowNewPassword(false);
+    } catch (err) {
+      setResetMsg(`Error: ${err instanceof Error ? err.message : 'Network error.'}`);
+    } finally {
+      setResetting(false);
     }
-
-    setResetMsg('Password updated successfully.');
-    setNewPassword('');
-    setShowNewPassword(false);
   }
 
   async function copyToClipboard(text: string) {
