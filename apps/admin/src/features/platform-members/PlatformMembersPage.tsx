@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
@@ -43,11 +43,25 @@ function canManage(platformRole: string | null) {
   return platformRole === 'super_admin' || platformRole === 'admin';
 }
 
+function isSuperAdmin(platformRole: string | null) {
+  return platformRole === 'super_admin';
+}
+
 export function PlatformMembersPage() {
   const { platformRole } = useAdminAuthStore();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+
+  // Selection
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const selectAllRef = useRef<HTMLInputElement>(null);
+
+  // Bulk action state
+  const [bulkWorking, setBulkWorking] = useState(false);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+
+  // Add modal
   const [showAddModal, setShowAddModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,10 +119,19 @@ export function PlatformMembersPage() {
     });
 
     setMembers(enriched);
+    setSelected(new Set());
     setLoading(false);
   }
 
   useEffect(() => { loadMembers(); }, []);
+
+  // Keep indeterminate state in sync
+  useEffect(() => {
+    if (!selectAllRef.current) return;
+    const total = filtered.length;
+    const sel = filtered.filter((m) => selected.has(m.id)).length;
+    selectAllRef.current.indeterminate = sel > 0 && sel < total;
+  });
 
   function generatePassword() {
     const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
@@ -188,12 +211,91 @@ export function PlatformMembersPage() {
     loadMembers();
   }
 
+  // ── Selection helpers ─────────────────────────────────────────────────────
+
   const filtered = members.filter(
     (m) =>
       search.trim() === '' ||
       m.display_name.toLowerCase().includes(search.toLowerCase()) ||
       m.email.toLowerCase().includes(search.toLowerCase()),
   );
+
+  function toggleRow(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    const visibleIds = filtered.map((m) => m.id);
+    const allSelected = visibleIds.every((id) => selected.has(id));
+    if (allSelected) {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        visibleIds.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        visibleIds.forEach((id) => next.add(id));
+        return next;
+      });
+    }
+  }
+
+  const selectedCount = filtered.filter((m) => selected.has(m.id)).length;
+  const allSelected = filtered.length > 0 && filtered.every((m) => selected.has(m.id));
+
+  // ── Bulk actions ──────────────────────────────────────────────────────────
+
+  async function handleBulkDeactivate() {
+    setBulkWorking(true);
+    setBulkError(null);
+    const ids = [...selected];
+    const { error } = await supabase
+      .from('platform_members')
+      .update({ is_active: false })
+      .in('id', ids);
+    setBulkWorking(false);
+    if (error) { setBulkError(error.message); return; }
+    setSelected(new Set());
+    loadMembers();
+  }
+
+  async function handleBulkDelete() {
+    if (!window.confirm(`Delete ${selectedCount} member${selectedCount > 1 ? 's' : ''}? This cannot be undone.`)) return;
+    setBulkWorking(true);
+    setBulkError(null);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-delete-member`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ member_ids: [...selected] }),
+      },
+    );
+
+    const result = await res.json();
+    setBulkWorking(false);
+
+    if (!res.ok || !result.success) {
+      setBulkError(result.error ?? 'Delete failed.');
+      return;
+    }
+
+    setSelected(new Set());
+    loadMembers();
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -206,7 +308,7 @@ export function PlatformMembersPage() {
         {canManage(platformRole) && (
           <button
             onClick={openAdd}
-            className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-4 py-2 transition-colors"
+            className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -217,8 +319,8 @@ export function PlatformMembersPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex-shrink-0 border-b border-[#E5EAE8] px-8 pb-3">
-        <div className="relative max-w-xs">
+      <div className="flex-shrink-0 border-b border-[#E5EAE8] px-8 pb-3 flex items-center gap-3">
+        <div className="relative max-w-xs flex-1">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -226,11 +328,48 @@ export function PlatformMembersPage() {
             type="search"
             placeholder="Search by name or email…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+            onChange={(e) => { setSearch(e.target.value); setSelected(new Set()); }}
+            className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
           />
         </div>
+
+        {/* Bulk action bar */}
+        {selectedCount > 0 && (
+          <div className="flex items-center gap-2 ml-2">
+            <span className="text-xs text-[#6B7280] font-medium">{selectedCount} selected</span>
+            {canManage(platformRole) && (
+              <button
+                onClick={handleBulkDeactivate}
+                disabled={bulkWorking}
+                className="px-3 py-1.5 text-xs font-semibold text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] disabled:opacity-50 transition-colors"
+              >
+                Deactivate
+              </button>
+            )}
+            {isSuperAdmin(platformRole) && (
+              <button
+                onClick={handleBulkDelete}
+                disabled={bulkWorking}
+                className="px-3 py-1.5 text-xs font-semibold text-red-700 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+              >
+                Delete
+              </button>
+            )}
+            <button
+              onClick={() => setSelected(new Set())}
+              className="text-xs text-[#9CA3AF] hover:text-[#374151] transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+        )}
       </div>
+
+      {bulkError && (
+        <div className="flex-shrink-0 mx-8 mt-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {bulkError}
+        </div>
+      )}
 
       {/* Scrollable table */}
       <div className="flex-1 min-h-0 px-8 py-4">
@@ -239,10 +378,21 @@ export function PlatformMembersPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
                 <tr>
+                  <th className="px-4 py-2.5 w-10">
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleAll}
+                      className="w-4 h-4 accent-[#0D4C3C] cursor-pointer"
+                      aria-label="Select all"
+                    />
+                  </th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Name</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Email</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Role</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Status</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Last Login</th>
                   <th className="px-5 py-2.5 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Actions</th>
                 </tr>
@@ -251,7 +401,7 @@ export function PlatformMembersPage() {
                 {loading ? (
                   Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i}>
-                      {Array.from({ length: 6 }).map((_, j) => (
+                      {Array.from({ length: 8 }).map((_, j) => (
                         <td key={j} className="px-5 py-1.5">
                           <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-24" />
                         </td>
@@ -260,13 +410,24 @@ export function PlatformMembersPage() {
                   ))
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
+                    <td colSpan={8} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
                       {search ? 'No users match your search.' : 'No users yet.'}
                     </td>
                   </tr>
                 ) : (
                   filtered.map((m) => (
-                    <tr key={m.id} className="hover:bg-[#F8FAF9] transition-colors">
+                    <tr
+                      key={m.id}
+                      className={`hover:bg-[#F8FAF9] transition-colors ${selected.has(m.id) ? 'bg-[#F0F9F5]' : ''}`}
+                    >
+                      <td className="px-4 py-1.5">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(m.id)}
+                          onChange={() => toggleRow(m.id)}
+                          className="w-4 h-4 accent-[#0D4C3C] cursor-pointer"
+                        />
+                      </td>
                       <td className="px-5 py-1.5">
                         <span className="font-mono text-xs text-[#6B7280]">{formatId(m.ref_id)}</span>
                       </td>
@@ -278,6 +439,11 @@ export function PlatformMembersPage() {
                       <td className="px-5 py-1.5">
                         <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${ROLE_COLOR[m.role] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
                           {ROLE_LABEL[m.role] ?? m.role}
+                        </span>
+                      </td>
+                      <td className="px-5 py-1.5">
+                        <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${m.is_active ? 'bg-[#ECFDF5] text-[#065F46]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+                          {m.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="px-5 py-1.5 text-[#9CA3AF] text-xs">{formatDate(m.last_sign_in_at)}</td>

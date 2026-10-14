@@ -83,15 +83,18 @@ serve(async (req) => {
       userId = newUser.user.id;
     }
 
-    // Update profile with name and phone
+    // Ensure profile exists and is active (email_confirm:true on INSERT skips the UPDATE trigger
+    // that normally sets status='active', so we must do it explicitly)
     await adminClient
       .from('profiles')
-      .update({
+      .upsert({
+        id: userId,
         display_name: name.trim(),
+        email: email.trim().toLowerCase(),
         ...(phone?.trim() ? { phone: phone.trim() } : {}),
+        status: 'active',
         updated_at: new Date().toISOString(),
-      })
-      .eq('id', userId);
+      }, { onConflict: 'id' });
 
     // Add to platform_members (upsert in case already exists)
     const { error: memberErr } = await adminClient

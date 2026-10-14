@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
-import { adminAuthService } from '@/features/auth/auth.service';
 import { Dropdown } from '@/components/Dropdown';
 import { formatDate, formatId } from '@/lib/format';
 
@@ -34,19 +33,30 @@ interface MemberDetail {
   displayName: string;
   email: string;
   phone: string | null;
-  status: string;
   role: PlatformRole;
   isActive: boolean;
   createdAt: string;
+  lastSignInAt: string | null;
 }
 
 function canManage(platformRole: string | null) {
   return platformRole === 'super_admin' || platformRole === 'admin';
 }
 
+function generatePassword() {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghjkmnpqrstuvwxyz';
+  const digits = '23456789';
+  const special = '@#$!%&*';
+  const all = upper + lower + digits + special;
+  const rand = (s: string) => s[Math.floor(Math.random() * s.length)];
+  const chars = [rand(upper), rand(lower), rand(digits), rand(special)];
+  for (let i = 0; i < 8; i++) chars.push(rand(all));
+  return chars.sort(() => Math.random() - 0.5).join('');
+}
+
 export function TeamMemberDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { platformRole } = useAdminAuthStore();
 
   const [member, setMember] = useState<MemberDetail | null>(null);
@@ -61,8 +71,11 @@ export function TeamMemberDetailPage() {
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
   // Reset password state
+  const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetMsg, setResetMsg] = useState<string | null>(null);
+  const [passwordCopied, setPasswordCopied] = useState(false);
 
   // Activate/deactivate
   const [toggling, setToggling] = useState(false);
@@ -73,7 +86,7 @@ export function TeamMemberDetailPage() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, ref_id, display_name, phone, status')
+      .select('id, ref_id, display_name, phone')
       .eq('ref_id', id)
       .maybeSingle();
 
@@ -87,7 +100,6 @@ export function TeamMemberDetailPage() {
 
     if (!pm) { setNotFound(true); setLoading(false); return; }
 
-    // Get real email from auth.users via security-definer RPC
     const { data: authRows } = await supabase.rpc('get_platform_members_auth');
     type AuthRow = { user_id: string; email: string; last_sign_in_at: string | null };
     const authRow = (authRows as AuthRow[] ?? []).find((a) => a.user_id === profile.id);
@@ -99,10 +111,10 @@ export function TeamMemberDetailPage() {
       displayName: profile.display_name ?? '—',
       email: authRow?.email ?? '—',
       phone: profile.phone ?? null,
-      status: profile.status ?? 'pending_verification',
       role: pm.role as PlatformRole,
       isActive: pm.is_active,
       createdAt: pm.created_at,
+      lastSignInAt: authRow?.last_sign_in_at ?? null,
     };
 
     setMember(detail);
@@ -140,13 +152,47 @@ export function TeamMemberDetailPage() {
     load();
   }
 
-  async function handleResetPassword() {
+  async function handleSetPassword() {
     if (!member) return;
+    if (!newPassword.trim() || newPassword.length < 8) {
+      setResetMsg('Error: Password must be at least 8 characters.');
+      return;
+    }
+
     setResetting(true);
     setResetMsg(null);
-    const { error } = await adminAuthService.forgotPassword(member.email);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-set-password`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({ user_id: member.userId, password: newPassword }),
+      },
+    );
+
+    const result = await res.json();
     setResetting(false);
-    setResetMsg(error ? `Error: ${error.message}` : `Reset link sent to ${member.email}.`);
+
+    if (!res.ok || !result.success) {
+      setResetMsg(`Error: ${result.error ?? 'Failed to set password.'}`);
+      return;
+    }
+
+    setResetMsg('Password updated successfully.');
+    setNewPassword('');
+    setShowNewPassword(false);
+  }
+
+  async function copyToClipboard(text: string) {
+    await navigator.clipboard.writeText(text);
+    setPasswordCopied(true);
+    setTimeout(() => setPasswordCopied(false), 2000);
   }
 
   async function handleToggleActive() {
@@ -162,7 +208,7 @@ export function TeamMemberDetailPage() {
 
   if (loading) {
     return (
-      <div className="px-8 py-8">
+      <div className="h-full overflow-y-auto px-8 py-8">
         <div className="h-4 bg-[#E5EAE8] rounded animate-pulse w-48 mb-8" />
         <div className="bg-white border border-[#E5EAE8] rounded-xl p-6 animate-pulse space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -175,12 +221,12 @@ export function TeamMemberDetailPage() {
 
   if (notFound) {
     return (
-      <div className="px-8 py-8">
+      <div className="h-full overflow-y-auto px-8 py-8">
         <Link to="/users" className="flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#111827] mb-6">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Back to team
+          Back to Users
         </Link>
         <p className="text-sm text-[#9CA3AF]">Member not found.</p>
       </div>
@@ -188,9 +234,6 @@ export function TeamMemberDetailPage() {
   }
 
   if (!member) return null;
-
-  const statusLabel = member.status === 'active' ? 'Active' : member.status === 'suspended' ? 'Suspended' : 'Pending';
-  const statusColor = member.status === 'active' ? 'bg-[#ECFDF5] text-[#065F46]' : member.status === 'suspended' ? 'bg-[#FEF2F2] text-[#991B1B]' : 'bg-[#FFF7ED] text-[#9A3412]';
 
   return (
     <div className="h-full overflow-y-auto px-8 py-8 max-w-2xl">
@@ -205,27 +248,27 @@ export function TeamMemberDetailPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2.5 mb-1">
             <h1 className="text-2xl font-bold text-[#111827]">{member.displayName}</h1>
-            <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${statusColor}`}>{statusLabel}</span>
+            <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${member.isActive ? 'bg-[#ECFDF5] text-[#065F46]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+              {member.isActive ? 'Active' : 'Inactive'}
+            </span>
           </div>
-          <p className="text-sm text-[#9CA3AF] font-mono">{member.refId} · {formatId(member.refId)}</p>
+          <p className="text-sm text-[#9CA3AF] font-mono">{formatId(member.refId)}</p>
         </div>
-        <div className="flex items-center gap-2">
-          {canManage(platformRole) && (
-            <button
-              onClick={handleToggleActive}
-              disabled={toggling}
-              className={`px-3 py-1.5 text-xs font-semibold rounded transition-colors disabled:opacity-50 ${
-                member.isActive
-                  ? 'bg-[#FEF2F2] text-red-700 hover:bg-red-100'
-                  : 'bg-[#ECFDF5] text-[#065F46] hover:bg-green-100'
-              }`}
-            >
-              {toggling ? '…' : member.isActive ? 'Deactivate' : 'Reactivate'}
-            </button>
-          )}
-        </div>
+        {canManage(platformRole) && (
+          <button
+            onClick={handleToggleActive}
+            disabled={toggling}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 ${
+              member.isActive
+                ? 'bg-[#FEF2F2] text-red-700 hover:bg-red-100'
+                : 'bg-[#ECFDF5] text-[#065F46] hover:bg-green-100'
+            }`}
+          >
+            {toggling ? '…' : member.isActive ? 'Deactivate' : 'Reactivate'}
+          </button>
+        )}
       </div>
 
       {/* Info card */}
@@ -251,6 +294,10 @@ export function TeamMemberDetailPage() {
             <dd className="text-sm text-[#111827]">{member.phone ?? '—'}</dd>
           </div>
           <div className="px-6 py-3.5 flex items-center gap-4">
+            <dt className="w-32 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Last login</dt>
+            <dd className="text-sm text-[#111827]">{formatDate(member.lastSignInAt)}</dd>
+          </div>
+          <div className="px-6 py-3.5 flex items-center gap-4">
             <dt className="w-32 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Added</dt>
             <dd className="text-sm text-[#111827]">{formatDate(member.createdAt)}</dd>
           </div>
@@ -270,7 +317,7 @@ export function TeamMemberDetailPage() {
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] text-[#111827] focus:outline-none focus:border-[#0D4C3C]"
+                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg text-[#111827] focus:outline-none focus:border-[#0D4C3C]"
               />
             </div>
             <div>
@@ -280,7 +327,7 @@ export function TeamMemberDetailPage() {
                 value={editPhone}
                 onChange={(e) => setEditPhone(e.target.value)}
                 placeholder="+1 555 000 0000"
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
               />
             </div>
             <div>
@@ -294,7 +341,7 @@ export function TeamMemberDetailPage() {
             </div>
 
             {saveMsg && (
-              <p className={`text-sm px-3 py-2 ${saveMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#E6F2EE] border border-[#A7D7C5] text-[#0D4C3C]'}`}>
+              <p className={`text-sm px-3 py-2 rounded-lg ${saveMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#E6F2EE] border border-[#A7D7C5] text-[#0D4C3C]'}`}>
                 {saveMsg}
               </p>
             )}
@@ -303,7 +350,7 @@ export function TeamMemberDetailPage() {
               <button
                 onClick={handleSave}
                 disabled={saving || !editName.trim()}
-                className="px-4 py-2 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] rounded-lg disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Saving…' : 'Save changes'}
               </button>
@@ -313,29 +360,86 @@ export function TeamMemberDetailPage() {
       )}
 
       {/* Reset password */}
-      <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
-        <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
-          <h2 className="text-sm font-semibold text-[#111827]">Password reset</h2>
-        </div>
-        <div className="p-6">
-          <p className="text-sm text-[#6B7280] mb-4">
-            Send a password reset link to <span className="font-medium text-[#111827]">{member.email}</span>.
-            The link expires in 24 hours.
-          </p>
-          {resetMsg && (
-            <p className={`text-sm px-3 py-2 mb-4 ${resetMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#E6F2EE] border border-[#A7D7C5] text-[#0D4C3C]'}`}>
-              {resetMsg}
+      {canManage(platformRole) && (
+        <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
+            <h2 className="text-sm font-semibold text-[#111827]">Set password</h2>
+          </div>
+          <div className="p-6">
+            <p className="text-sm text-[#6B7280] mb-4">
+              Set a new password for <span className="font-medium text-[#111827]">{member.displayName}</span>. Share it with them directly — they can change it after signing in.
             </p>
-          )}
-          <button
-            onClick={handleResetPassword}
-            disabled={resetting}
-            className="px-4 py-2 text-sm font-semibold text-[#0D4C3C] border border-[#0D4C3C] hover:bg-[#E6F2EE] disabled:opacity-50 transition-colors"
-          >
-            {resetting ? 'Sending…' : 'Send reset link'}
-          </button>
+
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-[#374151] uppercase tracking-wide">New password</label>
+              <button
+                type="button"
+                onClick={() => {
+                  const pw = generatePassword();
+                  setNewPassword(pw);
+                  setShowNewPassword(true);
+                  setResetMsg(null);
+                }}
+                className="text-xs font-medium text-[#0D4C3C] hover:underline"
+              >
+                Auto-generate
+              </button>
+            </div>
+
+            <div className="relative mb-4">
+              <input
+                type={showNewPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => { setNewPassword(e.target.value); setResetMsg(null); }}
+                placeholder="Min. 8 characters"
+                className="w-full px-3 py-2 pr-16 text-sm border border-[#E5EAE8] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] font-mono"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                {newPassword && (
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(newPassword)}
+                    className="text-xs font-medium text-[#0D4C3C] hover:underline"
+                  >
+                    {passwordCopied ? 'Copied!' : 'Copy'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((v) => !v)}
+                  className="text-[#9CA3AF] hover:text-[#374151] transition-colors"
+                  aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showNewPassword ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {resetMsg && (
+              <p className={`text-sm px-3 py-2 rounded-lg mb-4 ${resetMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#E6F2EE] border border-[#A7D7C5] text-[#0D4C3C]'}`}>
+                {resetMsg}
+              </p>
+            )}
+
+            <button
+              onClick={handleSetPassword}
+              disabled={resetting || !newPassword.trim()}
+              className="px-4 py-2 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] rounded-lg disabled:opacity-50 transition-colors"
+            >
+              {resetting ? 'Setting…' : 'Set password'}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
