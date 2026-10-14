@@ -11,6 +11,8 @@ import { PlatformMembersPage } from '@/features/platform-members/PlatformMembers
 import { TeamMemberDetailPage } from '@/features/platform-members/TeamMemberDetailPage';
 import { RolesPage } from '@/features/roles/RolesPage';
 import { AuditPage } from '@/features/audit/AuditPage';
+import { SubscriptionsPage } from '@/features/billing/SubscriptionsPage';
+import { PaymentsPage } from '@/features/billing/PaymentsPage';
 
 export function App() {
   const initialize = useAdminAuthStore((s) => s.initialize);
@@ -37,6 +39,8 @@ export function App() {
           <Route path="clients/:id" element={<ClientDetailPage />} />
           <Route path="users" element={<PlatformMembersPage />} />
           <Route path="users/:id" element={<TeamMemberDetailPage />} />
+          <Route path="billing" element={<SubscriptionsPage />} />
+          <Route path="payments" element={<PaymentsPage />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="audit" element={<AuditPage />} />
           {/* Legacy redirects */}
