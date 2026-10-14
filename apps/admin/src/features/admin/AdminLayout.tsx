@@ -202,10 +202,38 @@ function AdminSearch() {
 
 interface AdminNotif {
   id: string;
-  text: string;
-  sub: string;
-  time: string;
-  color: string;
+  type: string;
+  title: string;
+  body: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+const NOTIF_STYLE: Record<string, { bg: string; text: string; icon: string }> = {
+  new_client:               { bg: 'bg-[#E6F2EE]', text: 'text-[#0D4C3C]', icon: '🏢' },
+  subscription_changed:     { bg: 'bg-[#EFF6FF]', text: 'text-[#1D4ED8]', icon: '↑' },
+  subscription_cancelled:   { bg: 'bg-[#FEF2F2]', text: 'text-[#DC2626]', icon: '✕' },
+  google_connected:         { bg: 'bg-[#F0FDF4]', text: 'text-[#15803D]', icon: 'G' },
+  google_disconnected:      { bg: 'bg-[#FFF7ED]', text: 'text-[#C2410C]', icon: 'G' },
+};
+
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function notifRoute(type: string) {
+  if (type === 'new_client') return '/clients';
+  if (type.startsWith('subscription')) return '/billing';
+  if (type.startsWith('google')) return '/clients';
+  return '/';
 }
 
 function AdminNotificationsBell() {
@@ -220,35 +248,47 @@ function AdminNotificationsBell() {
     return () => document.removeEventListener('mousedown', fn);
   }, []);
 
+  // Initial load
   useEffect(() => {
-    async function load() {
-      const [recentOrgs, recentMembers] = await Promise.all([
-        supabase.from('organizations').select('id, name, created_at').order('created_at', { ascending: false }).limit(3),
-        supabase.from('platform_members').select('id, user_id, created_at').order('created_at', { ascending: false }).limit(3),
-      ]);
-
-      const memberUserIds = (recentMembers.data ?? []).map((m: any) => m.user_id);
-      const profilesRes = memberUserIds.length > 0
-        ? await supabase.from('profiles').select('id, display_name').in('id', memberUserIds)
-        : { data: [] };
-      const nameById = new Map<string, string>(
-        (profilesRes.data ?? []).map((p: any) => [p.id, p.display_name ?? 'Unknown']),
-      );
-
-      const list: AdminNotif[] = [];
-      (recentOrgs.data ?? []).forEach((o: any) => {
-        list.push({ id: o.id, text: o.name, sub: 'New client', time: new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'bg-[#E6F2EE] text-[#0D4C3C]' });
-      });
-      (recentMembers.data ?? []).forEach((m: any) => {
-        const name = nameById.get(m.user_id) ?? 'Unknown';
-        list.push({ id: m.id, text: name, sub: 'New platform member', time: new Date(m.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), color: 'bg-[#EDE9FE] text-[#5B21B6]' });
-      });
-      setNotifs(list.sort((a, b) => b.time.localeCompare(a.time)).slice(0, 6));
-    }
-    load();
+    supabase
+      .from('admin_notifications')
+      .select('id, type, title, body, is_read, created_at')
+      .order('created_at', { ascending: false })
+      .limit(30)
+      .then(({ data }) => { if (data) setNotifs(data as AdminNotif[]); });
   }, []);
 
-  const unread = notifs.length;
+  // Realtime: new notifications appear instantly
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin_notifications_realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'admin_notifications' },
+        (payload) => {
+          setNotifs(prev => [payload.new as AdminNotif, ...prev].slice(0, 30));
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const unread = notifs.filter(n => !n.is_read).length;
+
+  async function markAllRead() {
+    const unreadIds = notifs.filter(n => !n.is_read).map(n => n.id);
+    if (unreadIds.length === 0) return;
+    await supabase
+      .from('admin_notifications')
+      .update({ is_read: true })
+      .in('id', unreadIds);
+    setNotifs(prev => prev.map(n => ({ ...n, is_read: true })));
+  }
+
+  async function markRead(id: string) {
+    await supabase.from('admin_notifications').update({ is_read: true }).eq('id', id);
+    setNotifs(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+  }
 
   return (
     <div ref={ref} className="relative">
@@ -266,29 +306,39 @@ function AdminNotificationsBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-50">
-          <div className="px-4 py-3 border-b border-[#F3F4F6] flex items-center justify-between">
+        <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-[#E5EAE8] rounded-xl shadow-lg z-50 flex flex-col" style={{ maxHeight: '420px' }}>
+          <div className="px-4 py-3 border-b border-[#F3F4F6] flex items-center justify-between flex-shrink-0">
             <p className="text-sm font-semibold text-[#111827]">Notifications</p>
-            {unread > 0 && <span className="text-xs text-[#9CA3AF]">{unread} recent</span>}
+            {unread > 0 && (
+              <button onClick={markAllRead} className="text-xs text-[#0D4C3C] hover:underline font-medium">
+                Mark all read
+              </button>
+            )}
           </div>
           {notifs.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-[#9CA3AF]">All caught up!</div>
+            <div className="px-4 py-10 text-center text-sm text-[#9CA3AF]">All caught up!</div>
           ) : (
-            <div className="divide-y divide-[#F9FAFB] max-h-72 overflow-y-auto">
-              {notifs.map(n => (
-                <button key={n.id}
-                  onClick={() => { navigate(n.sub.includes('client') ? '/clients' : '/users'); setOpen(false); }}
-                  className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#F8FAF9] transition-colors text-left">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5 ${n.color}`}>
-                    {n.text[0]?.toUpperCase() ?? '?'}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-[#111827] truncate">{n.text}</p>
-                    <p className="text-xs text-[#6B7280] mt-0.5">{n.sub}</p>
-                  </div>
-                  <span className="text-[10px] text-[#9CA3AF] flex-shrink-0 mt-1">{n.time}</span>
-                </button>
-              ))}
+            <div className="divide-y divide-[#F9FAFB] overflow-y-auto">
+              {notifs.map(n => {
+                const style = NOTIF_STYLE[n.type] ?? { bg: 'bg-[#F3F4F6]', text: 'text-[#374151]', icon: '•' };
+                return (
+                  <button key={n.id}
+                    onClick={() => { markRead(n.id); navigate(notifRoute(n.type)); setOpen(false); }}
+                    className={`w-full flex items-start gap-3 px-4 py-3 hover:bg-[#F8FAF9] transition-colors text-left ${!n.is_read ? 'bg-[#FAFFFE]' : ''}`}>
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0 mt-0.5 ${style.bg} ${style.text}`}>
+                      {style.icon}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-semibold text-[#111827] truncate">{n.title}</p>
+                        {!n.is_read && <span className="w-1.5 h-1.5 rounded-full bg-[#0D4C3C] flex-shrink-0" />}
+                      </div>
+                      <p className="text-xs text-[#6B7280] mt-0.5 line-clamp-2">{n.body}</p>
+                    </div>
+                    <span className="text-[10px] text-[#9CA3AF] flex-shrink-0 mt-0.5 whitespace-nowrap">{timeAgo(n.created_at)}</span>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
