@@ -40,55 +40,67 @@ export function ClientsPage() {
   async function load() {
     setLoading(true);
 
-    const { data: orgRows } = await supabase
+    const { data: orgRows, error: orgErr } = await supabase
       .from('organizations')
       .select('id, display_id, name, created_at, status')
       .order('created_at', { ascending: false });
 
-    if (!orgRows) { setLoading(false); return; }
+    if (orgErr || !orgRows) { setLoading(false); return; }
+    if (orgRows.length === 0) { setClients([]); setLoading(false); return; }
 
     const orgIds = orgRows.map((o: { id: string }) => o.id);
-
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    const [subsRes, membersRes, usageRes] = await Promise.all([
+    const [subsRes, membersRes] = await Promise.all([
       supabase.from('subscriptions').select('org_id, plan, status').in('org_id', orgIds),
       supabase.from('org_members').select('org_id, user_id, role').in('org_id', orgIds),
-      supabase.from('ai_draft_logs').select('org_id').in('org_id', orgIds).gte('created_at', monthStart),
     ]);
 
     const subsByOrg = new Map<string, { plan: string; status: string }>();
-    (subsRes.data ?? []).forEach((s: { org_id: string; plan: string; status: string }) => subsByOrg.set(s.org_id, s));
+    (subsRes.data ?? []).forEach((s: { org_id: string; plan: string; status: string }) =>
+      subsByOrg.set(s.org_id, s),
+    );
 
     const memberCountByOrg = new Map<string, number>();
-    (membersRes.data ?? []).forEach((m: { org_id: string }) => {
+    const userToOrg = new Map<string, string>();
+    (membersRes.data ?? []).forEach((m: { org_id: string; user_id: string; role: string }) => {
       memberCountByOrg.set(m.org_id, (memberCountByOrg.get(m.org_id) ?? 0) + 1);
+      if (!userToOrg.has(m.user_id)) userToOrg.set(m.user_id, m.org_id);
     });
 
-    const usageByOrg = new Map<string, number>();
-    (usageRes.data ?? []).forEach((r: { org_id: string }) => {
-      usageByOrg.set(r.org_id, (usageByOrg.get(r.org_id) ?? 0) + 1);
-    });
-
+    // owner emails
     const ownerPairs = (membersRes.data ?? [])
       .filter((m: { role: string }) => m.role === 'owner')
       .map((m: { org_id: string; user_id: string }) => ({ orgId: m.org_id, userId: m.user_id }));
-
     const ownerIds = [...new Set(ownerPairs.map((p: { userId: string }) => p.userId))];
     const { data: profileRows } = ownerIds.length > 0
       ? await supabase.from('profiles').select('id, email').in('id', ownerIds)
       : { data: [] };
-
     const emailById = new Map<string, string>();
     (profileRows ?? []).forEach((p: { id: string; email: string }) => emailById.set(p.id, p.email));
-
     const ownerEmailByOrg = new Map<string, string>();
     ownerPairs.forEach(({ orgId, userId }: { orgId: string; userId: string }) => {
       if (!ownerEmailByOrg.has(orgId)) ownerEmailByOrg.set(orgId, emailById.get(userId) ?? '—');
     });
 
-    const enriched: Client[] = orgRows.map((o: { id: string; display_id: number | null; name: string; created_at: string; status: string }) => {
+    // usage: usage_events keyed by user_id, map back to org via userToOrg
+    const allUserIds = [...userToOrg.keys()];
+    const usageByOrg = new Map<string, number>();
+    if (allUserIds.length > 0) {
+      const { data: usageRows } = await supabase
+        .from('usage_events')
+        .select('user_id')
+        .in('user_id', allUserIds)
+        .eq('event_type', 'ai_draft')
+        .gte('created_at', monthStart);
+      (usageRows ?? []).forEach((r: { user_id: string }) => {
+        const orgId = userToOrg.get(r.user_id);
+        if (orgId) usageByOrg.set(orgId, (usageByOrg.get(orgId) ?? 0) + 1);
+      });
+    }
+
+    const enriched: Client[] = orgRows.map((o: { id: string; display_id: number | null; name: string; created_at: string; status: string | null }) => {
       const sub = subsByOrg.get(o.id);
       const plan = sub?.plan ?? null;
       return {
@@ -98,7 +110,7 @@ export function ClientsPage() {
         created_at: o.created_at,
         plan,
         plan_limit: plan ? (PLAN_LIMIT[plan] ?? 200) : 200,
-        status: o.status ?? sub?.status ?? null,
+        status: o.status ?? null,
         owner_email: ownerEmailByOrg.get(o.id) ?? null,
         member_count: memberCountByOrg.get(o.id) ?? 0,
         usage: usageByOrg.get(o.id) ?? 0,
@@ -230,9 +242,10 @@ export function ClientsPage() {
                       {new Date(c.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-5 py-4">
-                      <span className="text-[#374151] font-mono text-xs">
-                        {c.usage}/{c.plan_limit}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-xs text-[#374151]">{c.usage}</span>
+                        <span className="text-xs text-[#9CA3AF]">/ {c.plan_limit}</span>
+                      </div>
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-3">
