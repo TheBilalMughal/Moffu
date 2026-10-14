@@ -450,7 +450,7 @@ export function PlatformMembersPage() {
                       <td className="px-5 py-1.5 text-right">
                         {m.ref_id != null ? (
                           <Link
-                            to={`/users/${m.ref_id}`}
+                            to={`/users/${m.ref_id.split('-')[1]}`}
                             className="text-xs font-medium text-[#0D4C3C] hover:underline"
                           >
                             View
