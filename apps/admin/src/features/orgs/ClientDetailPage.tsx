@@ -30,9 +30,17 @@ interface UsageDetail {
 
 interface MonthBucket {
   label: string;
+  isoKey: string;
   drafts: number;
   published: number;
 }
+
+interface RawEvent {
+  event_type: string;
+  created_at: string;
+}
+
+type ChartPeriod = '1m' | '3m' | '6m' | 'custom';
 
 interface MemberRow {
   user_id: string;
@@ -88,8 +96,48 @@ function smoothPath(pts: { x: number; y: number }[]): string {
   return d;
 }
 
+function buildMonthlyBuckets(events: RawEvent[], monthCount: number): MonthBucket[] {
+  const now = new Date();
+  const buckets: MonthBucket[] = [];
+  for (let i = monthCount - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const isoKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    buckets.push({ label: monthLabel(d), isoKey, drafts: 0, published: 0 });
+  }
+  events.forEach((r) => {
+    const isoKey = r.created_at.slice(0, 7);
+    const b = buckets.find((x) => x.isoKey === isoKey);
+    if (!b) return;
+    if (r.event_type === 'ai_draft') b.drafts++;
+    else b.published++;
+  });
+  return buckets;
+}
+
+function buildDailyBuckets(events: RawEvent[], fromIso: string, toIso: string): MonthBucket[] {
+  const from = new Date(fromIso + 'T00:00:00');
+  const to = new Date(toIso + 'T23:59:59');
+  const buckets: MonthBucket[] = [];
+  const cur = new Date(from);
+  while (cur <= to) {
+    const isoKey = cur.toISOString().slice(0, 10);
+    const d = cur.getDate();
+    const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][cur.getMonth()]!;
+    buckets.push({ label: `${d} ${mon}`, isoKey, drafts: 0, published: 0 });
+    cur.setDate(cur.getDate() + 1);
+  }
+  events.forEach((r) => {
+    const isoKey = r.created_at.slice(0, 10);
+    const b = buckets.find((x) => x.isoKey === isoKey);
+    if (!b) return;
+    if (r.event_type === 'ai_draft') b.drafts++;
+    else b.published++;
+  });
+  return buckets;
+}
+
 interface UsageTrendChartProps {
-  buckets: MonthBucket[];
+  events: RawEvent[];
   aiDrafts: number;
   published: number;
   members: number;
@@ -98,8 +146,41 @@ interface UsageTrendChartProps {
   usageLimit: number;
 }
 
-function UsageTrendChart({ buckets, aiDrafts, published, members, connections, usagePct, usageLimit }: UsageTrendChartProps) {
+function UsageTrendChart({ events, aiDrafts, published, members, connections, usagePct, usageLimit }: UsageTrendChartProps) {
   const [hovered, setHovered] = useState<number | null>(null);
+  const [period, setPeriod] = useState<ChartPeriod>('6m');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const buckets = useMemo<MonthBucket[]>(() => {
+    if (period === '1m') return buildMonthlyBuckets(events, 1);
+    if (period === '3m') return buildMonthlyBuckets(events, 3);
+    if (period === '6m') return buildMonthlyBuckets(events, 6);
+    if (period === 'custom' && customFrom && customTo) {
+      const daysDiff = Math.ceil((new Date(customTo).getTime() - new Date(customFrom).getTime()) / 86400000) + 1;
+      if (daysDiff <= 60) return buildDailyBuckets(events, customFrom, customTo);
+      // monthly for longer ranges
+      const from = new Date(customFrom + 'T00:00:00');
+      const to = new Date(customTo + 'T23:59:59');
+      const result: MonthBucket[] = [];
+      const cur = new Date(from.getFullYear(), from.getMonth(), 1);
+      while (cur <= to) {
+        const isoKey = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`;
+        result.push({ label: monthLabel(cur), isoKey, drafts: 0, published: 0 });
+        cur.setMonth(cur.getMonth() + 1);
+      }
+      events.forEach((r) => {
+        const isoKey = r.created_at.slice(0, 7);
+        const b = result.find((x) => x.isoKey === isoKey);
+        if (!b) return;
+        if (r.event_type === 'ai_draft') b.drafts++;
+        else b.published++;
+      });
+      return result;
+    }
+    return buildMonthlyBuckets(events, 6);
+  }, [events, period, customFrom, customTo]);
 
   const W = 1000; const H = 130;
   const PAD = { top: 10, right: 8, bottom: 28, left: 8 };
@@ -149,7 +230,47 @@ function UsageTrendChart({ buckets, aiDrafts, published, members, connections, u
               </div>
             </div>
           </div>
-          <span className="text-xs font-medium text-[#9CA3AF] bg-[#F3F4F6] px-2.5 py-1 rounded-lg">Last 6 months</span>
+          {/* Period switcher */}
+          <div className="flex items-center gap-1.5">
+            <div className="flex bg-[#F3F4F6] rounded-lg p-0.5">
+              {([['1m', 'This Month'], ['3m', '3 Months'], ['6m', '6 Months']] as [ChartPeriod, string][]).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => { setPeriod(key); setShowDatePicker(false); }}
+                  className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
+                    period === key ? 'bg-white shadow-sm text-[#111827]' : 'text-[#6B7280] hover:text-[#374151]'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+              <button
+                onClick={() => { setPeriod('custom'); setShowDatePicker(true); }}
+                className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${
+                  period === 'custom' ? 'bg-white shadow-sm text-[#111827]' : 'text-[#6B7280] hover:text-[#374151]'
+                }`}
+              >
+                Custom
+              </button>
+            </div>
+            {period === 'custom' && showDatePicker && (
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="date"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                  className="text-xs border border-[#E5EAE8] rounded px-2 py-1 text-[#374151] focus:outline-none focus:border-[#0D4C3C]"
+                />
+                <span className="text-xs text-[#9CA3AF]">—</span>
+                <input
+                  type="date"
+                  value={customTo}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                  className="text-xs border border-[#E5EAE8] rounded px-2 py-1 text-[#374151] focus:outline-none focus:border-[#0D4C3C]"
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* SVG chart */}
@@ -272,7 +393,7 @@ export function ClientDetailPage() {
   const [org, setOrg] = useState<OrgDetail | null>(null);
   const [sub, setSub] = useState<SubDetail | null>(null);
   const [usage, setUsage] = useState<UsageDetail | null>(null);
-  const [monthlyUsage, setMonthlyUsage] = useState<MonthBucket[]>([]);
+  const [rawUsageEvents, setRawUsageEvents] = useState<RawEvent[]>([]);
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [connections, setConnections] = useState<GoogleConn[]>([]);
   const [plans, setPlans] = useState<PlanOption[]>([]);
@@ -318,7 +439,7 @@ export function ClientDetailPage() {
 
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString();
+    const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1).toISOString();
 
     const [plansRes, subsRes, profilesRes, emailsRes, usageAiRes, usagePubRes, usageHistRes, connRes, auditRes] = await Promise.all([
       supabase.from('plans').select('id, slug, name').order('sort_order'),
@@ -333,7 +454,7 @@ export function ClientDetailPage() {
         : Promise.resolve({ data: [] }),
       supabase.from('usage_events').select('user_id', { count: 'exact', head: true }).in('user_id', memberUserIds).eq('event_type', 'ai_draft').gte('created_at', monthStart),
       supabase.from('usage_events').select('user_id', { count: 'exact', head: true }).in('user_id', memberUserIds).eq('event_type', 'published_reply').gte('created_at', monthStart),
-      supabase.from('usage_events').select('event_type, created_at').in('user_id', memberUserIds).in('event_type', ['ai_draft', 'published_reply']).gte('created_at', sixMonthsAgo),
+      supabase.from('usage_events').select('event_type, created_at').in('user_id', memberUserIds).in('event_type', ['ai_draft', 'published_reply']).gte('created_at', twelveMonthsAgo),
       supabase.from('google_connections').select('id, google_email, state, connected_at').in('user_id', memberUserIds),
       supabase.from('audit_events').select('id, action, metadata, created_at').eq('org_id', orgRow.id).eq('resource_type', 'subscription').order('created_at', { ascending: false }).limit(20),
     ]);
@@ -365,22 +486,8 @@ export function ClientDetailPage() {
       limit: PLAN_LIMIT[planSlug] ?? 50,
     });
 
-    // Build 6-month buckets
-    const buckets: MonthBucket[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      buckets.push({ label: monthLabel(d), drafts: 0, published: 0 });
-    }
     type HistRow = { event_type: string; created_at: string };
-    (usageHistRes.data ?? []).forEach((r: HistRow) => {
-      const d = new Date(r.created_at);
-      const label = monthLabel(d);
-      const b = buckets.find((x) => x.label === label);
-      if (!b) return;
-      if (r.event_type === 'ai_draft') b.drafts++;
-      else b.published++;
-    });
-    setMonthlyUsage(buckets);
+    setRawUsageEvents((usageHistRes.data ?? []) as HistRow[]);
 
     type ConnRow = { id: string; google_email: string | null; state: string; connected_at: string };
     setConnections((connRes.data ?? []) as ConnRow[]);
@@ -501,7 +608,7 @@ export function ClientDetailPage() {
       {/* Chart + Stats (top of page) */}
       <div className="mb-4">
         <UsageTrendChart
-          buckets={monthlyUsage}
+          events={rawUsageEvents}
           aiDrafts={usage?.aiDrafts ?? 0}
           published={usage?.published ?? 0}
           members={members.length}
