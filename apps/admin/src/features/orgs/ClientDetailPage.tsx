@@ -77,100 +77,190 @@ function monthLabel(date: Date): string {
   return date.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
 }
 
-// SVG line+area chart matching portal InsightsPage style
-function UsageTrendChart({ buckets }: { buckets: MonthBucket[] }) {
-  const W = 680, H = 180;
-  const PAD = { top: 16, right: 20, bottom: 32, left: 40 };
+function smoothPath(pts: { x: number; y: number }[]): string {
+  if (pts.length < 2) return pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  let d = `M ${pts[0]!.x} ${pts[0]!.y}`;
+  for (let i = 1; i < pts.length; i++) {
+    const prev = pts[i - 1]!; const curr = pts[i]!;
+    const cpx = (prev.x + curr.x) / 2;
+    d += ` C ${cpx} ${prev.y} ${cpx} ${curr.y} ${curr.x} ${curr.y}`;
+  }
+  return d;
+}
+
+interface UsageTrendChartProps {
+  buckets: MonthBucket[];
+  aiDrafts: number;
+  published: number;
+  members: number;
+  connections: number;
+  usagePct: number;
+  usageLimit: number;
+}
+
+function UsageTrendChart({ buckets, aiDrafts, published, members, connections, usagePct, usageLimit }: UsageTrendChartProps) {
+  const [hovered, setHovered] = useState<number | null>(null);
+
+  const W = 1000; const H = 130;
+  const PAD = { top: 10, right: 8, bottom: 28, left: 8 };
+  const innerW = W - PAD.left - PAD.right;
+  const innerH = H - PAD.top - PAD.bottom;
 
   const maxVal = useMemo(() => Math.max(...buckets.map((b) => Math.max(b.drafts, b.published)), 1), [buckets]);
-  const cW = W - PAD.left - PAD.right;
-  const cH = H - PAD.top - PAD.bottom;
-  const stepX = buckets.length > 1 ? cW / (buckets.length - 1) : cW;
+  const yTicks = useMemo(() => Array.from({ length: 5 }, (_, i) => Math.round((maxVal * i) / 4)), [maxVal]);
+
+  const draftPts = useMemo(() => buckets.map((b, i) => ({
+    x: PAD.left + (i / Math.max(buckets.length - 1, 1)) * innerW,
+    y: PAD.top + innerH - (b.drafts / maxVal) * innerH,
+  })), [buckets, maxVal]);
+
+  const pubPts = useMemo(() => buckets.map((b, i) => ({
+    x: PAD.left + (i / Math.max(buckets.length - 1, 1)) * innerW,
+    y: PAD.top + innerH - (b.published / maxVal) * innerH,
+  })), [buckets, maxVal]);
+
+  const draftLine = smoothPath(draftPts);
+  const pubLine = smoothPath(pubPts);
+
+  const draftArea = draftPts.length > 1
+    ? `${draftLine} L ${draftPts[draftPts.length - 1]!.x} ${PAD.top + innerH} L ${draftPts[0]!.x} ${PAD.top + innerH} Z`
+    : '';
 
   const hasData = buckets.some((b) => b.drafts > 0 || b.published > 0);
 
-  if (!hasData) {
-    return (
-      <div className="flex items-center justify-center h-48 border border-[#E5EAE8] rounded-xl bg-[#FAFAFA]">
-        <p className="text-xs text-[#9CA3AF]">No usage data for the last 6 months.</p>
-      </div>
-    );
-  }
-
-  function pts(getValue: (b: MonthBucket) => number) {
-    return buckets.map((b, i) => {
-      const x = PAD.left + i * stepX;
-      const y = PAD.top + cH - (getValue(b) / maxVal) * cH;
-      return `${x},${y}`;
-    }).join(' ');
-  }
-
-  function area(getValue: (b: MonthBucket) => number) {
-    const firstX = PAD.left;
-    const lastX = PAD.left + (buckets.length - 1) * stepX;
-    const baseY = PAD.top + cH;
-    const linePts = pts(getValue).split(' ').map((p, i) => i === 0 ? p : `L ${p}`).join(' ');
-    return `M ${firstX},${baseY} L ${linePts} L ${lastX},${baseY} Z`;
-  }
-
-  const yTicks = [0, Math.round(maxVal / 2), maxVal];
-
   return (
-    <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
-      <div className="px-5 py-3.5 border-b border-[#E5EAE8] flex items-center gap-4">
-        <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Usage Trend — 6 months</p>
-        <div className="flex items-center gap-3 ml-auto">
-          <span className="flex items-center gap-1.5 text-[10px] text-[#6B7280]">
-            <span className="w-3 h-2 rounded-xl bg-[#0D4C3C]/60 inline-block" />AI Drafts
-          </span>
-          <span className="flex items-center gap-1.5 text-[10px] text-[#6B7280]">
-            <span className="w-3 h-2 rounded-xl bg-[#A7D7C5]/80 inline-block" />Published
-          </span>
+    <div className="bg-white border border-[#E5EAE8] rounded-xl">
+      <div className="px-6 pt-5 pb-3">
+        {/* Header row */}
+        <div className="flex items-start justify-between mb-1">
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold text-[#111827]">{aiDrafts + published}</span>
+              <span className="text-sm text-[#9CA3AF]">total events this month</span>
+            </div>
+            <div className="flex items-center gap-3 mt-1.5">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-1.5 rounded-full bg-[#0D4C3C]" />
+                <span className="text-xs text-[#6B7280]">AI Drafts</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-1.5 rounded-full bg-[#10B981]" />
+                <span className="text-xs text-[#6B7280]">Published</span>
+              </div>
+            </div>
+          </div>
+          <span className="text-xs font-medium text-[#9CA3AF] bg-[#F3F4F6] px-2.5 py-1 rounded-lg">Last 6 months</span>
         </div>
+
+        {/* SVG chart */}
+        {!hasData ? (
+          <div className="flex items-center justify-center h-32 bg-[#FAFAFA] rounded-lg mt-3">
+            <p className="text-xs text-[#9CA3AF]">No usage data yet.</p>
+          </div>
+        ) : (
+          <div className="relative w-full mt-3" onMouseLeave={() => setHovered(null)}>
+            <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 160 }} preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="adminDraftGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#0D4C3C" stopOpacity="0.12" />
+                  <stop offset="100%" stopColor="#0D4C3C" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+
+              {/* Grid lines */}
+              {yTicks.map((v) => {
+                const y = PAD.top + innerH - (v / maxVal) * innerH;
+                return (
+                  <g key={v}>
+                    <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#F3F4F6" strokeWidth={1} />
+                    <text x={PAD.left + 4} y={y - 3} fontSize={9} fill="#D1D5DB">{v}</text>
+                  </g>
+                );
+              })}
+
+              {/* Hover crosshair */}
+              {hovered !== null && draftPts[hovered] && (
+                <line
+                  x1={draftPts[hovered]!.x} y1={PAD.top}
+                  x2={draftPts[hovered]!.x} y2={PAD.top + innerH}
+                  stroke="#0D4C3C" strokeWidth={1} strokeDasharray="3 3" strokeOpacity={0.4}
+                />
+              )}
+
+              {/* Draft area + line */}
+              {draftArea && <path d={draftArea} fill="url(#adminDraftGrad)" />}
+              <path d={draftLine} fill="none" stroke="#0D4C3C" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+
+              {/* Published line */}
+              <path d={pubLine} fill="none" stroke="#10B981" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+
+              {/* X labels */}
+              {buckets.map((b, i) => {
+                const x = PAD.left + (i / Math.max(buckets.length - 1, 1)) * innerW;
+                return (
+                  <text key={b.label} x={x} y={H - 6} textAnchor="middle" fontSize={10} fill="#9CA3AF">{b.label}</text>
+                );
+              })}
+
+              {/* Hover zones + dots */}
+              {draftPts.map((p, i) => (
+                <g key={i} onMouseEnter={() => setHovered(i)} style={{ cursor: 'default' }}>
+                  <rect x={p.x - (innerW / buckets.length / 2)} y={PAD.top} width={innerW / buckets.length} height={innerH} fill="transparent" />
+                  {(hovered === i || buckets[i]!.drafts > 0) && (
+                    <circle cx={p.x} cy={p.y} r={hovered === i ? 4.5 : 3} fill="#0D4C3C" stroke="white" strokeWidth={1.5} />
+                  )}
+                  {(hovered === i || buckets[i]!.published > 0) && (
+                    <circle cx={pubPts[i]!.x} cy={pubPts[i]!.y} r={hovered === i ? 4.5 : 3} fill="#10B981" stroke="white" strokeWidth={1.5} />
+                  )}
+                </g>
+              ))}
+            </svg>
+
+            {/* Hover tooltip */}
+            {hovered !== null && buckets[hovered] && draftPts[hovered] && (() => {
+              const b = buckets[hovered]!;
+              const px = (draftPts[hovered]!.x / W) * 100;
+              const alignRight = px > 70;
+              return (
+                <div
+                  className="absolute top-2 pointer-events-none z-10 bg-[#111827] text-white text-xs rounded-lg px-3 py-2 shadow-lg whitespace-nowrap"
+                  style={{ left: alignRight ? 'auto' : `calc(${px}% + 8px)`, right: alignRight ? `calc(${100 - px}% + 8px)` : 'auto' }}
+                >
+                  <p className="font-semibold text-white/80">{b.label}</p>
+                  <p className="mt-0.5">{b.drafts} AI draft{b.drafts !== 1 ? 's' : ''}</p>
+                  <p className="text-[#10B981]">{b.published} published</p>
+                </div>
+              );
+            })()}
+          </div>
+        )}
       </div>
-      <div className="px-4 py-4">
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
-          {yTicks.map((tick) => {
-            const y = PAD.top + cH - (tick / maxVal) * cH;
-            return (
-              <g key={tick}>
-                <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#F3F4F6" strokeWidth="1" />
-                <text x={PAD.left - 6} y={y + 4} textAnchor="end" fontSize="9" fill="#9CA3AF">{tick}</text>
-              </g>
-            );
-          })}
 
-          {/* Area fills */}
-          <path d={area((b) => b.drafts)} fill="#0D4C3C" fillOpacity="0.12" />
-          <path d={area((b) => b.published)} fill="#10B981" fillOpacity="0.12" />
-
-          {/* Lines */}
-          <polyline points={pts((b) => b.drafts)} fill="none" stroke="#0D4C3C" strokeWidth="1.5" strokeLinejoin="round" />
-          <polyline points={pts((b) => b.published)} fill="none" stroke="#10B981" strokeWidth="1.5" strokeLinejoin="round" />
-
-          {/* Dots */}
-          {buckets.map((b, i) => {
-            const x = PAD.left + i * stepX;
-            const yD = PAD.top + cH - (b.drafts / maxVal) * cH;
-            const yP = PAD.top + cH - (b.published / maxVal) * cH;
-            return (
-              <g key={i}>
-                <circle cx={x} cy={yD} r="2.5" fill="#0D4C3C" />
-                <circle cx={x} cy={yP} r="2.5" fill="#10B981" />
-              </g>
-            );
-          })}
-
-          {/* X-axis labels */}
-          {buckets.map((b, i) => {
-            const x = PAD.left + i * stepX;
-            return (
-              <text key={b.label} x={x} y={H - 6} textAnchor="middle" fontSize="9" fill="#9CA3AF">
-                {b.label}
-              </text>
-            );
-          })}
-        </svg>
+      {/* Stat strip */}
+      <div className="flex items-center bg-[#F9FAFB] rounded-b-xl border-t border-[#E5EAE8]">
+        <div className="flex-1 px-4 py-3">
+          <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">AI Drafts (mo.)</p>
+          <p className="text-lg font-bold text-[#111827]">{aiDrafts}</p>
+        </div>
+        <div className="w-px h-8 bg-[#E5EAE8] flex-shrink-0" />
+        <div className="flex-1 px-4 py-3">
+          <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Published (mo.)</p>
+          <p className="text-lg font-bold text-[#111827]">{published}</p>
+        </div>
+        <div className="w-px h-8 bg-[#E5EAE8] flex-shrink-0" />
+        <div className="flex-1 px-4 py-3">
+          <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Usage</p>
+          <p className="text-lg font-bold text-[#111827]">{aiDrafts}<span className="text-sm font-normal text-[#9CA3AF]">/{usageLimit}</span></p>
+          <div className="w-full bg-[#E5EAE8] rounded-full h-1 mt-1">
+            <div className={`h-1 rounded-full ${usagePct >= 90 ? 'bg-red-500' : usagePct >= 70 ? 'bg-amber-500' : 'bg-[#0D4C3C]'}`} style={{ width: `${usagePct}%` }} />
+          </div>
+        </div>
+        <div className="w-px h-8 bg-[#E5EAE8] flex-shrink-0" />
+        <div className="flex-1 px-4 py-3">
+          <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Team Members</p>
+          <p className="text-lg font-bold text-[#111827]">{members}</p>
+          <p className="text-[10px] text-[#9CA3AF] mt-0.5">{connections} Google conn.</p>
+        </div>
       </div>
     </div>
   );
@@ -408,42 +498,17 @@ export function ClientDetailPage() {
         </div>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div className="bg-white border border-[#E5EAE8] rounded-xl p-5">
-          <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-2">AI Drafts (this month)</p>
-          <p className="text-3xl font-bold text-[#111827]">{usage?.aiDrafts ?? 0}</p>
-          {usage && (
-            <div className="mt-3">
-              <div className="flex items-center justify-between text-xs text-[#9CA3AF] mb-1">
-                <span>{usagePct}% of limit</span>
-                <span>{usage.limit}</span>
-              </div>
-              <div className="w-full bg-[#E5EAE8] rounded-full h-1.5">
-                <div
-                  className={`h-1.5 rounded-full transition-all ${usagePct >= 90 ? 'bg-red-500' : usagePct >= 70 ? 'bg-amber-500' : 'bg-[#0D4C3C]'}`}
-                  style={{ width: `${usagePct}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="bg-white border border-[#E5EAE8] rounded-xl p-5">
-          <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-2">Published Replies (this month)</p>
-          <p className="text-3xl font-bold text-[#111827]">{usage?.published ?? 0}</p>
-        </div>
-
-        <div className="bg-white border border-[#E5EAE8] rounded-xl p-5">
-          <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-2">Team Members</p>
-          <p className="text-3xl font-bold text-[#111827]">{members.length}</p>
-          <p className="text-xs text-[#9CA3AF] mt-1">{connections.length} Google connection{connections.length !== 1 ? 's' : ''}</p>
-        </div>
-      </div>
-
-      {/* Monthly Usage Chart */}
+      {/* Chart + Stats (top of page) */}
       <div className="mb-4">
-        <UsageTrendChart buckets={monthlyUsage} />
+        <UsageTrendChart
+          buckets={monthlyUsage}
+          aiDrafts={usage?.aiDrafts ?? 0}
+          published={usage?.published ?? 0}
+          members={members.length}
+          connections={connections.length}
+          usagePct={usagePct}
+          usageLimit={usage?.limit ?? 50}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
