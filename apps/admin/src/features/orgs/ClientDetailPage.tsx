@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
@@ -55,6 +55,13 @@ interface PlanOption {
   name: string;
 }
 
+interface SubHistory {
+  id: string;
+  action: string;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
 const PLAN_LIMIT: Record<string, number> = {
   free: 50, starter: 200, pro: 500, enterprise: 2000,
 };
@@ -70,6 +77,105 @@ function monthLabel(date: Date): string {
   return date.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' });
 }
 
+// SVG line+area chart matching portal InsightsPage style
+function UsageTrendChart({ buckets }: { buckets: MonthBucket[] }) {
+  const W = 680, H = 180;
+  const PAD = { top: 16, right: 20, bottom: 32, left: 40 };
+
+  const maxVal = useMemo(() => Math.max(...buckets.map((b) => Math.max(b.drafts, b.published)), 1), [buckets]);
+  const cW = W - PAD.left - PAD.right;
+  const cH = H - PAD.top - PAD.bottom;
+  const stepX = buckets.length > 1 ? cW / (buckets.length - 1) : cW;
+
+  const hasData = buckets.some((b) => b.drafts > 0 || b.published > 0);
+
+  if (!hasData) {
+    return (
+      <div className="flex items-center justify-center h-48 border border-[#E5EAE8] rounded-xl bg-[#FAFAFA]">
+        <p className="text-xs text-[#9CA3AF]">No usage data for the last 6 months.</p>
+      </div>
+    );
+  }
+
+  function pts(getValue: (b: MonthBucket) => number) {
+    return buckets.map((b, i) => {
+      const x = PAD.left + i * stepX;
+      const y = PAD.top + cH - (getValue(b) / maxVal) * cH;
+      return `${x},${y}`;
+    }).join(' ');
+  }
+
+  function area(getValue: (b: MonthBucket) => number) {
+    const firstX = PAD.left;
+    const lastX = PAD.left + (buckets.length - 1) * stepX;
+    const baseY = PAD.top + cH;
+    const linePts = pts(getValue).split(' ').map((p, i) => i === 0 ? p : `L ${p}`).join(' ');
+    return `M ${firstX},${baseY} L ${linePts} L ${lastX},${baseY} Z`;
+  }
+
+  const yTicks = [0, Math.round(maxVal / 2), maxVal];
+
+  return (
+    <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+      <div className="px-5 py-3.5 border-b border-[#E5EAE8] flex items-center gap-4">
+        <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Usage Trend — 6 months</p>
+        <div className="flex items-center gap-3 ml-auto">
+          <span className="flex items-center gap-1.5 text-[10px] text-[#6B7280]">
+            <span className="w-3 h-2 rounded-xl bg-[#0D4C3C]/60 inline-block" />AI Drafts
+          </span>
+          <span className="flex items-center gap-1.5 text-[10px] text-[#6B7280]">
+            <span className="w-3 h-2 rounded-xl bg-[#A7D7C5]/80 inline-block" />Published
+          </span>
+        </div>
+      </div>
+      <div className="px-4 py-4">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
+          {yTicks.map((tick) => {
+            const y = PAD.top + cH - (tick / maxVal) * cH;
+            return (
+              <g key={tick}>
+                <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#F3F4F6" strokeWidth="1" />
+                <text x={PAD.left - 6} y={y + 4} textAnchor="end" fontSize="9" fill="#9CA3AF">{tick}</text>
+              </g>
+            );
+          })}
+
+          {/* Area fills */}
+          <path d={area((b) => b.drafts)} fill="#0D4C3C" fillOpacity="0.12" />
+          <path d={area((b) => b.published)} fill="#10B981" fillOpacity="0.12" />
+
+          {/* Lines */}
+          <polyline points={pts((b) => b.drafts)} fill="none" stroke="#0D4C3C" strokeWidth="1.5" strokeLinejoin="round" />
+          <polyline points={pts((b) => b.published)} fill="none" stroke="#10B981" strokeWidth="1.5" strokeLinejoin="round" />
+
+          {/* Dots */}
+          {buckets.map((b, i) => {
+            const x = PAD.left + i * stepX;
+            const yD = PAD.top + cH - (b.drafts / maxVal) * cH;
+            const yP = PAD.top + cH - (b.published / maxVal) * cH;
+            return (
+              <g key={i}>
+                <circle cx={x} cy={yD} r="2.5" fill="#0D4C3C" />
+                <circle cx={x} cy={yP} r="2.5" fill="#10B981" />
+              </g>
+            );
+          })}
+
+          {/* X-axis labels */}
+          {buckets.map((b, i) => {
+            const x = PAD.left + i * stepX;
+            return (
+              <text key={b.label} x={x} y={H - 6} textAnchor="middle" fontSize="9" fill="#9CA3AF">
+                {b.label}
+              </text>
+            );
+          })}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 export function ClientDetailPage() {
   const { id } = useParams<{ id: string }>();
 
@@ -80,6 +186,7 @@ export function ClientDetailPage() {
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [connections, setConnections] = useState<GoogleConn[]>([]);
   const [plans, setPlans] = useState<PlanOption[]>([]);
+  const [subHistory, setSubHistory] = useState<SubHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -123,7 +230,7 @@ export function ClientDetailPage() {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString();
 
-    const [plansRes, subsRes, profilesRes, emailsRes, usageAiRes, usagePubRes, usageHistRes, connRes] = await Promise.all([
+    const [plansRes, subsRes, profilesRes, emailsRes, usageAiRes, usagePubRes, usageHistRes, connRes, auditRes] = await Promise.all([
       supabase.from('plans').select('id, slug, name').order('sort_order'),
       ownerUserId
         ? supabase.from('subscriptions')
@@ -138,6 +245,7 @@ export function ClientDetailPage() {
       supabase.from('usage_events').select('user_id', { count: 'exact', head: true }).in('user_id', memberUserIds).eq('event_type', 'published_reply').gte('created_at', monthStart),
       supabase.from('usage_events').select('event_type, created_at').in('user_id', memberUserIds).in('event_type', ['ai_draft', 'published_reply']).gte('created_at', sixMonthsAgo),
       supabase.from('google_connections').select('id, google_email, state, connected_at').in('user_id', memberUserIds),
+      supabase.from('audit_events').select('id, action, metadata, created_at').eq('org_id', orgRow.id).eq('resource_type', 'subscription').order('created_at', { ascending: false }).limit(20),
     ]);
 
     type PlanRow = { id: string; slug: string; name: string };
@@ -186,6 +294,9 @@ export function ClientDetailPage() {
 
     type ConnRow = { id: string; google_email: string | null; state: string; connected_at: string };
     setConnections((connRes.data ?? []) as ConnRow[]);
+
+    type AuditRow = { id: string; action: string; metadata: Record<string, unknown> | null; created_at: string };
+    setSubHistory((auditRes.data ?? []) as AuditRow[]);
 
     type ProfileRow = { id: string; display_name: string | null };
     const profileById = new Map<string, ProfileRow>(
@@ -258,7 +369,6 @@ export function ClientDetailPage() {
   const isActive = org.status !== 'suspended';
   const statusColor = isActive ? 'bg-[#ECFDF5] text-[#065F46]' : 'bg-[#FEF2F2] text-[#991B1B]';
   const usagePct = usage ? Math.min(Math.round((usage.aiDrafts / usage.limit) * 100), 100) : 0;
-  const maxBucket = Math.max(...monthlyUsage.map((b) => b.drafts + b.published), 1);
 
   return (
     <div className="px-8 py-8">
@@ -278,7 +388,7 @@ export function ClientDetailPage() {
               {isActive ? 'Active' : 'Suspended'}
             </span>
           </div>
-          <p className="text-sm text-[#9CA3AF] font-mono">{org.ref_id} · Since {formatDate(org.created_at)}</p>
+          <p className="text-sm text-[#9CA3AF] font-mono">{formatId(org.ref_id)} · Since {formatDate(org.created_at)}</p>
         </div>
         <div className="flex items-center gap-2">
           {sub?.plan && (
@@ -332,34 +442,8 @@ export function ClientDetailPage() {
       </div>
 
       {/* Monthly Usage Chart */}
-      <div className="bg-white border border-[#E5EAE8] rounded-xl p-5 mb-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-[#111827]">Usage Trend (6 months)</h2>
-          <div className="flex items-center gap-4 text-xs text-[#6B7280]">
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[#0D4C3C] inline-block" />AI Drafts</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[#A7D7C5] inline-block" />Published</span>
-          </div>
-        </div>
-        <div className="flex items-end gap-2 h-32">
-          {monthlyUsage.map((b) => {
-            const totalH = Math.round(((b.drafts + b.published) / maxBucket) * 100);
-            const draftH = totalH > 0 ? Math.round((b.drafts / (b.drafts + b.published)) * totalH) : 0;
-            const pubH = totalH - draftH;
-            return (
-              <div key={b.label} className="flex-1 flex flex-col items-center gap-1">
-                <div className="w-full flex flex-col justify-end" style={{ height: '96px' }}>
-                  <div className="w-full flex flex-col gap-px">
-                    <div className="w-full bg-[#0D4C3C] rounded-t-sm" style={{ height: `${draftH}%`, minHeight: b.drafts > 0 ? '2px' : '0' }} />
-                    <div className="w-full bg-[#A7D7C5] rounded-b-sm" style={{ height: `${pubH}%`, minHeight: b.published > 0 ? '2px' : '0' }} />
-                  </div>
-                  {totalH === 0 && <div className="w-full bg-[#F3F4F6] rounded-sm h-1" />}
-                </div>
-                <span className="text-[10px] text-[#9CA3AF]">{b.label}</span>
-                <span className="text-[10px] font-medium text-[#374151]">{b.drafts + b.published}</span>
-              </div>
-            );
-          })}
-        </div>
+      <div className="mb-4">
+        <UsageTrendChart buckets={monthlyUsage} />
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
@@ -394,8 +478,11 @@ export function ClientDetailPage() {
 
         {/* Subscription + Plan Change */}
         <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
+          <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Subscription</h2>
+            {sub?.cancel_at_period_end && (
+              <span className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded">Cancels at period end</span>
+            )}
           </div>
           <dl className="divide-y divide-[#F3F4F6]">
             <div className="px-6 py-3.5 flex items-center gap-4">
@@ -405,27 +492,32 @@ export function ClientDetailPage() {
                   <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${PLAN_COLOR[sub.plan] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
                     {sub.planName}
                   </span>
-                ) : <span className="text-[#9CA3AF]">—</span>}
+                ) : <span className="text-[#9CA3AF]">Free</span>}
               </dd>
             </div>
             <div className="px-6 py-3.5 flex items-center gap-4">
               <dt className="w-28 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Status</dt>
-              <dd className="text-sm text-[#374151] capitalize">{sub?.status ?? '—'}</dd>
-            </div>
-            <div className="px-6 py-3.5 flex items-center gap-4">
-              <dt className="w-28 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Renews</dt>
-              <dd className="text-sm text-[#374151]">
-                {sub?.period_end ? formatDate(sub.period_end) : '—'}
-                {sub?.cancel_at_period_end && <span className="ml-2 text-xs text-red-600 font-medium">Cancels</span>}
+              <dd>
+                <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded capitalize ${
+                  sub?.status === 'active' ? 'bg-[#ECFDF5] text-[#065F46]' :
+                  sub?.status === 'trialing' ? 'bg-[#EFF6FF] text-[#1D4ED8]' :
+                  sub?.status === 'past_due' ? 'bg-[#FEF2F2] text-[#991B1B]' :
+                  'bg-[#F3F4F6] text-[#374151]'
+                }`}>{sub?.status ?? 'none'}</span>
               </dd>
             </div>
             <div className="px-6 py-3.5 flex items-center gap-4">
+              <dt className="w-28 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Period end</dt>
+              <dd className="text-sm text-[#374151]">{sub?.period_end ? formatDate(sub.period_end) : '—'}</dd>
+            </div>
+            <div className="px-6 py-3.5 flex items-center gap-4">
               <dt className="w-28 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Limit</dt>
-              <dd className="text-sm text-[#374151]">{usage?.limit ?? '—'} drafts / month</dd>
+              <dd className="text-sm text-[#374151]">{usage?.limit ?? 50} drafts / month</dd>
             </div>
           </dl>
+
           {/* Plan Override */}
-          {plans.length > 0 && sub && (
+          {plans.length > 0 && (
             <div className="px-6 py-4 border-t border-[#F3F4F6] bg-[#F8FAF9]">
               <p className="text-xs font-semibold text-[#374151] uppercase tracking-wide mb-2">Change Plan</p>
               <div className="flex items-center gap-2">
@@ -439,7 +531,7 @@ export function ClientDetailPage() {
                 </div>
                 <button
                   onClick={handleChangePlan}
-                  disabled={changingPlan || selectedPlanId === sub.plan_id}
+                  disabled={changingPlan || !selectedPlanId || selectedPlanId === sub?.plan_id}
                   className="px-3 py-2 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-50 rounded transition-colors"
                 >
                   {changingPlan ? '…' : 'Apply'}
@@ -450,6 +542,42 @@ export function ClientDetailPage() {
               )}
             </div>
           )}
+
+          {/* Subscription history */}
+          <div className="border-t border-[#F3F4F6]">
+            <div className="px-6 py-3 bg-[#F8FAF9] flex items-center justify-between">
+              <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide">History</p>
+              <span className="text-[10px] text-[#9CA3AF]">{subHistory.length} event{subHistory.length !== 1 ? 's' : ''}</span>
+            </div>
+            {subHistory.length === 0 ? (
+              <p className="px-6 py-5 text-xs text-[#9CA3AF] text-center">No subscription events logged.</p>
+            ) : (
+              <div className="divide-y divide-[#F9FAFB]">
+                {subHistory.map((h) => {
+                  const meta = h.metadata ?? {};
+                  const label = String(meta.action_label ?? h.action).replace(/_/g, ' ');
+                  const planFrom = meta.from_plan as string | undefined;
+                  const planTo = meta.to_plan as string | undefined;
+                  return (
+                    <div key={h.id} className="px-6 py-3 flex items-center gap-3">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#0D4C3C] flex-shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-[#374151] capitalize font-medium">{label}</p>
+                        {planFrom && planTo && (
+                          <p className="text-[10px] text-[#9CA3AF] mt-0.5">
+                            <span className={`font-semibold ${PLAN_COLOR[planFrom]?.includes('text') ? '' : ''}`}>{planFrom}</span>
+                            {' → '}
+                            <span className="font-semibold">{planTo}</span>
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-[#9CA3AF] flex-shrink-0">{formatDate(h.created_at)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
