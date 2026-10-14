@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
+import { formatDate, formatId } from '@/lib/format';
 
 interface Client {
   id: string;
@@ -55,7 +56,6 @@ export function ClientsPage() {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    // Get members for all orgs
     const { data: memberRows } = await supabase
       .from('org_members')
       .select('org_id, user_id, role')
@@ -74,37 +74,32 @@ export function ClientsPage() {
     const ownerIds = [...new Set(ownerUserIdByOrg.values())];
     const allMemberIds = [...userToOrg.keys()];
 
-    // Fetch in parallel: plans catalog, subscriptions for owners, profiles for owners, usage
-    const [plansRes, subsRes, profilesRes, usageRes] = await Promise.all([
+    const [plansRes, subsRes, emailRes, usageRes] = await Promise.all([
       supabase.from('plans').select('id, slug'),
       ownerIds.length > 0
         ? supabase.from('subscriptions').select('user_id, plan_id, status').in('user_id', ownerIds)
         : Promise.resolve({ data: [] }),
       ownerIds.length > 0
-        ? supabase.from('profiles').select('id, email').in('id', ownerIds)
+        ? supabase.rpc('get_users_email', { user_ids: ownerIds })
         : Promise.resolve({ data: [] }),
       allMemberIds.length > 0
         ? supabase.from('usage_events').select('user_id').in('user_id', allMemberIds).eq('event_type', 'ai_draft').gte('created_at', monthStart)
         : Promise.resolve({ data: [] }),
     ]);
 
-    // plan_id → slug
     const planSlugById = new Map<string, string>(
       (plansRes.data ?? []).map((p: { id: string; slug: string }) => [p.id, p.slug]),
     );
 
-    // owner user_id → { plan slug, sub status }
     const subByOwner = new Map<string, { plan: string; status: string }>();
     (subsRes.data ?? []).forEach((s: { user_id: string; plan_id: string; status: string }) => {
       subByOwner.set(s.user_id, { plan: planSlugById.get(s.plan_id) ?? 'free', status: s.status });
     });
 
-    // owner user_id → email
     const emailByUser = new Map<string, string>(
-      (profilesRes.data ?? []).map((p: { id: string; email: string }) => [p.id, p.email]),
+      (emailRes.data ?? []).map((e: { user_id: string; email: string }) => [e.user_id, e.email]),
     );
 
-    // usage per org (via user_id → org)
     const usageByOrg = new Map<string, number>();
     (usageRes.data ?? []).forEach((r: { user_id: string }) => {
       const orgId = userToOrg.get(r.user_id);
@@ -114,14 +109,14 @@ export function ClientsPage() {
     const enriched: Client[] = orgRows.map((o: { id: string; ref_id: string | null; name: string; created_at: string; status: string | null }) => {
       const ownerUserId = ownerUserIdByOrg.get(o.id);
       const sub = ownerUserId ? subByOwner.get(ownerUserId) : null;
-      const plan = sub?.plan ?? null;
+      const plan = sub?.plan ?? 'free';
       return {
         id: o.id,
         ref_id: o.ref_id ?? null,
         name: o.name,
         created_at: o.created_at,
         plan,
-        plan_limit: plan ? (PLAN_LIMIT[plan] ?? 200) : 200,
+        plan_limit: PLAN_LIMIT[plan] ?? 50,
         status: o.status ?? null,
         owner_email: ownerUserId ? (emailByUser.get(ownerUserId) ?? null) : null,
         member_count: memberCountByOrg.get(o.id) ?? 0,
@@ -223,9 +218,7 @@ export function ClientsPage() {
                 return (
                   <tr key={c.id} className="hover:bg-[#F8FAF9] transition-colors">
                     <td className="px-5 py-4">
-                      <span className="font-mono text-xs text-[#6B7280]">
-                        {c.ref_id ?? '—'}
-                      </span>
+                      <span className="font-mono text-xs text-[#6B7280]">{formatId(c.ref_id)}</span>
                     </td>
                     <td className="px-5 py-4">
                       {c.ref_id != null ? (
@@ -236,18 +229,14 @@ export function ClientsPage() {
                         <p className="font-medium text-[#111827]">{c.name}</p>
                       )}
                     </td>
-                    <td className="px-5 py-4 text-[#374151]">{c.owner_email ?? '—'}</td>
+                    <td className="px-5 py-4 text-[#374151] text-xs">{c.owner_email ?? '—'}</td>
                     <td className="px-5 py-4">
-                      {c.plan ? (
-                        <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${PLAN_COLOR[c.plan] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
-                          {c.plan}
-                        </span>
-                      ) : (
-                        <span className="text-[#9CA3AF]">—</span>
-                      )}
+                      <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${PLAN_COLOR[c.plan ?? 'free'] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
+                        {c.plan ?? 'free'}
+                      </span>
                     </td>
                     <td className="px-5 py-4 text-[#374151]">{c.member_count}</td>
-                    <td className="px-5 py-4 text-[#9CA3AF]">{new Date(c.created_at).toLocaleDateString()}</td>
+                    <td className="px-5 py-4 text-[#9CA3AF] text-xs">{formatDate(c.created_at)}</td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1.5">
                         <span className="font-mono text-xs text-[#374151]">{c.usage}</span>

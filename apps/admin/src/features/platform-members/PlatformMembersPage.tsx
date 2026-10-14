@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { Dropdown } from '@/components/Dropdown';
+import { formatDate, formatId } from '@/lib/format';
 
 const ROLES = ['super_admin', 'admin', 'finance', 'support', 'operations', 'viewer'] as const;
 type PlatformRole = typeof ROLES[number];
@@ -227,9 +228,7 @@ export function PlatformMembersPage() {
               filtered.map((m) => (
                 <tr key={m.id} className="hover:bg-[#F8FAF9] transition-colors">
                   <td className="px-5 py-4">
-                    <span className="font-mono text-xs text-[#6B7280]">
-                      {m.ref_id ?? '—'}
-                    </span>
+                    <span className="font-mono text-xs text-[#6B7280]">{formatId(m.ref_id)}</span>
                   </td>
                   <td className="px-5 py-4">
                     <p className="font-medium text-[#111827]">{m.display_name}</p>
@@ -241,11 +240,7 @@ export function PlatformMembersPage() {
                       {ROLE_LABEL[m.role] ?? m.role}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-[#9CA3AF] text-xs">
-                    {m.last_sign_in_at
-                      ? new Date(m.last_sign_in_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                      : '—'}
-                  </td>
+                  <td className="px-5 py-4 text-[#9CA3AF] text-xs">{formatDate(m.last_sign_in_at)}</td>
                   <td className="px-5 py-4 text-right">
                     {m.ref_id != null ? (
                       <Link

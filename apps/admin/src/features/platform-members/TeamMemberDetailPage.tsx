@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { adminAuthService } from '@/features/auth/auth.service';
 import { Dropdown } from '@/components/Dropdown';
+import { formatDate, formatId } from '@/lib/format';
 
 const ROLES = ['super_admin', 'admin', 'finance', 'support', 'operations', 'viewer'] as const;
 type PlatformRole = typeof ROLES[number];
@@ -208,7 +209,7 @@ export function TeamMemberDetailPage() {
             <h1 className="text-2xl font-bold text-[#111827]">{member.displayName}</h1>
             <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${statusColor}`}>{statusLabel}</span>
           </div>
-          <p className="text-sm text-[#9CA3AF] font-mono">{member.refId}</p>
+          <p className="text-sm text-[#9CA3AF] font-mono">{member.refId} · {formatId(member.refId)}</p>
         </div>
         <div className="flex items-center gap-2">
           {canManage(platformRole) && (
@@ -251,7 +252,7 @@ export function TeamMemberDetailPage() {
           </div>
           <div className="px-6 py-3.5 flex items-center gap-4">
             <dt className="w-32 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Added</dt>
-            <dd className="text-sm text-[#111827]">{new Date(member.createdAt).toLocaleDateString()}</dd>
+            <dd className="text-sm text-[#111827]">{formatDate(member.createdAt)}</dd>
           </div>
         </dl>
       </div>
