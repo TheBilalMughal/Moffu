@@ -477,7 +477,7 @@ export function ClientDetailPage() {
         </div>
 
         {/* Subscription + Plan Change */}
-        <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+        <div className="bg-white border border-[#E5EAE8] rounded-xl">
           <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Subscription</h2>
             {sub?.cancel_at_period_end && (
