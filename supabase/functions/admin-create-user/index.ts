@@ -36,9 +36,10 @@ serve(async (req) => {
       return json({ error: 'Forbidden — super_admin or admin role required' }, 403);
     }
 
-    const { email, role, name, phone } = await req.json();
+    const { email, role, name, phone, password } = await req.json();
 
     if (!email || !role || !name) return json({ error: 'Missing required fields: email, role, name' }, 400);
+    if (!password || password.length < 8) return json({ error: 'Password must be at least 8 characters' }, 400);
     if (!VALID_ROLES.includes(role)) return json({ error: `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}` }, 400);
 
     // Non-super_admin cannot create super_admins
@@ -62,16 +63,18 @@ serve(async (req) => {
     let userId: string;
 
     if (existing) {
+      // Update password for existing user
+      const { error: updateErr } = await adminClient.auth.admin.updateUserById(existing.id, { password });
+      if (updateErr) return json({ error: updateErr.message }, 500);
       userId = existing.id;
     } else {
-      const adminUrl = Deno.env.get('ADMIN_URL') ?? 'https://adminmoffu.vercel.app';
-      const { data: newUser, error: createErr } = await adminClient.auth.admin.inviteUserByEmail(
-        email.trim().toLowerCase(),
-        {
-          redirectTo: `${adminUrl}/auth/login`,
-          data: { display_name: name.trim(), full_name: name.trim() },
-        },
-      );
+      // Create user directly with password — no email invite
+      const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
+        email: email.trim().toLowerCase(),
+        password,
+        email_confirm: true,
+        user_metadata: { display_name: name.trim(), full_name: name.trim() },
+      });
 
       if (createErr || !newUser.user) {
         return json({ error: createErr?.message ?? 'Failed to create user' }, 500);
