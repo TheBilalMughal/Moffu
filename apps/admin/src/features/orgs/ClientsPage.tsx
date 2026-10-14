@@ -45,63 +45,75 @@ export function ClientsPage() {
       .select('id, display_id, name, created_at, status')
       .order('created_at', { ascending: false });
 
-    if (orgErr || !orgRows) { setLoading(false); return; }
-    if (orgRows.length === 0) { setClients([]); setLoading(false); return; }
+    if (orgErr || !orgRows || orgRows.length === 0) {
+      setClients([]);
+      setLoading(false);
+      return;
+    }
 
     const orgIds = orgRows.map((o: { id: string }) => o.id);
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    const [subsRes, membersRes] = await Promise.all([
-      supabase.from('subscriptions').select('org_id, plan, status').in('org_id', orgIds),
-      supabase.from('org_members').select('org_id, user_id, role').in('org_id', orgIds),
-    ]);
-
-    const subsByOrg = new Map<string, { plan: string; status: string }>();
-    (subsRes.data ?? []).forEach((s: { org_id: string; plan: string; status: string }) =>
-      subsByOrg.set(s.org_id, s),
-    );
+    // Get members for all orgs
+    const { data: memberRows } = await supabase
+      .from('org_members')
+      .select('org_id, user_id, role')
+      .in('org_id', orgIds);
 
     const memberCountByOrg = new Map<string, number>();
     const userToOrg = new Map<string, string>();
-    (membersRes.data ?? []).forEach((m: { org_id: string; user_id: string; role: string }) => {
+    const ownerUserIdByOrg = new Map<string, string>();
+
+    (memberRows ?? []).forEach((m: { org_id: string; user_id: string; role: string }) => {
       memberCountByOrg.set(m.org_id, (memberCountByOrg.get(m.org_id) ?? 0) + 1);
       if (!userToOrg.has(m.user_id)) userToOrg.set(m.user_id, m.org_id);
+      if (m.role === 'owner') ownerUserIdByOrg.set(m.org_id, m.user_id);
     });
 
-    // owner emails
-    const ownerPairs = (membersRes.data ?? [])
-      .filter((m: { role: string }) => m.role === 'owner')
-      .map((m: { org_id: string; user_id: string }) => ({ orgId: m.org_id, userId: m.user_id }));
-    const ownerIds = [...new Set(ownerPairs.map((p: { userId: string }) => p.userId))];
-    const { data: profileRows } = ownerIds.length > 0
-      ? await supabase.from('profiles').select('id, email').in('id', ownerIds)
-      : { data: [] };
-    const emailById = new Map<string, string>();
-    (profileRows ?? []).forEach((p: { id: string; email: string }) => emailById.set(p.id, p.email));
-    const ownerEmailByOrg = new Map<string, string>();
-    ownerPairs.forEach(({ orgId, userId }: { orgId: string; userId: string }) => {
-      if (!ownerEmailByOrg.has(orgId)) ownerEmailByOrg.set(orgId, emailById.get(userId) ?? '—');
+    const ownerIds = [...new Set(ownerUserIdByOrg.values())];
+    const allMemberIds = [...userToOrg.keys()];
+
+    // Fetch in parallel: plans catalog, subscriptions for owners, profiles for owners, usage
+    const [plansRes, subsRes, profilesRes, usageRes] = await Promise.all([
+      supabase.from('plans').select('id, slug'),
+      ownerIds.length > 0
+        ? supabase.from('subscriptions').select('user_id, plan_id, status').in('user_id', ownerIds)
+        : Promise.resolve({ data: [] }),
+      ownerIds.length > 0
+        ? supabase.from('profiles').select('id, email').in('id', ownerIds)
+        : Promise.resolve({ data: [] }),
+      allMemberIds.length > 0
+        ? supabase.from('usage_events').select('user_id').in('user_id', allMemberIds).eq('event_type', 'ai_draft').gte('created_at', monthStart)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    // plan_id → slug
+    const planSlugById = new Map<string, string>(
+      (plansRes.data ?? []).map((p: { id: string; slug: string }) => [p.id, p.slug]),
+    );
+
+    // owner user_id → { plan slug, sub status }
+    const subByOwner = new Map<string, { plan: string; status: string }>();
+    (subsRes.data ?? []).forEach((s: { user_id: string; plan_id: string; status: string }) => {
+      subByOwner.set(s.user_id, { plan: planSlugById.get(s.plan_id) ?? 'free', status: s.status });
     });
 
-    // usage: usage_events keyed by user_id, map back to org via userToOrg
-    const allUserIds = [...userToOrg.keys()];
+    // owner user_id → email
+    const emailByUser = new Map<string, string>(
+      (profilesRes.data ?? []).map((p: { id: string; email: string }) => [p.id, p.email]),
+    );
+
+    // usage per org (via user_id → org)
     const usageByOrg = new Map<string, number>();
-    if (allUserIds.length > 0) {
-      const { data: usageRows } = await supabase
-        .from('usage_events')
-        .select('user_id')
-        .in('user_id', allUserIds)
-        .eq('event_type', 'ai_draft')
-        .gte('created_at', monthStart);
-      (usageRows ?? []).forEach((r: { user_id: string }) => {
-        const orgId = userToOrg.get(r.user_id);
-        if (orgId) usageByOrg.set(orgId, (usageByOrg.get(orgId) ?? 0) + 1);
-      });
-    }
+    (usageRes.data ?? []).forEach((r: { user_id: string }) => {
+      const orgId = userToOrg.get(r.user_id);
+      if (orgId) usageByOrg.set(orgId, (usageByOrg.get(orgId) ?? 0) + 1);
+    });
 
     const enriched: Client[] = orgRows.map((o: { id: string; display_id: number | null; name: string; created_at: string; status: string | null }) => {
-      const sub = subsByOrg.get(o.id);
+      const ownerUserId = ownerUserIdByOrg.get(o.id);
+      const sub = ownerUserId ? subByOwner.get(ownerUserId) : null;
       const plan = sub?.plan ?? null;
       return {
         id: o.id,
@@ -111,7 +123,7 @@ export function ClientsPage() {
         plan,
         plan_limit: plan ? (PLAN_LIMIT[plan] ?? 200) : 200,
         status: o.status ?? null,
-        owner_email: ownerEmailByOrg.get(o.id) ?? null,
+        owner_email: ownerUserId ? (emailByUser.get(ownerUserId) ?? null) : null,
         member_count: memberCountByOrg.get(o.id) ?? 0,
         usage: usageByOrg.get(o.id) ?? 0,
       };
@@ -217,10 +229,7 @@ export function ClientsPage() {
                     </td>
                     <td className="px-5 py-4">
                       {c.display_id != null ? (
-                        <Link
-                          to={`/clients/${c.display_id}`}
-                          className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline"
-                        >
+                        <Link to={`/clients/${c.display_id}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
                           {c.name}
                         </Link>
                       ) : (
@@ -238,9 +247,7 @@ export function ClientsPage() {
                       )}
                     </td>
                     <td className="px-5 py-4 text-[#374151]">{c.member_count}</td>
-                    <td className="px-5 py-4 text-[#9CA3AF]">
-                      {new Date(c.created_at).toLocaleDateString()}
-                    </td>
+                    <td className="px-5 py-4 text-[#9CA3AF]">{new Date(c.created_at).toLocaleDateString()}</td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1.5">
                         <span className="font-mono text-xs text-[#374151]">{c.usage}</span>
@@ -250,12 +257,7 @@ export function ClientsPage() {
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-3">
                         {c.display_id != null ? (
-                          <Link
-                            to={`/clients/${c.display_id}`}
-                            className="text-xs font-medium text-[#0D4C3C] hover:underline"
-                          >
-                            View
-                          </Link>
+                          <Link to={`/clients/${c.display_id}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>
                         ) : (
                           <span className="text-xs text-[#9CA3AF]">View</span>
                         )}
