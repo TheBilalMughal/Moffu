@@ -47,11 +47,10 @@ Deno.serve(async (req) => {
     // Check AI draft limit before calling Gemini
     const limitCheck = await checkAndRecordUsage(supabase, user.id, 'ai_draft', review_id);
     if (!limitCheck.allowed) {
-      return json({
-        error: 'AI draft limit reached for this period',
-        used: limitCheck.used,
-        limit: limitCheck.limit,
-      }, 429);
+      const msg = limitCheck.limit === 0
+        ? 'No active subscription found. Please contact support.'
+        : `AI draft limit reached (${limitCheck.used}/${limitCheck.limit} used this period).`;
+      return json({ error: msg, used: limitCheck.used, limit: limitCheck.limit }, 429);
     }
 
     // Fetch brand brain settings
