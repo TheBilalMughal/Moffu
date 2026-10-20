@@ -293,7 +293,7 @@ export function PaymentsPage() {
     const [subsRes, plansRes, pricesRes, orgMembersRes] = await Promise.all([
       supabase.from('subscriptions').select('id, user_id, plan_id, status, billing_interval, current_period_start, current_period_end, cancel_at_period_end, stripe_subscription_id, created_at').order('created_at', { ascending: false }),
       supabase.from('plans').select('id, slug, name').order('sort_order'),
-      supabase.from('plan_prices').select('plan_id, interval, amount_cents').eq('currency', 'USD'),
+      supabase.from('plan_prices').select('plan_id, "interval", amount_cents').eq('currency', 'USD'),
       supabase.from('org_members').select('user_id, org_id').eq('role', 'owner'),
     ]);
 

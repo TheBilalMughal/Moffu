@@ -183,7 +183,7 @@ export function AISettingsPage() {
                       </button>
                     )}
                     <button
-                      onClick={() => openEdit(existing ?? { provider } as AISetting)}
+                      onClick={() => existing ? openEdit(existing) : openAdd(provider)}
                       className="text-xs px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10"
                     >
                       {existing ? 'Edit' : 'Add'}
