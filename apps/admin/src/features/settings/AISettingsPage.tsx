@@ -28,13 +28,13 @@ const PROVIDER_META: Record<Provider, {
     docsUrl: 'https://console.groq.com/keys',
     defaultModel: 'openai/gpt-oss-20b',
     modelOptions: [
-      { id: 'openai/gpt-oss-20b',   label: 'GPT-OSS 20B  (fast · free tier)' },
+      { id: 'openai/gpt-oss-20b',   label: 'GPT-OSS 20B  (1000 t/s)' },
       { id: 'openai/gpt-oss-120b',  label: 'GPT-OSS 120B  (powerful)' },
       { id: 'qwen/qwen3.8-27b',     label: 'Qwen 3.8 27B' },
     ],
     color: '#F97316',
     textColor: '#fff',
-    description: 'Fast inference — pay-per-use',
+    description: 'Fast inference — requires Groq credits',
   },
   anthropic: {
     name: 'Anthropic',
@@ -52,15 +52,15 @@ const PROVIDER_META: Record<Provider, {
   gemini: {
     name: 'Gemini',
     docsUrl: 'https://aistudio.google.com/app/apikey',
-    defaultModel: 'gemini-2.0-flash',
+    defaultModel: 'gemini-3.8-flash',
     modelOptions: [
-      { id: 'gemini-2.0-flash',      label: 'Gemini 2.0 Flash  (free tier)' },
-      { id: 'gemini-1.5-flash',      label: 'Gemini 1.5 Flash' },
-      { id: 'gemini-1.5-flash-8b',   label: 'Gemini 1.5 Flash 8B  (lightest)' },
+      { id: 'gemini-3.8-flash',      label: 'Gemini 3.8 Flash  (recommended · free)' },
+      { id: 'gemini-3.6-flash',      label: 'Gemini 3.6 Flash' },
+      { id: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite  (fastest · free)' },
     ],
     color: '#4285F4',
     textColor: '#fff',
-    description: 'Google AI — generous free quota',
+    description: 'Google AI — free quota, no billing needed',
   },
   openai: {
     name: 'OpenAI',
