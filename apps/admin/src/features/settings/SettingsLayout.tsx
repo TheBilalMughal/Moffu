@@ -20,7 +20,7 @@ export function SettingsLayout() {
   return (
     <div className="flex h-full bg-[#F8FAF9]">
       {/* Settings left panel */}
-      <aside className="w-60 flex-shrink-0 bg-white border-r border-[#E5EAE8] flex flex-col">
+      <aside className="w-60 flex-shrink-0 border-r border-[#E5EAE8] flex flex-col">
         <div className="px-5 py-5 border-b border-[#E5EAE8]">
           <h2 className="text-sm font-semibold text-[#111827]">Settings</h2>
           <p className="text-xs text-[#9CA3AF] mt-0.5">Platform configuration</p>
