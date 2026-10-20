@@ -459,6 +459,7 @@ export function SettingsPage() {
   const [connectingGoogle, setConnectingGoogle] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [fetchingLocations, setFetchingLocations] = useState(false);
 
   // Account
   const currentDisplayName = user?.user_metadata?.display_name ?? user?.user_metadata?.full_name ?? '';
@@ -677,12 +678,21 @@ export function SettingsPage() {
     setSyncing(false);
   }
 
+  async function handleFetchLocations() {
+    setFetchingLocations(true);
+    const { locations_fetched, error } = await googleService.fetchLocations();
+    if (error) { showToast(error, 'error'); }
+    else { showToast(`${locations_fetched} location(s) fetched.`, 'success'); await loadConnection(); }
+    setFetchingLocations(false);
+  }
+
   async function handleToggleLocation(id: string, current: boolean) {
     await googleService.toggleLocationSelected(id, !current);
     setLocations(prev => prev.map(l => l.id === id ? { ...l, is_selected: !current } : l));
   }
 
   const isConnected = connection?.state === 'CONNECTED';
+  const isAttentionRequired = connection?.state === 'ATTENTION_REQUIRED';
   const inputCls = 'w-full text-sm text-[#111827] border border-[#E5EAE8] rounded-lg px-4 py-3 focus:outline-none focus:border-[#0D4C3C] transition-colors bg-white';
 
   return (
@@ -936,6 +946,17 @@ export function SettingsPage() {
                         {disconnecting ? 'Disconnecting...' : 'Disconnect'}
                       </button>
                     </div>
+                  ) : isAttentionRequired ? (
+                    <div className="flex items-center gap-2">
+                      <button onClick={handleFetchLocations} disabled={fetchingLocations}
+                        className="text-xs font-semibold text-white bg-[#0D4C3C] rounded-lg px-4 py-1.5 hover:bg-[#0a3d30] transition-colors disabled:opacity-50">
+                        {fetchingLocations ? 'Fetching...' : 'Retry fetch locations'}
+                      </button>
+                      <button onClick={handleDisconnect} disabled={disconnecting}
+                        className="text-xs font-medium text-red-600 border border-[#FCA5A5] rounded-lg px-3 py-1.5 hover:bg-red-50 transition-colors disabled:opacity-50">
+                        {disconnecting ? 'Disconnecting...' : 'Disconnect'}
+                      </button>
+                    </div>
                   ) : (
                     <button onClick={handleConnect} disabled={connectingGoogle}
                       className="text-xs font-semibold text-white bg-[#0D4C3C] rounded-lg px-4 py-1.5 hover:bg-[#0a3d30] transition-colors disabled:opacity-50">
@@ -944,6 +965,14 @@ export function SettingsPage() {
                   )}
                 </div>
               </div>
+              {isAttentionRequired && connection?.error_message && (
+                <div className="mt-4 border-t border-[#F3F4F6] pt-4">
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    <strong>Action required:</strong> {connection.error_message.replace(/ensure.*Console\./i, 'Make sure "My Business Account Management API" and "My Business Business Information API" are enabled in Google Cloud Console.')}
+                  </p>
+                  <p className="text-xs text-[#9CA3AF] mt-2">Once APIs are enabled, click <strong>Retry fetch locations</strong> above — no need to reconnect.</p>
+                </div>
+              )}
               {isConnected && locations.length > 0 && (
                 <div className="mt-5 border-t border-[#F3F4F6] pt-4">
                   <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-3">Locations to sync</p>

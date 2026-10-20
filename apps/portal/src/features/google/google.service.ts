@@ -100,6 +100,19 @@ export const googleService = {
     return {};
   },
 
+  async fetchLocations(): Promise<{ locations_fetched?: number; error?: string }> {
+    const auth = await getAuthHeader();
+    if (!auth) return { error: 'Not authenticated' };
+
+    const res = await fetch(`${BASE}/google-fetch-locations`, {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+    });
+    const json = await res.json();
+    if (!res.ok) return { error: json.error ?? 'Failed to fetch locations' };
+    return { locations_fetched: json.locations_fetched };
+  },
+
   async toggleLocationSelected(locationId: string, selected: boolean): Promise<{ error?: string }> {
     const { error } = await supabase
       .from('google_locations')
