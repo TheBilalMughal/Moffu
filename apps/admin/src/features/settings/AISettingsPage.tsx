@@ -12,11 +12,13 @@ interface AISetting {
   is_active: boolean;
 }
 
+interface ModelOption { id: string; label: string; }
+
 const PROVIDER_META: Record<Provider, {
   name: string;
   docsUrl: string;
   defaultModel: string;
-  modelOptions: string[];
+  modelOptions: ModelOption[];
   color: string;
   textColor: string;
   description: string;
@@ -25,16 +27,24 @@ const PROVIDER_META: Record<Provider, {
     name: 'Groq',
     docsUrl: 'https://console.groq.com/keys',
     defaultModel: 'openai/gpt-oss-20b',
-    modelOptions: ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'qwen/qwen3.8-27b'],
+    modelOptions: [
+      { id: 'openai/gpt-oss-20b',   label: 'GPT-OSS 20B  (fast · free tier)' },
+      { id: 'openai/gpt-oss-120b',  label: 'GPT-OSS 120B  (powerful)' },
+      { id: 'qwen/qwen3.8-27b',     label: 'Qwen 3.8 27B' },
+    ],
     color: '#F97316',
     textColor: '#fff',
-    description: 'Fast inference — free tier available',
+    description: 'Fast inference — pay-per-use',
   },
   anthropic: {
     name: 'Anthropic',
     docsUrl: 'https://console.anthropic.com/settings/keys',
     defaultModel: 'claude-haiku-5-5',
-    modelOptions: ['claude-haiku-5-5', 'claude-sonnet-5-5', 'claude-opus-5-5'],
+    modelOptions: [
+      { id: 'claude-haiku-5-5',   label: 'Claude Haiku 5.5  (fast · cheap)' },
+      { id: 'claude-sonnet-5-5',  label: 'Claude Sonnet 5.5' },
+      { id: 'claude-opus-5-5',    label: 'Claude Opus 5.5  (most capable)' },
+    ],
     color: '#CC785C',
     textColor: '#fff',
     description: 'Claude models — high quality replies',
@@ -43,7 +53,11 @@ const PROVIDER_META: Record<Provider, {
     name: 'Gemini',
     docsUrl: 'https://aistudio.google.com/app/apikey',
     defaultModel: 'gemini-2.0-flash',
-    modelOptions: ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'],
+    modelOptions: [
+      { id: 'gemini-2.0-flash',      label: 'Gemini 2.0 Flash  (free tier)' },
+      { id: 'gemini-1.5-flash',      label: 'Gemini 1.5 Flash' },
+      { id: 'gemini-1.5-flash-8b',   label: 'Gemini 1.5 Flash 8B  (lightest)' },
+    ],
     color: '#4285F4',
     textColor: '#fff',
     description: 'Google AI — generous free quota',
@@ -52,7 +66,10 @@ const PROVIDER_META: Record<Provider, {
     name: 'OpenAI',
     docsUrl: 'https://platform.openai.com/api-keys',
     defaultModel: 'gpt-4o-mini',
-    modelOptions: ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'],
+    modelOptions: [
+      { id: 'gpt-4o-mini', label: 'GPT-4o Mini  (fast · cheap)' },
+      { id: 'gpt-4o',      label: 'GPT-4o' },
+    ],
     color: '#10A37F',
     textColor: '#fff',
     description: 'GPT models — industry standard',
@@ -378,7 +395,7 @@ export function AISettingsPage() {
                   className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-2.5 text-sm text-[#111827] focus:outline-none focus:border-[#0D4C3C] focus:ring-1 focus:ring-[#0D4C3C]/20 bg-white transition-colors"
                 >
                   {PROVIDER_META[form.provider].modelOptions.map(m => (
-                    <option key={m} value={m}>{m}</option>
+                    <option key={m.id} value={m.id}>{m.label}</option>
                   ))}
                 </select>
               </div>
