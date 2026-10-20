@@ -103,7 +103,7 @@ Reply (output the reply text only, nothing else):`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
+        model: 'claude-haiku-5-5',
         max_tokens: 300,
         system: 'You are a customer service specialist. Output ONLY the reply text — no labels, no markdown, no extra commentary.',
         messages: [{ role: 'user', content: prompt }],
