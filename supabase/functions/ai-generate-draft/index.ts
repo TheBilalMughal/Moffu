@@ -113,7 +113,7 @@ Reply (output the reply text only, nothing else):`;
     if (!claudeRes.ok) {
       const err = await claudeRes.text();
       console.error('Claude API error:', claudeRes.status, err);
-      return json({ error: 'AI service unavailable' }, 500);
+      return json({ error: `Claude API error ${claudeRes.status}: ${err}` }, 500);
     }
 
     const claudeData = await claudeRes.json();
