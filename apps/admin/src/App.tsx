@@ -15,6 +15,7 @@ import { SubscriptionsPage } from '@/features/billing/SubscriptionsPage';
 import { PaymentsPage } from '@/features/billing/PaymentsPage';
 import { SettingsLayout } from '@/features/settings/SettingsLayout';
 import { AISettingsPage } from '@/features/settings/AISettingsPage';
+import { GoogleSettingsPage } from '@/features/settings/GoogleSettingsPage';
 
 export function App() {
   const initialize = useAdminAuthStore((s) => s.initialize);
@@ -48,6 +49,7 @@ export function App() {
           <Route path="settings" element={<SettingsLayout />}>
             <Route index element={<Navigate to="ai" replace />} />
             <Route path="ai" element={<AISettingsPage />} />
+            <Route path="google" element={<GoogleSettingsPage />} />
           </Route>
           {/* Legacy redirects */}
           <Route path="team" element={<Navigate to="/users" replace />} />

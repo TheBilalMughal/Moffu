@@ -1,0 +1,247 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+
+interface GoogleCreds {
+  client_id: string;
+  client_secret: string;
+  redirect_uri: string;
+}
+
+const REDIRECT_URI_DEFAULT = 'https://appmoffu.vercel.app/auth/google/callback';
+
+export function GoogleSettingsPage() {
+  const [creds, setCreds] = useState<GoogleCreds>({
+    client_id: '',
+    client_secret: '',
+    redirect_uri: REDIRECT_URI_DEFAULT,
+  });
+  const [showSecret, setShowSecret] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  async function loadSettings() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('platform_settings')
+      .select('key, value')
+      .in('key', ['google_client_id', 'google_client_secret', 'google_redirect_uri']);
+
+    if (error) {
+      setError('Failed to load settings');
+      setLoading(false);
+      return;
+    }
+
+    const map: Record<string, string> = {};
+    (data ?? []).forEach((r) => { map[r.key] = r.value; });
+
+    setCreds({
+      client_id: map['google_client_id'] ?? '',
+      client_secret: map['google_client_secret'] ?? '',
+      redirect_uri: map['google_redirect_uri'] ?? REDIRECT_URI_DEFAULT,
+    });
+    setLoading(false);
+  }
+
+  async function handleSave() {
+    setError(null);
+    if (!creds.client_id.trim()) { setError('Client ID is required'); return; }
+    if (!creds.client_secret.trim()) { setError('Client Secret is required'); return; }
+
+    setSaving(true);
+    const rows = [
+      { key: 'google_client_id',     value: creds.client_id.trim() },
+      { key: 'google_client_secret', value: creds.client_secret.trim() },
+      { key: 'google_redirect_uri',  value: creds.redirect_uri.trim() },
+    ];
+
+    const { error: upsertError } = await supabase
+      .from('platform_settings')
+      .upsert(rows, { onConflict: 'key' });
+
+    setSaving(false);
+    if (upsertError) { setError(upsertError.message); return; }
+
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="w-5 h-5 border-2 border-[#0D4C3C] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-2xl mx-auto px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#4285F4' }}>
+              <GoogleIcon />
+            </div>
+            <h1 className="text-xl font-semibold text-[#111827]">Google API</h1>
+          </div>
+          <p className="text-sm text-[#6B7280] mt-1">
+            Configure Google OAuth credentials for Google Business Profile integration.
+          </p>
+        </div>
+
+        {/* How to get credentials */}
+        <div className="bg-[#F0F9F5] border border-[#B6DDD0] rounded-xl p-4 mb-6">
+          <p className="text-sm font-medium text-[#0D4C3C] mb-2">How to get these credentials</p>
+          <ol className="text-sm text-[#374151] space-y-1 list-decimal list-inside">
+            <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" className="text-[#0D4C3C] underline">Google Cloud Console → Credentials</a></li>
+            <li>Create an <strong>OAuth 2.0 Client ID</strong> (Web application)</li>
+            <li>Add the Redirect URI shown below to <strong>Authorized redirect URIs</strong></li>
+            <li>Enable <strong>My Business Account Management API</strong> and <strong>My Business Business Information API</strong></li>
+          </ol>
+        </div>
+
+        {/* Form */}
+        <div className="bg-white border border-[#E5EAE8] rounded-xl divide-y divide-[#F3F4F6]">
+          {/* Client ID */}
+          <div className="px-6 py-5">
+            <label className="block text-sm font-medium text-[#374151] mb-1.5">
+              Client ID
+            </label>
+            <input
+              type="text"
+              value={creds.client_id}
+              onChange={(e) => setCreds((p) => ({ ...p, client_id: e.target.value }))}
+              placeholder="123456789-abc.apps.googleusercontent.com"
+              className="w-full px-3 py-2 text-sm border border-[#D1D5DB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 focus:border-[#0D4C3C] font-mono placeholder:font-sans placeholder:text-[#9CA3AF]"
+            />
+          </div>
+
+          {/* Client Secret */}
+          <div className="px-6 py-5">
+            <label className="block text-sm font-medium text-[#374151] mb-1.5">
+              Client Secret
+            </label>
+            <div className="relative">
+              <input
+                type={showSecret ? 'text' : 'password'}
+                value={creds.client_secret}
+                onChange={(e) => setCreds((p) => ({ ...p, client_secret: e.target.value }))}
+                placeholder="GOCSPX-…"
+                className="w-full px-3 py-2 pr-10 text-sm border border-[#D1D5DB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 focus:border-[#0D4C3C] font-mono placeholder:font-sans placeholder:text-[#9CA3AF]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowSecret((s) => !s)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151]"
+              >
+                {showSecret ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
+          </div>
+
+          {/* Redirect URI */}
+          <div className="px-6 py-5">
+            <label className="block text-sm font-medium text-[#374151] mb-1.5">
+              Redirect URI
+              <span className="ml-2 text-xs font-normal text-[#9CA3AF]">Copy this to Google Console</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={creds.redirect_uri}
+                onChange={(e) => setCreds((p) => ({ ...p, redirect_uri: e.target.value }))}
+                className="flex-1 px-3 py-2 text-sm border border-[#D1D5DB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 focus:border-[#0D4C3C] font-mono text-[#374151]"
+              />
+              <button
+                type="button"
+                onClick={() => navigator.clipboard.writeText(creds.redirect_uri)}
+                className="px-3 py-2 text-sm text-[#374151] border border-[#D1D5DB] rounded-lg hover:bg-[#F9FAFB] transition-colors"
+                title="Copy"
+              >
+                <CopyIcon />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="mt-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        {/* Save */}
+        <div className="mt-6 flex items-center gap-3">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-5 py-2 bg-[#0D4C3C] text-white text-sm font-medium rounded-lg hover:bg-[#0a3d30] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {saving ? 'Saving…' : 'Save credentials'}
+          </button>
+          {saved && (
+            <span className="text-sm text-[#16a34a] font-medium flex items-center gap-1.5">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Saved
+            </span>
+          )}
+        </div>
+
+        {/* Note about edge functions */}
+        <div className="mt-6 px-4 py-3 bg-[#FFFBEB] border border-[#FDE68A] rounded-xl text-sm text-[#92400E]">
+          <strong>Note:</strong> After saving, redeploy the Google Edge Functions from the terminal so they pick up the latest values:
+          <pre className="mt-1.5 text-xs bg-[#FEF3C7] rounded px-2 py-1 font-mono overflow-x-auto">
+            npx supabase functions deploy google-oauth-start --project-ref kgttncfkzdrgswfkkdji{'\n'}
+            npx supabase functions deploy google-oauth-callback --project-ref kgttncfkzdrgswfkkdji
+          </pre>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    </svg>
+  );
+}
+
+function EyeOffIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+    </svg>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+  );
+}
