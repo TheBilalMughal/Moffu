@@ -3,7 +3,7 @@ import { checkAndRecordUsage } from '../_shared/billing.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')!;
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -94,33 +94,30 @@ Requirements: ${constraints}${exampleReply ? `\n\nStyle reference (match this to
 Reply (output the reply text only, nothing else):`;
 
 
-    // Call Gemini
-    const sysInstruction = { parts: [{ text: 'You are a customer service specialist. Output ONLY the reply text — no labels, no markdown, no extra commentary.' }] };
-    const contents = [{ role: 'user', parts: [{ text: prompt }] }];
+    // Call Claude API
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 300,
+        system: 'You are a customer service specialist. Output ONLY the reply text — no labels, no markdown, no extra commentary.',
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    });
 
-    const gc = { temperature: 0.7, maxOutputTokens: 300 };
-    const modelConfigs = [
-      { model: 'gemini-2.0-flash',  body: { system_instruction: sysInstruction, contents, generationConfig: gc } },
-      { model: 'gemini-1.5-flash',  body: { system_instruction: sysInstruction, contents, generationConfig: gc } },
-      { model: 'gemini-1.5-flash-8b', body: { system_instruction: sysInstruction, contents, generationConfig: gc } },
-    ];
-
-    let draft = '';
-
-    for (const { model, body } of modelConfigs) {
-      const geminiRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-      );
-      if (!geminiRes.ok) {
-        const err = await geminiRes.text();
-        console.error(`Gemini ${model} error:`, geminiRes.status, err);
-        continue;
-      }
-      const geminiData = await geminiRes.json();
-      draft = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
-      if (draft) break;
+    if (!claudeRes.ok) {
+      const err = await claudeRes.text();
+      console.error('Claude API error:', claudeRes.status, err);
+      return json({ error: 'AI service unavailable' }, 500);
     }
+
+    const claudeData = await claudeRes.json();
+    const draft = claudeData.content?.[0]?.text?.trim() ?? '';
 
     if (!draft) return json({ error: 'Empty response from AI' }, 500);
 
