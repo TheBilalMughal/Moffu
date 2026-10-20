@@ -13,6 +13,7 @@ import { RolesPage } from '@/features/roles/RolesPage';
 import { AuditPage } from '@/features/audit/AuditPage';
 import { SubscriptionsPage } from '@/features/billing/SubscriptionsPage';
 import { PaymentsPage } from '@/features/billing/PaymentsPage';
+import { AISettingsPage } from '@/features/settings/AISettingsPage';
 
 export function App() {
   const initialize = useAdminAuthStore((s) => s.initialize);
@@ -43,6 +44,7 @@ export function App() {
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="audit" element={<AuditPage />} />
+          <Route path="settings/ai" element={<AISettingsPage />} />
           {/* Legacy redirects */}
           <Route path="team" element={<Navigate to="/users" replace />} />
           <Route path="team/:id" element={<Navigate to="/users" replace />} />

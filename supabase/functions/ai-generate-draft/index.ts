@@ -3,7 +3,6 @@ import { checkAndRecordUsage } from '../_shared/billing.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +15,90 @@ function json(data: unknown, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json', ...corsHeaders },
   });
+}
+
+async function callAI(provider: string, apiKey: string, model: string, systemPrompt: string, userPrompt: string): Promise<string> {
+  if (provider === 'anthropic') {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 300,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    });
+    if (!res.ok) throw new Error(`Anthropic ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    return data.content?.[0]?.text?.trim() ?? '';
+  }
+
+  if (provider === 'groq') {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 300,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
+    });
+    if (!res.ok) throw new Error(`Groq ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content?.trim() ?? '';
+  }
+
+  if (provider === 'gemini') {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+          generationConfig: { temperature: 0.7, maxOutputTokens: 300 },
+        }),
+      }
+    );
+    if (!res.ok) throw new Error(`Gemini ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+  }
+
+  if (provider === 'openai') {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 300,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+      }),
+    });
+    if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content?.trim() ?? '';
+  }
+
+  throw new Error(`Unknown provider: ${provider}`);
 }
 
 Deno.serve(async (req) => {
@@ -34,6 +117,15 @@ Deno.serve(async (req) => {
     const { review_id } = await req.json();
     if (!review_id) return json({ error: 'Missing review_id' }, 400);
 
+    // Load active AI provider from DB
+    const { data: aiSetting } = await supabase
+      .from('ai_settings')
+      .select('provider, api_key, model')
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (!aiSetting) return json({ error: 'No AI provider configured. Please set one in the admin panel.' }, 503);
+
     // Fetch review
     const { data: review, error: reviewError } = await supabase
       .from('reviews')
@@ -44,7 +136,7 @@ Deno.serve(async (req) => {
 
     if (reviewError || !review) return json({ error: 'Review not found' }, 404);
 
-    // Check AI draft limit before calling Gemini
+    // Check AI draft limit
     const limitCheck = await checkAndRecordUsage(supabase, user.id, 'ai_draft', review_id);
     if (!limitCheck.allowed) {
       const msg = limitCheck.limit === 0
@@ -72,7 +164,6 @@ Deno.serve(async (req) => {
     const prohibited = (brain?.prohibited_phrases as string[] ?? []).join(', ');
     const exampleReply = brain?.example_reply ?? '';
     const negativeHandling = brain?.negative_rule ?? 'Normal';
-
     const firstName = (review.reviewer_name ?? '').split(' ')[0] || 'there';
 
     const constraints = [
@@ -85,7 +176,8 @@ Deno.serve(async (req) => {
       review.rating <= 2 ? `Negative review — be empathetic, acknowledge the issue, offer to resolve offline. Strategy: ${negativeHandling}` : '',
     ].filter(Boolean).join('. ');
 
-    const prompt = `Write a Google Business review reply for ${businessName}.
+    const systemPrompt = 'You are a customer service specialist. Output ONLY the reply text — no labels, no markdown, no extra commentary.';
+    const userPrompt = `Write a Google Business review reply for ${businessName}.
 
 Customer review (${review.rating}/5 stars): "${review.body ?? '(no text)'}"
 
@@ -93,35 +185,10 @@ Requirements: ${constraints}${exampleReply ? `\n\nStyle reference (match this to
 
 Reply (output the reply text only, nothing else):`;
 
-
-    // Call Claude API
-    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-5-5',
-        max_tokens: 300,
-        system: 'You are a customer service specialist. Output ONLY the reply text — no labels, no markdown, no extra commentary.',
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    });
-
-    if (!claudeRes.ok) {
-      const err = await claudeRes.text();
-      console.error('Claude API error:', claudeRes.status, err);
-      return json({ error: `Claude API error ${claudeRes.status}: ${err}` }, 500);
-    }
-
-    const claudeData = await claudeRes.json();
-    const draft = claudeData.content?.[0]?.text?.trim() ?? '';
+    const draft = await callAI(aiSetting.provider, aiSetting.api_key, aiSetting.model, systemPrompt, userPrompt);
 
     if (!draft) return json({ error: 'Empty response from AI' }, 500);
 
-    // Save draft + record usage atomically after success
     await Promise.all([
       supabase
         .from('reviews')
@@ -136,6 +203,7 @@ Reply (output the reply text only, nothing else):`;
     return json({ draft });
   } catch (err) {
     console.error('ai-generate-draft error:', err);
-    return json({ error: 'Internal error' }, 500);
+    const msg = err instanceof Error ? err.message : 'Internal error';
+    return json({ error: msg }, 500);
   }
 });
