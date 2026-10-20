@@ -181,7 +181,7 @@ function GlobalSearch() {
     if (!q.trim()) { setResults([]); return; }
     setLoading(true);
     const { data } = await supabase
-      .from('google_reviews')
+      .from('reviews')
       .select('id, reviewer_name, rating, body, published_at, google_locations(display_name)')
       .or(`reviewer_name.ilike.%${q}%,body.ilike.%${q}%`)
       .order('published_at', { ascending: false })
@@ -299,9 +299,9 @@ function NotificationsBell() {
   useEffect(() => {
     async function load() {
       const [pending, recent] = await Promise.all([
-        supabase.from('google_reviews').select('id, reviewer_name, published_at', { count: 'exact' })
+        supabase.from('reviews').select('id, reviewer_name, published_at', { count: 'exact' })
           .eq('status', 'NEEDS_REPLY').order('published_at', { ascending: false }).limit(5),
-        supabase.from('google_reviews').select('id, reviewer_name, rating, published_at')
+        supabase.from('reviews').select('id, reviewer_name, rating, published_at')
           .gte('published_at', new Date(Date.now() - 86400000).toISOString())
           .order('published_at', { ascending: false }).limit(3),
       ]);
@@ -392,7 +392,7 @@ function QuickStatsPill() {
 
   useEffect(() => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    supabase.from('google_reviews').select('id', { count: 'exact', head: true })
+    supabase.from('reviews').select('id', { count: 'exact', head: true })
       .gte('published_at', today.toISOString())
       .then(({ count }) => setTodayCount(count ?? 0));
   }, []);
