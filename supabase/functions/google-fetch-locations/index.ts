@@ -41,7 +41,17 @@ Deno.serve(async (req) => {
 
     const accessToken = tokenRow.access_token;
 
-    const accountsRes = await fetch(
+    // Fetch with one auto-retry on 429
+    async function fetchWithRetry(url: string, init: RequestInit, retries = 1): Promise<Response> {
+      const res = await fetch(url, init);
+      if (res.status === 429 && retries > 0) {
+        await new Promise(r => setTimeout(r, 3000));
+        return fetchWithRetry(url, init, retries - 1);
+      }
+      return res;
+    }
+
+    const accountsRes = await fetchWithRetry(
       'https://mybusinessaccountmanagement.googleapis.com/v1/accounts',
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
@@ -49,9 +59,10 @@ Deno.serve(async (req) => {
     if (!accountsRes.ok) {
       const errText = await accountsRes.text();
       console.error('Accounts API failed:', accountsRes.status, errText);
-      return new Response(JSON.stringify({
-        error: `Google API error (${accountsRes.status}). Ensure "My Business Account Management API" is enabled in Google Cloud Console.`
-      }), { status: 400, headers: corsHeaders });
+      const msg = accountsRes.status === 429
+        ? 'Google API rate limit hit. Please wait a minute and retry.'
+        : `Google API error (${accountsRes.status}). Ensure "My Business Account Management API" is enabled in Google Cloud Console.`;
+      return new Response(JSON.stringify({ error: msg }), { status: 400, headers: corsHeaders });
     }
 
     const accountsData = await accountsRes.json();
