@@ -13,6 +13,7 @@ import { RolesPage } from '@/features/roles/RolesPage';
 import { AuditPage } from '@/features/audit/AuditPage';
 import { SubscriptionsPage } from '@/features/billing/SubscriptionsPage';
 import { PaymentsPage } from '@/features/billing/PaymentsPage';
+import { SettingsLayout } from '@/features/settings/SettingsLayout';
 import { AISettingsPage } from '@/features/settings/AISettingsPage';
 
 export function App() {
@@ -44,7 +45,10 @@ export function App() {
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="audit" element={<AuditPage />} />
-          <Route path="settings/ai" element={<AISettingsPage />} />
+          <Route path="settings" element={<SettingsLayout />}>
+            <Route index element={<Navigate to="ai" replace />} />
+            <Route path="ai" element={<AISettingsPage />} />
+          </Route>
           {/* Legacy redirects */}
           <Route path="team" element={<Navigate to="/users" replace />} />
           <Route path="team/:id" element={<Navigate to="/users" replace />} />

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { adminAuthService } from '@/features/auth/auth.service';
 import { supabase } from '@/lib/supabase';
@@ -73,11 +73,11 @@ const NAV_MAIN = [
 
 const NAV_SETTINGS = [
   {
-    to: '/settings/ai',
-    label: 'AI Keys',
+    to: '/settings',
+    label: 'Settings',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
       </svg>
     ),
   },
@@ -435,6 +435,8 @@ function AdminProfile() {
 // ── Layout ────────────────────────────────────────────────────────────────────
 
 export function AdminLayout() {
+  const location = useLocation();
+  const settingsActive = location.pathname.startsWith('/settings');
   return (
     <div className="flex h-screen bg-[#F8FAF9] overflow-hidden">
       {/* Sidebar */}
@@ -469,14 +471,13 @@ export function AdminLayout() {
 
           {/* Settings section */}
           <div className="mt-4 pt-4 border-t border-[#E5EAE8] space-y-0.5">
-            <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#9CA3AF]">Settings</p>
             {NAV_SETTINGS.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) =>
+                className={
                   `flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors border-l-2 ${
-                    isActive
+                    settingsActive
                       ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]'
                       : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827] border-transparent'
                   }`
