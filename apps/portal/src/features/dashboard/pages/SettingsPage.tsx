@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { supabase } from '@/lib/supabase';
-import { googleService, type GoogleConnection, type GoogleLocation } from '@/features/google/google.service';
+import { googleService, type GoogleConnection, type GoogleLocation, type BusinessSearchResult } from '@/features/google/google.service';
 import { Toast, useToast } from '@/components/Toast';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -461,6 +461,12 @@ export function SettingsPage() {
   const [syncing, setSyncing] = useState(false);
   const [fetchingLocations, setFetchingLocations] = useState(false);
 
+  // Business search
+  const [bizSearch, setBizSearch] = useState('');
+  const [bizSearching, setBizSearching] = useState(false);
+  const [bizResults, setBizResults] = useState<BusinessSearchResult[]>([]);
+  const [addingBiz, setAddingBiz] = useState<string | null>(null);
+
   // Account
   const currentDisplayName = user?.user_metadata?.display_name ?? user?.user_metadata?.full_name ?? '';
   const [displayName, setDisplayName] = useState(currentDisplayName);
@@ -684,6 +690,35 @@ export function SettingsPage() {
     if (error) { showToast(error, 'error'); }
     else { showToast(`${locations_fetched} location(s) fetched.`, 'success'); await loadConnection(); }
     setFetchingLocations(false);
+  }
+
+  async function handleBizSearch() {
+    if (!bizSearch.trim()) return;
+    setBizSearching(true);
+    setBizResults([]);
+    const { businesses, error } = await googleService.searchBusiness(bizSearch.trim());
+    if (error) showToast(error, 'error');
+    else setBizResults(businesses ?? []);
+    setBizSearching(false);
+  }
+
+  async function handleAddBiz(biz: BusinessSearchResult) {
+    if (!connection?.id) return;
+    setAddingBiz(biz.place_id);
+    const { error } = await googleService.addLocationByPlaceId(
+      connection.id,
+      biz.place_id,
+      biz.name,
+      biz.address,
+    );
+    if (error) { showToast(error, 'error'); }
+    else {
+      showToast(`${biz.name} added successfully.`, 'success');
+      setBizResults([]);
+      setBizSearch('');
+      await loadConnection();
+    }
+    setAddingBiz(null);
   }
 
   async function handleToggleLocation(id: string, current: boolean) {
@@ -994,8 +1029,56 @@ export function SettingsPage() {
                 </div>
               )}
               {isConnected && locations.length === 0 && (
-                <div className="mt-4 border-t border-[#F3F4F6] pt-4">
-                  <p className="text-xs text-[#9CA3AF]">No locations found on this Google account. Make sure your Business Profile is verified.</p>
+                <div className="mt-5 border-t border-[#F3F4F6] pt-4 space-y-3">
+                  <div>
+                    <p className="text-xs font-medium text-[#374151] mb-0.5">Find your business on Google</p>
+                    <p className="text-xs text-[#9CA3AF]">Search by business name to add your location.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={bizSearch}
+                      onChange={e => setBizSearch(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleBizSearch()}
+                      placeholder="e.g. Black Drivo DHA Lahore"
+                      className="flex-1 text-sm border border-[#E5EAE8] rounded-lg px-3 py-2 focus:outline-none focus:border-[#0D4C3C] bg-white text-[#111827]"
+                    />
+                    <button
+                      onClick={handleBizSearch}
+                      disabled={bizSearching || !bizSearch.trim()}
+                      className="text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-4 py-2 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap"
+                    >
+                      {bizSearching ? 'Searching...' : 'Search'}
+                    </button>
+                  </div>
+                  {bizResults.length > 0 && (
+                    <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+                      {bizResults.map((biz, i) => (
+                        <div
+                          key={biz.place_id}
+                          className={`flex items-center justify-between px-4 py-3 ${i > 0 ? 'border-t border-[#F3F4F6]' : ''} hover:bg-[#F8FAF9] transition-colors`}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-[#111827] truncate">{biz.name}</p>
+                            {biz.address && <p className="text-xs text-[#9CA3AF] truncate">{biz.address}</p>}
+                            {biz.rating != null && (
+                              <p className="text-xs text-[#6B7280] mt-0.5">★ {biz.rating} · {biz.reviews_count ?? 0} reviews</p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleAddBiz(biz)}
+                            disabled={addingBiz === biz.place_id}
+                            className="ml-3 text-xs font-semibold text-[#0D4C3C] border border-[#0D4C3C] px-3 py-1.5 rounded-lg hover:bg-[#E6F2EE] disabled:opacity-40 transition-colors whitespace-nowrap flex-shrink-0"
+                          >
+                            {addingBiz === biz.place_id ? 'Adding...' : 'Add'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {bizResults.length === 0 && bizSearch && !bizSearching && (
+                    <p className="text-xs text-[#9CA3AF]">No results yet. Try searching with your business name and city.</p>
+                  )}
                 </div>
               )}
               {isConnected && connection?.last_synced_at && (

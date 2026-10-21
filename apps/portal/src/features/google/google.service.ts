@@ -28,6 +28,15 @@ async function getAuthHeader(): Promise<string | null> {
 
 const BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
+export interface BusinessSearchResult {
+  place_id: string;
+  name: string;
+  address: string | null;
+  phone: string | null;
+  rating: number | null;
+  reviews_count: number | null;
+}
+
 export const googleService = {
   async getConnection(): Promise<{ data?: GoogleConnection | null; error?: string }> {
     const { data, error } = await supabase
@@ -111,6 +120,38 @@ export const googleService = {
     const json = await res.json();
     if (!res.ok) return { error: json.error ?? 'Failed to fetch locations' };
     return { locations_fetched: json.locations_fetched };
+  },
+
+  async searchBusiness(keyword: string): Promise<{ businesses?: BusinessSearchResult[]; error?: string }> {
+    const auth = await getAuthHeader();
+    if (!auth) return { error: 'Not authenticated' };
+
+    const res = await fetch(`${BASE}/google-search-business`, {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keyword }),
+    });
+    const json = await res.json();
+    if (!res.ok) return { error: json.error ?? 'Search failed' };
+    return { businesses: json.businesses };
+  },
+
+  async addLocationByPlaceId(
+    connectionId: string,
+    placeId: string,
+    displayName: string,
+    address: string | null,
+  ): Promise<{ error?: string }> {
+    const { error } = await supabase.from('google_locations').upsert({
+      connection_id: connectionId,
+      google_location_name: `places/${placeId}`,
+      display_name: displayName,
+      address,
+      dataforseo_place_id: placeId,
+      is_selected: true,
+    }, { onConflict: 'connection_id,google_location_name' });
+    if (error) return { error: error.message };
+    return {};
   },
 
   async toggleLocationSelected(locationId: string, selected: boolean): Promise<{ error?: string }> {
