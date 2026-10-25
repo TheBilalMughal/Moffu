@@ -116,7 +116,7 @@ function PlanBreakdownChart({ rows }: { rows: SubRow[] }) {
   const data = plans.map((slug) => {
     const planRows = rows.filter((r) => r.planSlug === slug);
     const mrr = planRows.filter((r) => r.status === 'active').reduce((s, r) =>
-      s + (r.interval === 'annual' ? Math.round(r.amountCents / 12) : r.amountCents), 0);
+      s + r.amountCents, 0);
     return { slug, count: planRows.length, mrr };
   });
   const maxCount = Math.max(...data.map((d) => d.count), 1);
@@ -268,12 +268,157 @@ function SavedFiltersPopover({
   );
 }
 
+// ── Plan Override Modal ────────────────────────────────────────────────────────
+
+interface PlanOverrideModalProps {
+  sub: SubRow;
+  plans: { id: string; slug: string; name: string }[];
+  priceMap: Map<string, number>;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+function PlanOverrideModal({ sub, plans, priceMap, onClose, onSuccess }: PlanOverrideModalProps) {
+  const [selectedPlanId, setSelectedPlanId] = useState(sub.planId);
+  const [selectedInterval, setSelectedInterval] = useState<'monthly' | 'annual'>(
+    (sub.interval as 'monthly' | 'annual') ?? 'monthly',
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const paidPlans = plans.filter((p) => p.slug !== 'free');
+  const selectedPlan = plans.find((p) => p.id === selectedPlanId);
+
+  const currentPrice = sub.amountCents;
+  const newPrice = priceMap.get(`${selectedPlanId}:${selectedInterval}`) ?? priceMap.get(`${selectedPlanId}:monthly`) ?? 0;
+
+  const noChange = selectedPlanId === sub.planId && selectedInterval === (sub.interval ?? 'monthly');
+
+  async function apply() {
+    if (noChange) return;
+    setSaving(true); setError(null);
+    const { error: err } = await supabase
+      .from('subscriptions')
+      .update({ plan_id: selectedPlanId, billing_interval: selectedInterval })
+      .eq('id', sub.id);
+    if (err) { setError(err.message); setSaving(false); return; }
+    await supabase.from('audit_events').insert({
+      action: 'subscription_plan_override',
+      resource_type: 'subscription',
+      resource_id: sub.id,
+      org_id: sub.orgId,
+      metadata: {
+        action_label: 'Plan Override',
+        from_plan: sub.planName,
+        to_plan: selectedPlan?.name ?? selectedPlanId,
+        from_interval: sub.interval,
+        to_interval: selectedInterval,
+      },
+    });
+    onSuccess();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white w-full max-w-sm rounded-xl shadow-xl p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h2 className="text-sm font-bold text-[#111827]">Override Plan</h2>
+            <p className="text-xs text-[#9CA3AF] mt-0.5">{sub.orgName ?? sub.ownerEmail ?? sub.id}</p>
+          </div>
+          <button onClick={onClose} className="p-1 text-[#9CA3AF] hover:text-[#374151] transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        {/* Current */}
+        <div className="bg-[#F8FAF9] rounded-lg px-4 py-3 mb-4">
+          <p className="text-xs text-[#9CA3AF] mb-1">Current</p>
+          <div className="flex items-center justify-between">
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded ${PLAN_COLOR[sub.planSlug] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>{sub.planName}</span>
+            <div className="text-right">
+              <span className="text-sm font-semibold text-[#111827]">{fmt(currentPrice)}<span className="text-xs text-[#9CA3AF] font-normal">/mo</span></span>
+              {sub.interval === 'annual' && <p className="text-[10px] text-[#9CA3AF]">billed annually</p>}
+            </div>
+          </div>
+        </div>
+
+        {/* New Plan */}
+        <div className="mb-3">
+          <label className="block text-xs font-medium text-[#374151] mb-1.5">New Plan</label>
+          <div className="grid grid-cols-2 gap-2">
+            {paidPlans.map((p) => (
+              <button key={p.id}
+                onClick={() => setSelectedPlanId(p.id)}
+                className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-colors text-left ${
+                  selectedPlanId === p.id
+                    ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]'
+                    : 'border-[#E5EAE8] hover:border-[#0D4C3C] text-[#374151]'
+                }`}>
+                {p.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Interval */}
+        <div className="mb-5">
+          <label className="block text-xs font-medium text-[#374151] mb-1.5">Billing Interval</label>
+          <div className="grid grid-cols-2 gap-2">
+            {(['monthly', 'annual'] as const).map((iv) => {
+              const price = priceMap.get(`${selectedPlanId}:${iv}`);
+              return (
+                <button key={iv}
+                  onClick={() => setSelectedInterval(iv)}
+                  disabled={price === undefined}
+                  className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-colors capitalize disabled:opacity-30 ${
+                    selectedInterval === iv
+                      ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]'
+                      : 'border-[#E5EAE8] hover:border-[#0D4C3C] text-[#374151]'
+                  }`}>
+                  {iv}
+                  {price !== undefined && (
+                    <span className="block text-[10px] font-normal opacity-70">{fmt(price)}/mo</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Preview */}
+        {!noChange && newPrice > 0 && (
+          <div className="bg-[#E6F2EE] rounded-lg px-4 py-3 mb-4">
+            <p className="text-xs text-[#0D4C3C] font-medium">
+              {selectedPlan?.name} · {selectedInterval} → {fmt(newPrice)}/mo
+            </p>
+          </div>
+        )}
+
+        {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
+
+        <div className="flex gap-3">
+          <button onClick={onClose}
+            className="flex-1 px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors">
+            Cancel
+          </button>
+          <button onClick={apply} disabled={noChange || saving}
+            className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-40 rounded-lg transition-colors">
+            {saving ? 'Applying…' : 'Apply Override'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export function SubscriptionsPage() {
   const [rows, setRows] = useState<SubRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<{ id: string; slug: string; name: string }[]>([]);
+  const [priceMap, setPriceMap] = useState<Map<string, number>>(new Map());
 
   // Filters
   const [search, setSearch] = useState('');
@@ -292,6 +437,9 @@ export function SubscriptionsPage() {
   const [bulkPlanId, setBulkPlanId] = useState('');
   const [bulkChanging, setBulkChanging] = useState(false);
   const [bulkMsg, setBulkMsg] = useState<string | null>(null);
+
+  // Plan override modal
+  const [overrideTarget, setOverrideTarget] = useState<SubRow | null>(null);
 
   // Timeline modal
   const [timelineOrg, setTimelineOrg] = useState<{ id: string; name: string } | null>(null);
@@ -329,6 +477,7 @@ export function SubscriptionsPage() {
     const planById = new Map<string, PlanRaw>(allPlans.map((p) => [p.id, p]));
     const priceMap = new Map<string, number>();
     (pricesRes.data ?? []).forEach((p: PriceRaw) => priceMap.set(`${p.plan_id}:${p.billing_interval}`, p.amount_cents));
+    setPriceMap(priceMap);
     const orgByOwner = new Map<string, string>((orgMembersOwnerRes.data ?? []).map((m: OrgMemberRaw) => [m.user_id, m.org_id]));
 
     const ownerUserIds = subs.map((s) => s.user_id);
@@ -440,7 +589,7 @@ export function SubscriptionsPage() {
 
   const stats = useMemo(() => {
     const paid = rows.filter((r) => r.planSlug !== 'free' && r.status === 'active');
-    const mrr = paid.reduce((s, r) => s + (r.interval === 'annual' ? Math.round(r.amountCents / 12) : r.amountCents), 0);
+    const mrr = paid.reduce((s, r) => s + r.amountCents, 0);
     return { total: rows.length, paid: paid.length, free: rows.filter((r) => r.planSlug === 'free').length, mrr, arr: mrr * 12 };
   }, [rows]);
 
@@ -744,6 +893,8 @@ export function SubscriptionsPage() {
                   <td className="px-4 py-1.5 text-right">
                     <div className="flex items-center justify-end gap-3">
                       {s.orgRefId && <Link to={`/clients/${s.orgRefId}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>}
+                      <button onClick={() => setOverrideTarget(s)}
+                        className="text-xs font-medium text-[#374151] hover:text-[#0D4C3C] transition-colors">Override</button>
                       {s.orgId && (
                         <button onClick={() => setTimelineOrg({ id: s.orgId!, name: s.orgName ?? '—' })}
                           className="text-xs font-medium text-[#6B7280] hover:text-[#374151] transition-colors">Timeline</button>
@@ -799,6 +950,17 @@ export function SubscriptionsPage() {
           </div>
         )}
       </div>
+
+      {/* Plan override modal */}
+      {overrideTarget && (
+        <PlanOverrideModal
+          sub={overrideTarget}
+          plans={plans}
+          priceMap={priceMap}
+          onClose={() => setOverrideTarget(null)}
+          onSuccess={() => { setOverrideTarget(null); load(); }}
+        />
+      )}
 
       {/* Bulk confirm modal */}
       {showBulkModal && (

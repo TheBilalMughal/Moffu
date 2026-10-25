@@ -13,6 +13,7 @@ import { RolesPage } from '@/features/roles/RolesPage';
 import { AuditPage } from '@/features/audit/AuditPage';
 import { SubscriptionsPage } from '@/features/billing/SubscriptionsPage';
 import { PaymentsPage } from '@/features/billing/PaymentsPage';
+import { MRRPage } from '@/features/billing/MRRPage';
 import { SettingsLayout } from '@/features/settings/SettingsLayout';
 import { AISettingsPage } from '@/features/settings/AISettingsPage';
 import { GoogleSettingsPage } from '@/features/settings/GoogleSettingsPage';
@@ -44,6 +45,7 @@ export function App() {
           <Route path="users" element={<PlatformMembersPage />} />
           <Route path="users/:id" element={<TeamMemberDetailPage />} />
           <Route path="billing" element={<SubscriptionsPage />} />
+          <Route path="mrr" element={<MRRPage />} />
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="audit" element={<AuditPage />} />
