@@ -16,6 +16,7 @@ import { PaymentsPage } from '@/features/billing/PaymentsPage';
 import { SettingsLayout } from '@/features/settings/SettingsLayout';
 import { AISettingsPage } from '@/features/settings/AISettingsPage';
 import { GoogleSettingsPage } from '@/features/settings/GoogleSettingsPage';
+import { PackagesSettingsPage } from '@/features/settings/PackagesSettingsPage';
 
 export function App() {
   const initialize = useAdminAuthStore((s) => s.initialize);
@@ -47,7 +48,8 @@ export function App() {
           <Route path="roles" element={<RolesPage />} />
           <Route path="audit" element={<AuditPage />} />
           <Route path="settings" element={<SettingsLayout />}>
-            <Route index element={<Navigate to="ai" replace />} />
+            <Route index element={<Navigate to="packages" replace />} />
+            <Route path="packages" element={<PackagesSettingsPage />} />
             <Route path="ai" element={<AISettingsPage />} />
             <Route path="google" element={<GoogleSettingsPage />} />
           </Route>

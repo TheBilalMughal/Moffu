@@ -21,7 +21,7 @@ export function SiteNav() {
           <Link href="/#how-it-works" className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150">
             How It Works
           </Link>
-          <Link href="/#pricing" className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150">
+          <Link href="/pricing" className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150">
             Pricing
           </Link>
         </nav>
