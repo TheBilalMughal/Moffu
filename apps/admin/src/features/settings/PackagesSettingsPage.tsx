@@ -609,7 +609,7 @@ export function PackagesSettingsPage() {
                       <input type="number" min="0" value={form.limits.brand_brain_limit}
                         onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, brand_brain_limit: e.target.value } }))}
                         className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
-                      <p className="text-[11px] text-[#9CA3AF] mt-1">Set to <span className="font-medium">0</span> to lock Brand Brain page entirely.</p>
+                      <p className="text-[11px] text-[#9CA3AF] mt-1">Max profiles a user can create. Use Steps to control page access.</p>
                     </>
                   )}
                   {/* Steps unlocked — multi-select checkboxes */}

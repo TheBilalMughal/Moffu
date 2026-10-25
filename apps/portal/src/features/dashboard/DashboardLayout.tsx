@@ -601,9 +601,9 @@ export function DashboardLayout() {
       for (const e of ents ?? []) {
         if (e.key === 'feature_insights') {
           map['feature_insights'] = e.bool_value !== false;
-        } else if (e.key === 'brand_brain_profiles') {
-          // locked when limit is explicitly 0 (not UNLIMITED)
-          map['feature_brand_brain'] = e.value_type === 'UNLIMITED' || (e.limit_value ?? 1) > 0;
+        } else if (e.key === 'brand_brain_steps') {
+          // locked when all steps are disabled (mask === 0); UNLIMITED = all accessible
+          map['feature_brand_brain'] = e.value_type === 'UNLIMITED' || ((e.limit_value ?? 63) & 63) > 0;
         } else if (e.key === 'team_members') {
           // team management locked when limit <= 1 (owner only)
           map['feature_team'] = e.value_type === 'UNLIMITED' || (e.limit_value ?? 2) > 1;
