@@ -1354,6 +1354,7 @@ export function BrandBrainPage() {
   }
 
   const score = completionScore(data);
+  const stepProgress = visibleSteps.length > 0 ? Math.round((completed.size / visibleSteps.length) * 100) : 0;
   const isLastStep = step === visibleSteps[visibleSteps.length - 1]?.id;
   const isFirstStep = step === visibleSteps[0]?.id;
 
@@ -1378,13 +1379,13 @@ export function BrandBrainPage() {
             <h1 className="text-xl font-bold text-[#111827]">Brand Brain</h1>
             <p className="text-xs text-[#9CA3AF] mt-0.5">Step {visibleSteps.findIndex(s => s.id === step) + 1} of {visibleSteps.length}</p>
           </div>
-          {/* Mini score */}
+          {/* Step progress bar */}
           <div className="flex items-center gap-2">
             <div className="h-1.5 w-24 bg-[#F3F4F6] rounded-full overflow-hidden">
-              <div className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${score}%`, backgroundColor: score >= 80 ? '#0D4C3C' : score >= 50 ? '#F59E0B' : '#EF4444' }}/>
+              <div className="h-full bg-[#0D4C3C] rounded-full transition-all duration-500"
+                style={{ width: `${stepProgress}%` }}/>
             </div>
-            <span className="text-xs font-semibold" style={{ color: score >= 80 ? '#0D4C3C' : score >= 50 ? '#F59E0B' : '#EF4444' }}>{score}%</span>
+            <span className="text-xs font-semibold text-[#0D4C3C]">{completed.size}/{visibleSteps.length}</span>
           </div>
         </div>
         <button onClick={handleSave} disabled={saving}
@@ -1431,7 +1432,7 @@ export function BrandBrainPage() {
       </div>
 
       {/* Navigation footer */}
-      <div className="px-10 py-4 border-t border-[#E5EAE8] bg-[#F8FAF9] flex items-center justify-between flex-shrink-0">
+      <div className="px-10 py-4 bg-[#F8FAF9] flex items-center justify-between flex-shrink-0">
         <button onClick={goPrev} disabled={isFirstStep}
           className="flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#111827] px-4 py-2 rounded-xl hover:bg-[#F3F4F6] disabled:opacity-0 transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
