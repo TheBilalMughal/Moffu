@@ -169,8 +169,8 @@ export function PackagesSettingsPage() {
       badge_text: form.badge_text.trim() || null,
       is_featured: form.is_featured,
       is_active: form.is_active,
-      contact_sales: form.contact_sales,
       sort_order: form.sort_order,
+      // contact_sales omitted until migration 20241025000030 is applied in Supabase
     };
 
     let planId: string;
