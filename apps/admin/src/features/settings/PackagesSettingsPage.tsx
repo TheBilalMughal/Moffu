@@ -9,6 +9,15 @@ interface PlanPrice {
   currency: string;
 }
 
+interface PlanEntitlement {
+  key: string;
+  value_type: 'INTEGER' | 'UNLIMITED' | 'BOOLEAN' | 'ENUM';
+  limit_value: number | null;
+  bool_value: boolean | null;
+  enum_value: string | null;
+  usage_reset: string | null;
+}
+
 interface Plan {
   id: string;
   slug: string;
@@ -22,6 +31,21 @@ interface Plan {
   sort_order: number;
   created_at: string;
   prices: PlanPrice[];
+  entitlements: Record<string, PlanEntitlement>;
+}
+
+interface LimitsForm {
+  locations: string;
+  replies_unlimited: boolean;
+  replies_limit: string;
+  replies_reset: 'monthly' | 'weekly';
+  ai_drafts_unlimited: boolean;
+  ai_drafts_limit: string;
+  ai_drafts_reset: 'monthly' | 'weekly';
+  team_members: string;
+  brand_brain_unlimited: boolean;
+  brand_brain_limit: string;
+  support_tier: string;
 }
 
 interface PlanForm {
@@ -35,8 +59,9 @@ interface PlanForm {
   contact_sales: boolean;
   sort_order: number;
   monthly_price: string;
-  annual_discount: string; // % off monthly, e.g. "20" → annual total = monthly*12*(1-0.20)
+  annual_discount: string;
   currency: string;
+  limits: LimitsForm;
 }
 
 function slugify(s: string) {
@@ -47,6 +72,20 @@ function formatPrice(cents: number, currency: string) {
   if (cents === 0) return 'Free';
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 0 }).format(cents / 100);
 }
+
+const DEFAULT_LIMITS: LimitsForm = {
+  locations: '1',
+  replies_unlimited: false,
+  replies_limit: '50',
+  replies_reset: 'monthly',
+  ai_drafts_unlimited: false,
+  ai_drafts_limit: '50',
+  ai_drafts_reset: 'monthly',
+  team_members: '1',
+  brand_brain_unlimited: false,
+  brand_brain_limit: '1',
+  support_tier: 'help_guides',
+};
 
 const EMPTY_FORM: PlanForm = {
   name: '',
@@ -61,7 +100,30 @@ const EMPTY_FORM: PlanForm = {
   monthly_price: '0',
   annual_discount: '20',
   currency: 'USD',
+  limits: { ...DEFAULT_LIMITS },
 };
+
+function entsToLimits(ents: Record<string, PlanEntitlement>): LimitsForm {
+  const loc = ents['locations'];
+  const rep = ents['published_replies'];
+  const ai  = ents['ai_drafts'];
+  const team = ents['team_members'];
+  const bb  = ents['brand_brain_profiles'];
+  const sup = ents['support_tier'];
+  return {
+    locations:           String(loc?.limit_value ?? 1),
+    replies_unlimited:   rep?.value_type === 'UNLIMITED',
+    replies_limit:       String(rep?.limit_value ?? 50),
+    replies_reset:       (rep?.usage_reset ?? 'monthly') as 'monthly' | 'weekly',
+    ai_drafts_unlimited: ai?.value_type === 'UNLIMITED',
+    ai_drafts_limit:     String(ai?.limit_value ?? 50),
+    ai_drafts_reset:     (ai?.usage_reset ?? 'monthly') as 'monthly' | 'weekly',
+    team_members:        String(team?.limit_value ?? 1),
+    brand_brain_unlimited: bb?.value_type === 'UNLIMITED',
+    brand_brain_limit:   String(bb?.limit_value ?? 1),
+    support_tier:        sup?.enum_value ?? 'help_guides',
+  };
+}
 
 export function PackagesSettingsPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -70,6 +132,7 @@ export function PackagesSettingsPage() {
   const toast = useToastStore();
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'details' | 'limits'>('details');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PlanForm>(EMPTY_FORM);
   const [featureInput, setFeatureInput] = useState('');
@@ -80,13 +143,11 @@ export function PackagesSettingsPage() {
 
   async function fetchPlans() {
     setLoading(true);
-    const { data: plansData } = await supabase
-      .from('plans')
-      .select('id, slug, name, description, features, badge_text, is_featured, is_active, contact_sales, sort_order, created_at')
-      .order('sort_order');
-    const { data: pricesData } = await supabase
-      .from('plan_prices')
-      .select('id, plan_id, billing_interval, amount_cents, currency');
+    const [{ data: plansData }, { data: pricesData }, { data: entsData }] = await Promise.all([
+      supabase.from('plans').select('id, slug, name, description, features, badge_text, is_featured, is_active, contact_sales, sort_order, created_at').order('sort_order'),
+      supabase.from('plan_prices').select('id, plan_id, billing_interval, amount_cents, currency'),
+      supabase.from('plan_entitlements').select('plan_id, key, value_type, limit_value, bool_value, enum_value, usage_reset'),
+    ]);
 
     const priceMap: Record<string, PlanPrice[]> = {};
     (pricesData ?? []).forEach((p: any) => {
@@ -94,10 +155,17 @@ export function PackagesSettingsPage() {
       (priceMap[p.plan_id] as PlanPrice[]).push(p);
     });
 
+    const entMap: Record<string, Record<string, PlanEntitlement>> = {};
+    (entsData ?? []).forEach((e: any) => {
+      if (!entMap[e.plan_id]) entMap[e.plan_id] = {} as Record<string, PlanEntitlement>;
+      (entMap[e.plan_id] as Record<string, PlanEntitlement>)[e.key] = e as PlanEntitlement;
+    });
+
     setPlans((plansData ?? []).map((p: any) => ({
       ...p,
       features: Array.isArray(p.features) ? p.features : [],
       prices: priceMap[p.id] ?? [],
+      entitlements: entMap[p.id] ?? {},
     })));
     setLoading(false);
   }
@@ -108,6 +176,7 @@ export function PackagesSettingsPage() {
     setEditingId(null);
     setForm({ ...EMPTY_FORM, sort_order: plans.length });
     setFeatureInput('');
+    setActiveTab('details');
     setModalOpen(true);
   }
 
@@ -116,7 +185,6 @@ export function PackagesSettingsPage() {
     const monthly = plan.prices.find(p => p.billing_interval === 'monthly');
     const annual = plan.prices.find(p => p.billing_interval === 'annual');
     const monthlyAmt = monthly ? monthly.amount_cents / 100 : 0;
-    // annual stores per-month equivalent (same as seed data), not total/yr
     const annualPerMo = annual && annual.amount_cents > 0 ? annual.amount_cents / 100 : 0;
     const discount = monthlyAmt > 0 && annualPerMo > 0
       ? Math.round((1 - annualPerMo / monthlyAmt) * 100)
@@ -134,8 +202,10 @@ export function PackagesSettingsPage() {
       annual_discount: String(discount),
       currency: monthly?.currency ?? 'USD',
       contact_sales: plan.contact_sales ?? false,
+      limits: entsToLimits(plan.entitlements),
     });
     setFeatureInput('');
+    setActiveTab('details');
     setModalOpen(true);
   }
 
@@ -197,6 +267,19 @@ export function PackagesSettingsPage() {
       .upsert(priceUpserts as any, { onConflict: 'plan_id,currency,billing_interval' });
 
     if (pe) { toast.error(pe.message); setSaving(false); return; }
+
+    // Upsert entitlements
+    const L = form.limits;
+    const entUpserts = [
+      { plan_id: planId, key: 'locations',           value_type: 'INTEGER',   limit_value: parseInt(L.locations) || 1,           bool_value: null, enum_value: null,            usage_reset: null },
+      { plan_id: planId, key: 'published_replies',   value_type: L.replies_unlimited   ? 'UNLIMITED' : 'INTEGER', limit_value: L.replies_unlimited   ? null : parseInt(L.replies_limit) || 50,   bool_value: null, enum_value: null, usage_reset: L.replies_reset },
+      { plan_id: planId, key: 'ai_drafts',           value_type: L.ai_drafts_unlimited ? 'UNLIMITED' : 'INTEGER', limit_value: L.ai_drafts_unlimited ? null : parseInt(L.ai_drafts_limit) || 50, bool_value: null, enum_value: null, usage_reset: L.ai_drafts_reset },
+      { plan_id: planId, key: 'team_members',        value_type: 'INTEGER',   limit_value: parseInt(L.team_members) || 1,         bool_value: null, enum_value: null,            usage_reset: null },
+      { plan_id: planId, key: 'brand_brain_profiles',value_type: L.brand_brain_unlimited ? 'UNLIMITED' : 'INTEGER', limit_value: L.brand_brain_unlimited ? null : parseInt(L.brand_brain_limit) || 1, bool_value: null, enum_value: null, usage_reset: null },
+      { plan_id: planId, key: 'support_tier',        value_type: 'ENUM',      limit_value: null,                                  bool_value: null, enum_value: L.support_tier,  usage_reset: null },
+    ];
+    const { error: ee } = await supabase.from('plan_entitlements').upsert(entUpserts as any, { onConflict: 'plan_id,key' });
+    if (ee) { toast.error(ee.message); setSaving(false); return; }
 
     toast.success(editingId ? 'Package updated.' : 'Package created.');
     setModalOpen(false);
@@ -359,18 +442,138 @@ export function PackagesSettingsPage() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 border-b border-[#E5EAE8] flex items-center justify-between flex-shrink-0">
-              <h2 className="text-base font-semibold text-[#111827]">
-                {editingId ? 'Edit Package' : 'New Package'}
-              </h2>
-              <button onClick={() => setModalOpen(false)} className="text-[#9CA3AF] hover:text-[#374151] transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            <div className="px-6 pt-4 border-b border-[#E5EAE8] flex-shrink-0">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-semibold text-[#111827]">
+                  {editingId ? 'Edit Package' : 'New Package'}
+                </h2>
+                <button onClick={() => setModalOpen(false)} className="text-[#9CA3AF] hover:text-[#374151] transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex gap-1">
+                {(['details', 'limits'] as const).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px capitalize ${
+                      activeTab === tab
+                        ? 'border-[#0D4C3C] text-[#0D4C3C]'
+                        : 'border-transparent text-[#6B7280] hover:text-[#111827]'
+                    }`}
+                  >
+                    {tab === 'details' ? 'Details' : 'Limits & Features'}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+            {activeTab === 'limits' ? (
+              <div className="space-y-5">
+                {/* Locations */}
+                <div>
+                  <label className="block text-xs font-medium text-[#374151] mb-1">Locations included</label>
+                  <input type="number" min="1" value={form.limits.locations}
+                    onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, locations: e.target.value } }))}
+                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                </div>
+
+                {/* Replies */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-[#374151]">Published Replies</label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={form.limits.replies_unlimited}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, replies_unlimited: e.target.checked } }))}
+                        className="w-3.5 h-3.5 accent-[#0D4C3C]" />
+                      <span className="text-xs text-[#6B7280]">Unlimited</span>
+                    </label>
+                  </div>
+                  {!form.limits.replies_unlimited && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <input type="number" min="0" value={form.limits.replies_limit}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, replies_limit: e.target.value } }))}
+                        placeholder="e.g. 100"
+                        className="px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                      <select value={form.limits.replies_reset}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, replies_reset: e.target.value as 'monthly' | 'weekly' } }))}
+                        className="px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] bg-white">
+                        <option value="monthly">per month</option>
+                        <option value="weekly">per week</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {/* AI Drafts */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-[#374151]">AI Drafts</label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={form.limits.ai_drafts_unlimited}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, ai_drafts_unlimited: e.target.checked } }))}
+                        className="w-3.5 h-3.5 accent-[#0D4C3C]" />
+                      <span className="text-xs text-[#6B7280]">Unlimited</span>
+                    </label>
+                  </div>
+                  {!form.limits.ai_drafts_unlimited && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <input type="number" min="0" value={form.limits.ai_drafts_limit}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, ai_drafts_limit: e.target.value } }))}
+                        placeholder="e.g. 50"
+                        className="px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                      <select value={form.limits.ai_drafts_reset}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, ai_drafts_reset: e.target.value as 'monthly' | 'weekly' } }))}
+                        className="px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] bg-white">
+                        <option value="monthly">per month</option>
+                        <option value="weekly">per week</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {/* Team members */}
+                <div>
+                  <label className="block text-xs font-medium text-[#374151] mb-1">Team Members</label>
+                  <input type="number" min="1" value={form.limits.team_members}
+                    onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, team_members: e.target.value } }))}
+                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                </div>
+
+                {/* Brand Brain profiles */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-[#374151]">Brand Brain Profiles</label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={form.limits.brand_brain_unlimited}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, brand_brain_unlimited: e.target.checked } }))}
+                        className="w-3.5 h-3.5 accent-[#0D4C3C]" />
+                      <span className="text-xs text-[#6B7280]">Unlimited</span>
+                    </label>
+                  </div>
+                  {!form.limits.brand_brain_unlimited && (
+                    <input type="number" min="0" value={form.limits.brand_brain_limit}
+                      onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, brand_brain_limit: e.target.value } }))}
+                      className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                  )}
+                </div>
+
+                {/* Support tier */}
+                <div>
+                  <label className="block text-xs font-medium text-[#374151] mb-1">Support Tier</label>
+                  <select value={form.limits.support_tier}
+                    onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, support_tier: e.target.value } }))}
+                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] bg-white">
+                    <option value="help_guides">Help center guides</option>
+                    <option value="standard_email">Standard email</option>
+                    <option value="priority_email">Priority email</option>
+                  </select>
+                </div>
+              </div>
+            ) : (<>
               {/* Name + Slug */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -557,6 +760,7 @@ export function PackagesSettingsPage() {
                   </div>
                 </label>
               </div>
+            </>)}
             </div>
 
             <div className="px-6 py-4 border-t border-[#E5EAE8] flex justify-end gap-3 flex-shrink-0">
