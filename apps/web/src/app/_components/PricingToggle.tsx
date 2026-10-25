@@ -3,29 +3,18 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-const PRICING_PLANS = [
-  {
-    name: 'Starter',
-    description: 'Great for single location businesses.',
-    monthlyPrice: 29,
-    features: ['1 location included', 'AI review responses', 'Brand Brain', 'Basic analytics'],
-    popular: false,
-  },
-  {
-    name: 'Growth',
-    description: 'For growing businesses with multiple locations.',
-    monthlyPrice: 79,
-    features: ['5 locations included', 'Everything in Starter', 'Advanced analytics', 'Team members'],
-    popular: true,
-  },
-  {
-    name: 'Scale',
-    description: 'For larger organizations and agencies.',
-    monthlyPrice: 199,
-    features: ['10 locations included', 'Everything in Growth', 'Priority support', 'Advanced permissions'],
-    popular: false,
-  },
-];
+export interface PricingPlan {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  features: string[];
+  badge_text: string | null;
+  is_featured: boolean;
+  monthly_cents: number;
+  annual_cents: number;
+  currency: string;
+}
 
 function CheckSolid() {
   return (
@@ -35,8 +24,20 @@ function CheckSolid() {
   );
 }
 
-export function PricingToggle() {
+function formatPrice(cents: number, currency: string) {
+  if (cents === 0) return '$0';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
+
+export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
   const [annual, setAnnual] = useState(false);
+
+  const visiblePlans = plans.filter(p => p.slug !== 'free');
 
   return (
     <>
@@ -69,39 +70,49 @@ export function PricingToggle() {
 
       {/* Cards */}
       <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-        {PRICING_PLANS.map(({ name, description, monthlyPrice, features, popular }) => {
-          const price = annual ? Math.round(monthlyPrice * 0.8) : monthlyPrice;
+        {visiblePlans.map((plan) => {
+          const priceCents = annual && plan.annual_cents > 0 ? plan.annual_cents : plan.monthly_cents;
+          const isFree = plan.monthly_cents === 0;
+
           return (
             <div
-              key={name}
+              key={plan.id}
               className={`relative bg-white border rounded-xl p-7 flex flex-col ${
-                popular ? 'border-[#0D4C3C] ring-1 ring-[#0D4C3C]' : 'border-[#E5E7EB]'
+                plan.is_featured ? 'border-[#0D4C3C] ring-1 ring-[#0D4C3C]' : 'border-[#E5E7EB]'
               }`}
             >
-              {popular && (
+              {plan.is_featured && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                   <span className="bg-[#0D4C3C] text-white text-[11px] font-semibold px-3 py-1 rounded-md whitespace-nowrap">
-                    Most Popular
+                    {plan.badge_text || 'Most Popular'}
                   </span>
                 </div>
               )}
 
               <div className="mb-6">
-                <h3 className="font-bold text-[#111827] text-[1.0625rem] mb-1">{name}</h3>
-                <p className="text-[13px] text-[#6B7280] mb-5">{description}</p>
+                <h3 className="font-bold text-[#111827] text-[1.0625rem] mb-1">{plan.name}</h3>
+                <p className="text-[13px] text-[#6B7280] mb-5">{plan.description ?? ''}</p>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-[2.75rem] font-bold text-[#111827] leading-none">${price}</span>
-                  <span className="text-[#6B7280] text-sm">/month</span>
+                  {isFree ? (
+                    <span className="text-[2.75rem] font-bold text-[#111827] leading-none">Free</span>
+                  ) : (
+                    <>
+                      <span className="text-[2.75rem] font-bold text-[#111827] leading-none">
+                        {formatPrice(priceCents, plan.currency)}
+                      </span>
+                      <span className="text-[#6B7280] text-sm">/month</span>
+                    </>
+                  )}
                 </div>
-                {annual && (
+                {annual && plan.annual_cents > 0 && !isFree && (
                   <p className="text-[12px] text-[#6B7280] mt-1">
-                    Billed annually (${price * 12}/yr)
+                    Billed annually ({formatPrice(plan.annual_cents * 12, plan.currency)}/yr)
                   </p>
                 )}
               </div>
 
               <ul className="space-y-3 mb-7 flex-1">
-                {features.map((feat) => (
+                {plan.features.map((feat) => (
                   <li key={feat} className="flex items-center gap-2.5">
                     <div className="w-4 h-4 flex-shrink-0 text-[#0D4C3C]">
                       <CheckSolid />
@@ -112,9 +123,9 @@ export function PricingToggle() {
               </ul>
 
               <Link
-                href="/signup"
+                href="https://appmoffu.vercel.app/auth/signup"
                 className={`block w-full text-center py-3 rounded-lg text-sm font-semibold transition-colors duration-150 ${
-                  popular
+                  plan.is_featured
                     ? 'bg-[#0D4C3C] hover:bg-[#083F32] text-white'
                     : 'border border-[#D1D5DB] text-[#374151] hover:bg-[#F8FAFB]'
                 }`}

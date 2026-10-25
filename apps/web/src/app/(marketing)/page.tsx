@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { PricingToggle } from '../_components/PricingToggle';
+import { PricingToggle, type PricingPlan } from '../_components/PricingToggle';
+import { createServerClient } from '../../lib/supabase/server';
 
 // ---------------------------------------------------------------------------
 // Icons
@@ -270,36 +271,51 @@ function BrandBrainSection() {
 }
 
 // ---------------------------------------------------------------------------
-// Pricing
-// NOTE: Prices match the design reference. BILLING-001/002 in checklist are TBD —
-// require business sign-off before go-live.
+// Pricing — fetched from DB
 // ---------------------------------------------------------------------------
 
-const PRICING_PLANS = [
-  {
-    name: 'Starter',
-    description: 'Great for single location businesses.',
-    price: 29,
-    features: ['1 location included', 'AI review responses', 'Brand Brain', 'Basic analytics'],
-    popular: false,
-  },
-  {
-    name: 'Growth',
-    description: 'For growing businesses with multiple locations.',
-    price: 79,
-    features: ['5 locations included', 'Everything in Starter', 'Advanced analytics', 'Team members'],
-    popular: true,
-  },
-  {
-    name: 'Scale',
-    description: 'For larger organizations and agencies.',
-    price: 199,
-    features: ['10 locations included', 'Everything in Growth', 'Priority support', 'Advanced permissions'],
-    popular: false,
-  },
-];
+async function fetchPricingPlans(): Promise<PricingPlan[]> {
+  try {
+    const supabase = createServerClient();
+    const [plansRes, pricesRes] = await Promise.all([
+      supabase
+        .from('plans')
+        .select('id, slug, name, description, features, badge_text, is_featured')
+        .eq('is_active', true)
+        .order('sort_order'),
+      supabase
+        .from('plan_prices')
+        .select('plan_id, billing_interval, amount_cents, currency')
+        .eq('is_active', true),
+    ]);
 
-function PricingSection() {
+    const plans = plansRes.data ?? [];
+    const prices = pricesRes.data ?? [];
+
+    return plans.map((p) => {
+      const planPrices = prices.filter((pr) => pr.plan_id === p.id);
+      const monthly = planPrices.find((pr) => pr.billing_interval === 'monthly');
+      const annual = planPrices.find((pr) => pr.billing_interval === 'annual');
+      return {
+        id: p.id,
+        slug: p.slug,
+        name: p.name,
+        description: p.description ?? null,
+        features: Array.isArray(p.features) ? (p.features as string[]) : [],
+        badge_text: p.badge_text ?? null,
+        is_featured: p.is_featured ?? false,
+        monthly_cents: monthly?.amount_cents ?? 0,
+        annual_cents: annual ? Math.round(annual.amount_cents / 12) : 0,
+        currency: monthly?.currency ?? annual?.currency ?? 'USD',
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+async function PricingSection() {
+  const plans = await fetchPricingPlans();
   return (
     <section id="pricing" className="h-screen flex flex-col justify-center bg-[#F8FAFB]">
       <div className="px-8 lg:px-16">
@@ -311,7 +327,7 @@ function PricingSection() {
             Start with one location or manage hundreds — with flexible add-ons.
           </p>
         </div>
-        <PricingToggle />
+        <PricingToggle plans={plans} />
       </div>
     </section>
   );
