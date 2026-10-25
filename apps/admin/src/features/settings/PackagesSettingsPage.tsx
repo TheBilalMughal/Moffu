@@ -46,6 +46,9 @@ interface LimitsForm {
   brand_brain_unlimited: boolean;
   brand_brain_limit: string;
   support_tier: string;
+  feature_insights: boolean;
+  feature_brand_brain: boolean;
+  feature_team: boolean;
 }
 
 interface PlanForm {
@@ -85,6 +88,9 @@ const DEFAULT_LIMITS: LimitsForm = {
   brand_brain_unlimited: false,
   brand_brain_limit: '1',
   support_tier: 'help_guides',
+  feature_insights: true,
+  feature_brand_brain: true,
+  feature_team: true,
 };
 
 const EMPTY_FORM: PlanForm = {
@@ -122,6 +128,9 @@ function entsToLimits(ents: Record<string, PlanEntitlement>): LimitsForm {
     brand_brain_unlimited: bb?.value_type === 'UNLIMITED',
     brand_brain_limit:   String(bb?.limit_value ?? 1),
     support_tier:        sup?.enum_value ?? 'help_guides',
+    feature_insights:    ents['feature_insights']?.bool_value !== false,
+    feature_brand_brain: ents['feature_brand_brain']?.bool_value !== false,
+    feature_team:        ents['feature_team']?.bool_value !== false,
   };
 }
 
@@ -290,6 +299,9 @@ export function PackagesSettingsPage() {
       { plan_id: planId, key: 'team_members',        value_type: 'LIMIT',     limit_value: parseInt(L.team_members) || 1,         bool_value: null, enum_value: null,            usage_reset: null },
       { plan_id: planId, key: 'brand_brain_profiles',value_type: L.brand_brain_unlimited ? 'UNLIMITED' : 'LIMIT', limit_value: L.brand_brain_unlimited ? null : parseInt(L.brand_brain_limit) || 1, bool_value: null, enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'support_tier',        value_type: 'ENUM',      limit_value: null,                                  bool_value: null, enum_value: L.support_tier,  usage_reset: null },
+      { plan_id: planId, key: 'feature_insights',    value_type: 'BOOLEAN',   limit_value: null, bool_value: L.feature_insights,    enum_value: null, usage_reset: null },
+      { plan_id: planId, key: 'feature_brand_brain', value_type: 'BOOLEAN',   limit_value: null, bool_value: L.feature_brand_brain, enum_value: null, usage_reset: null },
+      { plan_id: planId, key: 'feature_team',        value_type: 'BOOLEAN',   limit_value: null, bool_value: L.feature_team,        enum_value: null, usage_reset: null },
     ];
     const { error: ee } = await supabase.from('plan_entitlements').upsert(entUpserts as any, { onConflict: 'plan_id,key' });
     if (ee) { toast.error(ee.message); setSaving(false); return; }
@@ -486,6 +498,35 @@ export function PackagesSettingsPage() {
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
             {activeTab === 'limits' ? (
               <div className="space-y-5">
+
+                {/* Feature Access */}
+                <div>
+                  <p className="text-xs font-semibold text-[#374151] mb-2">Feature Access</p>
+                  <div className="border border-[#E5EAE8] rounded-lg divide-y divide-[#F3F4F6]">
+                    {([
+                      { key: 'feature_insights' as const,    label: 'Insights & Analytics', desc: 'Charts, rating trends, reply-rate metrics' },
+                      { key: 'feature_brand_brain' as const, label: 'Brand Brain',           desc: 'AI brand voice profiles for reply drafts' },
+                      { key: 'feature_team' as const,        label: 'Team Management',       desc: 'Invite members, assign roles' },
+                    ] as { key: 'feature_insights' | 'feature_brand_brain' | 'feature_team'; label: string; desc: string }[]).map(({ key, label, desc }) => (
+                      <label key={key} className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#F8FAF9] transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={form.limits[key]}
+                          onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, [key]: e.target.checked } }))}
+                          className="w-4 h-4 accent-[#0D4C3C] rounded flex-shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-[#111827]">{label}</p>
+                          <p className="text-[11px] text-[#9CA3AF] mt-0.5">{desc}</p>
+                        </div>
+                        <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits[key] ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+                          {form.limits[key] ? 'On' : 'Off'}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Locations */}
                 <div>
                   <label className="block text-xs font-medium text-[#374151] mb-1">Locations included</label>

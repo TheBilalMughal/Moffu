@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import type React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { authService } from '@/features/auth/auth.service';
 import { useAuthStore } from '@/features/auth/auth.store';
@@ -62,13 +63,13 @@ function TeamIcon() {
   );
 }
 
-const navItems = [
-  { to: '/dashboard',  label: 'Overview',   icon: <ChartBarIcon /> },
-  { to: '/reviews',    label: 'Reviews',    icon: <StarIcon /> },
-  { to: '/insights',   label: 'Insights',   icon: <InsightsIcon /> },
-  { to: '/brand-brain',label: 'Brand Brain',icon: <SlidersIcon /> },
-  { to: '/team',       label: 'Team',       icon: <TeamIcon /> },
-  { to: '/billing',    label: 'Billing',    icon: <BillingIcon /> },
+const navItems: { to: string; label: string; icon: React.ReactNode; featureKey: string | null }[] = [
+  { to: '/dashboard',   label: 'Overview',    icon: <ChartBarIcon />,  featureKey: null },
+  { to: '/reviews',     label: 'Reviews',     icon: <StarIcon />,      featureKey: null },
+  { to: '/insights',    label: 'Insights',    icon: <InsightsIcon />,  featureKey: 'feature_insights' },
+  { to: '/brand-brain', label: 'Brand Brain', icon: <SlidersIcon />,   featureKey: 'feature_brand_brain' },
+  { to: '/team',        label: 'Team',        icon: <TeamIcon />,      featureKey: 'feature_team' },
+  { to: '/billing',     label: 'Billing',     icon: <BillingIcon />,   featureKey: null },
 ];
 
 const navSettings = [
@@ -576,12 +577,38 @@ function TopbarProfile() {
 
 export function DashboardLayout() {
   const { setLocations } = useLocationStore();
+  const navigate = useNavigate();
+  const [featureAccess, setFeatureAccess] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     supabase.from('google_locations').select('id, display_name').eq('is_selected', true).then(({ data }) => {
       setLocations(data ?? []);
     });
   }, [setLocations]);
+
+  useEffect(() => {
+    async function loadFeatureAccess() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: sub } = await supabase
+        .from('subscriptions').select('plan_id')
+        .eq('user_id', user.id).eq('status', 'active').maybeSingle();
+      if (!sub) return;
+      const { data: ents } = await supabase
+        .from('plan_entitlements').select('key, bool_value')
+        .eq('plan_id', sub.plan_id).like('key', 'feature_%');
+      const map: Record<string, boolean> = {};
+      for (const e of ents ?? []) { map[e.key] = e.bool_value !== false; }
+      setFeatureAccess(map);
+    }
+    loadFeatureAccess();
+  }, []);
+
+  function isLocked(featureKey: string | null): boolean {
+    if (!featureKey) return false;
+    if (!(featureKey in featureAccess)) return false; // not set yet → accessible
+    return featureAccess[featureKey] === false;
+  }
 
   return (
     <div className="flex h-screen bg-[#F8FAF9] overflow-hidden">
@@ -594,23 +621,42 @@ export function DashboardLayout() {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 flex flex-col overflow-y-auto gap-0.5" aria-label="Main navigation">
-          {navItems.map(({ to, label, icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/dashboard'}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-[#0D4C3C] text-white'
-                    : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
-                }`
-              }
-            >
-              {icon}
-              {label}
-            </NavLink>
-          ))}
+          {navItems.map(({ to, label, icon, featureKey }) => {
+            const locked = isLocked(featureKey);
+            if (locked) {
+              return (
+                <button
+                  key={to}
+                  onClick={() => navigate('/billing')}
+                  title={`Upgrade to access ${label}`}
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-[#C4CAC8] hover:bg-[#F3F4F6] hover:text-[#9CA3AF] transition-colors w-full text-left"
+                >
+                  {icon}
+                  <span className="flex-1">{label}</span>
+                  <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                </button>
+              );
+            }
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                end={to === '/dashboard'}
+                className={({ isActive }) =>
+                  `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-[#0D4C3C] text-white'
+                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
+                  }`
+                }
+              >
+                {icon}
+                {label}
+              </NavLink>
+            );
+          })}
 
           {/* Settings — pinned to bottom */}
           <div className="mt-auto pt-2">
