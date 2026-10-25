@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: 'Simple, transparent pricing. Start free and scale as you grow.',
 };
 
-export const revalidate = 60; // revalidate every 60s
+export const dynamic = 'force-dynamic'; // always fetch fresh from DB
 
 interface PlanPrice {
   billing_interval: string;

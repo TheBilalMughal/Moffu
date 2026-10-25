@@ -664,16 +664,18 @@ export function BillingPage() {
                   <span className="text-[10px] font-bold text-white bg-[#0D4C3C] px-3 py-0.5 rounded whitespace-nowrap">Current plan</span>
                 </div>
               )}
-              {isGrowth && !isCurrent && (
+              {plan.is_featured && !isCurrent && (
                 <div className="absolute -top-3 inset-x-0 flex justify-center">
-                  <span className="text-[10px] font-bold text-white bg-[#374151] px-3 py-0.5 rounded whitespace-nowrap">Most popular</span>
+                  <span className="text-[10px] font-bold text-white bg-[#374151] px-3 py-0.5 rounded whitespace-nowrap">
+                    {plan.badge_text || 'Most popular'}
+                  </span>
                 </div>
               )}
 
               <div className="p-6 flex flex-col flex-1">
                 <div className="mb-5">
                   <p className={`text-sm font-bold mb-1 ${isScale ? 'text-stone-100' : 'text-[#111827]'}`}>{plan.name}</p>
-                  <p className={`text-xs leading-relaxed ${isScale ? 'text-stone-400' : 'text-[#6B7280]'}`}>{PLAN_DESCRIPTIONS[plan.slug]}</p>
+                  <p className={`text-xs leading-relaxed ${isScale ? 'text-stone-400' : 'text-[#6B7280]'}`}>{plan.description ?? PLAN_DESCRIPTIONS[plan.slug]}</p>
                 </div>
 
                 <div className="mb-6">
