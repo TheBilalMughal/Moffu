@@ -355,7 +355,7 @@ export function PackagesSettingsPage() {
             {plans.map((plan, idx) => {
               const monthly = plan.prices.find(p => p.billing_interval === 'monthly');
               const annual  = plan.prices.find(p => p.billing_interval === 'annual');
-              const annualPerMo = annual && annual.amount_cents > 0 ? annual.amount_cents / 12 : 0;
+              const annualPerMo = annual && annual.amount_cents > 0 ? annual.amount_cents : 0;
               const disc = monthly && monthly.amount_cents > 0 && annualPerMo > 0
                 ? Math.round((1 - annualPerMo / monthly.amount_cents) * 100)
                 : 0;
