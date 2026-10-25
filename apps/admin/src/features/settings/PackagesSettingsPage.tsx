@@ -88,7 +88,7 @@ export function PackagesSettingsPage() {
     const priceMap: Record<string, PlanPrice[]> = {};
     (pricesData ?? []).forEach((p: any) => {
       if (!priceMap[p.plan_id]) priceMap[p.plan_id] = [];
-      priceMap[p.plan_id].push(p);
+      (priceMap[p.plan_id] as PlanPrice[]).push(p);
     });
 
     setPlans((plansData ?? []).map((p: any) => ({
