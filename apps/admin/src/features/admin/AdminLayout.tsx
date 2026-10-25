@@ -456,10 +456,10 @@ export function AdminLayout() {
                 to={item.to}
                 {...(item.end ? { end: true } : {})}
                 className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors border-l-2 ${
+                  `flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     isActive
-                      ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]'
-                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827] border-transparent'
+                      ? 'bg-[#0D4C3C] text-white'
+                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
                   }`
                 }
               >

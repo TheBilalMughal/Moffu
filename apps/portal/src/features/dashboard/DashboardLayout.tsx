@@ -597,10 +597,10 @@ export function DashboardLayout() {
               to={to}
               end={to === '/dashboard'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors border-l-2 ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]'
-                    : 'text-[#5A7169] hover:bg-[#F3F8F6] hover:text-[#0D4C3C] border-transparent'
+                    ? 'bg-[#0D4C3C] text-white'
+                    : 'text-[#5A7169] hover:bg-[#F3F8F6] hover:text-[#0D4C3C]'
                 }`
               }
             >
