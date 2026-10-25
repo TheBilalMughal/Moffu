@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { unstable_noStore as noStore } from 'next/cache';
 import { PricingToggle, type PricingPlan } from '../_components/PricingToggle';
 import { createServerClient } from '../../lib/supabase/server';
 
@@ -277,6 +278,7 @@ function BrandBrainSection() {
 // ---------------------------------------------------------------------------
 
 async function fetchPricingPlans(): Promise<PricingPlan[]> {
+  noStore();
   try {
     const supabase = createServerClient();
     const [plansRes, pricesRes] = await Promise.all([
