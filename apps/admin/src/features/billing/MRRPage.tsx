@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { Dropdown } from '@/components/Dropdown';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -9,33 +10,27 @@ interface SubRaw {
   status: string;
   billing_interval: string | null;
   created_at: string;
+  current_period_end: string;
   cancel_at_period_end: boolean;
 }
 
-interface PriceRaw {
-  plan_id: string;
-  billing_interval: string;
-  amount_cents: number;
-}
-
-interface PlanRaw {
-  id: string;
-  slug: string;
-  name: string;
-}
+interface PriceRaw { plan_id: string; billing_interval: string; amount_cents: number }
+interface PlanRaw  { id: string; slug: string; name: string }
 
 interface EnrichedSub {
   id: string;
+  planId: string;
   planSlug: string;
   planName: string;
   amountCents: number;
   status: string;
   interval: string;
   createdAt: string;
+  periodEnd: string;
   cancelAtPeriodEnd: boolean;
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const PLAN_COLOR: Record<string, string> = {
   free: 'bg-[#F3F4F6] text-[#374151]',
@@ -43,64 +38,251 @@ const PLAN_COLOR: Record<string, string> = {
   growth: 'bg-[#F0FDF4] text-[#15803D]',
   scale: 'bg-[#FFF7ED] text-[#C2410C]',
 };
-
 const PLAN_BAR: Record<string, string> = {
   free: '#D1D5DB', starter: '#3B82F6', growth: '#10B981', scale: '#F97316',
 };
+const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS_SHORT   = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 
-function fmt(cents: number): string {
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+function isoToDate(s: string) { return s ? new Date(s + 'T00:00:00') : null; }
+function dateToIso(d: Date): string { return d.toISOString().split('T')[0] ?? ''; }
+function sameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+function fmtLabel(iso: string | null) {
+  if (!iso) return '—';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function fmtMoney(cents: number, short = false): string {
   if (cents === 0) return '$0';
   const v = cents / 100;
-  return v >= 1000 ? `$${(v / 1000).toFixed(1)}k` : `$${v.toFixed(v % 1 === 0 ? 0 : 0)}`;
+  if (short && v >= 1000) return `$${(v / 1000).toFixed(1)}k`;
+  return `$${v.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
+function today(): string { return new Date().toISOString().split('T')[0] ?? ''; }
+function monthStart(monthsAgo = 0): string {
+  const n = new Date(); return dateToIso(new Date(n.getFullYear(), n.getMonth() - monthsAgo, 1));
 }
 
-function fmtFull(cents: number): string {
-  if (cents === 0) return '$0';
-  return `$${(cents / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-}
+// ── Date Range Picker (exact same style as portal ReviewsPage) ─────────────────
 
-function monthLabel(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString('en-US', { month: 'short' });
-}
-
-function getMonthStart(monthsAgo: number): Date {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
-}
-
-function getMonthEnd(monthsAgo: number): Date {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth() - monthsAgo + 1, 0, 23, 59, 59, 999);
-}
-
-// ── Bar Chart ─────────────────────────────────────────────────────────────────
-
-function TrendChart({ data }: { data: { label: string; mrr: number }[] }) {
-  const max = Math.max(...data.map((d) => d.mrr), 1);
-  const H = 100;
-
+function CalMonth({ year, month, from, to, hovered, onDay, onHover }: {
+  year: number; month: number; from: Date | null; to: Date | null; hovered: Date | null;
+  onDay: (d: Date) => void; onHover: (d: Date | null) => void;
+}) {
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayDate = new Date();
+  const rangeEnd = to ?? hovered;
+  function inRange(d: Date) {
+    if (!from || !rangeEnd) return false;
+    const [lo, hi] = from <= rangeEnd ? [from, rangeEnd] : [rangeEnd, from];
+    return d > lo && d < hi;
+  }
+  const cells: (Date | null)[] = Array(firstDay).fill(null);
+  for (let i = 1; i <= daysInMonth; i++) cells.push(new Date(year, month, i));
+  while (cells.length % 7 !== 0) cells.push(null);
   return (
-    <div className="flex items-end gap-3 h-32">
-      {data.map((d, i) => {
-        const pct = d.mrr / max;
-        const barH = Math.max(pct * H, d.mrr > 0 ? 4 : 2);
-        const isLast = i === data.length - 1;
-        return (
-          <div key={d.label} className="flex-1 flex flex-col items-center gap-1.5">
-            <p className="text-[10px] text-[#9CA3AF] font-medium">{d.mrr > 0 ? fmt(d.mrr) : '—'}</p>
-            <div className="w-full flex items-end" style={{ height: H }}>
-              <div
-                className={`w-full rounded-t transition-all ${isLast ? 'bg-[#0D4C3C]' : 'bg-[#C7DDD8]'}`}
-                style={{ height: barH }}
-              />
+    <div className="w-[216px]">
+      <p className="text-xs font-semibold text-[#111827] text-center mb-3">{MONTHS_LONG[month]} {year}</p>
+      <div className="grid grid-cols-7">
+        {DAYS_SHORT.map((d) => <div key={d} className="h-7 flex items-center justify-center text-[10px] font-medium text-[#9CA3AF]">{d}</div>)}
+        {cells.map((d, i) => {
+          if (!d) return <div key={`e${i}`} className="h-7"/>;
+          const isStart = !!from && sameDay(d, from);
+          const isEnd   = !!rangeEnd && sameDay(d, rangeEnd);
+          const range   = inRange(d);
+          const isToday = sameDay(d, todayDate);
+          return (
+            <div key={d.getTime()} onMouseEnter={() => onHover(d)} onMouseLeave={() => onHover(null)} onClick={() => onDay(d)}
+              className={['h-7 flex items-center justify-center text-xs cursor-pointer select-none transition-colors',
+                isStart || isEnd ? 'bg-[#0D4C3C] text-white font-semibold rounded-md' : '',
+                range ? 'bg-[#E6F2EE] text-[#0D4C3C]' : '',
+                !isStart && !isEnd && !range ? 'text-[#374151] hover:bg-[#F3F4F6] rounded-md' : '',
+                isToday && !isStart && !isEnd ? 'font-bold underline decoration-dotted' : '',
+              ].join(' ')}>
+              {d.getDate()}
             </div>
-            <p className="text-[10px] text-[#9CA3AF]">{d.label}</p>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
+}
+
+function DateRangePicker({ from, to, onChange }: {
+  from: string; to: string; onChange: (f: string, t: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [selecting, setSelecting] = useState<'from'|'to'>('from');
+  const [hovered, setHovered] = useState<Date | null>(null);
+  const todayDate = new Date();
+  const [viewYear, setViewYear] = useState(todayDate.getFullYear());
+  const [viewMonth, setViewMonth] = useState(todayDate.getMonth());
+  const ref = useRef<HTMLDivElement>(null);
+  const fromDate = isoToDate(from); const toDate = isoToDate(to);
+  const hasValue = !!(from || to);
+  const label = from && to ? `${fmtLabel(from)} – ${fmtLabel(to)}` : from ? `From ${fmtLabel(from)}` : 'Date range';
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', fn); return () => document.removeEventListener('mousedown', fn);
+  }, []);
+
+  function handleDay(d: Date) {
+    if (selecting === 'from' || !fromDate) { onChange(dateToIso(d), ''); setSelecting('to'); }
+    else {
+      const [lo, hi] = d >= fromDate ? [fromDate, d] : [d, fromDate];
+      onChange(dateToIso(lo), dateToIso(hi)); setSelecting('from'); setOpen(false);
+    }
+  }
+  function preset(f: Date, t: Date) { onChange(dateToIso(f), dateToIso(t)); setSelecting('from'); setOpen(false); }
+  const nextM = viewMonth === 11 ? 0 : viewMonth + 1;
+  const nextY = viewMonth === 11 ? viewYear + 1 : viewYear;
+
+  return (
+    <div className="relative" ref={ref}>
+      <button onClick={() => setOpen((o) => !o)}
+        className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-xl border transition-colors ${hasValue ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#E5EAE8] text-[#374151] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <span>{label}</span>
+        {hasValue && (
+          <span onClick={(e) => { e.stopPropagation(); onChange('', ''); setSelecting('from'); }} className="ml-0.5 hover:text-red-500">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+          </span>
+        )}
+      </button>
+      {open && (
+        <div className="absolute top-full mt-2 right-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg p-4 min-w-max">
+          <div className="flex items-center justify-between mb-3">
+            <button onClick={() => { if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); } else setViewMonth((m) => m - 1); }}
+              className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <span className="text-xs font-medium text-[#374151]">{MONTHS_LONG[viewMonth]} {viewYear}</span>
+            <button onClick={() => { if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); } else setViewMonth((m) => m + 1); }}
+              className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+          <div className="flex gap-6">
+            <CalMonth year={viewYear} month={viewMonth} from={fromDate} to={toDate} hovered={hovered} onDay={handleDay} onHover={setHovered}/>
+            <div className="w-px bg-[#F3F4F6]"/>
+            <CalMonth year={nextY} month={nextM} from={fromDate} to={toDate} hovered={hovered} onDay={handleDay} onHover={setHovered}/>
+          </div>
+          <div className="mt-3 pt-3 border-t border-[#F3F4F6] flex items-center justify-between">
+            <p className="text-xs text-[#9CA3AF]">{selecting === 'from' ? 'Select start date' : 'Select end date'}</p>
+            <div className="flex items-center gap-3">
+              <button onClick={() => { const t = new Date(); preset(new Date(t.getFullYear(), t.getMonth(), 1), t); }} className="text-xs text-[#0D4C3C] font-medium hover:underline">This month</button>
+              <button onClick={() => { const t = new Date(); const a = new Date(t); a.setDate(t.getDate() - 29); preset(a, t); }} className="text-xs text-[#0D4C3C] font-medium hover:underline">Last 30 days</button>
+              <button onClick={() => { const t = new Date(); const a = new Date(t); a.setDate(t.getDate() - 89); preset(a, t); }} className="text-xs text-[#0D4C3C] font-medium hover:underline">Last 90 days</button>
+              {hasValue && <button onClick={() => { onChange('', ''); setSelecting('from'); }} className="text-xs text-[#9CA3AF] hover:text-red-500">Clear</button>}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── SVG Sparkline (MRR trend) ──────────────────────────────────────────────────
+
+function MRRTrendChart({ data }: { data: { label: string; mrr: number; churn: number }[] }) {
+  const W = 600; const H = 140; const pad = { t: 16, b: 32, l: 8, r: 8 };
+  const innerW = W - pad.l - pad.r;
+  const innerH = H - pad.t - pad.b;
+  const maxVal = Math.max(...data.map((d) => d.mrr), 1);
+  const barW = Math.floor(innerW / data.length) - 6;
+  const halfBar = barW / 2;
+
+  const mrrPoints = data.map((d, i) => {
+    const x = pad.l + (i / (data.length - 1)) * innerW;
+    const y = pad.t + (1 - d.mrr / maxVal) * innerH;
+    return { x, y };
+  });
+
+  function makePath(pts: { x: number; y: number }[]) {
+    if (pts.length < 2) return '';
+    const first = pts[0]!;
+    let pathD = `M ${first.x} ${first.y}`;
+    for (let i = 1; i < pts.length; i++) {
+      const prev = pts[i - 1]!; const curr = pts[i]!;
+      const cx = (prev.x + curr.x) / 2;
+      pathD += ` C ${cx} ${prev.y} ${cx} ${curr.y} ${curr.x} ${curr.y}`;
+    }
+    return pathD;
+  }
+
+  return (
+    <div className="w-full overflow-x-auto">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ minWidth: 400 }}>
+        {/* Gridlines */}
+        {[0, 0.25, 0.5, 0.75, 1].map((p) => (
+          <line key={p} x1={pad.l} x2={W - pad.r} y1={pad.t + p * innerH} y2={pad.t + p * innerH}
+            stroke="#F3F4F6" strokeWidth="1"/>
+        ))}
+        {/* MRR bars */}
+        {data.map((d, i) => {
+          const x = pad.l + (i / (data.length - 1)) * innerW;
+          const barH = (d.mrr / maxVal) * innerH;
+          return (
+            <g key={d.label}>
+              <rect x={x - halfBar} y={pad.t + innerH - barH} width={barW} height={barH}
+                fill={i === data.length - 1 ? '#0D4C3C' : '#C7DDD8'} rx="3"/>
+              {/* Churn negative */}
+              {d.churn > 0 && (
+                <rect x={x - halfBar} y={pad.t + innerH} width={barW} height={Math.min((d.churn / maxVal) * innerH, 12)}
+                  fill="#FCA5A5" rx="2"/>
+              )}
+              <text x={x} y={H - 8} textAnchor="middle" fontSize="9" fill="#9CA3AF">{d.label}</text>
+            </g>
+          );
+        })}
+        {/* MRR line */}
+        <path d={makePath(mrrPoints)} fill="none" stroke="#0D4C3C" strokeWidth="2" strokeLinecap="round"/>
+        {/* Dots */}
+        {mrrPoints.map((pt, i) => (
+          <circle key={i} cx={pt.x} cy={pt.y} r="3" fill={i === data.length - 1 ? '#0D4C3C' : 'white'}
+            stroke="#0D4C3C" strokeWidth="2"/>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+// ── Mini Donut ────────────────────────────────────────────────────────────────
+
+function MiniDonut({ pct, color }: { pct: number; color: string }) {
+  const r = 15.9; const circ = 2 * Math.PI * r;
+  return (
+    <svg viewBox="0 0 36 36" className="w-14 h-14 -rotate-90">
+      <circle cx="18" cy="18" r={r} fill="none" stroke="#F3F4F6" strokeWidth="4"/>
+      <circle cx="18" cy="18" r={r} fill="none" stroke={color} strokeWidth="4"
+        strokeDasharray={`${(pct / 100) * circ} ${circ}`} strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+
+function exportCSV(subs: EnrichedSub[], dateFrom: string, dateTo: string) {
+  const headers = ['ID', 'Plan', 'Interval', 'Status', 'MRR (USD)', 'Period End', 'Created', 'Cancel At Period End'];
+  const rows = subs.map((s) => [
+    s.id, s.planName, s.interval, s.status,
+    (s.amountCents / 100).toFixed(2),
+    s.periodEnd, s.createdAt, s.cancelAtPeriodEnd ? 'Yes' : 'No',
+  ]);
+  const meta = [`"Date range: ${dateFrom || 'all'} to ${dateTo || 'all'}"`];
+  const csv = [...meta, [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')].join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  const a = document.createElement('a'); a.href = url; a.download = `mrr-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
@@ -109,22 +291,26 @@ export function MRRPage() {
   const [subs, setSubs] = useState<EnrichedSub[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Filters
+  const [dateFrom, setDateFrom] = useState(monthStart(0));
+  const [dateTo, setDateTo] = useState(today());
+  const [planFilter, setPlanFilter] = useState('');
+  const [intervalFilter, setIntervalFilter] = useState('');
+
   useEffect(() => { load(); }, []);
 
   async function load() {
     setLoading(true);
-
     const [subsRes, plansRes, pricesRes] = await Promise.all([
-      supabase
-        .from('subscriptions')
-        .select('id, plan_id, status, billing_interval, created_at, cancel_at_period_end')
-        .order('created_at', { ascending: false }),
+      supabase.from('subscriptions').select(
+        'id, plan_id, status, billing_interval, created_at, current_period_end, cancel_at_period_end'
+      ).order('created_at', { ascending: false }),
       supabase.from('plans').select('id, slug, name').order('sort_order'),
       supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('currency', 'USD'),
     ]);
 
-    const allPlans = ((plansRes.data ?? []) as PlanRaw[]);
-    const planById = new Map<string, PlanRaw>(allPlans.map((p) => [p.id, p]));
+    const allPlans = (plansRes.data ?? []) as PlanRaw[];
+    const planById = new Map(allPlans.map((p) => [p.id, p]));
     const priceMap = new Map<string, number>();
     ((pricesRes.data ?? []) as PriceRaw[]).forEach((p) =>
       priceMap.set(`${p.plan_id}:${p.billing_interval}`, p.amount_cents));
@@ -134,13 +320,12 @@ export function MRRPage() {
       const interval = s.billing_interval ?? 'monthly';
       const amountCents = priceMap.get(`${s.plan_id}:${interval}`) ?? priceMap.get(`${s.plan_id}:monthly`) ?? 0;
       return {
-        id: s.id,
+        id: s.id, planId: s.plan_id,
         planSlug: plan?.slug ?? 'free',
         planName: plan?.name ?? 'Free',
-        amountCents,
-        status: s.status,
-        interval,
+        amountCents, status: s.status, interval,
         createdAt: s.created_at,
+        periodEnd: s.current_period_end,
         cancelAtPeriodEnd: s.cancel_at_period_end,
       };
     });
@@ -149,153 +334,282 @@ export function MRRPage() {
     setLoading(false);
   }
 
+  // Apply plan/interval filters (not date — date is for movements only)
+  const filtered = useMemo(() => {
+    let r = subs;
+    if (planFilter) r = r.filter((s) => s.planSlug === planFilter);
+    if (intervalFilter) r = r.filter((s) => s.interval === intervalFilter);
+    return r;
+  }, [subs, planFilter, intervalFilter]);
+
+  // KPIs — Total MRR is always current state
   const kpis = useMemo(() => {
-    const active = subs.filter((s) => s.status === 'active');
+    const active = filtered.filter((s) => s.status === 'active');
     const paid = active.filter((s) => s.planSlug !== 'free');
-    const mrr = paid.reduce((sum, s) => sum + s.amountCents, 0);
-    const arr = mrr * 12;
+    const totalMRR = paid.reduce((sum, s) => sum + s.amountCents, 0);
+    const arpu = paid.length > 0 ? Math.round(totalMRR / paid.length) : 0;
 
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const newThisMonth = paid.filter((s) => s.createdAt >= monthStart);
-    const newMRR = newThisMonth.reduce((sum, s) => sum + s.amountCents, 0);
+    // Period movements using dateFrom/dateTo
+    const from = dateFrom; const to = dateTo;
+    const newSubs = paid.filter((s) => s.createdAt.slice(0, 10) >= from && s.createdAt.slice(0, 10) <= to);
+    const newMRR = newSubs.reduce((sum, s) => sum + s.amountCents, 0);
 
-    const atRisk = active.filter((s) => s.planSlug !== 'free' && s.cancelAtPeriodEnd).length;
-    const pastDue = subs.filter((s) => s.status === 'past_due').length;
+    // Churn: canceled OR cancel_at_period_end with period_end in range
+    const churnedSubs = filtered.filter((s) =>
+      s.planSlug !== 'free' &&
+      (s.status === 'canceled' || s.cancelAtPeriodEnd) &&
+      s.periodEnd.slice(0, 10) >= from && s.periodEnd.slice(0, 10) <= to
+    );
+    const churnMRR = churnedSubs.reduce((sum, s) => sum + s.amountCents, 0);
+    const netMRR = newMRR - churnMRR;
 
-    return { mrr, arr, paidCount: paid.length, newMRR, newCount: newThisMonth.length, atRisk: atRisk + pastDue };
-  }, [subs]);
+    // Monthly churn rate for LTV
+    const churnRate = paid.length > 0 ? churnedSubs.length / paid.length : 0;
+    const ltv = churnRate > 0 ? Math.round(arpu / churnRate) : 0;
 
+    // Opening MRR approximation
+    const openingMRR = Math.max(0, totalMRR - newMRR + churnMRR);
+
+    return {
+      totalMRR, arr: totalMRR * 12,
+      paidCount: paid.length, arpu, ltv,
+      newMRR, newCount: newSubs.length,
+      churnMRR, churnCount: churnedSubs.length,
+      netMRR, churnRate,
+      openingMRR,
+      atRisk: paid.filter((s) => s.cancelAtPeriodEnd || s.status === 'past_due').length,
+    };
+  }, [filtered, dateFrom, dateTo]);
+
+  // Plan breakdown
   const planBreakdown = useMemo(() => {
     const slugs = ['free', 'starter', 'growth', 'scale'];
     const NAMES: Record<string, string> = { free: 'Free', starter: 'Starter', growth: 'Growth', scale: 'Scale' };
+    const active = filtered.filter((s) => s.status === 'active');
+    const total = active.length || 1;
     return slugs.map((slug) => {
-      const rows = subs.filter((s) => s.planSlug === slug);
-      const active = rows.filter((s) => s.status === 'active');
-      const mrr = active.reduce((sum, s) => sum + s.amountCents, 0);
-      return { slug, name: NAMES[slug], count: active.length, mrr };
+      const rows = active.filter((s) => s.planSlug === slug);
+      const mrr = rows.reduce((sum, s) => sum + s.amountCents, 0);
+      return { slug, name: NAMES[slug], count: rows.length, mrr, pct: Math.round((rows.length / total) * 100) };
     });
-  }, [subs]);
+  }, [filtered]);
 
   const maxPlanMRR = Math.max(...planBreakdown.map((d) => d.mrr), 1);
 
+  // 12-month trend
   const trendData = useMemo(() => {
-    return Array.from({ length: 6 }, (_, i) => {
-      const monthsAgo = 5 - i;
-      const start = getMonthStart(monthsAgo).toISOString();
-      const end = getMonthEnd(monthsAgo).toISOString();
-      const label = monthLabel(getMonthStart(monthsAgo).toISOString());
-      const newPaid = subs.filter(
-        (s) => s.planSlug !== 'free' && s.createdAt >= start && s.createdAt <= end,
+    return Array.from({ length: 12 }, (_, i) => {
+      const monthsAgo = 11 - i;
+      const now = new Date();
+      const from = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
+      const to = new Date(now.getFullYear(), now.getMonth() - monthsAgo + 1, 0);
+      const fromIso = dateToIso(from); const toIso = dateToIso(to);
+
+      const newPaid = filtered.filter(
+        (s) => s.planSlug !== 'free' && s.status === 'active' &&
+               s.createdAt.slice(0, 10) >= fromIso && s.createdAt.slice(0, 10) <= toIso
       );
-      const mrr = newPaid.reduce((sum, s) => sum + s.amountCents, 0);
-      return { label, mrr };
+      const churnedMonth = filtered.filter(
+        (s) => s.planSlug !== 'free' && (s.status === 'canceled' || s.cancelAtPeriodEnd) &&
+               s.periodEnd.slice(0, 10) >= fromIso && s.periodEnd.slice(0, 10) <= toIso
+      );
+      return {
+        label: MONTHS_SHORT[from.getMonth()] ?? '',
+        mrr: newPaid.reduce((sum, s) => sum + s.amountCents, 0),
+        churn: churnedMonth.reduce((sum, s) => sum + s.amountCents, 0),
+      };
     });
-  }, [subs]);
+  }, [filtered]);
 
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="w-5 h-5 border-2 border-[#0D4C3C] border-t-transparent rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-[#0D4C3C] border-t-transparent rounded-full animate-spin"/>
       </div>
     );
   }
 
+  const planOpts = [
+    { value: '', label: 'All Plans' },
+    { value: 'free', label: 'Free' },
+    { value: 'starter', label: 'Starter' },
+    { value: 'growth', label: 'Growth' },
+    { value: 'scale', label: 'Scale' },
+  ];
+  const intervalOpts = [
+    { value: '', label: 'All Intervals' },
+    { value: 'monthly', label: 'Monthly' },
+    { value: 'annual', label: 'Annual' },
+  ];
+
   return (
     <div className="h-full overflow-y-auto px-8 py-8">
+
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#111827]">MRR Dashboard</h1>
-        <p className="text-sm text-[#6B7280] mt-0.5">Monthly recurring revenue overview.</p>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-[#111827]">MRR Dashboard</h1>
+          <p className="text-sm text-[#6B7280] mt-0.5">Monthly recurring revenue and growth metrics.</p>
+        </div>
+        <button onClick={() => exportCSV(filtered, dateFrom, dateTo)}
+          className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-[#0D4C3C] hover:bg-[#083F32] rounded-lg transition-colors">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Export CSV
+        </button>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-5 gap-3 mb-6">
+      {/* Filter bar */}
+      <div className="flex items-center gap-2 mb-6 flex-wrap">
+        <DateRangePicker from={dateFrom} to={dateTo} onChange={(f, t) => { if (f) setDateFrom(f); if (t) setDateTo(t); }}/>
+        <Dropdown options={planOpts} value={planFilter} onChange={setPlanFilter} placeholder="All Plans" clearable/>
+        <Dropdown options={intervalOpts} value={intervalFilter} onChange={setIntervalFilter} placeholder="All Intervals" clearable/>
+        {(planFilter || intervalFilter) && (
+          <button onClick={() => { setPlanFilter(''); setIntervalFilter(''); }}
+            className="text-xs text-[#9CA3AF] hover:text-red-500 transition-colors px-2 py-1.5">
+            Clear filters
+          </button>
+        )}
+      </div>
+
+      {/* KPI Row */}
+      <div className="grid grid-cols-6 gap-3 mb-5">
         {[
-          { label: 'Total MRR', value: fmtFull(kpis.mrr), sub: 'active paid plans', accent: false },
-          { label: 'ARR', value: fmtFull(kpis.arr), sub: 'annualised', accent: false },
-          { label: 'Paid Accounts', value: String(kpis.paidCount), sub: 'active subscriptions', accent: false },
-          { label: 'New MRR (Mo)', value: fmtFull(kpis.newMRR), sub: `${kpis.newCount} new this month`, accent: kpis.newMRR > 0 },
-          { label: 'At Risk', value: String(kpis.atRisk), sub: 'past due / canceling', accent: kpis.atRisk > 0 },
+          { label: 'Total MRR',     value: fmtMoney(kpis.totalMRR), sub: `${fmtMoney(kpis.arr)} ARR`,             color: '' },
+          { label: 'New MRR',       value: fmtMoney(kpis.newMRR),   sub: `${kpis.newCount} new in period`,        color: kpis.newMRR > 0 ? 'text-[#0D4C3C]' : '' },
+          { label: 'Churned MRR',   value: fmtMoney(kpis.churnMRR), sub: `${kpis.churnCount} churn in period`,    color: kpis.churnMRR > 0 ? 'text-red-600' : '' },
+          { label: 'Net MRR',       value: (kpis.netMRR >= 0 ? '+' : '') + fmtMoney(kpis.netMRR), sub: 'New − Churned', color: kpis.netMRR > 0 ? 'text-[#0D4C3C]' : kpis.netMRR < 0 ? 'text-red-600' : '' },
+          { label: 'ARPU',          value: fmtMoney(kpis.arpu),     sub: 'avg revenue / user',                    color: '' },
+          { label: 'LTV Estimate',  value: kpis.ltv > 0 ? fmtMoney(kpis.ltv) : 'N/A', sub: kpis.churnRate > 0 ? `${(kpis.churnRate * 100).toFixed(1)}% mo. churn` : 'need churn data', color: '' },
         ].map((c) => (
-          <div key={c.label} className={`bg-white border rounded-xl px-5 py-4 ${c.accent && c.label === 'At Risk' && kpis.atRisk > 0 ? 'border-red-200' : 'border-[#E5EAE8]'}`}>
-            <p className="text-xs text-[#9CA3AF] uppercase tracking-wide">{c.label}</p>
-            <p className={`text-2xl font-bold mt-1 ${c.accent && c.label === 'At Risk' && kpis.atRisk > 0 ? 'text-red-600' : c.accent && kpis.newMRR > 0 ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>
-              {c.value}
-            </p>
-            <p className="text-xs text-[#9CA3AF] mt-0.5">{c.sub}</p>
+          <div key={c.label} className="bg-white border border-[#E5EAE8] rounded-xl px-4 py-4">
+            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">{c.label}</p>
+            <p className={`text-xl font-bold mt-1 ${c.color || 'text-[#111827]'}`}>{c.value}</p>
+            <p className="text-[11px] text-[#9CA3AF] mt-0.5">{c.sub}</p>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-5 gap-4">
-        {/* Plan Breakdown */}
+      {/* MRR Movements Waterfall */}
+      <div className="bg-white border border-[#E5EAE8] rounded-xl p-5 mb-4">
+        <h2 className="text-sm font-semibold text-[#111827] mb-1">MRR Movements</h2>
+        <p className="text-xs text-[#9CA3AF] mb-5">{fmtLabel(dateFrom)} — {fmtLabel(dateTo)}</p>
+        <div className="flex items-stretch gap-2">
+          {/* Opening */}
+          <div className="flex-1 bg-[#F8FAF9] rounded-lg p-3 text-center">
+            <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide mb-1">Opening MRR</p>
+            <p className="text-lg font-bold text-[#111827]">{fmtMoney(kpis.openingMRR, true)}</p>
+          </div>
+
+          <div className="flex items-center text-[#9CA3AF] px-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+          </div>
+
+          {/* New */}
+          <div className="flex-1 bg-[#F0FDF4] border border-[#BBF7D0] rounded-lg p-3 text-center">
+            <p className="text-[10px] text-[#15803D] uppercase tracking-wide mb-1">+ New</p>
+            <p className="text-lg font-bold text-[#15803D]">+{fmtMoney(kpis.newMRR, true)}</p>
+            <p className="text-[10px] text-[#9CA3AF] mt-0.5">{kpis.newCount} subscriptions</p>
+          </div>
+
+          <div className="flex items-center text-[#9CA3AF] px-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+          </div>
+
+          {/* Churn */}
+          <div className="flex-1 bg-[#FEF2F2] border border-[#FECACA] rounded-lg p-3 text-center">
+            <p className="text-[10px] text-[#991B1B] uppercase tracking-wide mb-1">− Churned</p>
+            <p className="text-lg font-bold text-[#991B1B]">-{fmtMoney(kpis.churnMRR, true)}</p>
+            <p className="text-[10px] text-[#9CA3AF] mt-0.5">{kpis.churnCount} lost</p>
+          </div>
+
+          <div className="flex items-center text-[#9CA3AF] px-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+          </div>
+
+          {/* Net Change */}
+          <div className={`flex-1 rounded-lg p-3 text-center border ${kpis.netMRR >= 0 ? 'bg-[#E6F2EE] border-[#0D4C3C]/20' : 'bg-[#FEF2F2] border-red-200'}`}>
+            <p className={`text-[10px] uppercase tracking-wide mb-1 ${kpis.netMRR >= 0 ? 'text-[#0D4C3C]' : 'text-[#991B1B]'}`}>Net Change</p>
+            <p className={`text-lg font-bold ${kpis.netMRR >= 0 ? 'text-[#0D4C3C]' : 'text-[#991B1B]'}`}>
+              {kpis.netMRR >= 0 ? '+' : ''}{fmtMoney(kpis.netMRR, true)}
+            </p>
+          </div>
+
+          <div className="flex items-center text-[#9CA3AF] px-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+          </div>
+
+          {/* Closing */}
+          <div className="flex-1 bg-[#0D4C3C] rounded-lg p-3 text-center">
+            <p className="text-[10px] text-[#A7C9C0] uppercase tracking-wide mb-1">Closing MRR</p>
+            <p className="text-lg font-bold text-white">{fmtMoney(kpis.totalMRR, true)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts row */}
+      <div className="grid grid-cols-5 gap-4 mb-4">
+        {/* Trend chart */}
         <div className="col-span-3 bg-white border border-[#E5EAE8] rounded-xl p-5">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-sm font-semibold text-[#111827]">New MRR — 12 Month Trend</h2>
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1.5 text-[10px] text-[#9CA3AF]">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#0D4C3C] inline-block"/>Current month
+              </span>
+              <span className="flex items-center gap-1.5 text-[10px] text-[#9CA3AF]">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#FCA5A5] inline-block"/>Churn
+              </span>
+            </div>
+          </div>
+          <p className="text-xs text-[#9CA3AF] mb-4">New paid subscriptions acquired each month</p>
+          <MRRTrendChart data={trendData}/>
+        </div>
+
+        {/* Plan breakdown */}
+        <div className="col-span-2 bg-white border border-[#E5EAE8] rounded-xl p-5">
           <h2 className="text-sm font-semibold text-[#111827] mb-4">MRR by Plan</h2>
           <div className="space-y-4">
             {planBreakdown.map((d) => (
               <div key={d.slug}>
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded ${PLAN_COLOR[d.slug] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
-                      {d.name}
-                    </span>
-                    <span className="text-xs text-[#9CA3AF]">{d.count} active</span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded ${PLAN_COLOR[d.slug] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>{d.name}</span>
+                    <span className="text-xs text-[#9CA3AF]">{d.count}</span>
                   </div>
-                  <span className="text-sm font-semibold text-[#111827]">{fmtFull(d.mrr)}<span className="text-xs text-[#9CA3AF] font-normal">/mo</span></span>
+                  <span className="text-sm font-semibold text-[#111827]">{fmtMoney(d.mrr, true)}<span className="text-xs font-normal text-[#9CA3AF]">/mo</span></span>
                 </div>
                 <div className="w-full bg-[#F3F4F6] rounded-full h-2">
-                  <div
-                    className="h-2 rounded-full transition-all"
-                    style={{
-                      width: d.mrr > 0 ? `${(d.mrr / maxPlanMRR) * 100}%` : '2px',
-                      backgroundColor: PLAN_BAR[d.slug] ?? '#9CA3AF',
-                    }}
-                  />
+                  <div className="h-2 rounded-full transition-all"
+                    style={{ width: d.mrr > 0 ? `${(d.mrr / maxPlanMRR) * 100}%` : '2px', backgroundColor: PLAN_BAR[d.slug] ?? '#9CA3AF' }}/>
                 </div>
               </div>
             ))}
           </div>
         </div>
-
-        {/* Monthly Trend */}
-        <div className="col-span-2 bg-white border border-[#E5EAE8] rounded-xl p-5">
-          <h2 className="text-sm font-semibold text-[#111827] mb-1">New MRR — Last 6 Months</h2>
-          <p className="text-xs text-[#9CA3AF] mb-4">New paid subscriptions acquired per month</p>
-          <TrendChart data={trendData} />
-        </div>
       </div>
 
-      {/* Plan mix summary */}
-      <div className="mt-4 bg-white border border-[#E5EAE8] rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-[#111827] mb-4">Plan Mix</h2>
-        <div className="grid grid-cols-4 gap-4">
-          {planBreakdown.map((d) => {
-            const total = subs.filter((s) => s.status === 'active').length || 1;
-            const pct = Math.round((d.count / total) * 100);
-            return (
-              <div key={d.slug} className="text-center">
-                <div className="relative w-16 h-16 mx-auto mb-2">
-                  <svg viewBox="0 0 36 36" className="w-16 h-16 -rotate-90">
-                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#F3F4F6" strokeWidth="3" />
-                    <circle
-                      cx="18" cy="18" r="15.9" fill="none"
-                      stroke={PLAN_BAR[d.slug] ?? '#9CA3AF'} strokeWidth="3"
-                      strokeDasharray={`${pct} ${100 - pct}`}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-bold text-[#111827]">{pct}%</span>
-                  </div>
+      {/* Plan Mix */}
+      <div className="bg-white border border-[#E5EAE8] rounded-xl p-5">
+        <h2 className="text-sm font-semibold text-[#111827] mb-5">Plan Mix</h2>
+        <div className="grid grid-cols-4 gap-6">
+          {planBreakdown.map((d) => (
+            <div key={d.slug} className="flex items-center gap-4">
+              <div className="relative flex-shrink-0">
+                <MiniDonut pct={d.pct} color={PLAN_BAR[d.slug] ?? '#9CA3AF'}/>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-[11px] font-bold text-[#111827]">{d.pct}%</span>
                 </div>
-                <p className={`text-xs font-semibold inline-block px-2 py-0.5 rounded ${PLAN_COLOR[d.slug] ?? ''}`}>{d.name}</p>
-                <p className="text-xs text-[#9CA3AF] mt-0.5">{d.count} active</p>
               </div>
-            );
-          })}
+              <div>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded inline-block mb-1 ${PLAN_COLOR[d.slug] ?? ''}`}>{d.name}</span>
+                <p className="text-sm font-bold text-[#111827]">{d.count} <span className="text-xs font-normal text-[#9CA3AF]">active</span></p>
+                <p className="text-xs text-[#9CA3AF]">{fmtMoney(d.mrr, true)}/mo</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+
     </div>
   );
 }
