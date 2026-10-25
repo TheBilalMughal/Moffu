@@ -138,6 +138,9 @@ export function PackagesSettingsPage() {
   const [featureInput, setFeatureInput] = useState('');
   const featureRef = useRef<HTMLInputElement>(null);
 
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -219,6 +222,16 @@ export function PackagesSettingsPage() {
 
   function removeFeature(i: number) {
     setForm(f => ({ ...f, features: f.features.filter((_, idx) => idx !== i) }));
+  }
+
+  function reorderFeatures(from: number, to: number) {
+    if (from === to) return;
+    setForm(f => {
+      const arr = [...f.features];
+      const [item] = arr.splice(from, 1) as [string];
+      arr.splice(to, 0, item);
+      return { ...f, features: arr };
+    });
   }
 
   async function handleSave() {
@@ -686,7 +699,28 @@ export function PackagesSettingsPage() {
                 {form.features.length > 0 && (
                   <div className="mt-2 flex flex-col gap-1.5">
                     {form.features.map((f, i) => (
-                      <div key={i} className="flex items-center gap-2 px-3 py-1.5 bg-[#F8FAF9] border border-[#E5EAE8] rounded-lg">
+                      <div
+                        key={i}
+                        draggable
+                        onDragStart={() => setDragIdx(i)}
+                        onDragOver={e => { e.preventDefault(); setDragOverIdx(i); }}
+                        onDrop={() => { reorderFeatures(dragIdx!, i); setDragIdx(null); setDragOverIdx(null); }}
+                        onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
+                        className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg transition-colors cursor-default ${
+                          dragOverIdx === i && dragIdx !== i
+                            ? 'bg-[#E6F2EE] border-[#0D4C3C]'
+                            : dragIdx === i
+                            ? 'bg-[#F3F4F6] border-[#D1D5DB] opacity-50'
+                            : 'bg-[#F8FAF9] border-[#E5EAE8]'
+                        }`}
+                      >
+                        {/* Grip handle */}
+                        <span className="flex-shrink-0 cursor-grab active:cursor-grabbing text-[#C4CAC8] hover:text-[#9CA3AF] transition-colors">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+                            <circle cx="5" cy="4" r="1.2"/><circle cx="5" cy="8" r="1.2"/><circle cx="5" cy="12" r="1.2"/>
+                            <circle cx="11" cy="4" r="1.2"/><circle cx="11" cy="8" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+                          </svg>
+                        </span>
                         <svg className="w-3 h-3 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                         </svg>
