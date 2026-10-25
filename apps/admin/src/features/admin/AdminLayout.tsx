@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { adminAuthService } from '@/features/auth/auth.service';
 import { supabase } from '@/lib/supabase';
+import { ToastContainer } from '@/components/ToastContainer';
 
 const NAV_DASHBOARD = [
   {
@@ -446,6 +447,7 @@ function AdminProfile() {
 export function AdminLayout() {
   return (
     <div className="flex h-screen bg-[#F8FAF9] overflow-hidden">
+      <ToastContainer />
       {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 bg-white border-r border-[#E5EAE8] flex flex-col">
         {/* Logo */}

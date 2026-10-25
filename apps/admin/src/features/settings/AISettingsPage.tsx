@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useToastStore } from '@/lib/toast';
 
 type Provider = 'groq' | 'anthropic' | 'gemini' | 'openai';
 
@@ -97,7 +98,7 @@ export function AISettingsPage() {
   const [saving, setSaving] = useState<Provider | null>(null);
   const [activating, setActivating] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const toast = useToastStore();
   const [form, setForm] = useState<{ provider: Provider; apiKey: string; model: string } | null>(null);
   const [showKey, setShowKey] = useState<string | null>(null);
 
@@ -108,11 +109,6 @@ export function AISettingsPage() {
     const { data } = await supabase.from('ai_settings').select('*').order('created_at');
     setSettings((data as AISetting[]) ?? []);
     setLoading(false);
-  }
-
-  function showToast(message: string, type: 'success' | 'error') {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
   }
 
   function openAdd(provider: Provider) {
@@ -140,8 +136,8 @@ export function AISettingsPage() {
       ({ error } = await supabase.from('ai_settings').insert(payload));
     }
     setSaving(null);
-    if (error) { showToast(error.message, 'error'); return; }
-    showToast('Saved successfully.', 'success');
+    if (error) { toast.error(error.message); return; }
+    toast.success('Saved successfully.');
     setForm(null);
     load();
   }
@@ -150,8 +146,8 @@ export function AISettingsPage() {
     setActivating(id);
     const { error } = await supabase.from('ai_settings').update({ is_active: true }).eq('id', id);
     setActivating(null);
-    if (error) { showToast(error.message, 'error'); return; }
-    showToast('Provider activated.', 'success');
+    if (error) { toast.error(error.message); return; }
+    toast.success('Provider activated.');
     load();
   }
 
@@ -159,8 +155,8 @@ export function AISettingsPage() {
     setDeleting(id);
     const { error } = await supabase.from('ai_settings').delete().eq('id', id);
     setDeleting(null);
-    if (error) { showToast(error.message, 'error'); return; }
-    showToast('Provider removed.', 'success');
+    if (error) { toast.error(error.message); return; }
+    toast.success('Provider removed.');
     load();
   }
 
@@ -171,22 +167,6 @@ export function AISettingsPage() {
 
   return (
     <div className="h-full overflow-y-auto">
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium shadow-xl border ${
-          toast.type === 'success'
-            ? 'bg-[#F0FDF4] text-[#15803D] border-[#BBF7D0]'
-            : 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]'
-        }`} style={{ animation: 'slideDown 0.2s ease' }}>
-          <style>{`@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}`}</style>
-          {toast.type === 'success'
-            ? <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            : <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          }
-          {toast.message}
-        </div>
-      )}
-
       <div className="max-w-3xl mx-auto px-6 py-8 space-y-8">
         {/* Header */}
         <div>

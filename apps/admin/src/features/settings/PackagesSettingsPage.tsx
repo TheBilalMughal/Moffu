@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useToastStore } from '@/lib/toast';
 
 interface PlanPrice {
   id: string;
@@ -66,8 +67,7 @@ export function PackagesSettingsPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const toast = useToastStore();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -109,7 +109,6 @@ export function PackagesSettingsPage() {
     setForm({ ...EMPTY_FORM, sort_order: plans.length });
     setFeatureInput('');
     setModalOpen(true);
-    setError('');
   }
 
   function openEdit(plan: Plan) {
@@ -138,7 +137,6 @@ export function PackagesSettingsPage() {
     });
     setFeatureInput('');
     setModalOpen(true);
-    setError('');
   }
 
   function addFeature() {
@@ -154,12 +152,11 @@ export function PackagesSettingsPage() {
   }
 
   async function handleSave() {
-    if (!form.name.trim()) { setError('Plan name is required.'); return; }
+    if (!form.name.trim()) { toast.error('Plan name is required.'); return; }
     const slug = form.slug || slugify(form.name);
-    if (!slug) { setError('Slug is required.'); return; }
+    if (!slug) { toast.error('Slug is required.'); return; }
 
     setSaving(true);
-    setError('');
 
     const planPayload = {
       slug,
@@ -177,11 +174,11 @@ export function PackagesSettingsPage() {
 
     if (editingId) {
       const { error: e } = await supabase.from('plans').update(planPayload).eq('id', editingId);
-      if (e) { setError(e.message); setSaving(false); return; }
+      if (e) { toast.error(e.message); setSaving(false); return; }
       planId = editingId;
     } else {
       const { data: newPlan, error: e } = await supabase.from('plans').insert(planPayload).select('id').single();
-      if (e || !newPlan) { setError(e?.message ?? 'Failed to create plan'); setSaving(false); return; }
+      if (e || !newPlan) { toast.error(e?.message ?? 'Failed to create plan'); setSaving(false); return; }
       planId = newPlan.id;
     }
 
@@ -199,21 +196,20 @@ export function PackagesSettingsPage() {
       .from('plan_prices')
       .upsert(priceUpserts as any, { onConflict: 'plan_id,currency,billing_interval' });
 
-    if (pe) { setError(pe.message); setSaving(false); return; }
+    if (pe) { toast.error(pe.message); setSaving(false); return; }
 
-    setSuccess(editingId ? 'Package updated.' : 'Package created.');
+    toast.success(editingId ? 'Package updated.' : 'Package created.');
     setModalOpen(false);
     await fetchPlans();
     setSaving(false);
-    setTimeout(() => setSuccess(''), 3000);
   }
 
   async function handleDelete() {
     if (!deleteId) return;
     setDeleting(true);
     const { error: e } = await supabase.from('plans').delete().eq('id', deleteId);
-    if (e) { setError(e.message); }
-    else { setSuccess('Package deleted.'); await fetchPlans(); setTimeout(() => setSuccess(''), 3000); }
+    if (e) { toast.error(e.message); }
+    else { toast.success('Package deleted.'); await fetchPlans(); }
     setDeleteId(null);
     setDeleting(false);
   }
@@ -242,12 +238,6 @@ export function PackagesSettingsPage() {
             Add Package
           </button>
         </div>
-
-        {success && (
-          <div className="mb-4 px-4 py-3 bg-[#E6F2EE] border border-[#B2D8CC] rounded-lg text-sm text-[#0D4C3C]">
-            {success}
-          </div>
-        )}
 
         {/* Plans list */}
         {loading ? (
@@ -381,10 +371,6 @@ export function PackagesSettingsPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-              {error && (
-                <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">{error}</div>
-              )}
-
               {/* Name + Slug */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -600,9 +586,8 @@ export function PackagesSettingsPage() {
             <p className="text-sm text-[#6B7280] mb-6">
               This will permanently delete the package and all its prices. Active subscribers will not be affected but the plan will no longer be selectable.
             </p>
-            {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
             <div className="flex justify-end gap-3">
-              <button onClick={() => { setDeleteId(null); setError(''); }} className="px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors">
+              <button onClick={() => setDeleteId(null)} className="px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors">
                 Cancel
               </button>
               <button
