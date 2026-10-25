@@ -15,6 +15,9 @@ import { SubscriptionsPage } from '@/features/billing/SubscriptionsPage';
 import { PaymentsPage } from '@/features/billing/PaymentsPage';
 import { MRRPage } from '@/features/billing/MRRPage';
 import { CouponsPage } from '@/features/billing/CouponsPage';
+import { UsagePage } from '@/features/analytics/UsagePage';
+import { BroadcastPage } from '@/features/broadcasts/BroadcastPage';
+import { FeatureFlagsPage } from '@/features/flags/FeatureFlagsPage';
 import { SettingsLayout } from '@/features/settings/SettingsLayout';
 import { AISettingsPage } from '@/features/settings/AISettingsPage';
 import { GoogleSettingsPage } from '@/features/settings/GoogleSettingsPage';
@@ -49,6 +52,9 @@ export function App() {
           <Route path="mrr" element={<MRRPage />} />
           <Route path="coupons" element={<CouponsPage />} />
           <Route path="payments" element={<PaymentsPage />} />
+          <Route path="usage" element={<UsagePage />} />
+          <Route path="broadcasts" element={<BroadcastPage />} />
+          <Route path="flags" element={<FeatureFlagsPage />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="audit" element={<AuditPage />} />
           <Route path="settings" element={<SettingsLayout />}>

@@ -29,6 +29,15 @@ const NAV_CLIENTS = [
     ),
   },
   {
+    to: '/usage',
+    label: 'Usage',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+  },
+  {
     to: '/billing',
     label: 'Subscriptions',
     icon: (
@@ -64,6 +73,27 @@ const NAV_FINANCE = [
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+      </svg>
+    ),
+  },
+];
+
+const NAV_PLATFORM = [
+  {
+    to: '/broadcasts',
+    label: 'Broadcasts',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+      </svg>
+    ),
+  },
+  {
+    to: '/flags',
+    label: 'Feature Flags',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
       </svg>
     ),
   },
@@ -522,6 +552,27 @@ export function AdminLayout() {
           <div className="space-y-0.5">
             <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-[#9CA3AF]">Finance</p>
             {NAV_FINANCE.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-[#0D4C3C] text-white'
+                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
+                  }`
+                }
+              >
+                {item.icon}
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
+
+          {/* Platform */}
+          <div className="space-y-0.5">
+            <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-[#9CA3AF]">Platform</p>
+            {NAV_PLATFORM.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
