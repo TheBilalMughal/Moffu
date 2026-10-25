@@ -24,10 +24,21 @@ function CheckSolid() {
   );
 }
 
+function calcDiscount(monthly_cents: number, annual_cents: number): number {
+  if (monthly_cents <= 0 || annual_cents <= 0) return 0;
+  return Math.round((1 - annual_cents / monthly_cents) * 100);
+}
+
 export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
   const [annual, setAnnual] = useState(false);
 
   const visiblePlans = plans.filter(p => p.slug !== 'free');
+
+  // Use the first plan with annual pricing to show the badge discount
+  const firstWithAnnual = visiblePlans.find(p => p.annual_cents > 0 && p.monthly_cents > 0);
+  const toggleDiscount = firstWithAnnual
+    ? calcDiscount(firstWithAnnual.monthly_cents, firstWithAnnual.annual_cents)
+    : 0;
 
   return (
     <>
@@ -51,9 +62,11 @@ export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
             }`}
           >
             Annual
-            <span className="text-[11px] bg-[#D1FAE5] text-[#065F46] px-1.5 py-0.5 rounded font-semibold">
-              Save 20%
-            </span>
+            {toggleDiscount > 0 && (
+              <span className="text-[11px] bg-[#D1FAE5] text-[#065F46] px-1.5 py-0.5 rounded font-semibold">
+                Save {toggleDiscount}%
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -63,6 +76,7 @@ export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
         {visiblePlans.map((plan) => {
           const priceCents = annual && plan.annual_cents > 0 ? plan.annual_cents : plan.monthly_cents;
           const price = Math.round(priceCents / 100);
+          const discount = calcDiscount(plan.monthly_cents, plan.annual_cents);
 
           return (
             <div
@@ -88,7 +102,7 @@ export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
                 </div>
                 {annual && plan.annual_cents > 0 && (
                   <p className="text-[12px] text-[#6B7280] mt-1">
-                    Billed annually (${price * 12}/yr)
+                    Billed annually (${price * 12}/yr){discount > 0 && ` · save ${discount}%`}
                   </p>
                 )}
               </div>

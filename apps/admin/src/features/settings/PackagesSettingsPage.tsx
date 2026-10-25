@@ -32,7 +32,7 @@ interface PlanForm {
   is_active: boolean;
   sort_order: number;
   monthly_price: string;
-  annual_price: string;
+  annual_discount: string; // % off monthly, e.g. "20" → annual total = monthly*12*(1-0.20)
   currency: string;
 }
 
@@ -55,7 +55,7 @@ const EMPTY_FORM: PlanForm = {
   is_active: true,
   sort_order: 0,
   monthly_price: '0',
-  annual_price: '0',
+  annual_discount: '20',
   currency: 'USD',
 };
 
@@ -113,6 +113,12 @@ export function PackagesSettingsPage() {
     setEditingId(plan.id);
     const monthly = plan.prices.find(p => p.billing_interval === 'monthly');
     const annual = plan.prices.find(p => p.billing_interval === 'annual');
+    const monthlyAmt = monthly ? monthly.amount_cents / 100 : 0;
+    // Reverse-calculate discount: annual stores total/yr, per-mo = total/12
+    const annualPerMo = annual && annual.amount_cents > 0 ? annual.amount_cents / 12 / 100 : 0;
+    const discount = monthlyAmt > 0 && annualPerMo > 0
+      ? Math.round((1 - annualPerMo / monthlyAmt) * 100)
+      : 20;
     setForm({
       name: plan.name,
       slug: plan.slug,
@@ -122,8 +128,8 @@ export function PackagesSettingsPage() {
       is_featured: plan.is_featured,
       is_active: plan.is_active,
       sort_order: plan.sort_order,
-      monthly_price: monthly ? String(monthly.amount_cents / 100) : '0',
-      annual_price: annual ? String(annual.amount_cents / 100) : '0',
+      monthly_price: String(monthlyAmt),
+      annual_discount: String(discount),
       currency: monthly?.currency ?? 'USD',
     });
     setFeatureInput('');
@@ -174,9 +180,10 @@ export function PackagesSettingsPage() {
       planId = newPlan.id;
     }
 
-    // Upsert prices
+    // Upsert prices — annual total = monthly * 12 * (1 - discount/100)
     const monthly_cents = Math.round(parseFloat(form.monthly_price || '0') * 100);
-    const annual_cents = Math.round(parseFloat(form.annual_price || '0') * 100);
+    const discount = Math.min(100, Math.max(0, parseFloat(form.annual_discount || '0')));
+    const annual_cents = Math.round(monthly_cents * 12 * (1 - discount / 100));
 
     const priceUpserts = [
       { plan_id: planId, currency: form.currency, billing_interval: 'monthly', amount_cents: monthly_cents, is_active: true },
@@ -276,11 +283,16 @@ export function PackagesSettingsPage() {
                         <p className="text-sm font-semibold text-[#111827]">
                           {monthly ? formatPrice(monthly.amount_cents, monthly.currency) : '—'}<span className="text-xs font-normal text-[#9CA3AF]">/mo</span>
                         </p>
-                        {annual && annual.amount_cents > 0 && (
-                          <p className="text-[11px] text-[#6B7280]">
-                            {formatPrice(annual.amount_cents, annual.currency)}/mo annual
-                          </p>
-                        )}
+                        {annual && annual.amount_cents > 0 && monthly && monthly.amount_cents > 0 && (() => {
+                          const annualPerMo = annual.amount_cents / 12;
+                          const disc = Math.round((1 - annualPerMo / monthly.amount_cents) * 100);
+                          return (
+                            <p className="text-[11px] text-[#6B7280]">
+                              {formatPrice(Math.round(annualPerMo), annual.currency)}/mo annual
+                              {disc > 0 && <span className="ml-1 text-[#0D4C3C] font-medium">· save {disc}%</span>}
+                            </p>
+                          );
+                        })()}
                       </div>
                       <button
                         onClick={() => toggleActive(plan)}
@@ -409,17 +421,34 @@ export function PackagesSettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-1">Annual Price/mo</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={form.annual_price}
-                    onChange={e => setForm(f => ({ ...f, annual_price: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]"
-                  />
+                  <label className="block text-xs font-medium text-[#374151] mb-1">Annual Discount %</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={form.annual_discount}
+                      onChange={e => setForm(f => ({ ...f, annual_discount: e.target.value }))}
+                      className="w-full px-3 py-2 pr-7 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]"
+                    />
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#9CA3AF]">%</span>
+                  </div>
                 </div>
               </div>
+              {/* Annual price preview */}
+              {(() => {
+                const mo = parseFloat(form.monthly_price || '0');
+                const disc = Math.min(100, Math.max(0, parseFloat(form.annual_discount || '0')));
+                if (mo <= 0 || disc <= 0) return null;
+                const perMo = +(mo * (1 - disc / 100)).toFixed(2);
+                const total = +(perMo * 12).toFixed(2);
+                return (
+                  <p className="text-[11px] text-[#6B7280] -mt-2">
+                    Annual: <span className="font-medium text-[#374151]">${perMo}/mo</span> · billed ${total}/yr · saves {disc}%
+                  </p>
+                );
+              })()}
 
               {/* Features */}
               <div>
