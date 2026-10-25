@@ -587,7 +587,7 @@ export function RolesPage() {
     <>
       <div className="flex h-full">
         {/* Left: Roles sidebar */}
-        <aside className="w-52 flex-shrink-0 border-r border-[#E5EAE8] bg-white px-3 py-6">
+        <aside className="w-52 flex-shrink-0 border-r border-[#E5EAE8] px-3 py-6">
           <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest px-3 mb-3">Roles</p>
           <div className="space-y-0.5">
             {ROLES.map((r) => (
@@ -612,7 +612,7 @@ export function RolesPage() {
         {/* Right content */}
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {/* Header */}
-          <div className="px-8 pt-6 pb-4 border-b border-[#E5EAE8] bg-white flex items-start justify-between gap-4 flex-shrink-0">
+          <div className="px-8 pt-6 pb-4 border-b border-[#E5EAE8] flex items-start justify-between gap-4 flex-shrink-0">
             <div>
               <h1 className="text-xl font-bold text-[#111827]">{selectedRoleConfig.label} Permissions</h1>
               <p className="text-sm text-[#6B7280] mt-0.5">{selectedRoleConfig.desc}</p>
@@ -631,7 +631,7 @@ export function RolesPage() {
           </div>
 
           {/* Tabs */}
-          <div className="px-8 pt-0 flex-shrink-0 bg-white border-b border-[#E5EAE8]">
+          <div className="px-8 pt-0 flex-shrink-0 border-b border-[#E5EAE8]">
             <div className="flex gap-0">
               {(['permissions', 'audit'] as const).map((t) => (
                 <button

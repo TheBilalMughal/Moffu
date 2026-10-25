@@ -156,7 +156,7 @@ export function ClientsPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex-shrink-0 border-b border-[#E5EAE8] px-8 pb-3 flex items-center gap-3">
+      <div className="flex-shrink-0 px-8 pb-3 flex items-center gap-3">
         <div className="relative flex-1 max-w-xs">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
