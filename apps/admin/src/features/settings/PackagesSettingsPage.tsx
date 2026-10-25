@@ -11,7 +11,7 @@ interface PlanPrice {
 
 interface PlanEntitlement {
   key: string;
-  value_type: 'INTEGER' | 'UNLIMITED' | 'BOOLEAN' | 'ENUM';
+  value_type: 'LIMIT' | 'UNLIMITED' | 'BOOLEAN' | 'ENUM';
   limit_value: number | null;
   bool_value: boolean | null;
   enum_value: string | null;
@@ -284,11 +284,11 @@ export function PackagesSettingsPage() {
     // Upsert entitlements
     const L = form.limits;
     const entUpserts = [
-      { plan_id: planId, key: 'locations',           value_type: 'INTEGER',   limit_value: parseInt(L.locations) || 1,           bool_value: null, enum_value: null,            usage_reset: null },
-      { plan_id: planId, key: 'published_replies',   value_type: L.replies_unlimited   ? 'UNLIMITED' : 'INTEGER', limit_value: L.replies_unlimited   ? null : parseInt(L.replies_limit) || 50,   bool_value: null, enum_value: null, usage_reset: L.replies_reset },
-      { plan_id: planId, key: 'ai_drafts',           value_type: L.ai_drafts_unlimited ? 'UNLIMITED' : 'INTEGER', limit_value: L.ai_drafts_unlimited ? null : parseInt(L.ai_drafts_limit) || 50, bool_value: null, enum_value: null, usage_reset: L.ai_drafts_reset },
-      { plan_id: planId, key: 'team_members',        value_type: 'INTEGER',   limit_value: parseInt(L.team_members) || 1,         bool_value: null, enum_value: null,            usage_reset: null },
-      { plan_id: planId, key: 'brand_brain_profiles',value_type: L.brand_brain_unlimited ? 'UNLIMITED' : 'INTEGER', limit_value: L.brand_brain_unlimited ? null : parseInt(L.brand_brain_limit) || 1, bool_value: null, enum_value: null, usage_reset: null },
+      { plan_id: planId, key: 'locations',           value_type: 'LIMIT',     limit_value: parseInt(L.locations) || 1,           bool_value: null, enum_value: null,            usage_reset: null },
+      { plan_id: planId, key: 'published_replies',   value_type: L.replies_unlimited   ? 'UNLIMITED' : 'LIMIT', limit_value: L.replies_unlimited   ? null : parseInt(L.replies_limit) || 50,   bool_value: null, enum_value: null, usage_reset: L.replies_reset },
+      { plan_id: planId, key: 'ai_drafts',           value_type: L.ai_drafts_unlimited ? 'UNLIMITED' : 'LIMIT', limit_value: L.ai_drafts_unlimited ? null : parseInt(L.ai_drafts_limit) || 50, bool_value: null, enum_value: null, usage_reset: L.ai_drafts_reset },
+      { plan_id: planId, key: 'team_members',        value_type: 'LIMIT',     limit_value: parseInt(L.team_members) || 1,         bool_value: null, enum_value: null,            usage_reset: null },
+      { plan_id: planId, key: 'brand_brain_profiles',value_type: L.brand_brain_unlimited ? 'UNLIMITED' : 'LIMIT', limit_value: L.brand_brain_unlimited ? null : parseInt(L.brand_brain_limit) || 1, bool_value: null, enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'support_tier',        value_type: 'ENUM',      limit_value: null,                                  bool_value: null, enum_value: L.support_tier,  usage_reset: null },
     ];
     const { error: ee } = await supabase.from('plan_entitlements').upsert(entUpserts as any, { onConflict: 'plan_id,key' });
