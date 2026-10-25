@@ -82,7 +82,7 @@ export function PackagesSettingsPage() {
     setLoading(true);
     const { data: plansData } = await supabase
       .from('plans')
-      .select('id, slug, name, description, features, badge_text, is_featured, is_active, sort_order, created_at')
+      .select('id, slug, name, description, features, badge_text, is_featured, is_active, contact_sales, sort_order, created_at')
       .order('sort_order');
     const { data: pricesData } = await supabase
       .from('plan_prices')
@@ -134,7 +134,7 @@ export function PackagesSettingsPage() {
       monthly_price: String(monthlyAmt),
       annual_discount: String(discount),
       currency: monthly?.currency ?? 'USD',
-      contact_sales: (plan as any).contact_sales ?? false,
+      contact_sales: plan.contact_sales ?? false,
     });
     setFeatureInput('');
     setModalOpen(true);
@@ -169,8 +169,8 @@ export function PackagesSettingsPage() {
       badge_text: form.badge_text.trim() || null,
       is_featured: form.is_featured,
       is_active: form.is_active,
+      contact_sales: form.contact_sales,
       sort_order: form.sort_order,
-      // contact_sales omitted until migration 20241025000030 is applied in Supabase
     };
 
     let planId: string;
