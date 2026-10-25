@@ -46,6 +46,12 @@ interface LimitsForm {
   brand_brain_steps: string; // bitmask 0–63: bit0=step1 … bit5=step6
   support_tier: string;
   feature_insights: boolean;
+  campaign_emails_unlimited: boolean;
+  campaign_emails_limit: string;
+  campaign_sms_unlimited: boolean;
+  campaign_sms_limit: string;
+  campaign_whatsapp_unlimited: boolean;
+  campaign_whatsapp_limit: string;
 }
 
 interface PlanForm {
@@ -85,6 +91,12 @@ const DEFAULT_LIMITS: LimitsForm = {
   brand_brain_steps: '63',
   support_tier: 'help_guides',
   feature_insights: true,
+  campaign_emails_unlimited: false,
+  campaign_emails_limit: '500',
+  campaign_sms_unlimited: false,
+  campaign_sms_limit: '0',
+  campaign_whatsapp_unlimited: false,
+  campaign_whatsapp_limit: '0',
 };
 
 const EMPTY_FORM: PlanForm = {
@@ -121,6 +133,12 @@ function entsToLimits(ents: Record<string, PlanEntitlement>): LimitsForm {
     brand_brain_steps:   String(ents['brand_brain_steps']?.limit_value ?? 63),
     support_tier:        sup?.enum_value ?? 'help_guides',
     feature_insights:    ents['feature_insights']?.bool_value !== false,
+    campaign_emails_unlimited: ents['campaign_emails']?.value_type === 'UNLIMITED',
+    campaign_emails_limit:     String(ents['campaign_emails']?.limit_value ?? 500),
+    campaign_sms_unlimited:    ents['campaign_sms']?.value_type === 'UNLIMITED',
+    campaign_sms_limit:        String(ents['campaign_sms']?.limit_value ?? 0),
+    campaign_whatsapp_unlimited: ents['campaign_whatsapp']?.value_type === 'UNLIMITED',
+    campaign_whatsapp_limit:     String(ents['campaign_whatsapp']?.limit_value ?? 0),
   };
 }
 
@@ -290,6 +308,9 @@ export function PackagesSettingsPage() {
       { plan_id: planId, key: 'brand_brain_steps',   value_type: 'LIMIT', limit_value: (parseInt(L.brand_brain_steps) || 0) & 63, bool_value: null, enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'support_tier',        value_type: 'ENUM',      limit_value: null,                                  bool_value: null, enum_value: L.support_tier,  usage_reset: null },
       { plan_id: planId, key: 'feature_insights',    value_type: 'BOOLEAN',   limit_value: null, bool_value: L.feature_insights,    enum_value: null, usage_reset: null },
+      { plan_id: planId, key: 'campaign_emails',    value_type: L.campaign_emails_unlimited    ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_emails_unlimited    ? null : parseInt(L.campaign_emails_limit) || 0,    bool_value: null, enum_value: null, usage_reset: 'monthly' },
+      { plan_id: planId, key: 'campaign_sms',       value_type: L.campaign_sms_unlimited       ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_sms_unlimited       ? null : parseInt(L.campaign_sms_limit) || 0,       bool_value: null, enum_value: null, usage_reset: 'monthly' },
+      { plan_id: planId, key: 'campaign_whatsapp',  value_type: L.campaign_whatsapp_unlimited  ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_whatsapp_unlimited  ? null : parseInt(L.campaign_whatsapp_limit) || 0,  bool_value: null, enum_value: null, usage_reset: 'monthly' },
     ];
     const { error: ee } = await supabase.from('plan_entitlements').upsert(entUpserts as any, { onConflict: 'plan_id,key' });
     if (ee) { toast.error(ee.message); setSaving(false); return; }
@@ -511,6 +532,49 @@ export function PackagesSettingsPage() {
                       <p className="text-[11px] text-[#9CA3AF]"><span className="font-medium text-[#6B7280]">Brand Brain</span> &amp; <span className="font-medium text-[#6B7280]">Team</span> access is controlled by their limits below — set to <span className="font-medium">0</span> to lock, <span className="font-medium">1+</span> to allow.</p>
                     </div>
                   </div>
+                </div>
+
+                {/* Campaign Limits */}
+                <div>
+                  <p className="text-xs font-semibold text-[#374151] mb-2">Campaign Limits <span className="font-normal text-[#9CA3AF]">(per month)</span></p>
+                  <div className="space-y-3">
+                    {([
+                      { label: 'Email',     unlimitedKey: 'campaign_emails_unlimited',   limitKey: 'campaign_emails_limit',    active: true  },
+                      { label: 'SMS',       unlimitedKey: 'campaign_sms_unlimited',      limitKey: 'campaign_sms_limit',       active: false },
+                      { label: 'WhatsApp',  unlimitedKey: 'campaign_whatsapp_unlimited', limitKey: 'campaign_whatsapp_limit',  active: false },
+                    ] as { label: string; unlimitedKey: keyof LimitsForm; limitKey: keyof LimitsForm; active: boolean }[]).map(ch => {
+                      const isUnlimited = form.limits[ch.unlimitedKey] as boolean;
+                      return (
+                        <div key={ch.label} className={`border border-[#E5EAE8] rounded-lg px-3.5 py-3 ${!ch.active ? 'opacity-50' : ''}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-[#374151]">{ch.label}</span>
+                              {!ch.active && <span className="text-[10px] font-semibold bg-[#F3F4F6] text-[#9CA3AF] px-1.5 py-0.5 rounded">Coming soon</span>}
+                            </div>
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input type="checkbox" disabled={!ch.active}
+                                checked={isUnlimited}
+                                onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, [ch.unlimitedKey]: e.target.checked } }))}
+                                className="w-3.5 h-3.5 accent-[#0D4C3C]" />
+                              <span className="text-xs text-[#6B7280]">Unlimited</span>
+                            </label>
+                          </div>
+                          {!isUnlimited && (
+                            <div className="flex items-center gap-2">
+                              <input type="number" min="0" disabled={!ch.active}
+                                value={form.limits[ch.limitKey] as string}
+                                onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, [ch.limitKey]: e.target.value } }))}
+                                placeholder="0 = no access"
+                                className="flex-1 px-3 py-1.5 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
+                              <span className="text-xs text-[#9CA3AF]">{ch.label === 'Email' ? 'emails' : 'messages'}/mo</span>
+                            </div>
+                          )}
+                          {isUnlimited && <p className="text-[11px] text-[#0D4C3C] font-medium">Unlimited {ch.label === 'Email' ? 'emails' : 'messages'} per month</p>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[11px] text-[#9CA3AF] mt-1.5">Set to <span className="font-medium">0</span> to block campaigns on this plan. SMS &amp; WhatsApp limits are saved but inactive until channels are enabled.</p>
                 </div>
 
                 {/* Locations */}

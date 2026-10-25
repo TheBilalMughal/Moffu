@@ -130,12 +130,15 @@ function UsageHistoryChart({ days }: { days: UsageDay[] }) {
   );
 }
 
-const COMPARISON_ROWS: { label: string; key: string }[] = [
+const COMPARISON_ROWS: { label: string; key: string; section?: string }[] = [
   { label: 'Locations',            key: 'locations' },
   { label: 'Replies',              key: 'published_replies' },
   { label: 'AI Drafts',            key: 'ai_drafts' },
   { label: 'Team members',         key: 'team_members' },
   { label: 'Brand Brain profiles', key: 'brand_brain_profiles' },
+  { label: 'Email Campaigns',      key: 'campaign_emails',    section: 'Campaigns' },
+  { label: 'SMS Campaigns',        key: 'campaign_sms',       section: 'Campaigns' },
+  { label: 'WhatsApp Campaigns',   key: 'campaign_whatsapp',  section: 'Campaigns' },
   { label: 'Support',              key: 'support_tier' },
 ];
 
@@ -189,18 +192,31 @@ function PlanComparisonModal({ plans, sub, billingInterval, onClose }: {
 
           {/* Feature rows */}
           <div className="space-y-0">
-            {COMPARISON_ROWS.map((row, ri) => (
-              <div key={row.key} className={`grid grid-cols-5 gap-3 py-3 ${ri < COMPARISON_ROWS.length - 1 ? 'border-b border-[#F9FAFB]' : ''}`}>
-                <div className="flex items-center">
-                  <span className="text-xs font-medium text-[#374151]">{row.label}</span>
-                </div>
-                {plans.map(plan => (
-                  <div key={plan.id} className="text-center">
-                    <span className="text-xs text-[#374151]">{formatEntitlement(plan.entitlements[row.key])}</span>
+            {COMPARISON_ROWS.map((row, ri) => {
+              const prevRow = ri > 0 ? COMPARISON_ROWS[ri - 1] : null;
+              const showSectionHeader = row.section && row.section !== prevRow?.section;
+              return (
+                <div key={row.key}>
+                  {showSectionHeader && (
+                    <div className="grid grid-cols-5 gap-3 pt-4 pb-1 border-t border-[#E5EAE8] mt-1">
+                      <div className="col-span-5">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">{row.section}</span>
+                      </div>
+                    </div>
+                  )}
+                  <div className={`grid grid-cols-5 gap-3 py-3 ${ri < COMPARISON_ROWS.length - 1 && !COMPARISON_ROWS[ri + 1]?.section ? 'border-b border-[#F9FAFB]' : ''}`}>
+                    <div className="flex items-center">
+                      <span className="text-xs font-medium text-[#374151]">{row.label}</span>
+                    </div>
+                    {plans.map(plan => (
+                      <div key={plan.id} className="text-center">
+                        <span className="text-xs text-[#374151]">{formatEntitlement(plan.entitlements[row.key])}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ))}
+                </div>
+              );
+            })}
 
             {/* Location add-on row */}
             <div className="grid grid-cols-5 gap-3 py-3 border-t border-[#E5EAE8] mt-1">
