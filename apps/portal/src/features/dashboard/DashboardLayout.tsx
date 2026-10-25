@@ -595,10 +595,20 @@ export function DashboardLayout() {
         .eq('user_id', user.id).eq('status', 'active').maybeSingle();
       if (!sub) return;
       const { data: ents } = await supabase
-        .from('plan_entitlements').select('key, bool_value')
-        .eq('plan_id', sub.plan_id).like('key', 'feature_%');
+        .from('plan_entitlements').select('key, bool_value, value_type, limit_value')
+        .eq('plan_id', sub.plan_id);
       const map: Record<string, boolean> = {};
-      for (const e of ents ?? []) { map[e.key] = e.bool_value !== false; }
+      for (const e of ents ?? []) {
+        if (e.key === 'feature_insights') {
+          map['feature_insights'] = e.bool_value !== false;
+        } else if (e.key === 'brand_brain_profiles') {
+          // locked when limit is explicitly 0 (not UNLIMITED)
+          map['feature_brand_brain'] = e.value_type === 'UNLIMITED' || (e.limit_value ?? 1) > 0;
+        } else if (e.key === 'team_members') {
+          // team management locked when limit <= 1 (owner only)
+          map['feature_team'] = e.value_type === 'UNLIMITED' || (e.limit_value ?? 2) > 1;
+        }
+      }
       setFeatureAccess(map);
     }
     loadFeatureAccess();
@@ -606,7 +616,7 @@ export function DashboardLayout() {
 
   function isLocked(featureKey: string | null): boolean {
     if (!featureKey) return false;
-    if (!(featureKey in featureAccess)) return false; // not set yet → accessible
+    if (!(featureKey in featureAccess)) return false; // no entitlement set → accessible
     return featureAccess[featureKey] === false;
   }
 

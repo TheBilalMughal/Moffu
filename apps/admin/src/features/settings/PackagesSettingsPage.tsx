@@ -47,8 +47,6 @@ interface LimitsForm {
   brand_brain_limit: string;
   support_tier: string;
   feature_insights: boolean;
-  feature_brand_brain: boolean;
-  feature_team: boolean;
 }
 
 interface PlanForm {
@@ -89,8 +87,6 @@ const DEFAULT_LIMITS: LimitsForm = {
   brand_brain_limit: '1',
   support_tier: 'help_guides',
   feature_insights: true,
-  feature_brand_brain: true,
-  feature_team: true,
 };
 
 const EMPTY_FORM: PlanForm = {
@@ -129,8 +125,6 @@ function entsToLimits(ents: Record<string, PlanEntitlement>): LimitsForm {
     brand_brain_limit:   String(bb?.limit_value ?? 1),
     support_tier:        sup?.enum_value ?? 'help_guides',
     feature_insights:    ents['feature_insights']?.bool_value !== false,
-    feature_brand_brain: ents['feature_brand_brain']?.bool_value !== false,
-    feature_team:        ents['feature_team']?.bool_value !== false,
   };
 }
 
@@ -300,8 +294,6 @@ export function PackagesSettingsPage() {
       { plan_id: planId, key: 'brand_brain_profiles',value_type: L.brand_brain_unlimited ? 'UNLIMITED' : 'LIMIT', limit_value: L.brand_brain_unlimited ? null : parseInt(L.brand_brain_limit) || 1, bool_value: null, enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'support_tier',        value_type: 'ENUM',      limit_value: null,                                  bool_value: null, enum_value: L.support_tier,  usage_reset: null },
       { plan_id: planId, key: 'feature_insights',    value_type: 'BOOLEAN',   limit_value: null, bool_value: L.feature_insights,    enum_value: null, usage_reset: null },
-      { plan_id: planId, key: 'feature_brand_brain', value_type: 'BOOLEAN',   limit_value: null, bool_value: L.feature_brand_brain, enum_value: null, usage_reset: null },
-      { plan_id: planId, key: 'feature_team',        value_type: 'BOOLEAN',   limit_value: null, bool_value: L.feature_team,        enum_value: null, usage_reset: null },
     ];
     const { error: ee } = await supabase.from('plan_entitlements').upsert(entUpserts as any, { onConflict: 'plan_id,key' });
     if (ee) { toast.error(ee.message); setSaving(false); return; }
@@ -503,27 +495,25 @@ export function PackagesSettingsPage() {
                 <div>
                   <p className="text-xs font-semibold text-[#374151] mb-2">Feature Access</p>
                   <div className="border border-[#E5EAE8] rounded-lg divide-y divide-[#F3F4F6]">
-                    {([
-                      { key: 'feature_insights' as const,    label: 'Insights & Analytics', desc: 'Charts, rating trends, reply-rate metrics' },
-                      { key: 'feature_brand_brain' as const, label: 'Brand Brain',           desc: 'AI brand voice profiles for reply drafts' },
-                      { key: 'feature_team' as const,        label: 'Team Management',       desc: 'Invite members, assign roles' },
-                    ] as { key: 'feature_insights' | 'feature_brand_brain' | 'feature_team'; label: string; desc: string }[]).map(({ key, label, desc }) => (
-                      <label key={key} className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#F8FAF9] transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={form.limits[key]}
-                          onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, [key]: e.target.checked } }))}
-                          className="w-4 h-4 accent-[#0D4C3C] rounded flex-shrink-0"
-                        />
-                        <div className="min-w-0">
-                          <p className="text-xs font-medium text-[#111827]">{label}</p>
-                          <p className="text-[11px] text-[#9CA3AF] mt-0.5">{desc}</p>
-                        </div>
-                        <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits[key] ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
-                          {form.limits[key] ? 'On' : 'Off'}
-                        </span>
-                      </label>
-                    ))}
+                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#F8FAF9] transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={form.limits.feature_insights}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_insights: e.target.checked } }))}
+                        className="w-4 h-4 accent-[#0D4C3C] rounded flex-shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-[#111827]">Insights & Analytics</p>
+                        <p className="text-[11px] text-[#9CA3AF] mt-0.5">Charts, rating trends, reply-rate metrics</p>
+                      </div>
+                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_insights ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+                        {form.limits.feature_insights ? 'On' : 'Off'}
+                      </span>
+                    </label>
+                    <div className="px-3.5 py-3 flex items-center gap-3">
+                      <svg className="w-4 h-4 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                      <p className="text-[11px] text-[#9CA3AF]"><span className="font-medium text-[#6B7280]">Brand Brain</span> &amp; <span className="font-medium text-[#6B7280]">Team</span> access is controlled by their limits below — set to <span className="font-medium">0</span> to lock, <span className="font-medium">1+</span> to allow.</p>
+                    </div>
                   </div>
                 </div>
 
@@ -592,15 +582,17 @@ export function PackagesSettingsPage() {
                 {/* Team members */}
                 <div>
                   <label className="block text-xs font-medium text-[#374151] mb-1">Team Members</label>
-                  <input type="number" min="1" value={form.limits.team_members}
+                  <input type="number" min="0" value={form.limits.team_members}
                     onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, team_members: e.target.value } }))}
                     className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                  <p className="text-[11px] text-[#9CA3AF] mt-1">Set to <span className="font-medium">0</span> to lock Team page. <span className="font-medium">1</span> = owner only (no invites). <span className="font-medium">2+</span> = can invite members.</p>
                 </div>
 
                 {/* Brand Brain profiles */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-medium text-[#374151]">Brand Brain Profiles</label>
+
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input type="checkbox" checked={form.limits.brand_brain_unlimited}
                         onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, brand_brain_unlimited: e.target.checked } }))}
@@ -609,9 +601,12 @@ export function PackagesSettingsPage() {
                     </label>
                   </div>
                   {!form.limits.brand_brain_unlimited && (
-                    <input type="number" min="0" value={form.limits.brand_brain_limit}
-                      onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, brand_brain_limit: e.target.value } }))}
-                      className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                    <>
+                      <input type="number" min="0" value={form.limits.brand_brain_limit}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, brand_brain_limit: e.target.value } }))}
+                        className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                      <p className="text-[11px] text-[#9CA3AF] mt-1">Set to <span className="font-medium">0</span> to lock Brand Brain page entirely.</p>
+                    </>
                   )}
                 </div>
 
