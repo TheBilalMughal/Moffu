@@ -280,7 +280,7 @@ async function fetchPricingPlans(): Promise<PricingPlan[]> {
     const [plansRes, pricesRes] = await Promise.all([
       supabase
         .from('plans')
-        .select('id, slug, name, description, features, badge_text, is_featured')
+        .select('id, slug, name, description, features, badge_text, is_featured, contact_sales')
         .eq('is_active', true)
         .order('sort_order'),
       supabase
@@ -304,6 +304,7 @@ async function fetchPricingPlans(): Promise<PricingPlan[]> {
         features: Array.isArray(p.features) ? (p.features as string[]) : [],
         badge_text: p.badge_text ?? null,
         is_featured: p.is_featured ?? false,
+        contact_sales: p.contact_sales ?? false,
         monthly_cents: monthly?.amount_cents ?? 0,
         annual_cents: annual ? Math.round(annual.amount_cents / 12) : 0,
         currency: monthly?.currency ?? annual?.currency ?? 'USD',

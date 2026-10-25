@@ -11,6 +11,7 @@ export interface PricingPlan {
   features: string[];
   badge_text: string | null;
   is_featured: boolean;
+  contact_sales: boolean;
   monthly_cents: number;
   annual_cents: number;
   currency: string;
@@ -32,7 +33,7 @@ function calcDiscount(monthly_cents: number, annual_cents: number): number {
 export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
   const [annual, setAnnual] = useState(false);
 
-  const visiblePlans = plans.filter(p => p.slug !== 'free');
+  const visiblePlans = plans;
 
   // Use the first plan with annual pricing to show the badge discount
   const firstWithAnnual = visiblePlans.find(p => p.annual_cents > 0 && p.monthly_cents > 0);
@@ -72,8 +73,9 @@ export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
       </div>
 
       {/* Cards */}
-      <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+      <div className={`grid gap-6 mx-auto ${visiblePlans.length === 4 ? 'sm:grid-cols-2 xl:grid-cols-4 max-w-6xl' : 'md:grid-cols-3 max-w-5xl'}`}>
         {visiblePlans.map((plan) => {
+          const isFree = plan.monthly_cents === 0 && !plan.contact_sales;
           const priceCents = annual && plan.annual_cents > 0 ? plan.annual_cents : plan.monthly_cents;
           const price = Math.round(priceCents / 100);
           const discount = calcDiscount(plan.monthly_cents, plan.annual_cents);
@@ -96,14 +98,27 @@ export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
               <div className="mb-6">
                 <h3 className="font-bold text-[#111827] text-[1.0625rem] mb-1">{plan.name}</h3>
                 <p className="text-[13px] text-[#6B7280] mb-5">{plan.description ?? ''}</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-[2.75rem] font-bold text-[#111827] leading-none">${price}</span>
-                  <span className="text-[#6B7280] text-sm">/month</span>
-                </div>
-                {annual && plan.annual_cents > 0 && (
-                  <p className="text-[12px] text-[#6B7280] mt-1">
-                    Billed annually (${price * 12}/yr){discount > 0 && ` · save ${discount}%`}
-                  </p>
+
+                {plan.contact_sales ? (
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[1.75rem] font-bold text-[#111827] leading-none">Contact Sales</span>
+                  </div>
+                ) : isFree ? (
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-[2.75rem] font-bold text-[#111827] leading-none">Free</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-[2.75rem] font-bold text-[#111827] leading-none">${price}</span>
+                      <span className="text-[#6B7280] text-sm">/month</span>
+                    </div>
+                    {annual && plan.annual_cents > 0 && (
+                      <p className="text-[12px] text-[#6B7280] mt-1">
+                        Billed annually (${price * 12}/yr){discount > 0 && ` · save ${discount}%`}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -118,16 +133,29 @@ export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
                 ))}
               </ul>
 
-              <Link
-                href="https://appmoffu.vercel.app/auth/signup"
-                className={`block w-full text-center py-3 rounded-lg text-sm font-semibold transition-colors duration-150 ${
-                  plan.is_featured
-                    ? 'bg-[#0D4C3C] hover:bg-[#083F32] text-white'
-                    : 'border border-[#D1D5DB] text-[#374151] hover:bg-[#F8FAFB]'
-                }`}
-              >
-                Get Started
-              </Link>
+              {plan.contact_sales ? (
+                <a
+                  href="mailto:sales@moffu.com"
+                  className={`block w-full text-center py-3 rounded-lg text-sm font-semibold transition-colors duration-150 ${
+                    plan.is_featured
+                      ? 'bg-[#0D4C3C] hover:bg-[#083F32] text-white'
+                      : 'border border-[#D1D5DB] text-[#374151] hover:bg-[#F8FAFB]'
+                  }`}
+                >
+                  Contact Sales Team
+                </a>
+              ) : (
+                <Link
+                  href="https://appmoffu.vercel.app/auth/signup"
+                  className={`block w-full text-center py-3 rounded-lg text-sm font-semibold transition-colors duration-150 ${
+                    plan.is_featured
+                      ? 'bg-[#0D4C3C] hover:bg-[#083F32] text-white'
+                      : 'border border-[#D1D5DB] text-[#374151] hover:bg-[#F8FAFB]'
+                  }`}
+                >
+                  Get Started
+                </Link>
+              )}
             </div>
           );
         })}

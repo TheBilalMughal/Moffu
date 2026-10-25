@@ -17,6 +17,7 @@ interface Plan {
   badge_text: string | null;
   is_featured: boolean;
   is_active: boolean;
+  contact_sales: boolean;
   sort_order: number;
   created_at: string;
   prices: PlanPrice[];
@@ -30,6 +31,7 @@ interface PlanForm {
   badge_text: string;
   is_featured: boolean;
   is_active: boolean;
+  contact_sales: boolean;
   sort_order: number;
   monthly_price: string;
   annual_discount: string; // % off monthly, e.g. "20" → annual total = monthly*12*(1-0.20)
@@ -53,6 +55,7 @@ const EMPTY_FORM: PlanForm = {
   badge_text: '',
   is_featured: false,
   is_active: true,
+  contact_sales: false,
   sort_order: 0,
   monthly_price: '0',
   annual_discount: '20',
@@ -79,7 +82,7 @@ export function PackagesSettingsPage() {
     setLoading(true);
     const { data: plansData } = await supabase
       .from('plans')
-      .select('id, slug, name, description, features, badge_text, is_featured, is_active, sort_order, created_at')
+      .select('id, slug, name, description, features, badge_text, is_featured, is_active, contact_sales, sort_order, created_at')
       .order('sort_order');
     const { data: pricesData } = await supabase
       .from('plan_prices')
@@ -131,6 +134,7 @@ export function PackagesSettingsPage() {
       monthly_price: String(monthlyAmt),
       annual_discount: String(discount),
       currency: monthly?.currency ?? 'USD',
+      contact_sales: plan.contact_sales ?? false,
     });
     setFeatureInput('');
     setModalOpen(true);
@@ -165,6 +169,7 @@ export function PackagesSettingsPage() {
       badge_text: form.badge_text.trim() || null,
       is_featured: form.is_featured,
       is_active: form.is_active,
+      contact_sales: form.contact_sales,
       sort_order: form.sort_order,
     };
 
@@ -280,9 +285,13 @@ export function PackagesSettingsPage() {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <div className="text-right">
+                        {plan.contact_sales ? (
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#EFF6FF] text-[#1D4ED8]">Contact Sales</span>
+                        ) : (
                         <p className="text-sm font-semibold text-[#111827]">
                           {monthly ? formatPrice(monthly.amount_cents, monthly.currency) : '—'}<span className="text-xs font-normal text-[#9CA3AF]">/mo</span>
                         </p>
+                        )}
                         {annual && annual.amount_cents > 0 && monthly && monthly.amount_cents > 0 && (() => {
                           const annualPerMo = annual.amount_cents / 12;
                           const disc = Math.round((1 - annualPerMo / monthly.amount_cents) * 100);
@@ -513,24 +522,38 @@ export function PackagesSettingsPage() {
               </div>
 
               {/* Toggles */}
-              <div className="flex gap-6">
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.is_featured}
+                      onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))}
+                      className="w-4 h-4 accent-[#0D4C3C] rounded"
+                    />
+                    <span className="text-sm text-[#374151]">Featured (highlight on pricing page)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.is_active}
+                      onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
+                      className="w-4 h-4 accent-[#0D4C3C] rounded"
+                    />
+                    <span className="text-sm text-[#374151]">Active (visible on website)</span>
+                  </label>
+                </div>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={form.is_featured}
-                    onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))}
+                    checked={form.contact_sales}
+                    onChange={e => setForm(f => ({ ...f, contact_sales: e.target.checked }))}
                     className="w-4 h-4 accent-[#0D4C3C] rounded"
                   />
-                  <span className="text-sm text-[#374151]">Featured (highlight on pricing page)</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.is_active}
-                    onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
-                    className="w-4 h-4 accent-[#0D4C3C] rounded"
-                  />
-                  <span className="text-sm text-[#374151]">Active (visible on website)</span>
+                  <div>
+                    <span className="text-sm text-[#374151]">Contact Sales</span>
+                    <span className="text-xs text-[#9CA3AF] ml-2">— hides price, shows "Contact Sales Team" button → sales@moffu.com</span>
+                  </div>
                 </label>
               </div>
             </div>
