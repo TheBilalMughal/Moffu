@@ -24,16 +24,6 @@ function CheckSolid() {
   );
 }
 
-function formatPrice(cents: number, currency: string) {
-  if (cents === 0) return '$0';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(cents / 100);
-}
-
 export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
   const [annual, setAnnual] = useState(false);
 
@@ -72,7 +62,7 @@ export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
       <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {visiblePlans.map((plan) => {
           const priceCents = annual && plan.annual_cents > 0 ? plan.annual_cents : plan.monthly_cents;
-          const isFree = plan.monthly_cents === 0;
+          const price = Math.round(priceCents / 100);
 
           return (
             <div
@@ -93,20 +83,12 @@ export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
                 <h3 className="font-bold text-[#111827] text-[1.0625rem] mb-1">{plan.name}</h3>
                 <p className="text-[13px] text-[#6B7280] mb-5">{plan.description ?? ''}</p>
                 <div className="flex items-baseline gap-1">
-                  {isFree ? (
-                    <span className="text-[2.75rem] font-bold text-[#111827] leading-none">Free</span>
-                  ) : (
-                    <>
-                      <span className="text-[2.75rem] font-bold text-[#111827] leading-none">
-                        {formatPrice(priceCents, plan.currency)}
-                      </span>
-                      <span className="text-[#6B7280] text-sm">/month</span>
-                    </>
-                  )}
+                  <span className="text-[2.75rem] font-bold text-[#111827] leading-none">${price}</span>
+                  <span className="text-[#6B7280] text-sm">/month</span>
                 </div>
-                {annual && plan.annual_cents > 0 && !isFree && (
+                {annual && plan.annual_cents > 0 && (
                   <p className="text-[12px] text-[#6B7280] mt-1">
-                    Billed annually ({formatPrice(plan.annual_cents * 12, plan.currency)}/yr)
+                    Billed annually (${price * 12}/yr)
                   </p>
                 )}
               </div>
