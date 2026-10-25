@@ -159,7 +159,7 @@ function DateRangePicker({ from, to, onChange }: {
         )}
       </button>
       {open && (
-        <div className="absolute top-full mt-2 right-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg p-4 min-w-max">
+        <div className="absolute top-full mt-2 left-0 z-[200] bg-white border border-[#E5EAE8] rounded-xl shadow-lg p-4 min-w-max">
           <div className="flex items-center justify-between mb-3">
             <button onClick={() => { if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); } else setViewMonth((m) => m - 1); }}
               className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
@@ -194,63 +194,76 @@ function DateRangePicker({ from, to, onChange }: {
 // ── SVG Sparkline (MRR trend) ──────────────────────────────────────────────────
 
 function MRRTrendChart({ data }: { data: { label: string; mrr: number; churn: number }[] }) {
-  const W = 600; const H = 140; const pad = { t: 16, b: 32, l: 8, r: 8 };
+  const W = 620; const H = 160;
+  const pad = { t: 20, b: 36, l: 48, r: 16 };
   const innerW = W - pad.l - pad.r;
   const innerH = H - pad.t - pad.b;
+  const n = data.length;
   const maxVal = Math.max(...data.map((d) => d.mrr), 1);
-  const barW = Math.floor(innerW / data.length) - 6;
-  const halfBar = barW / 2;
+  const slotW = innerW / n;
+  const barW = Math.max(slotW * 0.55, 6);
+  const churnBarW = barW * 0.6;
 
-  const mrrPoints = data.map((d, i) => {
-    const x = pad.l + (i / (data.length - 1)) * innerW;
-    const y = pad.t + (1 - d.mrr / maxVal) * innerH;
-    return { x, y };
-  });
+  // Y-axis labels (3 levels)
+  const yTicks = [0, 0.5, 1];
 
-  function makePath(pts: { x: number; y: number }[]) {
-    if (pts.length < 2) return '';
-    const first = pts[0]!;
-    let pathD = `M ${first.x} ${first.y}`;
-    for (let i = 1; i < pts.length; i++) {
-      const prev = pts[i - 1]!; const curr = pts[i]!;
-      const cx = (prev.x + curr.x) / 2;
-      pathD += ` C ${cx} ${prev.y} ${cx} ${curr.y} ${curr.x} ${curr.y}`;
-    }
-    return pathD;
-  }
+  function barX(i: number) { return pad.l + slotW * i + slotW / 2; }
 
   return (
-    <div className="w-full overflow-x-auto">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ minWidth: 400 }}>
-        {/* Gridlines */}
-        {[0, 0.25, 0.5, 0.75, 1].map((p) => (
-          <line key={p} x1={pad.l} x2={W - pad.r} y1={pad.t + p * innerH} y2={pad.t + p * innerH}
-            stroke="#F3F4F6" strokeWidth="1"/>
-        ))}
-        {/* MRR bars */}
-        {data.map((d, i) => {
-          const x = pad.l + (i / (data.length - 1)) * innerW;
-          const barH = (d.mrr / maxVal) * innerH;
+    <div className="w-full">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+        {/* Horizontal gridlines + y-axis labels */}
+        {yTicks.map((p) => {
+          const y = pad.t + (1 - p) * innerH;
+          const val = Math.round((p * maxVal) / 100);
           return (
-            <g key={d.label}>
-              <rect x={x - halfBar} y={pad.t + innerH - barH} width={barW} height={barH}
-                fill={i === data.length - 1 ? '#0D4C3C' : '#C7DDD8'} rx="3"/>
-              {/* Churn negative */}
-              {d.churn > 0 && (
-                <rect x={x - halfBar} y={pad.t + innerH} width={barW} height={Math.min((d.churn / maxVal) * innerH, 12)}
-                  fill="#FCA5A5" rx="2"/>
-              )}
-              <text x={x} y={H - 8} textAnchor="middle" fontSize="9" fill="#9CA3AF">{d.label}</text>
+            <g key={p}>
+              <line x1={pad.l} x2={W - pad.r} y1={y} y2={y} stroke="#F3F4F6" strokeWidth="1"/>
+              <text x={pad.l - 6} y={y + 4} textAnchor="end" fontSize="8" fill="#9CA3AF">
+                {p === 0 ? '$0' : `$${val}k`}
+              </text>
             </g>
           );
         })}
-        {/* MRR line */}
-        <path d={makePath(mrrPoints)} fill="none" stroke="#0D4C3C" strokeWidth="2" strokeLinecap="round"/>
-        {/* Dots */}
-        {mrrPoints.map((pt, i) => (
-          <circle key={i} cx={pt.x} cy={pt.y} r="3" fill={i === data.length - 1 ? '#0D4C3C' : 'white'}
-            stroke="#0D4C3C" strokeWidth="2"/>
-        ))}
+
+        {/* Baseline */}
+        <line x1={pad.l} x2={W - pad.r} y1={pad.t + innerH} y2={pad.t + innerH} stroke="#E5EAE8" strokeWidth="1"/>
+
+        {/* Bars */}
+        {data.map((d, i) => {
+          const x = barX(i);
+          const mrrH = Math.max((d.mrr / maxVal) * innerH, d.mrr > 0 ? 2 : 0);
+          const churnH = Math.max((d.churn / maxVal) * innerH * 0.4, d.churn > 0 ? 2 : 0);
+          const isLast = i === n - 1;
+          return (
+            <g key={`${d.label}-${i}`}>
+              {/* MRR bar */}
+              <rect
+                x={x - barW / 2} y={pad.t + innerH - mrrH}
+                width={barW} height={mrrH}
+                fill={isLast ? '#0D4C3C' : '#B8D4CD'} rx="3"
+              />
+              {/* Churn bar (below baseline) */}
+              {d.churn > 0 && (
+                <rect
+                  x={x - churnBarW / 2} y={pad.t + innerH + 1}
+                  width={churnBarW} height={churnH}
+                  fill="#FCA5A5" rx="2"
+                />
+              )}
+              {/* MRR value label on bar if tall enough */}
+              {mrrH > 18 && (
+                <text x={x} y={pad.t + innerH - mrrH + 11} textAnchor="middle" fontSize="8" fill={isLast ? 'white' : '#6B7280'} fontWeight="600">
+                  ${Math.round(d.mrr / 100)}
+                </text>
+              )}
+              {/* Month label */}
+              <text x={x} y={H - 8} textAnchor="middle" fontSize="9" fill={isLast ? '#0D4C3C' : '#9CA3AF'} fontWeight={isLast ? '600' : '400'}>
+                {d.label}
+              </text>
+            </g>
+          );
+        })}
       </svg>
     </div>
   );
@@ -349,8 +362,8 @@ export function MRRPage() {
     const totalMRR = paid.reduce((sum, s) => sum + s.amountCents, 0);
     const arpu = paid.length > 0 ? Math.round(totalMRR / paid.length) : 0;
 
-    // Period movements using dateFrom/dateTo
-    const from = dateFrom; const to = dateTo;
+    // Period movements using dateFrom/dateTo (empty = all-time)
+    const from = dateFrom || '2000-01-01'; const to = dateTo || today();
     const newSubs = paid.filter((s) => s.createdAt.slice(0, 10) >= from && s.createdAt.slice(0, 10) <= to);
     const newMRR = newSubs.reduce((sum, s) => sum + s.amountCents, 0);
 
@@ -460,7 +473,7 @@ export function MRRPage() {
 
       {/* Filter bar */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
-        <DateRangePicker from={dateFrom} to={dateTo} onChange={(f, t) => { if (f) setDateFrom(f); if (t) setDateTo(t); }}/>
+        <DateRangePicker from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }}/>
         <Dropdown options={planOpts} value={planFilter} onChange={setPlanFilter} placeholder="All Plans" clearable/>
         <Dropdown options={intervalOpts} value={intervalFilter} onChange={setIntervalFilter} placeholder="All Intervals" clearable/>
         {(planFilter || intervalFilter) && (
@@ -492,7 +505,7 @@ export function MRRPage() {
       {/* MRR Movements Waterfall */}
       <div className="bg-white border border-[#E5EAE8] rounded-xl p-5 mb-4">
         <h2 className="text-sm font-semibold text-[#111827] mb-1">MRR Movements</h2>
-        <p className="text-xs text-[#9CA3AF] mb-5">{fmtLabel(dateFrom)} — {fmtLabel(dateTo)}</p>
+        <p className="text-xs text-[#9CA3AF] mb-5">{dateFrom && dateTo ? `${fmtLabel(dateFrom)} — ${fmtLabel(dateTo)}` : 'All time'}</p>
         <div className="flex items-stretch gap-2">
           {/* Opening */}
           <div className="flex-1 bg-[#F8FAF9] rounded-lg p-3 text-center">
