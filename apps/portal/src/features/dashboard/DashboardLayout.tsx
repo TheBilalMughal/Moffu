@@ -5,6 +5,7 @@ import { authService } from '@/features/auth/auth.service';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { supabase } from '@/lib/supabase';
 import { useLocationStore } from '@/features/location/location.store';
+import { FeatureAccessContext } from '@/components/FeatureGate';
 
 function StarIcon() {
   return (
@@ -579,6 +580,7 @@ export function DashboardLayout() {
   const { setLocations } = useLocationStore();
   const navigate = useNavigate();
   const [featureAccess, setFeatureAccess] = useState<Record<string, boolean>>({});
+  const [featureLoading, setFeatureLoading] = useState(true);
 
   useEffect(() => {
     supabase.from('google_locations').select('id, display_name').eq('is_selected', true).then(({ data }) => {
@@ -610,6 +612,7 @@ export function DashboardLayout() {
         }
       }
       setFeatureAccess(map);
+      setFeatureLoading(false);
     }
     loadFeatureAccess();
   }, []);
@@ -621,6 +624,7 @@ export function DashboardLayout() {
   }
 
   return (
+    <FeatureAccessContext.Provider value={{ access: featureAccess, loading: featureLoading }}>
     <div className="flex h-screen bg-[#F8FAF9] overflow-hidden">
       {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 bg-white border-r border-[#E5EAE8] flex flex-col">
@@ -714,5 +718,6 @@ export function DashboardLayout() {
         </div>
       </main>
     </div>
+    </FeatureAccessContext.Provider>
   );
 }
