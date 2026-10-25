@@ -651,9 +651,7 @@ export function BillingPage() {
           const isCurrent = plan.id === sub?.plan_id;
           const price = plan.prices.find(p => p.interval === billingInterval) ?? plan.prices.find(p => p.interval === 'monthly');
           const monthlyPrice = plan.prices.find(p => p.interval === 'monthly');
-          const ents = plan.entitlements;
           const isScale = plan.slug === 'scale';
-          const isGrowth = plan.slug === 'growth';
 
           return (
             <div
@@ -711,24 +709,12 @@ export function BillingPage() {
                 <div className={`border-t mb-5 ${isScale ? 'border-stone-700' : 'border-[#F3F4F6]'}`} />
 
                 <ul className="space-y-2.5 text-xs flex-1 mb-6">
-                  {[
-                    `${ents['locations']?.limit_value ?? 1} location${(ents['locations']?.limit_value ?? 1) !== 1 ? 's' : ''}`,
-                    ents['published_replies']?.value_type === 'UNLIMITED' ? 'Unlimited replies' : `${ents['published_replies']?.limit_value ?? 0} replies/${ents['published_replies']?.usage_reset === 'weekly' ? 'week' : 'mo'}`,
-                    ents['ai_drafts']?.value_type === 'UNLIMITED' ? 'Unlimited AI drafts' : `${ents['ai_drafts']?.limit_value ?? 0} AI drafts/${ents['ai_drafts']?.usage_reset === 'weekly' ? 'week' : 'mo'}`,
-                    `${ents['team_members']?.limit_value ?? 1} team member${(ents['team_members']?.limit_value ?? 1) !== 1 ? 's' : ''}`,
-                    ents['brand_brain_profiles']?.value_type === 'UNLIMITED' ? 'Unlimited Brand Brain profiles' : `${ents['brand_brain_profiles']?.limit_value ?? 0} Brand Brain profile${(ents['brand_brain_profiles']?.limit_value ?? 0) !== 1 ? 's' : ''}`,
-                    SUPPORT_LABELS[ents['support_tier']?.enum_value ?? 'help_guides'],
-                  ].map((feat, i) => (
+                  {plan.features.map((feat, i) => (
                     <li key={i} className="flex items-start gap-2.5">
                       <svg className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${isScale ? 'text-emerald-400' : 'text-[#0D4C3C]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                       </svg>
-                      <span className={isScale ? 'text-stone-300' : 'text-[#374151]'}>
-                        {feat}
-                        {i === 0 && plan.location_addon_cents ? (
-                          <span className={`ml-1 ${isScale ? 'text-stone-500' : 'text-[#9CA3AF]'}`}>(+{cents(plan.location_addon_cents)}/extra)</span>
-                        ) : null}
-                      </span>
+                      <span className={isScale ? 'text-stone-300' : 'text-[#374151]'}>{feat}</span>
                     </li>
                   ))}
                 </ul>

@@ -310,7 +310,7 @@ async function fetchPricingPlans(): Promise<PricingPlan[]> {
         is_featured: p.is_featured ?? false,
         contact_sales: p.contact_sales ?? false,
         monthly_cents: monthly?.amount_cents ?? 0,
-        annual_cents: annual ? Math.round(annual.amount_cents / 12) : 0,
+        annual_cents: annual?.amount_cents ?? 0,
         currency: monthly?.currency ?? annual?.currency ?? 'USD',
       };
     });
