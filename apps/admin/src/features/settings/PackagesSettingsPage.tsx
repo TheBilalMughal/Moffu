@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 
 interface PlanPrice {
   id: string;
-  interval: 'monthly' | 'annual';
+  billing_interval: 'monthly' | 'annual';
   amount_cents: number;
   currency: string;
 }
@@ -83,7 +83,7 @@ export function PackagesSettingsPage() {
       .order('sort_order');
     const { data: pricesData } = await supabase
       .from('plan_prices')
-      .select('id, plan_id, interval, amount_cents, currency');
+      .select('id, plan_id, billing_interval, amount_cents, currency');
 
     const priceMap: Record<string, PlanPrice[]> = {};
     (pricesData ?? []).forEach((p: any) => {
@@ -111,8 +111,8 @@ export function PackagesSettingsPage() {
 
   function openEdit(plan: Plan) {
     setEditingId(plan.id);
-    const monthly = plan.prices.find(p => p.interval === 'monthly');
-    const annual = plan.prices.find(p => p.interval === 'annual');
+    const monthly = plan.prices.find(p => p.billing_interval === 'monthly');
+    const annual = plan.prices.find(p => p.billing_interval === 'annual');
     setForm({
       name: plan.name,
       slug: plan.slug,
@@ -179,13 +179,13 @@ export function PackagesSettingsPage() {
     const annual_cents = Math.round(parseFloat(form.annual_price || '0') * 100);
 
     const priceUpserts = [
-      { plan_id: planId, currency: form.currency, interval: 'monthly', amount_cents: monthly_cents, is_active: true },
-      { plan_id: planId, currency: form.currency, interval: 'annual', amount_cents: annual_cents, is_active: true },
+      { plan_id: planId, currency: form.currency, billing_interval: 'monthly', amount_cents: monthly_cents, is_active: true },
+      { plan_id: planId, currency: form.currency, billing_interval: 'annual', amount_cents: annual_cents, is_active: true },
     ];
 
     const { error: pe } = await supabase
       .from('plan_prices')
-      .upsert(priceUpserts as any, { onConflict: 'plan_id,currency,interval' });
+      .upsert(priceUpserts as any, { onConflict: 'plan_id,currency,billing_interval' });
 
     if (pe) { setError(pe.message); setSaving(false); return; }
 
@@ -247,8 +247,8 @@ export function PackagesSettingsPage() {
         ) : (
           <div className="space-y-3">
             {plans.map(plan => {
-              const monthly = plan.prices.find(p => p.interval === 'monthly');
-              const annual = plan.prices.find(p => p.interval === 'annual');
+                      const monthly = plan.prices.find(p => p.billing_interval === 'monthly');
+              const annual = plan.prices.find(p => p.billing_interval === 'annual');
               return (
                 <div key={plan.id} className="bg-white border border-[#E5EAE8] rounded-xl p-5">
                   <div className="flex items-start justify-between gap-4">

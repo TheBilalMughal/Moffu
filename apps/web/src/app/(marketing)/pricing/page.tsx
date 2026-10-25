@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export const revalidate = 60; // revalidate every 60s
 
 interface PlanPrice {
-  interval: string;
+  billing_interval: string;
   amount_cents: number;
   currency: string;
 }
@@ -41,7 +41,7 @@ async function getPlans(): Promise<Plan[]> {
   const supabase = createServerClient();
   const { data } = await supabase
     .from('plans')
-    .select('id, slug, name, description, features, badge_text, is_featured, sort_order, plan_prices(interval, amount_cents, currency)')
+    .select('id, slug, name, description, features, badge_text, is_featured, sort_order, plan_prices(billing_interval, amount_cents, currency)')
     .eq('is_active', true)
     .order('sort_order');
   return (data ?? []) as Plan[];
@@ -73,8 +73,8 @@ export default async function PricingPage() {
           ) : (
             <div className={`grid gap-6 ${plans.length <= 2 ? 'max-w-2xl mx-auto grid-cols-1 sm:grid-cols-2' : plans.length === 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
               {plans.map((plan) => {
-                const monthly = plan.plan_prices?.find(p => p.interval === 'monthly');
-                const annual = plan.plan_prices?.find(p => p.interval === 'annual');
+                const monthly = plan.plan_prices?.find(p => p.billing_interval === 'monthly');
+                const annual = plan.plan_prices?.find(p => p.billing_interval === 'annual');
                 const isFree = monthly?.amount_cents === 0;
 
                 return (
