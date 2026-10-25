@@ -484,6 +484,28 @@ export function MRRPage() {
         )}
       </div>
 
+      {/* Plan Mix */}
+      <div className="bg-white shadow-sm rounded-xl p-5 mb-5">
+        <h2 className="text-sm font-semibold text-[#111827] mb-5">Plan Mix</h2>
+        <div className="grid grid-cols-4 gap-6">
+          {planBreakdown.map((d) => (
+            <div key={d.slug} className="flex items-center gap-4">
+              <div className="relative flex-shrink-0">
+                <MiniDonut pct={d.pct} color={PLAN_BAR[d.slug] ?? '#9CA3AF'}/>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-[11px] font-bold text-[#111827]">{d.pct}%</span>
+                </div>
+              </div>
+              <div>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded inline-block mb-1 ${PLAN_COLOR[d.slug] ?? ''}`}>{d.name}</span>
+                <p className="text-sm font-bold text-[#111827]">{d.count} <span className="text-xs font-normal text-[#9CA3AF]">active</span></p>
+                <p className="text-xs text-[#9CA3AF]">{fmtMoney(d.mrr, true)}/mo</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* KPI Row */}
       <div className="grid grid-cols-6 gap-3 mb-5">
         {[
@@ -601,27 +623,6 @@ export function MRRPage() {
         </div>
       </div>
 
-      {/* Plan Mix */}
-      <div className="bg-white shadow-sm rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-[#111827] mb-5">Plan Mix</h2>
-        <div className="grid grid-cols-4 gap-6">
-          {planBreakdown.map((d) => (
-            <div key={d.slug} className="flex items-center gap-4">
-              <div className="relative flex-shrink-0">
-                <MiniDonut pct={d.pct} color={PLAN_BAR[d.slug] ?? '#9CA3AF'}/>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-[11px] font-bold text-[#111827]">{d.pct}%</span>
-                </div>
-              </div>
-              <div>
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded inline-block mb-1 ${PLAN_COLOR[d.slug] ?? ''}`}>{d.name}</span>
-                <p className="text-sm font-bold text-[#111827]">{d.count} <span className="text-xs font-normal text-[#9CA3AF]">active</span></p>
-                <p className="text-xs text-[#9CA3AF]">{fmtMoney(d.mrr, true)}/mo</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
     </div>
   );
