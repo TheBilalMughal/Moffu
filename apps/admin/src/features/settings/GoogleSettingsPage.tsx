@@ -84,34 +84,34 @@ export function GoogleSettingsPage() {
     <div className="h-full overflow-y-auto">
       <div className="max-w-2xl mx-auto px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#4285F4' }}>
+        <div className="mb-6">
+          <div className="flex items-center gap-2.5 mb-1">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#4285F4' }}>
               <GoogleIcon />
             </div>
-            <h1 className="text-xl font-semibold text-[#111827]">Google API</h1>
+            <h1 className="text-lg font-semibold text-[#111827]">Google API</h1>
           </div>
-          <p className="text-sm text-[#6B7280] mt-1">
-            Configure Google OAuth credentials for Google Business Profile integration.
+          <p className="text-sm text-[#9CA3AF]">
+            OAuth credentials for Google Business Profile integration.
           </p>
         </div>
 
         {/* How to get credentials */}
-        <div className="bg-[#F0F9F5] border border-[#B6DDD0] rounded-xl p-4 mb-6">
-          <p className="text-sm font-medium text-[#0D4C3C] mb-2">How to get these credentials</p>
-          <ol className="text-sm text-[#374151] space-y-1 list-decimal list-inside">
-            <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" className="text-[#0D4C3C] underline">Google Cloud Console → Credentials</a></li>
-            <li>Create an <strong>OAuth 2.0 Client ID</strong> (Web application)</li>
-            <li>Add the Redirect URI shown below to <strong>Authorized redirect URIs</strong></li>
-            <li>Enable <strong>My Business Account Management API</strong> and <strong>My Business Business Information API</strong></li>
+        <div className="border border-[#E5EAE8] rounded-xl p-4 mb-6">
+          <p className="text-xs font-semibold text-[#374151] uppercase tracking-wide mb-2.5">Setup steps</p>
+          <ol className="text-sm text-[#6B7280] space-y-1.5 list-decimal list-inside">
+            <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" className="text-[#0D4C3C] hover:underline">Google Cloud Console → Credentials</a></li>
+            <li>Create an <strong className="text-[#374151]">OAuth 2.0 Client ID</strong> (Web application)</li>
+            <li>Add the Redirect URI below to <strong className="text-[#374151]">Authorized redirect URIs</strong></li>
+            <li>Enable <strong className="text-[#374151]">My Business Account Management API</strong> and <strong className="text-[#374151]">My Business Business Information API</strong></li>
           </ol>
         </div>
 
         {/* Form */}
-        <div className="bg-white border border-[#E5EAE8] rounded-xl divide-y divide-[#F3F4F6]">
+        <div className="space-y-5">
           {/* Client ID */}
-          <div className="px-6 py-5">
-            <label className="block text-sm font-medium text-[#374151] mb-1.5">
+          <div>
+            <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">
               Client ID
             </label>
             <input
@@ -119,13 +119,13 @@ export function GoogleSettingsPage() {
               value={creds.client_id}
               onChange={(e) => setCreds((p) => ({ ...p, client_id: e.target.value }))}
               placeholder="123456789-abc.apps.googleusercontent.com"
-              className="w-full px-3 py-2 text-sm border border-[#D1D5DB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 focus:border-[#0D4C3C] font-mono placeholder:font-sans placeholder:text-[#9CA3AF]"
+              className="w-full px-3 py-2.5 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] font-mono placeholder:font-sans placeholder:text-[#C4CAC8] transition-colors"
             />
           </div>
 
           {/* Client Secret */}
-          <div className="px-6 py-5">
-            <label className="block text-sm font-medium text-[#374151] mb-1.5">
+          <div>
+            <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">
               Client Secret
             </label>
             <div className="relative">
@@ -134,12 +134,12 @@ export function GoogleSettingsPage() {
                 value={creds.client_secret}
                 onChange={(e) => setCreds((p) => ({ ...p, client_secret: e.target.value }))}
                 placeholder="GOCSPX-…"
-                className="w-full px-3 py-2 pr-10 text-sm border border-[#D1D5DB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 focus:border-[#0D4C3C] font-mono placeholder:font-sans placeholder:text-[#9CA3AF]"
+                className="w-full px-3 py-2.5 pr-10 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] font-mono placeholder:font-sans placeholder:text-[#C4CAC8] transition-colors"
               />
               <button
                 type="button"
                 onClick={() => setShowSecret((s) => !s)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151] transition-colors"
               >
                 {showSecret ? <EyeOffIcon /> : <EyeIcon />}
               </button>
@@ -147,23 +147,23 @@ export function GoogleSettingsPage() {
           </div>
 
           {/* Redirect URI */}
-          <div className="px-6 py-5">
-            <label className="block text-sm font-medium text-[#374151] mb-1.5">
-              Redirect URI
-              <span className="ml-2 text-xs font-normal text-[#9CA3AF]">Copy this to Google Console</span>
-            </label>
+          <div>
+            <div className="flex items-baseline gap-2 mb-1.5">
+              <label className="text-xs font-semibold text-[#374151] uppercase tracking-wide">Redirect URI</label>
+              <span className="text-xs text-[#9CA3AF]">— paste this into Google Console</span>
+            </div>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={creds.redirect_uri}
                 onChange={(e) => setCreds((p) => ({ ...p, redirect_uri: e.target.value }))}
-                className="flex-1 px-3 py-2 text-sm border border-[#D1D5DB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 focus:border-[#0D4C3C] font-mono text-[#374151]"
+                className="flex-1 px-3 py-2.5 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] font-mono text-[#374151] transition-colors"
               />
               <button
                 type="button"
                 onClick={() => navigator.clipboard.writeText(creds.redirect_uri)}
-                className="px-3 py-2 text-sm text-[#374151] border border-[#D1D5DB] rounded-lg hover:bg-[#F9FAFB] transition-colors"
-                title="Copy"
+                className="px-3 py-2.5 text-sm text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors"
+                title="Copy to clipboard"
               >
                 <CopyIcon />
               </button>
@@ -198,8 +198,9 @@ export function GoogleSettingsPage() {
         </div>
 
         {/* Note about edge functions */}
-        <div className="mt-6 px-4 py-3 bg-[#FFFBEB] border border-[#FDE68A] rounded-xl text-sm text-[#92400E]">
-          <strong>Note:</strong> After saving, redeploy the Google Edge Functions from the terminal so they pick up the latest values:
+        <div className="mt-6 px-4 py-3 border border-[#E5EAE8] rounded-xl text-sm text-[#6B7280]">
+          <p className="text-xs font-semibold text-[#374151] uppercase tracking-wide mb-1.5">After saving</p>
+          Redeploy the Google Edge Functions so they pick up the new values:
           <pre className="mt-1.5 text-xs bg-[#FEF3C7] rounded px-2 py-1 font-mono overflow-x-auto">
             npx supabase functions deploy google-oauth-start --project-ref kgttncfkzdrgswfkkdji{'\n'}
             npx supabase functions deploy google-oauth-callback --project-ref kgttncfkzdrgswfkkdji

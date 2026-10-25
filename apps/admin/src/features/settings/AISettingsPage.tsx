@@ -238,8 +238,8 @@ export function AISettingsPage() {
                     const isActive = s.is_active;
                     const masked = s.api_key.slice(0, 10) + '••••••••••••••••••';
                     return (
-                      <div key={s.id} className={`flex items-center gap-4 px-5 py-4 rounded-xl border bg-white transition-all ${
-                        isActive ? 'border-[#BBF7D0]' : 'border-[#E5E7EB] hover:border-[#D1D5DB]'
+                      <div key={s.id} className={`flex items-center gap-4 px-5 py-4 rounded-xl border transition-all ${
+                        isActive ? 'border-[#BBF7D0] bg-[#F0FDF4]/40' : 'border-[#E5E7EB] hover:border-[#D1D5DB]'
                       }`}>
                         <ProviderInitial provider={s.provider} />
                         <div className="flex-1 min-w-0">
@@ -314,7 +314,7 @@ export function AISettingsPage() {
                       <button
                         key={provider}
                         onClick={() => openAdd(provider)}
-                        className="flex items-center gap-3 px-4 py-4 rounded-xl border border-dashed border-[#E5E7EB] bg-white hover:border-[#D1D5DB] hover:bg-[#F9FAFB] transition-all text-left group"
+                        className="flex items-center gap-3 px-4 py-4 rounded-xl border border-dashed border-[#E5E7EB] hover:border-[#0D4C3C]/30 hover:bg-[#F8FAF9] transition-all text-left group"
                       >
                         <ProviderInitial provider={provider} />
                         <div className="min-w-0 flex-1">
@@ -344,7 +344,7 @@ export function AISettingsPage() {
       {/* Add / Edit Modal */}
       {form && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
             {/* Modal header */}
             <div className="flex items-center gap-3 px-6 py-5 border-b border-[#F3F4F6]">
               <ProviderInitial provider={form.provider} size="sm" />

@@ -257,92 +257,107 @@ export function PackagesSettingsPage() {
             <p className="text-sm text-[#9CA3AF]">No packages yet. Create your first package.</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {plans.map(plan => {
-                      const monthly = plan.prices.find(p => p.billing_interval === 'monthly');
-              const annual = plan.prices.find(p => p.billing_interval === 'annual');
+          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+            {/* Table header */}
+            <div className="grid grid-cols-[1fr_160px_80px_auto] items-center px-5 py-2.5 bg-[#F8FAF9] border-b border-[#E5EAE8]">
+              <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Plan</span>
+              <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Pricing</span>
+              <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Status</span>
+              <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Actions</span>
+            </div>
+
+            {plans.map((plan, idx) => {
+              const monthly = plan.prices.find(p => p.billing_interval === 'monthly');
+              const annual  = plan.prices.find(p => p.billing_interval === 'annual');
+              const annualPerMo = annual && annual.amount_cents > 0 ? annual.amount_cents / 12 : 0;
+              const disc = monthly && monthly.amount_cents > 0 && annualPerMo > 0
+                ? Math.round((1 - annualPerMo / monthly.amount_cents) * 100)
+                : 0;
               return (
-                <div key={plan.id} className="bg-white border border-[#E5EAE8] rounded-xl p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3 min-w-0">
+                <div key={plan.id} className={`grid grid-cols-[1fr_160px_80px_auto] items-center px-5 py-3.5 bg-white hover:bg-[#FAFBFB] transition-colors ${idx < plans.length - 1 ? 'border-b border-[#F3F4F6]' : ''}`}>
+                  {/* Plan info */}
+                  <div className="min-w-0 pr-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold text-[#111827]">{plan.name}</span>
+                      <span className="text-[10px] text-[#C4CAC8] font-mono">{plan.slug}</span>
                       {plan.is_featured && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#FEF3C7] text-[#92400E] flex-shrink-0">
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[#FEF3C7] text-[#92400E]">
                           {plan.badge_text || 'Featured'}
                         </span>
                       )}
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-semibold text-[#111827]">{plan.name}</h3>
-                          <span className="text-[10px] text-[#9CA3AF] font-mono">{plan.slug}</span>
-                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${plan.is_active ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
-                            {plan.is_active ? 'Active' : 'Inactive'}
+                    </div>
+                    {plan.description && (
+                      <p className="text-xs text-[#9CA3AF] mt-0.5 truncate">{plan.description}</p>
+                    )}
+                    {plan.features.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {plan.features.map((f, i) => (
+                          <span key={i} className="text-[10px] px-1.5 py-0.5 bg-[#F3F4F6] text-[#6B7280] rounded">
+                            {f}
                           </span>
-                        </div>
-                        {plan.description && (
-                          <p className="text-xs text-[#6B7280] mt-0.5 truncate">{plan.description}</p>
-                        )}
+                        ))}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <div className="text-right">
-                        {plan.contact_sales ? (
-                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#EFF6FF] text-[#1D4ED8]">Contact Sales</span>
-                        ) : (
-                        <p className="text-sm font-semibold text-[#111827]">
-                          {monthly ? formatPrice(monthly.amount_cents, monthly.currency) : '—'}<span className="text-xs font-normal text-[#9CA3AF]">/mo</span>
-                        </p>
-                        )}
-                        {annual && annual.amount_cents > 0 && monthly && monthly.amount_cents > 0 && (() => {
-                          const annualPerMo = annual.amount_cents / 12;
-                          const disc = Math.round((1 - annualPerMo / monthly.amount_cents) * 100);
-                          return (
-                            <p className="text-[11px] text-[#6B7280]">
-                              {formatPrice(Math.round(annualPerMo), annual.currency)}/mo annual
-                              {disc > 0 && <span className="ml-1 text-[#0D4C3C] font-medium">· save {disc}%</span>}
-                            </p>
-                          );
-                        })()}
-                      </div>
-                      <button
-                        onClick={() => toggleActive(plan)}
-                        title={plan.is_active ? 'Deactivate' : 'Activate'}
-                        className="p-2 text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d={plan.is_active
-                            ? 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636'
-                            : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
-                          } />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => openEdit(plan)}
-                        className="p-2 text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => setDeleteId(plan.id)}
-                        className="p-2 text-[#9CA3AF] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
+                    )}
                   </div>
 
-                  {plan.features.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {plan.features.map((f, i) => (
-                        <span key={i} className="text-[11px] px-2 py-0.5 bg-[#F8FAF9] border border-[#E5EAE8] rounded text-[#374151]">
-                          {f}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  {/* Pricing */}
+                  <div>
+                    {plan.contact_sales ? (
+                      <span className="text-xs font-medium text-[#1D4ED8]">Contact Sales</span>
+                    ) : (
+                      <>
+                        <p className="text-sm font-semibold text-[#111827]">
+                          {monthly ? formatPrice(monthly.amount_cents, monthly.currency) : '—'}
+                          <span className="text-xs font-normal text-[#9CA3AF]">/mo</span>
+                        </p>
+                        {disc > 0 && (
+                          <p className="text-[11px] text-[#9CA3AF]">
+                            {formatPrice(Math.round(annualPerMo), annual!.currency)}/mo annual
+                            <span className="ml-1 text-[#0D4C3C] font-medium">· -{disc}%</span>
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Status badge */}
+                  <div>
+                    <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-md ${plan.is_active ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+                      {plan.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={() => toggleActive(plan)}
+                      title={plan.is_active ? 'Deactivate' : 'Activate'}
+                      className="p-1.5 text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d={plan.is_active
+                          ? 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636'
+                          : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
+                        } />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => openEdit(plan)}
+                      className="p-1.5 text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => setDeleteId(plan.id)}
+                      className="p-1.5 text-[#9CA3AF] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               );
             })}
