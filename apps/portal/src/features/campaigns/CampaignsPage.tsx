@@ -190,7 +190,15 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
       body: JSON.stringify({ campaign_id: id }),
     });
     const data = await res.json();
-    if (!res.ok) { setErr(data.error ?? 'Send failed'); setSending(false); return; }
+    if (!res.ok) {
+      if (res.status === 402) {
+        setErr(`Plan limit reached: ${data.error} Go to Billing to upgrade your plan.`);
+      } else {
+        setErr(data.error ?? 'Send failed');
+      }
+      setSending(false);
+      return;
+    }
     setSending(false);
     onCreated();
   }
@@ -452,25 +460,55 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 
+interface EmailQuota { used: number; limit: number | null; }
+
 export function CampaignsPage() {
   const orgId = useOrgStore(s => s.orgId);
   const [orgName,   setOrgName]   = useState('Your Business');
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading,   setLoading]   = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [quota,     setQuota]     = useState<EmailQuota | null>(null);
 
   async function load() {
     if (!orgId) return;
     setLoading(true);
-    const [{ data: orgData }, { data }] = await Promise.all([
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+    const [{ data: orgData }, { data }, { data: usedCount }] = await Promise.all([
       supabase.from('organizations').select('name').eq('id', orgId).single(),
       supabase.from('campaigns')
         .select('id,name,channel,status,subject,sent_count,opened_count,clicked_count,total_contacts,sent_at,created_at')
         .eq('org_id', orgId)
         .order('created_at', { ascending: false }),
+      supabase.rpc('count_org_campaign_emails_this_month', { p_org_id: orgId, p_month_start: monthStart }),
     ]);
     if (orgData?.name) setOrgName(orgData.name);
     setCampaigns((data ?? []) as Campaign[]);
+    // Fetch entitlement limit for current user's plan
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: sub } = await supabase
+        .from('subscriptions')
+        .select('plan_id')
+        .eq('user_id', user.id)
+        .in('status', ['active', 'trialing'])
+        .limit(1)
+        .single();
+      if (sub) {
+        const { data: ent } = await supabase
+          .from('plan_entitlements')
+          .select('value_type, limit_value')
+          .eq('plan_id', sub.plan_id)
+          .eq('key', 'campaign_emails')
+          .single();
+        if (ent) {
+          setQuota({
+            used: typeof usedCount === 'number' ? usedCount : 0,
+            limit: ent.value_type === 'UNLIMITED' ? null : (ent.limit_value ?? 0),
+          });
+        }
+      }
+    }
     setLoading(false);
   }
 
@@ -502,6 +540,40 @@ export function CampaignsPage() {
           New Campaign
         </button>
       </div>
+
+      {/* Email quota bar */}
+      {quota !== null && (
+        <div className="bg-white rounded-xl px-5 py-3.5 shadow-sm mb-4 flex items-center gap-4">
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-medium text-[#374151]">Email quota this month</span>
+              <span className={`text-xs font-semibold tabular-nums ${
+                quota.limit !== null && quota.used >= quota.limit ? 'text-red-600' :
+                quota.limit !== null && quota.used / quota.limit >= 0.8 ? 'text-amber-600' :
+                'text-[#6B7280]'
+              }`}>
+                {quota.limit === null ? `${quota.used} sent · Unlimited` : `${quota.used} / ${quota.limit}`}
+              </span>
+            </div>
+            <div className="w-full h-1.5 bg-[#F3F4F6] rounded-full overflow-hidden">
+              {quota.limit === null ? (
+                <div className="h-full w-full bg-[#E6F2EE] rounded-full" />
+              ) : (
+                <div className={`h-full rounded-full transition-all ${
+                  quota.used >= quota.limit ? 'bg-red-500' :
+                  quota.used / quota.limit >= 0.8 ? 'bg-amber-400' :
+                  'bg-[#0D4C3C]'
+                }`} style={{ width: `${Math.min((quota.used / quota.limit) * 100, 100)}%` }} />
+              )}
+            </div>
+          </div>
+          {quota.limit !== null && quota.used >= quota.limit && (
+            <Link to="/billing" className="text-xs font-semibold text-white bg-[#0D4C3C] px-3 py-1.5 rounded-lg hover:bg-[#0a3d30] transition-colors flex-shrink-0">
+              Upgrade
+            </Link>
+          )}
+        </div>
+      )}
 
       {/* KPI cards */}
       <div className="grid grid-cols-4 gap-4 mb-6">
