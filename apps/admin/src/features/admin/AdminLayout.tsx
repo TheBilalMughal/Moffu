@@ -451,7 +451,7 @@ export function AdminLayout() {
       {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 bg-white border-r border-[#E5EAE8] flex flex-col">
         {/* Logo */}
-        <div className="px-5 py-4 border-b border-[#E5EAE8] flex flex-col gap-0.5">
+        <div className="px-5 py-4 flex flex-col gap-0.5">
           <img src="/images/logo.png" alt="Moffu" className="h-7 w-auto self-start" />
           <p className="text-[10px] text-[#9CA3AF] uppercase tracking-widest">Admin</p>
         </div>
@@ -543,7 +543,7 @@ export function AdminLayout() {
           </div>
 
           {/* Settings — pinned to bottom */}
-          <div className="mt-auto pt-4 border-t border-[#E5EAE8] space-y-0.5">
+          <div className="mt-auto pt-2 space-y-0.5">
             {NAV_SETTINGS.map((item) => (
               <NavLink
                 key={item.to}
