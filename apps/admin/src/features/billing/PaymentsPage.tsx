@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
@@ -143,7 +143,7 @@ function MrrTrendChart({ records }: { records: BillingRecord[] }) {
   }));
 
   return (
-    <div className="bg-white border border-[#E5EAE8] rounded-xl p-5 mb-5">
+    <div className="bg-white shadow-sm rounded-xl p-5 mb-5">
       <h3 className="text-sm font-semibold text-[#111827] mb-4">MRR Trend — Last 12 Months</h3>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
         <defs>
@@ -188,7 +188,7 @@ function RevByPlanChart({ records }: { records: BillingRecord[] }) {
   const maxMrr = Math.max(...data.map((d) => d.mrr), 1);
 
   return (
-    <div className="bg-white border border-[#E5EAE8] rounded-xl p-5 mb-5">
+    <div className="bg-white shadow-sm rounded-xl p-5 mb-5">
       <h3 className="text-sm font-semibold text-[#111827] mb-4">Revenue by Plan</h3>
       <div className="space-y-3">
         {data.map((d) => (
@@ -231,7 +231,7 @@ function SavedFiltersPopover({ current, onLoad, onClose }: {
   }
 
   return (
-    <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-[#E5EAE8] rounded-xl shadow-lg z-30 overflow-hidden">
+    <div className="absolute right-0 top-full mt-2 w-72 bg-white shadow-sm rounded-xl shadow-lg z-30 overflow-hidden">
       <div className="px-4 py-3 border-b border-[#F3F4F6]">
         <p className="text-xs font-semibold text-[#374151] mb-2">Save current filters</p>
         <div className="flex gap-2">
@@ -443,7 +443,7 @@ export function PaymentsPage() {
           { label: 'New This Month', value: stats.newPaid, sub: 'new paid subs' },
           { label: 'Churned', value: stats.churned, sub: 'past due or canceled' },
         ].map((s) => (
-          <div key={s.label} className="bg-white border border-[#E5EAE8] rounded-xl px-4 py-4">
+          <div key={s.label} className="bg-white shadow-sm rounded-xl px-4 py-4">
             <p className="text-xs text-[#9CA3AF] uppercase tracking-wide">{s.label}</p>
             <p className="text-2xl font-bold text-[#111827] mt-1">{s.value}</p>
             <p className="text-xs text-[#9CA3AF] mt-0.5">{s.sub}</p>
@@ -483,7 +483,7 @@ export function PaymentsPage() {
       </div>
 
       {activeTab === 'refunds' && (
-        <div className="bg-white border border-[#E5EAE8] rounded-xl px-8 py-12 text-center">
+        <div className="bg-white shadow-sm rounded-xl px-8 py-12 text-center">
           <svg className="w-10 h-10 text-[#E5EAE8] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
           <p className="text-sm font-semibold text-[#374151] mb-1">Stripe not yet configured</p>
           <p className="text-xs text-[#9CA3AF] max-w-xs mx-auto">Refund management will be available after Stripe integration is configured in Phase 6. All refunds will be tracked, audited, and reconciled here.</p>
@@ -497,7 +497,7 @@ export function PaymentsPage() {
             <div className="relative flex-1 min-w-[200px] max-w-xs">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
               <input type="search" placeholder="Search client or email…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"/>
+                className="w-full pl-9 pr-3 py-2 text-sm shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"/>
             </div>
             <Dropdown clearable placeholder="All plans" value={planFilter} onChange={(v) => { setPlanFilter(v); setPage(1); }}
               options={[{ value:'free',label:'Free' },{ value:'starter',label:'Starter' },{ value:'growth',label:'Growth' },{ value:'scale',label:'Scale' }]}/>
@@ -506,10 +506,10 @@ export function PaymentsPage() {
             <Dropdown clearable placeholder="All intervals" value={intervalFilter} onChange={(v) => { setIntervalFilter(v); setPage(1); }}
               options={[{ value:'monthly',label:'Monthly' },{ value:'annual',label:'Annual' }]}/>
             <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-              className="text-xs border border-[#E5EAE8] rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]"/>
+              className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]"/>
             <span className="text-xs text-[#9CA3AF]">—</span>
             <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-              className="text-xs border border-[#E5EAE8] rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]"/>
+              className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]"/>
             {hasActiveFilters && (
               <button onClick={() => { setSearch(''); setPlanFilter(''); setStatusFilter(''); setIntervalFilter(''); setDateFrom(''); setDateTo(''); setPage(1); }}
                 className="text-xs text-[#6B7280] hover:text-[#111827] flex items-center gap-1 transition-colors">
@@ -520,7 +520,7 @@ export function PaymentsPage() {
           </div>
 
           {/* Table */}
-          <div className="bg-white border border-[#E5EAE8] rounded-xl">
+          <div className="bg-white shadow-sm rounded-xl">
             <table className="w-full text-sm">
               <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
                 <tr>

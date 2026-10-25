@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
@@ -19,7 +19,7 @@ interface ActionItem {
 
 function StatCard({ label, value, icon }: { label: string; value: number | string; icon: React.ReactNode }) {
   return (
-    <div className="bg-white border border-[#E5EAE8] rounded-xl px-6 py-5">
+    <div className="bg-white shadow-sm rounded-xl px-6 py-5">
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide">{label}</p>
         <div className="w-8 h-8 bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center rounded-lg">{icon}</div>
@@ -68,7 +68,7 @@ export function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white border border-[#E5EAE8] rounded-xl px-6 py-5 animate-pulse">
+            <div key={i} className="bg-white shadow-sm rounded-xl px-6 py-5 animate-pulse">
               <div className="h-3 bg-[#E5EAE8] rounded w-24 mb-3" />
               <div className="h-8 bg-[#E5EAE8] rounded w-12" />
             </div>
@@ -101,7 +101,7 @@ export function DashboardPage() {
 
       {/* Action Required */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+        <div className="bg-white shadow-sm rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-[#E5EAE8] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Action Required</h2>
             {actions.length > 0 && (
@@ -135,7 +135,7 @@ export function DashboardPage() {
         </div>
 
         {/* Quick Links */}
-        <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+        <div className="bg-white shadow-sm rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-[#E5EAE8]">
             <h2 className="text-sm font-semibold text-[#111827]">Quick Actions</h2>
           </div>

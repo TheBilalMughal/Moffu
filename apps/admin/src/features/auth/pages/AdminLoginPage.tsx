@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAuthService } from '../auth.service';
 
@@ -51,7 +51,7 @@ export function AdminLoginPage() {
           <p className="text-[10px] text-[#9CA3AF] uppercase tracking-widest">Admin</p>
         </div>
 
-        <div className="bg-white border border-[#E5EAE8] rounded-xl p-8">
+        <div className="bg-white shadow-sm rounded-xl p-8">
 
           {!forgotMode ? (
             <>

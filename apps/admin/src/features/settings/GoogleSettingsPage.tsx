@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToastStore } from '@/lib/toast';
 
@@ -117,7 +117,7 @@ export function GoogleSettingsPage() {
         </div>
 
         {/* Setup steps */}
-        <div className="border border-[#E5EAE8] rounded-xl p-4 mb-6">
+        <div className="shadow-sm rounded-xl p-4 mb-6">
           <p className="text-xs font-semibold text-[#374151] uppercase tracking-wide mb-2.5">Setup steps</p>
           <ol className="text-sm text-[#6B7280] space-y-1.5 list-decimal list-inside">
             <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer" className="text-[#0D4C3C] hover:underline">Google Cloud Console → Credentials</a></li>
@@ -205,7 +205,7 @@ export function GoogleSettingsPage() {
           </div>
         ) : (
           /* ── Read-only view ── */
-          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden divide-y divide-[#F3F4F6]">
+          <div className="shadow-sm rounded-xl overflow-hidden divide-y divide-[#F3F4F6]">
             <ReadRow label="Client ID"    value={saved.client_id}     mono />
             <ReadRow label="Client Secret" value={saved.client_secret} mono secret />
             <ReadRow label="Redirect URI"  value={saved.redirect_uri}  mono copyable />
@@ -213,7 +213,7 @@ export function GoogleSettingsPage() {
         )}
 
         {/* Deploy note */}
-        <div className="mt-6 px-4 py-3 border border-[#E5EAE8] rounded-xl text-sm text-[#6B7280]">
+        <div className="mt-6 px-4 py-3 shadow-sm rounded-xl text-sm text-[#6B7280]">
           <p className="text-xs font-semibold text-[#374151] uppercase tracking-wide mb-1.5">After saving</p>
           Redeploy the Google Edge Functions so they pick up the new values:
           <pre className="mt-1.5 text-xs bg-[#F3F4F6] rounded px-2 py-1 font-mono overflow-x-auto">

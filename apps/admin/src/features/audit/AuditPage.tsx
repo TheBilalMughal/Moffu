@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface AuditEvent {
@@ -96,7 +96,7 @@ export function AuditPage() {
 
       {/* Scrollable table */}
       <div className="flex-1 min-h-0 px-8 py-4">
-        <div className="h-full flex flex-col bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+        <div className="h-full flex flex-col bg-white shadow-sm rounded-xl overflow-hidden">
           <div className="flex-1 overflow-auto">
             <table className="w-full text-sm">
               <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">

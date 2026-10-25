@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToastStore } from '@/lib/toast';
 
@@ -343,7 +343,7 @@ export function PackagesSettingsPage() {
             <p className="text-sm text-[#9CA3AF]">No packages yet. Create your first package.</p>
           </div>
         ) : (
-          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+          <div className="shadow-sm rounded-xl overflow-hidden">
             {/* Table header */}
             <div className="grid grid-cols-[1fr_160px_80px_auto] items-center px-5 py-2.5 bg-[#F8FAF9] border-b border-[#E5EAE8]">
               <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Plan</span>

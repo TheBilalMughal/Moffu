@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+﻿import { useState, useRef, useEffect, useCallback } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { adminAuthService } from '@/features/auth/auth.service';
@@ -194,7 +194,7 @@ function AdminSearch() {
       </div>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-72 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-[200]"
+        <div className="absolute right-0 top-full mt-1.5 w-72 bg-white shadow-sm rounded-xl shadow-lg overflow-hidden z-[200]"
           style={{ animation: 'slideDown 0.15s ease' }}>
           <style>{`@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}`}</style>
           {results.length > 0 ? (
@@ -337,7 +337,7 @@ function AdminNotificationsBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-[#E5EAE8] rounded-xl shadow-lg z-50 flex flex-col" style={{ maxHeight: '420px' }}>
+        <div className="absolute right-0 top-full mt-2 w-80 bg-white shadow-sm rounded-xl shadow-lg z-50 flex flex-col" style={{ maxHeight: '420px' }}>
           <div className="px-4 py-3 border-b border-[#F3F4F6] flex items-center justify-between flex-shrink-0">
             <p className="text-sm font-semibold text-[#111827]">Notifications</p>
             {unread > 0 && (
@@ -423,7 +423,7 @@ function AdminProfile() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-50">
+        <div className="absolute right-0 top-full mt-2 w-64 bg-white shadow-sm rounded-xl shadow-lg overflow-hidden z-50">
           <div className="px-4 py-4 bg-[#F8FAF9] border-b border-[#E5EAE8] flex items-center gap-3">
             <div className="w-11 h-11 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
               {initials}

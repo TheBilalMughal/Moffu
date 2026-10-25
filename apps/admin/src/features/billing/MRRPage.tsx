@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
 
@@ -159,7 +159,7 @@ function DateRangePicker({ from, to, onChange }: {
         )}
       </button>
       {open && (
-        <div className="absolute top-full mt-2 left-0 z-[200] bg-white border border-[#E5EAE8] rounded-xl shadow-lg p-4 min-w-max">
+        <div className="absolute top-full mt-2 left-0 z-[200] bg-white shadow-sm rounded-xl shadow-lg p-4 min-w-max">
           <div className="flex items-center justify-between mb-3">
             <button onClick={() => { if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); } else setViewMonth((m) => m - 1); }}
               className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
@@ -494,7 +494,7 @@ export function MRRPage() {
           { label: 'ARPU',          value: fmtMoney(kpis.arpu),     sub: 'avg revenue / user',                    color: '' },
           { label: 'LTV Estimate',  value: kpis.ltv > 0 ? fmtMoney(kpis.ltv) : 'N/A', sub: kpis.churnRate > 0 ? `${(kpis.churnRate * 100).toFixed(1)}% mo. churn` : 'need churn data', color: '' },
         ].map((c) => (
-          <div key={c.label} className="bg-white border border-[#E5EAE8] rounded-xl px-4 py-4">
+          <div key={c.label} className="bg-white shadow-sm rounded-xl px-4 py-4">
             <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">{c.label}</p>
             <p className={`text-xl font-bold mt-1 ${c.color || 'text-[#111827]'}`}>{c.value}</p>
             <p className="text-[11px] text-[#9CA3AF] mt-0.5">{c.sub}</p>
@@ -503,7 +503,7 @@ export function MRRPage() {
       </div>
 
       {/* MRR Movements Waterfall */}
-      <div className="bg-white border border-[#E5EAE8] rounded-xl p-5 mb-4">
+      <div className="bg-white shadow-sm rounded-xl p-5 mb-4">
         <h2 className="text-sm font-semibold text-[#111827] mb-1">MRR Movements</h2>
         <p className="text-xs text-[#9CA3AF] mb-5">{dateFrom && dateTo ? `${fmtLabel(dateFrom)} — ${fmtLabel(dateTo)}` : 'All time'}</p>
         <div className="flex items-stretch gap-2">
@@ -562,7 +562,7 @@ export function MRRPage() {
       {/* Charts row */}
       <div className="grid grid-cols-5 gap-4 mb-4">
         {/* Trend chart */}
-        <div className="col-span-3 bg-white border border-[#E5EAE8] rounded-xl p-5">
+        <div className="col-span-3 bg-white shadow-sm rounded-xl p-5">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-sm font-semibold text-[#111827]">New MRR — 12 Month Trend</h2>
             <div className="flex items-center gap-3">
@@ -579,7 +579,7 @@ export function MRRPage() {
         </div>
 
         {/* Plan breakdown */}
-        <div className="col-span-2 bg-white border border-[#E5EAE8] rounded-xl p-5">
+        <div className="col-span-2 bg-white shadow-sm rounded-xl p-5">
           <h2 className="text-sm font-semibold text-[#111827] mb-4">MRR by Plan</h2>
           <div className="space-y-4">
             {planBreakdown.map((d) => (
@@ -602,7 +602,7 @@ export function MRRPage() {
       </div>
 
       {/* Plan Mix */}
-      <div className="bg-white border border-[#E5EAE8] rounded-xl p-5">
+      <div className="bg-white shadow-sm rounded-xl p-5">
         <h2 className="text-sm font-semibold text-[#111827] mb-5">Plan Mix</h2>
         <div className="grid grid-cols-4 gap-6">
           {planBreakdown.map((d) => (

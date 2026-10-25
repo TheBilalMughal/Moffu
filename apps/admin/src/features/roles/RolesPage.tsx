@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+﻿import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { Dropdown } from '@/components/Dropdown';
@@ -666,7 +666,7 @@ export function RolesPage() {
                       placeholder="Filter modules…"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="w-full pl-9 pr-3 py-1.5 text-sm border border-[#E5EAE8] rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+                      className="w-full pl-9 pr-3 py-1.5 text-sm shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
                     />
                   </div>
 
@@ -695,7 +695,7 @@ export function RolesPage() {
 
                 {/* Permission table */}
                 {loading ? (
-                  <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden animate-pulse">
+                  <div className="bg-white shadow-sm rounded-xl overflow-hidden animate-pulse">
                     {Array.from({ length: 8 }).map((_, i) => (
                       <div key={i} className="flex items-center gap-4 px-5 py-2.5 border-b border-[#F3F4F6]">
                         <div className="h-3 bg-[#E5EAE8] rounded w-24" />
@@ -706,7 +706,7 @@ export function RolesPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+                  <div className="bg-white shadow-sm rounded-xl overflow-hidden">
                     <table className="w-full text-sm">
                       <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
                         <tr>
@@ -771,7 +771,7 @@ export function RolesPage() {
 
             {/* ── Audit log tab ── */}
             {tab === 'audit' && (
-              <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+              <div className="bg-white shadow-sm rounded-xl overflow-hidden">
                 {auditLoading ? (
                   <div className="animate-pulse divide-y divide-[#F3F4F6]">
                     {Array.from({ length: 6 }).map((_, i) => (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
@@ -88,7 +88,7 @@ export function OrgDetailPage() {
     return (
       <div className="px-8 py-8 max-w-2xl">
         <div className="h-4 bg-[#E5EAE8] rounded animate-pulse w-40 mb-8" />
-        <div className="bg-white border border-[#E5EAE8] rounded-xl p-6 animate-pulse space-y-4">
+        <div className="bg-white shadow-sm rounded-xl p-6 animate-pulse space-y-4">
           {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-4 bg-[#E5EAE8] rounded w-56" />)}
         </div>
       </div>
@@ -130,7 +130,7 @@ export function OrgDetailPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden mb-5">
+      <div className="bg-white shadow-sm rounded-xl overflow-hidden mb-5">
         <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
           <h2 className="text-sm font-semibold text-[#111827]">Organization details</h2>
         </div>

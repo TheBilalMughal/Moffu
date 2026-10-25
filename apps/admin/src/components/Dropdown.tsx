@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 
 export interface DropdownOption {
   value: string;
@@ -73,7 +73,7 @@ export function Dropdown({
       </button>
 
       {open && (
-        <div className={`absolute top-full mt-1.5 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 ${fullWidth ? 'left-0 right-0' : 'left-0 min-w-[160px]'}`}>
+        <div className={`absolute top-full mt-1.5 z-50 bg-white shadow-sm rounded-xl shadow-lg py-1.5 ${fullWidth ? 'left-0 right-0' : 'left-0 min-w-[160px]'}`}>
           {options.map((opt) => {
             const sel = opt.value === value;
             return (

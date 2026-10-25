@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
@@ -210,7 +210,7 @@ function UsageTrendChart({ events, aiDrafts, published, members, connections, us
   const hasData = buckets.some((b) => b.drafts > 0 || b.published > 0);
 
   return (
-    <div className="bg-white border border-[#E5EAE8] rounded-xl">
+    <div className="bg-white shadow-sm rounded-xl">
       <div className="px-6 pt-5 pb-3">
         {/* Header row */}
         <div className="flex items-start justify-between mb-1">
@@ -620,7 +620,7 @@ export function ClientDetailPage() {
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         {/* Org Info */}
-        <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+        <div className="bg-white shadow-sm rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
             <h2 className="text-sm font-semibold text-[#111827]">Organisation</h2>
           </div>
@@ -649,7 +649,7 @@ export function ClientDetailPage() {
         </div>
 
         {/* Subscription + Plan Change */}
-        <div className="bg-white border border-[#E5EAE8] rounded-xl">
+        <div className="bg-white shadow-sm rounded-xl">
           <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Subscription</h2>
             {sub?.cancel_at_period_end && (
@@ -754,7 +754,7 @@ export function ClientDetailPage() {
       </div>
 
       {/* Google Connections */}
-      <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden mb-4">
+      <div className="bg-white shadow-sm rounded-xl overflow-hidden mb-4">
         <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
           <h2 className="text-sm font-semibold text-[#111827]">Google Connections</h2>
         </div>
@@ -792,7 +792,7 @@ export function ClientDetailPage() {
       </div>
 
       {/* Members */}
-      <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+      <div className="bg-white shadow-sm rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
           <h2 className="text-sm font-semibold text-[#111827]">Team Members</h2>
         </div>
