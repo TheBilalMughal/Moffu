@@ -4,7 +4,7 @@ import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { adminAuthService } from '@/features/auth/auth.service';
 import { supabase } from '@/lib/supabase';
 
-const NAV_MAIN = [
+const NAV_DASHBOARD = [
   {
     to: '/',
     label: 'Dashboard',
@@ -15,21 +15,15 @@ const NAV_MAIN = [
       </svg>
     ),
   },
+];
+
+const NAV_CLIENTS = [
   {
     to: '/clients',
     label: 'Clients',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-      </svg>
-    ),
-  },
-  {
-    to: '/users',
-    label: 'Users',
-    icon: (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
       </svg>
     ),
   },
@@ -42,12 +36,27 @@ const NAV_MAIN = [
       </svg>
     ),
   },
+];
+
+const NAV_FINANCE = [
   {
     to: '/payments',
     label: 'Payments',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+    ),
+  },
+];
+
+const NAV_ADMINISTRATION = [
+  {
+    to: '/users',
+    label: 'Users',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
       </svg>
     ),
   },
@@ -446,13 +455,14 @@ export function AdminLayout() {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 flex flex-col overflow-y-auto">
-          <div className="space-y-0.5 flex-1">
-            {NAV_MAIN.map((item) => (
+        <nav className="flex-1 px-3 py-4 flex flex-col overflow-y-auto gap-4">
+          {/* Dashboard */}
+          <div className="space-y-0.5">
+            {NAV_DASHBOARD.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
-                {...(item.end ? { end: true } : {})}
+                end
                 className={({ isActive }) =>
                   `flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     isActive
@@ -467,8 +477,71 @@ export function AdminLayout() {
             ))}
           </div>
 
-          {/* Settings section */}
-          <div className="mt-4 pt-4 border-t border-[#E5EAE8] space-y-0.5">
+          {/* Clients & Subscriptions */}
+          <div className="space-y-0.5">
+            <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-[#9CA3AF]">Clients</p>
+            {NAV_CLIENTS.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-[#0D4C3C] text-white'
+                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
+                  }`
+                }
+              >
+                {item.icon}
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
+
+          {/* Finance */}
+          <div className="space-y-0.5">
+            <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-[#9CA3AF]">Finance</p>
+            {NAV_FINANCE.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-[#0D4C3C] text-white'
+                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
+                  }`
+                }
+              >
+                {item.icon}
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
+
+          {/* Administration */}
+          <div className="space-y-0.5">
+            <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-widest text-[#9CA3AF]">Administration</p>
+            {NAV_ADMINISTRATION.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-[#0D4C3C] text-white'
+                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
+                  }`
+                }
+              >
+                {item.icon}
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
+
+          {/* Settings — pinned to bottom */}
+          <div className="mt-auto pt-4 border-t border-[#E5EAE8] space-y-0.5">
             {NAV_SETTINGS.map((item) => (
               <NavLink
                 key={item.to}
