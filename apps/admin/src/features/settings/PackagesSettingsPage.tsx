@@ -116,8 +116,8 @@ export function PackagesSettingsPage() {
     const monthly = plan.prices.find(p => p.billing_interval === 'monthly');
     const annual = plan.prices.find(p => p.billing_interval === 'annual');
     const monthlyAmt = monthly ? monthly.amount_cents / 100 : 0;
-    // Reverse-calculate discount: annual stores total/yr, per-mo = total/12
-    const annualPerMo = annual && annual.amount_cents > 0 ? annual.amount_cents / 12 / 100 : 0;
+    // annual stores per-month equivalent (same as seed data), not total/yr
+    const annualPerMo = annual && annual.amount_cents > 0 ? annual.amount_cents / 100 : 0;
     const discount = monthlyAmt > 0 && annualPerMo > 0
       ? Math.round((1 - annualPerMo / monthlyAmt) * 100)
       : 20;
@@ -182,10 +182,10 @@ export function PackagesSettingsPage() {
       planId = newPlan.id;
     }
 
-    // Upsert prices — annual total = monthly * 12 * (1 - discount/100)
+    // annual stores per-month equivalent, not total/yr: $19/mo at 20% off → 1520 cents/mo
     const monthly_cents = Math.round(parseFloat(form.monthly_price || '0') * 100);
     const discount = Math.min(100, Math.max(0, parseFloat(form.annual_discount || '0')));
-    const annual_cents = Math.round(monthly_cents * 12 * (1 - discount / 100));
+    const annual_cents = Math.round(monthly_cents * (1 - discount / 100));
 
     const priceUpserts = [
       { plan_id: planId, currency: form.currency, billing_interval: 'monthly', amount_cents: monthly_cents, is_active: true },

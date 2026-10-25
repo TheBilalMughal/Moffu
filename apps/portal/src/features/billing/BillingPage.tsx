@@ -1,17 +1,17 @@
 ﻿import { useEffect, useState } from 'react';
 import { billingService, type Plan, type Subscription, type UsageSummary, type UsageDay } from './billing.service';
 
-// â"€â"€â"€ Helpers â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// --- Helpers ---
 
 function cents(amount: number) {
   return `$${(amount / 100).toFixed(amount % 100 === 0 ? 0 : 2)}`;
 }
 
 function formatEntitlement(ent: { value_type: string; limit_value: number | null; bool_value: boolean | null; enum_value: string | null; usage_reset: string | null } | undefined): string {
-  if (!ent) return 'â€"';
+  if (!ent) return '—';
   if (ent.value_type === 'UNLIMITED') return 'Unlimited';
   if (ent.value_type === 'BOOLEAN') return ent.bool_value ? 'Yes' : 'No';
-  if (ent.value_type === 'ENUM') return SUPPORT_LABELS[ent.enum_value ?? ''] ?? ent.enum_value ?? 'â€"';
+  if (ent.value_type === 'ENUM') return SUPPORT_LABELS[ent.enum_value ?? ''] ?? ent.enum_value ?? '—';
   const reset = ent.usage_reset === 'weekly' ? '/wk' : ent.usage_reset === 'monthly' ? '/mo' : '';
   return `${ent.limit_value}${reset}`;
 }
@@ -36,7 +36,7 @@ const PLAN_COLORS: Record<string, { bg: string; text: string }> = {
   scale:   { bg: 'bg-[#1C1917]', text: 'text-stone-100' },
 };
 
-// â"€â"€â"€ Sub-components â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// --- Sub-components ---
 
 function UsageMeter({ label, used, limit }: { label: string; used: number; limit: number | null }) {
   const unlimited = limit === null;
@@ -49,7 +49,7 @@ function UsageMeter({ label, used, limit }: { label: string; used: number; limit
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-medium text-[#374151]">{label}</span>
         <span className={`text-xs font-semibold tabular-nums ${danger ? 'text-red-600' : warn ? 'text-amber-600' : 'text-[#6B7280]'}`}>
-          {unlimited ? `${used} Â· unlimited` : `${used} / ${limit}`}
+          {unlimited ? `${used} · unlimited` : `${used} / ${limit}`}
         </span>
       </div>
       <div className="w-full bg-[#F3F4F6] rounded-full h-1.5 overflow-hidden">
@@ -103,7 +103,7 @@ function UsageHistoryChart({ days }: { days: UsageDay[] }) {
           );
         })}
       </div>
-      {/* Date labels â€" every 2nd */}
+      {/* Date labels -- every 2nd */}
       <div className="flex gap-0.5 mt-1">
         {last14.map((day, i) => (
           <div key={day.date} className="flex-1 text-center">
@@ -155,7 +155,7 @@ function PlanComparisonModal({ plans, sub, billingInterval, onClose }: {
         <div className="sticky top-0 bg-white border-b border-[#E5EAE8] px-6 py-4 flex items-center justify-between rounded-t-2xl">
           <div>
             <h3 className="text-base font-bold text-[#111827]">Compare plans</h3>
-            <p className="text-xs text-[#6B7280] mt-0.5">All prices in USD Â· {billingInterval === 'annual' ? 'billed annually' : 'billed monthly'}</p>
+            <p className="text-xs text-[#6B7280] mt-0.5">All prices in USD · {billingInterval === 'annual' ? 'billed annually' : 'billed monthly'}</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F3F4F6] text-[#6B7280]">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,7 +207,7 @@ function PlanComparisonModal({ plans, sub, billingInterval, onClose }: {
               {plans.map(plan => (
                 <div key={plan.id} className="text-center">
                   <span className="text-xs text-[#374151]">
-                    {plan.location_addon_cents ? `+${cents(plan.location_addon_cents)}/loc` : 'â€"'}
+                    {plan.location_addon_cents ? `+${cents(plan.location_addon_cents)}/loc` : '—'}
                   </span>
                 </div>
               ))}
@@ -284,7 +284,7 @@ function AddLocationDialog({ plan, onClose }: { plan: Plan; onClose: () => void 
             title="Stripe integration coming soon"
             className="w-full py-2.5 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl opacity-50 cursor-not-allowed"
           >
-            Confirm & Pay â€" coming soon
+            Confirm & Pay — coming soon
           </button>
           <p className="text-[10px] text-[#9CA3AF] text-center">Stripe integration is in progress.</p>
         </div>
@@ -293,7 +293,7 @@ function AddLocationDialog({ plan, onClose }: { plan: Plan; onClose: () => void 
   );
 }
 
-// â"€â"€â"€ Main page â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+// --- Main page ---
 
 export function BillingPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -419,19 +419,19 @@ export function BillingPage() {
             </svg>
             <p className="text-xs text-[#0D4C3C]">
               <span className="font-bold">Switch to annual and save {cents(annualSavings)}/year</span>
-              {' '}on your {currentPlan?.name} plan â€" that's {cents(annualSavings / 12)}/mo off.
+              {' '}on your {currentPlan?.name} plan — that's {cents(annualSavings / 12)}/mo off.
             </p>
           </div>
           <button
             disabled
             className="flex-shrink-0 text-[11px] font-bold text-white bg-[#0D4C3C] px-3 py-1.5 rounded-lg opacity-50 cursor-not-allowed"
           >
-            Switch â€" coming soon
+            Switch — coming soon
           </button>
         </div>
       )}
 
-      {/* Current plan + usage â€" 2 equal columns */}
+      {/* Current plan + usage -- 2 equal columns */}
       <div className="grid grid-cols-2 gap-5 mb-5">
         {/* Current plan card */}
         <div className="bg-white border border-[#E5EAE8] rounded-2xl p-6">
@@ -453,7 +453,7 @@ export function BillingPage() {
               {!isFree && currentPlan && (
                 <p className="text-xs text-[#9CA3AF] mt-1">
                   {sub?.billing_interval === 'annual'
-                    ? `${cents(currentPlan.prices.find(p => p.interval === 'annual')?.amount_cents ?? 0)}/mo Â· billed annually`
+                    ? `${cents(currentPlan.prices.find(p => p.interval === 'annual')?.amount_cents ?? 0)}/mo · billed annually`
                     : `${cents(currentPlan.prices.find(p => p.interval === 'monthly')?.amount_cents ?? 0)}/mo`}
                 </p>
               )}
@@ -469,7 +469,7 @@ export function BillingPage() {
             <div className="w-full bg-[#F3F4F6] rounded-full h-1.5 overflow-hidden">
               <div className="h-full bg-[#0D4C3C] rounded-full" style={{ width: `${Math.min(100, Math.round((1 / (seatLimit || 1)) * 100))}%` }} />
             </div>
-            <p className="text-[10px] text-[#9CA3AF] mt-1">You (owner) Â· {seatLimit - 1} seat{seatLimit - 1 !== 1 ? 's' : ''} available</p>
+            <p className="text-[10px] text-[#9CA3AF] mt-1">You (owner) · {seatLimit - 1} seat{seatLimit - 1 !== 1 ? 's' : ''} available</p>
           </div>
         </div>
 
@@ -548,11 +548,11 @@ export function BillingPage() {
         </div>
       </div>
 
-      {/* Usage history + Add-ons â€" 2 columns */}
+      {/* Usage history + Add-ons -- 2 columns */}
       <div className="grid grid-cols-2 gap-5 mb-6">
         {/* Usage history chart */}
         <div className="bg-white border border-[#E5EAE8] rounded-2xl p-6">
-          <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Usage history Â· last 14 days</p>
+          <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Usage history · last 14 days</p>
           <UsageHistoryChart days={history} />
         </div>
 
@@ -568,7 +568,7 @@ export function BillingPage() {
                   <div>
                     <p className="text-xs font-medium text-[#111827]">
                       {item.addon_type === 'extra_location' ? 'Extra location' : item.addon_type}
-                      {item.quantity > 1 && <span className="text-[#9CA3AF]"> Ã—{item.quantity}</span>}
+                      {item.quantity > 1 && <span className="text-[#9CA3AF]"> ×{item.quantity}</span>}
                     </p>
                     <p className="text-[10px] text-[#9CA3AF] mt-0.5">{cents(item.unit_price_cents)}/mo per unit</p>
                   </div>
@@ -632,7 +632,7 @@ export function BillingPage() {
               }`}
             >
               {iv === 'monthly' ? 'Monthly' : 'Annual'}
-              {iv === 'annual' && <span className="ml-1.5 text-[10px] font-bold text-emerald-600">â€"20%</span>}
+              {iv === 'annual' && <span className="ml-1.5 text-[10px] font-bold text-emerald-600">—20%</span>}
             </button>
           ))}
         </div>
@@ -734,7 +734,7 @@ export function BillingPage() {
                   </button>
                 ) : (
                   <button disabled title="Coming soon" className={`w-full py-2.5 text-xs font-semibold rounded-xl cursor-not-allowed opacity-50 ${isScale ? 'bg-white text-[#1C1917]' : 'bg-[#0D4C3C] text-white'}`}>
-                    Upgrade â€" coming soon
+                    Upgrade — coming soon
                   </button>
                 )}
               </div>
@@ -745,7 +745,7 @@ export function BillingPage() {
 
       {/* Flat notice */}
       <p className="text-xs text-[#9CA3AF]">
-        Payments coming soon â€" Stripe integration is in progress. Upgrades and billing management will be available shortly.
+        Payments coming soon — Stripe integration is in progress. Upgrades and billing management will be available shortly.
       </p>
     </div>
   );
