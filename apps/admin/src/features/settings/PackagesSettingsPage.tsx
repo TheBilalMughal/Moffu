@@ -162,11 +162,12 @@ export function PackagesSettingsPage() {
       sort_order: form.sort_order,
     };
 
-    let planId = editingId;
+    let planId: string;
 
     if (editingId) {
       const { error: e } = await supabase.from('plans').update(planPayload).eq('id', editingId);
       if (e) { setError(e.message); setSaving(false); return; }
+      planId = editingId;
     } else {
       const { data: newPlan, error: e } = await supabase.from('plans').insert(planPayload).select('id').single();
       if (e || !newPlan) { setError(e?.message ?? 'Failed to create plan'); setSaving(false); return; }
