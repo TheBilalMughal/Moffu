@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { Toast } from '@/components/Toast';
+import { supabase } from '@/lib/supabase';
 import {
   brandBrainService, BrandBrainData, LocationOverride, GoogleLocation,
   StarRatingRules, KeywordContext, ApprovalRules,
@@ -199,27 +201,41 @@ function PhrasesInput({ phrases, onChange }: { phrases: string[]; onChange: (p: 
 
 // ── Step Indicator ────────────────────────────────────────────────────────────
 
-function StepIndicator({ current, steps, completed, onJump }: {
-  current: number; steps: typeof WIZARD_STEPS; completed: Set<number>; onJump: (n: number) => void;
+function StepIndicator({ current, steps, completed, maxSteps, onJump }: {
+  current: number; steps: typeof WIZARD_STEPS; completed: Set<number>; maxSteps: number; onJump: (n: number) => void;
 }) {
   return (
     <div className="flex items-center gap-0 px-10 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] overflow-x-auto flex-shrink-0">
       {steps.map((step, idx) => {
         const isActive = step.id === current;
         const isDone = completed.has(step.id) && !isActive;
-        const isReachable = isDone || isActive || completed.has(step.id - 1) || step.id === 1;
+        const isLocked = step.id !== 7 && step.id > maxSteps;
+        const isReachable = !isLocked && (isDone || isActive || completed.has(step.id - 1) || step.id === 1);
         return (
           <div key={step.id} className="flex items-center flex-shrink-0">
-            <button onClick={() => isReachable && onJump(step.id)} disabled={!isReachable}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${isActive ? 'text-[#0D4C3C]' : isDone ? 'text-[#0D4C3C] hover:bg-[#F0F7F5] cursor-pointer' : 'text-[#9CA3AF] cursor-default'}`}>
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold transition-all
-                ${isActive ? 'bg-[#0D4C3C] text-white' : isDone ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
-                {isDone
-                  ? <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
+            <button
+              onClick={() => isLocked ? onJump(-step.id) : isReachable && onJump(step.id)}
+              title={isLocked ? `Upgrade to unlock ${step.label}` : undefined}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
+                isActive ? 'text-[#0D4C3C]'
+                : isLocked ? 'text-[#C4CAC8] hover:bg-[#F3F4F6] cursor-pointer'
+                : isDone ? 'text-[#0D4C3C] hover:bg-[#F0F7F5] cursor-pointer'
+                : 'text-[#9CA3AF] cursor-default'
+              }`}
+            >
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold transition-all ${
+                isActive ? 'bg-[#0D4C3C] text-white'
+                : isLocked ? 'bg-[#F3F4F6] text-[#C4CAC8]'
+                : isDone ? 'bg-[#E6F2EE] text-[#0D4C3C]'
+                : 'bg-[#F3F4F6] text-[#9CA3AF]'
+              }`}>
+                {isLocked
+                  ? <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                  : isDone ? <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
                   : step.id
                 }
               </div>
-              <span className={`text-xs font-medium whitespace-nowrap ${isActive ? 'text-[#0D4C3C]' : isDone ? 'text-[#374151]' : 'text-[#9CA3AF]'}`}>{step.label}</span>
+              <span className={`text-xs font-medium whitespace-nowrap ${isActive ? 'text-[#0D4C3C]' : isLocked ? 'text-[#C4CAC8]' : isDone ? 'text-[#374151]' : 'text-[#9CA3AF]'}`}>{step.label}</span>
             </button>
             {idx < steps.length - 1 && (
               <div className={`w-6 h-px mx-0.5 ${isDone ? 'bg-[#0D4C3C]/30' : 'bg-[#E5EAE8]'}`}/>
@@ -1174,8 +1190,21 @@ export function BrandBrainPage() {
   // Wizard state
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
+  const [maxSteps, setMaxSteps] = useState(6); // steps 1–maxSteps unlocked; step 7 (Preview) always on
 
   const visibleSteps = locations.length > 0 ? WIZARD_STEPS : WIZARD_STEPS.filter(s => s.id !== 6);
+
+  useEffect(() => {
+    // Load brand_brain_steps entitlement for this plan
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: sub } = await supabase.from('subscriptions').select('plan_id').eq('user_id', user.id).eq('status', 'active').maybeSingle();
+      if (!sub) return;
+      const { data: ent } = await supabase.from('plan_entitlements').select('value_type, limit_value').eq('plan_id', sub.plan_id).eq('key', 'brand_brain_steps').maybeSingle();
+      if (ent) setMaxSteps(ent.value_type === 'UNLIMITED' ? 6 : Math.min(6, ent.limit_value ?? 6));
+    })();
+  }, []);
 
   useEffect(() => {
     Promise.all([
@@ -1318,7 +1347,11 @@ export function BrandBrainPage() {
     if (idx > 0) setStep(steps[idx - 1]!);
   }
 
-  function jumpTo(n: number) { setStep(n); }
+  const navigate = useNavigate();
+  function jumpTo(n: number) {
+    if (n < 0) { navigate('/billing'); return; } // negative = locked step
+    setStep(n);
+  }
 
   const score = completionScore(data);
   const isLastStep = step === visibleSteps[visibleSteps.length - 1]?.id;
@@ -1364,17 +1397,37 @@ export function BrandBrainPage() {
       </div>
 
       {/* Step indicator */}
-      <StepIndicator current={step} steps={visibleSteps} completed={completed} onJump={jumpTo}/>
+      <StepIndicator current={step} steps={visibleSteps} completed={completed} maxSteps={maxSteps} onJump={jumpTo}/>
 
       {/* Step content */}
       <div className="flex-1 overflow-y-auto px-8 py-7">
-        {step === 1 && <Step1 data={data} onChange={patch} locations={locations} locOverrides={locNameOverrides} onLocOverride={setLocName}/>}
-        {step === 2 && <Step2 data={data} onChange={patch} onAnalyzeVoice={handleAnalyzeVoice}/>}
-        {step === 3 && <Step3 data={data} onChange={patch}/>}
-        {step === 4 && <Step4 data={data} onChange={patch}/>}
-        {step === 5 && <Step5 data={data} onChange={patch}/>}
-        {step === 6 && locations.length > 0 && <Step6 locations={locations} locCache={locCache} globalData={data} onDataChange={patchLocData} onFlagToggle={toggleLocFlag}/>}
-        {step === 7 && <Step7 data={data} onGeneratePreview={async (tr) => { const r = await brandBrainService.previewVoice(data, tr); if (r.error) setToast({ message: r.error, type: 'error' }); return; }} onSave={handleSave} saving={saving}/>}
+        {step !== 7 && step > maxSteps ? (
+          <div className="flex flex-col items-center justify-center h-full gap-6 py-16">
+            <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] flex items-center justify-center">
+              <svg className="w-7 h-7 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+            </div>
+            <div className="text-center">
+              <p className="text-base font-semibold text-[#111827]">This step requires an upgrade</p>
+              <p className="text-sm text-[#6B7280] mt-1">Your current plan includes steps 1–{maxSteps}. Upgrade to unlock more Brand Brain steps.</p>
+            </div>
+            <button onClick={() => navigate('/billing')}
+              className="bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors">
+              View Plans
+            </button>
+          </div>
+        ) : (
+          <>
+            {step === 1 && <Step1 data={data} onChange={patch} locations={locations} locOverrides={locNameOverrides} onLocOverride={setLocName}/>}
+            {step === 2 && <Step2 data={data} onChange={patch} onAnalyzeVoice={handleAnalyzeVoice}/>}
+            {step === 3 && <Step3 data={data} onChange={patch}/>}
+            {step === 4 && <Step4 data={data} onChange={patch}/>}
+            {step === 5 && <Step5 data={data} onChange={patch}/>}
+            {step === 6 && locations.length > 0 && <Step6 locations={locations} locCache={locCache} globalData={data} onDataChange={patchLocData} onFlagToggle={toggleLocFlag}/>}
+            {step === 7 && <Step7 data={data} onGeneratePreview={async (tr) => { const r = await brandBrainService.previewVoice(data, tr); if (r.error) setToast({ message: r.error, type: 'error' }); return; }} onSave={handleSave} saving={saving}/>}
+          </>
+        )}
       </div>
 
       {/* Navigation footer */}

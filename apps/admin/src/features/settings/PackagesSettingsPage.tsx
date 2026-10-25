@@ -45,6 +45,7 @@ interface LimitsForm {
   team_members: string;
   brand_brain_unlimited: boolean;
   brand_brain_limit: string;
+  brand_brain_steps: string;
   support_tier: string;
   feature_insights: boolean;
 }
@@ -85,6 +86,7 @@ const DEFAULT_LIMITS: LimitsForm = {
   team_members: '1',
   brand_brain_unlimited: false,
   brand_brain_limit: '1',
+  brand_brain_steps: '6',
   support_tier: 'help_guides',
   feature_insights: true,
 };
@@ -123,6 +125,7 @@ function entsToLimits(ents: Record<string, PlanEntitlement>): LimitsForm {
     team_members:        String(team?.limit_value ?? 1),
     brand_brain_unlimited: bb?.value_type === 'UNLIMITED',
     brand_brain_limit:   String(bb?.limit_value ?? 1),
+    brand_brain_steps:   String(ents['brand_brain_steps']?.limit_value ?? 6),
     support_tier:        sup?.enum_value ?? 'help_guides',
     feature_insights:    ents['feature_insights']?.bool_value !== false,
   };
@@ -292,6 +295,7 @@ export function PackagesSettingsPage() {
       { plan_id: planId, key: 'ai_drafts',           value_type: L.ai_drafts_unlimited ? 'UNLIMITED' : 'LIMIT', limit_value: L.ai_drafts_unlimited ? null : parseInt(L.ai_drafts_limit) || 50, bool_value: null, enum_value: null, usage_reset: L.ai_drafts_reset },
       { plan_id: planId, key: 'team_members',        value_type: 'LIMIT',     limit_value: parseInt(L.team_members) || 1,         bool_value: null, enum_value: null,            usage_reset: null },
       { plan_id: planId, key: 'brand_brain_profiles',value_type: L.brand_brain_unlimited ? 'UNLIMITED' : 'LIMIT', limit_value: L.brand_brain_unlimited ? null : parseInt(L.brand_brain_limit) || 1, bool_value: null, enum_value: null, usage_reset: null },
+      { plan_id: planId, key: 'brand_brain_steps',   value_type: 'LIMIT', limit_value: Math.min(6, Math.max(0, parseInt(L.brand_brain_steps) || 6)), bool_value: null, enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'support_tier',        value_type: 'ENUM',      limit_value: null,                                  bool_value: null, enum_value: L.support_tier,  usage_reset: null },
       { plan_id: planId, key: 'feature_insights',    value_type: 'BOOLEAN',   limit_value: null, bool_value: L.feature_insights,    enum_value: null, usage_reset: null },
     ];
@@ -608,6 +612,21 @@ export function PackagesSettingsPage() {
                       <p className="text-[11px] text-[#9CA3AF] mt-1">Set to <span className="font-medium">0</span> to lock Brand Brain page entirely.</p>
                     </>
                   )}
+                  {/* Steps unlocked */}
+                  <div className="mt-3">
+                    <label className="block text-xs font-medium text-[#374151] mb-1">Steps Unlocked <span className="text-[#9CA3AF] font-normal">(0–6, Preview is always shown)</span></label>
+                    <input type="number" min="0" max="6" value={form.limits.brand_brain_steps}
+                      onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, brand_brain_steps: e.target.value } }))}
+                      className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {['0: Locked','1: Identity','2: +Voice','3: +Format','4: +Rules','5: +Guardrails','6: +Locations'].map((lbl, i) => (
+                        <span key={i} onClick={() => setForm(f => ({ ...f, limits: { ...f.limits, brand_brain_steps: String(i) } }))}
+                          className={`text-[10px] px-1.5 py-0.5 rounded cursor-pointer transition-colors ${parseInt(form.limits.brand_brain_steps) === i ? 'bg-[#0D4C3C] text-white' : 'bg-[#F3F4F6] text-[#6B7280] hover:bg-[#E5EAE8]'}`}>
+                          {lbl}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Support tier */}
