@@ -201,15 +201,15 @@ function PhrasesInput({ phrases, onChange }: { phrases: string[]; onChange: (p: 
 
 // ── Step Indicator ────────────────────────────────────────────────────────────
 
-function StepIndicator({ current, steps, completed, maxSteps, onJump }: {
-  current: number; steps: typeof WIZARD_STEPS; completed: Set<number>; maxSteps: number; onJump: (n: number) => void;
+function StepIndicator({ current, steps, completed, stepMask, onJump }: {
+  current: number; steps: typeof WIZARD_STEPS; completed: Set<number>; stepMask: number; onJump: (n: number) => void;
 }) {
   return (
     <div className="flex items-center gap-0 px-10 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] overflow-x-auto flex-shrink-0">
       {steps.map((step, idx) => {
         const isActive = step.id === current;
         const isDone = completed.has(step.id) && !isActive;
-        const isLocked = step.id !== 7 && step.id > maxSteps;
+        const isLocked = step.id !== 7 && !(stepMask & (1 << (step.id - 1)));
         const isReachable = !isLocked && (isDone || isActive || completed.has(step.id - 1) || step.id === 1);
         return (
           <div key={step.id} className="flex items-center flex-shrink-0">
@@ -1190,7 +1190,7 @@ export function BrandBrainPage() {
   // Wizard state
   const [step, setStep] = useState(1);
   const [completed, setCompleted] = useState<Set<number>>(new Set());
-  const [maxSteps, setMaxSteps] = useState(6); // steps 1–maxSteps unlocked; step 7 (Preview) always on
+  const [stepMask, setStepMask] = useState(63); // bitmask: bit0=step1…bit5=step6; 63=all unlocked; step7 always on
 
   const visibleSteps = locations.length > 0 ? WIZARD_STEPS : WIZARD_STEPS.filter(s => s.id !== 6);
 
@@ -1202,7 +1202,7 @@ export function BrandBrainPage() {
       const { data: sub } = await supabase.from('subscriptions').select('plan_id').eq('user_id', user.id).eq('status', 'active').maybeSingle();
       if (!sub) return;
       const { data: ent } = await supabase.from('plan_entitlements').select('value_type, limit_value').eq('plan_id', sub.plan_id).eq('key', 'brand_brain_steps').maybeSingle();
-      if (ent) setMaxSteps(ent.value_type === 'UNLIMITED' ? 6 : Math.min(6, ent.limit_value ?? 6));
+      if (ent) setStepMask(ent.value_type === 'UNLIMITED' ? 63 : ((ent.limit_value ?? 63) & 63));
     })();
   }, []);
 
@@ -1397,11 +1397,11 @@ export function BrandBrainPage() {
       </div>
 
       {/* Step indicator */}
-      <StepIndicator current={step} steps={visibleSteps} completed={completed} maxSteps={maxSteps} onJump={jumpTo}/>
+      <StepIndicator current={step} steps={visibleSteps} completed={completed} stepMask={stepMask} onJump={jumpTo}/>
 
       {/* Step content */}
       <div className="flex-1 overflow-y-auto px-8 py-7">
-        {step !== 7 && step > maxSteps ? (
+        {step !== 7 && !(stepMask & (1 << (step - 1))) ? (
           <div className="flex flex-col items-center justify-center h-full gap-6 py-16">
             <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] flex items-center justify-center">
               <svg className="w-7 h-7 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1410,7 +1410,7 @@ export function BrandBrainPage() {
             </div>
             <div className="text-center">
               <p className="text-base font-semibold text-[#111827]">This step requires an upgrade</p>
-              <p className="text-sm text-[#6B7280] mt-1">Your current plan includes steps 1–{maxSteps}. Upgrade to unlock more Brand Brain steps.</p>
+              <p className="text-sm text-[#6B7280] mt-1">This step is not included in your current plan. Upgrade to unlock it.</p>
             </div>
             <button onClick={() => navigate('/billing')}
               className="bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors">
