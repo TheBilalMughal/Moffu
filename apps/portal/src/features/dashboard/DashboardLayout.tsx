@@ -64,13 +64,22 @@ function TeamIcon() {
   );
 }
 
+function CampaignIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+    </svg>
+  );
+}
+
 const navItems: { to: string; label: string; icon: React.ReactNode; featureKey: string | null }[] = [
-  { to: '/dashboard',   label: 'Overview',    icon: <ChartBarIcon />,  featureKey: null },
-  { to: '/reviews',     label: 'Reviews',     icon: <StarIcon />,      featureKey: null },
-  { to: '/insights',    label: 'Insights',    icon: <InsightsIcon />,  featureKey: 'feature_insights' },
-  { to: '/brand-brain', label: 'Brand Brain', icon: <SlidersIcon />,   featureKey: 'feature_brand_brain' },
-  { to: '/team',        label: 'Team',        icon: <TeamIcon />,      featureKey: 'feature_team' },
-  { to: '/billing',     label: 'Billing',     icon: <BillingIcon />,   featureKey: null },
+  { to: '/dashboard',   label: 'Overview',    icon: <ChartBarIcon />,   featureKey: null },
+  { to: '/reviews',     label: 'Reviews',     icon: <StarIcon />,       featureKey: null },
+  { to: '/insights',    label: 'Insights',    icon: <InsightsIcon />,   featureKey: 'feature_insights' },
+  { to: '/brand-brain', label: 'Brand Brain', icon: <SlidersIcon />,    featureKey: 'feature_brand_brain' },
+  { to: '/campaigns',   label: 'Campaigns',   icon: <CampaignIcon />,   featureKey: null },
+  { to: '/team',        label: 'Team',        icon: <TeamIcon />,       featureKey: 'feature_team' },
+  { to: '/billing',     label: 'Billing',     icon: <BillingIcon />,    featureKey: null },
 ];
 
 const navSettings = [

@@ -19,6 +19,8 @@ import { GoogleCallbackPage } from '@/features/google/GoogleCallbackPage';
 import { TeamPage } from '@/features/team/TeamPage';
 import { AcceptInvitePage } from '@/features/team/AcceptInvitePage';
 import { FeatureGatePage } from '@/components/FeatureGate';
+import { CampaignsPage } from '@/features/campaigns/CampaignsPage';
+import { CampaignDetailPage } from '@/features/campaigns/CampaignDetailPage';
 
 export function App() {
   const initialize  = useAuthStore((s) => s.initialize);
@@ -62,6 +64,8 @@ export function App() {
           <Route path="/billing"   element={<BillingPage />} />
           <Route path="/settings"  element={<SettingsPage />} />
           <Route path="/team"      element={<FeatureGatePage feature="feature_team"><TeamPage /></FeatureGatePage>} />
+          <Route path="/campaigns"     element={<CampaignsPage />} />
+          <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
         </Route>
 
         {/* Invite acceptance — no auth required to view */}
