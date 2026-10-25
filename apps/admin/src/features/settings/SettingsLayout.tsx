@@ -37,7 +37,7 @@ export function SettingsLayout() {
   return (
     <div className="flex flex-col h-full bg-[#F8FAF9]">
       {/* Top bar with title + tabs */}
-      <div className="flex-shrink-0 border-b border-[#E5EAE8]">
+      <div className="flex-shrink-0">
         <div className="px-8 pt-6 pb-0">
           <h1 className="text-lg font-semibold text-[#111827]">Settings</h1>
           <p className="text-sm text-[#9CA3AF] mt-0.5 mb-4">Platform configuration</p>

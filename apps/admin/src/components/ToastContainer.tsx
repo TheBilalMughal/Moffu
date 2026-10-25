@@ -16,10 +16,10 @@ export function ToastContainer() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium shadow-lg border max-w-sm ${
+          className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium shadow-lg max-w-sm ${
             t.type === 'success'
-              ? 'bg-white border-[#BBF7D0] text-[#15803D]'
-              : 'bg-white border-[#FECACA] text-[#DC2626]'
+              ? 'bg-white text-[#15803D]'
+              : 'bg-white text-[#DC2626]'
           }`}
           style={{ animation: 'toastIn 0.18s ease' }}
         >
