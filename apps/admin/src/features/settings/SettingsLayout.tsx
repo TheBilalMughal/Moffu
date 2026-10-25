@@ -52,21 +52,21 @@ export function SettingsLayout() {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors border-l-2 group ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group ${
                   isActive
-                    ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]'
-                    : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827] border-transparent'
+                    ? 'bg-[#0D4C3C] text-white'
+                    : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
                 }`
               }
             >
               {({ isActive }) => (
                 <>
-                  <span className={isActive ? 'text-[#0D4C3C]' : 'text-[#6B7280] group-hover:text-[#374151]'}>
+                  <span className={isActive ? 'text-white' : 'text-[#6B7280] group-hover:text-[#374151]'}>
                     {item.icon}
                   </span>
                   <div className="min-w-0">
                     <p className="text-sm font-medium leading-none">{item.label}</p>
-                    <p className={`text-[11px] mt-0.5 truncate ${isActive ? 'text-[#2D7A5F]' : 'text-[#9CA3AF]'}`}>
+                    <p className={`text-[11px] mt-0.5 truncate ${isActive ? 'text-white/70' : 'text-[#9CA3AF]'}`}>
                       {item.description}
                     </p>
                   </div>

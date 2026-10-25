@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { adminAuthService } from '@/features/auth/auth.service';
 import { supabase } from '@/lib/supabase';
@@ -435,8 +435,6 @@ function AdminProfile() {
 // ── Layout ────────────────────────────────────────────────────────────────────
 
 export function AdminLayout() {
-  const location = useLocation();
-  const settingsActive = location.pathname.startsWith('/settings');
   return (
     <div className="flex h-screen bg-[#F8FAF9] overflow-hidden">
       {/* Sidebar */}
@@ -475,11 +473,11 @@ export function AdminLayout() {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={
-                  `flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors border-l-2 ${
-                    settingsActive
-                      ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]'
-                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827] border-transparent'
+                className={({ isActive }) =>
+                  `flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-[#0D4C3C] text-white'
+                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
                   }`
                 }
               >
