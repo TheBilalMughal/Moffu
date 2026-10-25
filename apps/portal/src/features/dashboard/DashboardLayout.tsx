@@ -281,17 +281,36 @@ function GlobalSearch() {
 
 // ── Notifications Bell ────────────────────────────────────────────────────────
 
-interface Notif {
+interface BroadcastNotif {
   id: string;
-  type: 'pending' | 'new';
-  text: string;
-  sub: string;
-  time: string;
+  title: string;
+  body: string;
+  type: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+const BROADCAST_TYPE_STYLE: Record<string, { bg: string; color: string }> = {
+  info:    { bg: 'bg-[#EFF6FF]', color: 'text-[#1D4ED8]' },
+  success: { bg: 'bg-[#F0FDF4]', color: 'text-[#15803D]' },
+  warning: { bg: 'bg-[#FFFBEB]', color: 'text-[#B45309]' },
+  error:   { bg: 'bg-[#FEF2F2]', color: 'text-[#DC2626]' },
+};
+
+function timeAgoPortal(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 function NotificationsBell() {
-  const [open, setOpen] = useState(false);
-  const [notifs, setNotifs] = useState<Notif[]>([]);
+  const [open,     setOpen]     = useState(false);
+  const [broadcasts, setBroadcasts] = useState<BroadcastNotif[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -301,40 +320,46 @@ function NotificationsBell() {
     return () => document.removeEventListener('mousedown', fn);
   }, []);
 
+  async function load() {
+    const [notifRes, pendingRes] = await Promise.all([
+      supabase.from('user_notifications')
+        .select('id, title, body, type, is_read, created_at')
+        .order('created_at', { ascending: false })
+        .limit(30),
+      supabase.from('reviews')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'NEEDS_REPLY'),
+    ]);
+    setBroadcasts((notifRes.data ?? []) as BroadcastNotif[]);
+    setPendingCount(pendingRes.count ?? 0);
+  }
+
+  useEffect(() => { load(); }, []);
+
+  // Realtime: new broadcast notifications
   useEffect(() => {
-    async function load() {
-      const [pending, recent] = await Promise.all([
-        supabase.from('reviews').select('id, reviewer_name, published_at', { count: 'exact' })
-          .eq('status', 'NEEDS_REPLY').order('published_at', { ascending: false }).limit(5),
-        supabase.from('reviews').select('id, reviewer_name, rating, published_at')
-          .gte('published_at', new Date(Date.now() - 86400000).toISOString())
-          .order('published_at', { ascending: false }).limit(3),
-      ]);
-      const list: Notif[] = [];
-      if ((pending.count ?? 0) > 0) {
-        list.push({
-          id: 'pending-summary',
-          type: 'pending',
-          text: `${pending.count} review${pending.count !== 1 ? 's' : ''} awaiting reply`,
-          sub: 'Requires your attention',
-          time: 'Now',
-        });
-      }
-      (recent.data ?? []).forEach((r: any) => {
-        list.push({
-          id: r.id,
-          type: 'new',
-          text: r.reviewer_name ?? 'Anonymous',
-          sub: `New ${r.rating}★ review`,
-          time: new Date(r.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        });
-      });
-      setNotifs(list);
-    }
-    load();
+    const channel = supabase
+      .channel('portal_user_notifications')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_notifications' },
+        (payload) => { setBroadcasts(prev => [payload.new as BroadcastNotif, ...prev].slice(0, 30)); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const unread = notifs.length;
+  async function markAllRead() {
+    const unreadIds = broadcasts.filter(n => !n.is_read).map(n => n.id);
+    if (!unreadIds.length) return;
+    await supabase.from('user_notifications').update({ is_read: true }).in('id', unreadIds);
+    setBroadcasts(prev => prev.map(n => ({ ...n, is_read: true })));
+  }
+
+  async function markRead(id: string) {
+    await supabase.from('user_notifications').update({ is_read: true }).eq('id', id);
+    setBroadcasts(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+  }
+
+  const unreadBroadcasts = broadcasts.filter(n => !n.is_read).length;
+  const totalUnread = unreadBroadcasts + (pendingCount > 0 ? 1 : 0);
 
   return (
     <div ref={ref} className="relative">
@@ -346,44 +371,74 @@ function NotificationsBell() {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
         </svg>
-        {unread > 0 && (
+        {totalUnread > 0 && (
           <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-1">
-            {unread > 9 ? '9+' : unread}
+            {totalUnread > 9 ? '9+' : totalUnread}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-50">
-          <div className="px-4 py-3 border-b border-[#F3F4F6] flex items-center justify-between">
+        <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-[#E5EAE8] rounded-xl shadow-lg z-50 flex flex-col" style={{ maxHeight: '420px' }}>
+          <div className="px-4 py-3 border-b border-[#F3F4F6] flex items-center justify-between flex-shrink-0">
             <p className="text-sm font-semibold text-[#111827]">Notifications</p>
-            {unread > 0 && <span className="text-xs text-[#9CA3AF]">{unread} new</span>}
+            {unreadBroadcasts > 0 && (
+              <button onClick={markAllRead} className="text-xs text-[#0D4C3C] hover:underline font-medium">
+                Mark all read
+              </button>
+            )}
           </div>
-          {notifs.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-[#9CA3AF]">All caught up!</div>
-          ) : (
-            <div className="divide-y divide-[#F9FAFB] max-h-72 overflow-y-auto">
-              {notifs.map(n => (
+
+          <div className="overflow-y-auto divide-y divide-[#F9FAFB]">
+            {/* Pending reviews row */}
+            {pendingCount > 0 && (
+              <button
+                onClick={() => { navigate('/reviews'); setOpen(false); }}
+                className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#FFFBEB] transition-colors text-left bg-[#FFFBEB]"
+              >
+                <div className="w-7 h-7 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <svg className="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-semibold text-[#111827]">{pendingCount} review{pendingCount !== 1 ? 's' : ''} awaiting reply</p>
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+                  </div>
+                  <p className="text-xs text-[#6B7280] mt-0.5">Go to Reviews</p>
+                </div>
+              </button>
+            )}
+
+            {/* Broadcast notifications */}
+            {broadcasts.length === 0 && pendingCount === 0 ? (
+              <div className="px-4 py-10 text-center text-sm text-[#9CA3AF]">All caught up!</div>
+            ) : broadcasts.length === 0 ? null : broadcasts.map(n => {
+              const style = BROADCAST_TYPE_STYLE[n.type] ?? BROADCAST_TYPE_STYLE['info']!;
+              return (
                 <button
                   key={n.id}
-                  onClick={() => { navigate('/reviews'); setOpen(false); }}
-                  className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#F8FAF9] transition-colors text-left"
+                  onClick={() => { markRead(n.id); setOpen(false); }}
+                  className={`w-full flex items-start gap-3 px-4 py-3 hover:bg-[#F8FAF9] transition-colors text-left ${!n.is_read ? 'bg-[#FAFFFE]' : ''}`}
                 >
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${n.type === 'pending' ? 'bg-amber-100' : 'bg-[#E6F2EE]'}`}>
-                    {n.type === 'pending'
-                      ? <svg className="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                      : <svg className="w-3.5 h-3.5 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-                    }
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${style.bg}`}>
+                    <svg className={`w-3.5 h-3.5 ${style.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                    </svg>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-[#111827] truncate">{n.text}</p>
-                    <p className="text-xs text-[#6B7280] mt-0.5">{n.sub}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-semibold text-[#111827] truncate">{n.title}</p>
+                      {!n.is_read && <span className="w-1.5 h-1.5 rounded-full bg-[#0D4C3C] flex-shrink-0" />}
+                    </div>
+                    <p className="text-xs text-[#6B7280] mt-0.5 line-clamp-2">{n.body}</p>
                   </div>
-                  <span className="text-[10px] text-[#9CA3AF] flex-shrink-0 mt-1">{n.time}</span>
+                  <span className="text-[10px] text-[#9CA3AF] flex-shrink-0 mt-0.5 whitespace-nowrap">{timeAgoPortal(n.created_at)}</span>
                 </button>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
