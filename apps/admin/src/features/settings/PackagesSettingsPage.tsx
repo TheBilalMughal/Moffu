@@ -43,8 +43,6 @@ interface LimitsForm {
   ai_drafts_limit: string;
   ai_drafts_reset: 'monthly' | 'weekly';
   team_members: string;
-  brand_brain_unlimited: boolean;
-  brand_brain_limit: string;
   brand_brain_steps: string; // bitmask 0–63: bit0=step1 … bit5=step6
   support_tier: string;
   feature_insights: boolean;
@@ -84,8 +82,6 @@ const DEFAULT_LIMITS: LimitsForm = {
   ai_drafts_limit: '50',
   ai_drafts_reset: 'monthly',
   team_members: '1',
-  brand_brain_unlimited: false,
-  brand_brain_limit: '1',
   brand_brain_steps: '63',
   support_tier: 'help_guides',
   feature_insights: true,
@@ -112,7 +108,6 @@ function entsToLimits(ents: Record<string, PlanEntitlement>): LimitsForm {
   const rep = ents['published_replies'];
   const ai  = ents['ai_drafts'];
   const team = ents['team_members'];
-  const bb  = ents['brand_brain_profiles'];
   const sup = ents['support_tier'];
   return {
     locations:           String(loc?.limit_value ?? 1),
@@ -123,8 +118,6 @@ function entsToLimits(ents: Record<string, PlanEntitlement>): LimitsForm {
     ai_drafts_limit:     String(ai?.limit_value ?? 50),
     ai_drafts_reset:     (ai?.usage_reset ?? 'monthly') as 'monthly' | 'weekly',
     team_members:        String(team?.limit_value ?? 1),
-    brand_brain_unlimited: bb?.value_type === 'UNLIMITED',
-    brand_brain_limit:   String(bb?.limit_value ?? 1),
     brand_brain_steps:   String(ents['brand_brain_steps']?.limit_value ?? 63),
     support_tier:        sup?.enum_value ?? 'help_guides',
     feature_insights:    ents['feature_insights']?.bool_value !== false,
@@ -294,7 +287,6 @@ export function PackagesSettingsPage() {
       { plan_id: planId, key: 'published_replies',   value_type: L.replies_unlimited   ? 'UNLIMITED' : 'LIMIT', limit_value: L.replies_unlimited   ? null : parseInt(L.replies_limit) || 50,   bool_value: null, enum_value: null, usage_reset: L.replies_reset },
       { plan_id: planId, key: 'ai_drafts',           value_type: L.ai_drafts_unlimited ? 'UNLIMITED' : 'LIMIT', limit_value: L.ai_drafts_unlimited ? null : parseInt(L.ai_drafts_limit) || 50, bool_value: null, enum_value: null, usage_reset: L.ai_drafts_reset },
       { plan_id: planId, key: 'team_members',        value_type: 'LIMIT',     limit_value: parseInt(L.team_members) || 1,         bool_value: null, enum_value: null,            usage_reset: null },
-      { plan_id: planId, key: 'brand_brain_profiles',value_type: L.brand_brain_unlimited ? 'UNLIMITED' : 'LIMIT', limit_value: L.brand_brain_unlimited ? null : parseInt(L.brand_brain_limit) || 1, bool_value: null, enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'brand_brain_steps',   value_type: 'LIMIT', limit_value: (parseInt(L.brand_brain_steps) || 0) & 63, bool_value: null, enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'support_tier',        value_type: 'ENUM',      limit_value: null,                                  bool_value: null, enum_value: L.support_tier,  usage_reset: null },
       { plan_id: planId, key: 'feature_insights',    value_type: 'BOOLEAN',   limit_value: null, bool_value: L.feature_insights,    enum_value: null, usage_reset: null },
@@ -592,26 +584,8 @@ export function PackagesSettingsPage() {
                   <p className="text-[11px] text-[#9CA3AF] mt-1">Set to <span className="font-medium">0</span> to lock Team page. <span className="font-medium">1</span> = owner only (no invites). <span className="font-medium">2+</span> = can invite members.</p>
                 </div>
 
-                {/* Brand Brain profiles */}
+                {/* Brand Brain steps */}
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-medium text-[#374151]">Brand Brain Profiles</label>
-
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={form.limits.brand_brain_unlimited}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, brand_brain_unlimited: e.target.checked } }))}
-                        className="w-3.5 h-3.5 accent-[#0D4C3C]" />
-                      <span className="text-xs text-[#6B7280]">Unlimited</span>
-                    </label>
-                  </div>
-                  {!form.limits.brand_brain_unlimited && (
-                    <>
-                      <input type="number" min="0" value={form.limits.brand_brain_limit}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, brand_brain_limit: e.target.value } }))}
-                        className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
-                      <p className="text-[11px] text-[#9CA3AF] mt-1">Max profiles a user can create. Use Steps to control page access.</p>
-                    </>
-                  )}
                   {/* Steps unlocked — multi-select checkboxes */}
                   <div className="mt-3">
                     <label className="block text-xs font-medium text-[#374151] mb-2">Steps Unlocked <span className="text-[#9CA3AF] font-normal">(Preview is always shown)</span></label>
