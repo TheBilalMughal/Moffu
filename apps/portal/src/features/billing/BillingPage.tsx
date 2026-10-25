@@ -176,8 +176,11 @@ function PlanComparisonModal({ plans, sub, billingInterval, onClose }: {
                   {isCurrent && <p className="text-[10px] font-bold text-[#0D4C3C] mb-1">Current</p>}
                   <p className="text-sm font-bold text-[#111827]">{plan.name}</p>
                   <p className="text-lg font-bold text-[#111827] mt-1">
-                    {price && price.amount_cents > 0 ? cents(price.amount_cents) : 'Free'}
-                    {price && price.amount_cents > 0 && <span className="text-xs font-normal text-[#9CA3AF]">/mo</span>}
+                    {plan.contact_sales ? (
+                      <span className="text-sm font-semibold text-[#374151]">Custom</span>
+                    ) : price && price.amount_cents > 0 ? (
+                      <>{cents(price.amount_cents)}<span className="text-xs font-normal text-[#9CA3AF]">/mo</span></>
+                    ) : 'Free'}
                   </p>
                 </div>
               );
@@ -225,6 +228,10 @@ function PlanComparisonModal({ plans, sub, billingInterval, onClose }: {
                     <button disabled className="w-full py-2 text-xs font-semibold text-[#9CA3AF] border border-[#E5EAE8] rounded-xl cursor-default">
                       Current
                     </button>
+                  ) : plan.contact_sales ? (
+                    <a href="mailto:sales@moffu.com" className="w-full py-2 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl flex items-center justify-center hover:bg-[#0a3d30] transition-colors">
+                      Contact Sales
+                    </a>
                   ) : plan.slug === 'free' ? (
                     <button disabled className="w-full py-2 text-xs font-semibold text-[#9CA3AF] border border-[#E5EAE8] rounded-xl cursor-default">
                       Downgrade
@@ -679,7 +686,9 @@ export function BillingPage() {
                 </div>
 
                 <div className="mb-6">
-                  {price && price.amount_cents > 0 ? (
+                  {plan.contact_sales ? (
+                    <span className={`text-sm font-semibold ${isScale ? 'text-stone-300' : 'text-[#374151]'}`}>Custom pricing</span>
+                  ) : price && price.amount_cents > 0 ? (
                     <>
                       <div className="flex items-end gap-1">
                         <span className={`text-3xl font-bold ${isScale ? 'text-white' : 'text-[#111827]'}`}>{cents(price.amount_cents)}</span>
@@ -728,6 +737,13 @@ export function BillingPage() {
                   <button disabled className={`w-full py-2.5 text-xs font-semibold rounded-xl cursor-default border ${isScale ? 'border-stone-600 text-stone-500' : 'border-[#E5EAE8] text-[#9CA3AF]'}`}>
                     Current plan
                   </button>
+                ) : plan.contact_sales ? (
+                  <a
+                    href="mailto:sales@moffu.com"
+                    className={`w-full py-2.5 text-xs font-semibold rounded-xl flex items-center justify-center ${isScale ? 'bg-white text-[#1C1917] hover:bg-stone-100' : 'bg-[#0D4C3C] text-white hover:bg-[#0a3d30]'} transition-colors`}
+                  >
+                    Contact Sales Team
+                  </a>
                 ) : plan.slug === 'free' ? (
                   <button disabled className="w-full py-2.5 text-xs font-semibold text-[#9CA3AF] border border-[#E5EAE8] rounded-xl cursor-default">
                     Downgrade
