@@ -1,10 +1,9 @@
 import { NavLink, Outlet } from 'react-router-dom';
 
-const SETTINGS_NAV = [
+const SETTINGS_TABS = [
   {
     to: '/settings/packages',
     label: 'Packages',
-    description: 'Subscription plans & pricing',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -14,7 +13,6 @@ const SETTINGS_NAV = [
   {
     to: '/settings/ai',
     label: 'AI Keys',
-    description: 'Manage AI provider API keys',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -24,7 +22,6 @@ const SETTINGS_NAV = [
   {
     to: '/settings/google',
     label: 'Google API',
-    description: 'Google Business Profile OAuth',
     icon: (
       <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -38,47 +35,35 @@ const SETTINGS_NAV = [
 
 export function SettingsLayout() {
   return (
-    <div className="flex h-full bg-[#F8FAF9]">
-      {/* Settings left panel */}
-      <aside className="w-60 flex-shrink-0 border-r border-[#E5EAE8] flex flex-col">
-        <div className="px-5 py-5 border-b border-[#E5EAE8]">
-          <h2 className="text-sm font-semibold text-[#111827]">Settings</h2>
-          <p className="text-xs text-[#9CA3AF] mt-0.5">Platform configuration</p>
+    <div className="flex flex-col h-full bg-[#F8FAF9]">
+      {/* Top bar with title + tabs */}
+      <div className="flex-shrink-0 bg-white border-b border-[#E5EAE8]">
+        <div className="px-8 pt-6 pb-0">
+          <h1 className="text-lg font-semibold text-[#111827]">Settings</h1>
+          <p className="text-sm text-[#9CA3AF] mt-0.5 mb-4">Platform configuration</p>
+          <nav className="flex gap-1" aria-label="Settings tabs">
+            {SETTINGS_TABS.map((tab) => (
+              <NavLink
+                key={tab.to}
+                to={tab.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                    isActive
+                      ? 'border-[#0D4C3C] text-[#0D4C3C]'
+                      : 'border-transparent text-[#6B7280] hover:text-[#111827] hover:border-[#D1D5DB]'
+                  }`
+                }
+              >
+                {tab.icon}
+                {tab.label}
+              </NavLink>
+            ))}
+          </nav>
         </div>
+      </div>
 
-        <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
-          {SETTINGS_NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group ${
-                  isActive
-                    ? 'bg-[#0D4C3C] text-white'
-                    : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <span className={isActive ? 'text-white' : 'text-[#6B7280] group-hover:text-[#374151]'}>
-                    {item.icon}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium leading-none">{item.label}</p>
-                    <p className={`text-[11px] mt-0.5 truncate ${isActive ? 'text-white/70' : 'text-[#9CA3AF]'}`}>
-                      {item.description}
-                    </p>
-                  </div>
-                </>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-      </aside>
-
-      {/* Settings content area */}
-      <div className="flex-1 overflow-hidden min-h-0">
+      {/* Page content */}
+      <div className="flex-1 overflow-y-auto min-h-0">
         <Outlet />
       </div>
     </div>
