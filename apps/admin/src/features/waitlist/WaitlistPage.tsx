@@ -9,15 +9,11 @@ interface WaitlistEntry {
   created_at: string;
 }
 
-function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return 'just now';
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return d < 30 ? `${d}d ago` : new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+function formatJoined(iso: string) {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return { date, time };
 }
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -188,7 +184,7 @@ export function WaitlistPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#F3F4F6]">
-                    {['#', 'Name', 'Email', 'Source', 'Joined'].map(h => (
+                    {['#', 'Name', 'Email', 'Section', 'Date', 'Time'].map(h => (
                       <th key={h} className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-[#9CA3AF]">{h}</th>
                     ))}
                   </tr>
@@ -200,14 +196,15 @@ export function WaitlistPage() {
                       <td className="px-5 py-3.5 font-medium text-[#111827]">{entry.name}</td>
                       <td className="px-5 py-3.5 text-[#374151]">{entry.email}</td>
                       <td className="px-5 py-3.5">
-                        <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-lg bg-[#F3F4F6] text-[#6B7280]">
+                        <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-lg bg-[#E6F2EE] text-[#0D4C3C]">
                           {SOURCE_LABEL[entry.source] ?? entry.source}
                         </span>
                       </td>
+                      <td className="px-5 py-3.5 text-xs text-[#374151] whitespace-nowrap">
+                        {formatJoined(entry.created_at).date}
+                      </td>
                       <td className="px-5 py-3.5 text-xs text-[#6B7280] whitespace-nowrap">
-                        <span title={new Date(entry.created_at).toLocaleString()}>
-                          {timeAgo(entry.created_at)}
-                        </span>
+                        {formatJoined(entry.created_at).time}
                       </td>
                     </tr>
                   ))}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { createClient } from '@/lib/supabase/client';
 
 interface Props {
@@ -72,7 +73,7 @@ export function WaitlistButton({
         )}
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
           onClick={() => setOpen(false)}
@@ -165,7 +166,8 @@ export function WaitlistButton({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
