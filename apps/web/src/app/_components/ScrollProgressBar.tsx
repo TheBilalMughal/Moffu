@@ -18,7 +18,7 @@ export function ScrollProgressBar() {
   }, []);
 
   return (
-    <div className="h-[3px] w-full bg-transparent overflow-hidden">
+    <div className="sticky top-16 z-40 h-[3px] w-full bg-transparent overflow-hidden">
       <div
         className="h-full bg-[#0D4C3C] transition-[width] duration-75 ease-out"
         style={{ width: `${pct}%` }}
