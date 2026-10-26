@@ -15,7 +15,7 @@ export function SiteNav() {
           <Link href="/#product" className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150">
             Product
           </Link>
-          <Link href="/#how-it-works" className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150">
+          <Link href="/feature" className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150">
             Features
           </Link>
           <Link href="/#how-it-works" className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150">

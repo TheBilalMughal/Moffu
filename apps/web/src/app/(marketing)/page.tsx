@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { unstable_noStore as noStore } from 'next/cache';
 import { PricingToggle, type PricingPlan } from '../_components/PricingToggle';
+import { WaitlistButton } from '../_components/WaitlistButton';
 import { createServerClient } from '../../lib/supabase/server';
 
 // ---------------------------------------------------------------------------
@@ -32,7 +33,7 @@ function CheckSolid({ className = 'w-4 h-4' }: { className?: string }) {
 // Hero — full-width split screen
 // ---------------------------------------------------------------------------
 
-function HeroSection() {
+function HeroSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean; portalUrl: string }) {
   return (
     <section className="relative flex-1 flex flex-col overflow-hidden">
       {/* Full-width background image */}
@@ -71,12 +72,13 @@ function HeroSection() {
             communicates, and turn customer reviews into thoughtful, on-brand responses.
           </p>
           <div className="flex flex-wrap items-center gap-3 mb-10">
-            <a
-              href={`${process.env.PORTAL_URL ?? ''}/auth/login`}
+            <WaitlistButton
+              enabled={waitlistEnabled}
+              label={waitlistEnabled ? 'Join Waitlist' : 'Get Started'}
+              source="hero"
+              portalUrl={portalUrl}
               className="bg-[#0D4C3C] hover:bg-[#083F32] text-white px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
-            >
-              Get Started
-            </a>
+            />
             <Link
               href="/feature"
               className="border border-[#D1D5DB] bg-white hover:bg-[#F9FAFB] text-[#111827] px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
@@ -319,7 +321,7 @@ async function fetchPricingPlans(): Promise<PricingPlan[]> {
   }
 }
 
-async function PricingSection() {
+async function PricingSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean; portalUrl: string }) {
   const plans = await fetchPricingPlans();
   return (
     <section id="pricing" className="h-screen flex flex-col justify-center bg-[#F8FAFB]">
@@ -332,7 +334,7 @@ async function PricingSection() {
             Start with one location or manage hundreds — with flexible add-ons.
           </p>
         </div>
-        <PricingToggle plans={plans} />
+        <PricingToggle plans={plans} waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       </div>
     </section>
   );
@@ -425,7 +427,6 @@ function IntegrationsSection() {
       <div className="px-8 lg:px-16 max-w-5xl mx-auto">
         <div className="text-center mb-10 reveal">
           <p className="text-xs font-semibold uppercase tracking-widest text-[#0D4C3C] mb-3">Integrations</p>
-          <h2 className="text-[1.75rem] font-bold text-[#111827]">Works with the tools you already use</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 reveal">
           {integrations.map(item => (
@@ -685,8 +686,7 @@ function FAQSection() {
 // Final CTA
 // ---------------------------------------------------------------------------
 
-function CTASection() {
-  const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? '';
+function CTASection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean; portalUrl: string }) {
   return (
     <section className="py-24 bg-[#0D4C3C]">
       <div className="px-8 lg:px-16 text-center reveal">
@@ -697,15 +697,14 @@ function CTASection() {
           Join 2,400+ businesses that use Moffu to manage reviews, build trust, and win more customers.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-          <a
-            href={`${portalUrl}/auth/login`}
+          <WaitlistButton
+            enabled={waitlistEnabled}
+            label={waitlistEnabled ? 'Join Waitlist' : 'Get started free'}
+            source="cta_section"
+            portalUrl={portalUrl}
+            arrow
             className="inline-flex items-center gap-2 bg-white text-[#0D4C3C] font-semibold px-7 py-3.5 rounded-xl text-sm hover:bg-[#F0F9F6] transition-colors"
-          >
-            Get started free
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-            </svg>
-          </a>
+          />
           <a
             href="#pricing"
             className="inline-flex items-center gap-2 text-[#A7C4BB] font-medium px-7 py-3.5 rounded-xl text-sm hover:text-white transition-colors"
@@ -723,11 +722,21 @@ function CTASection() {
 // Page
 // ---------------------------------------------------------------------------
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createServerClient();
+  const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? '';
+
+  const { data: wSetting } = await supabase
+    .from('platform_settings')
+    .select('value')
+    .eq('key', 'waitlist_enabled')
+    .single();
+  const waitlistEnabled = wSetting?.value === 'true';
+
   return (
     <main>
       <div className="flex flex-col h-[calc(100vh-64px)]">
-        <HeroSection />
+        <HeroSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
         <TrustedBySection />
       </div>
       <StatsSection />
@@ -738,9 +747,9 @@ export default function HomePage() {
       </div>
       <CaseStudySection />
       <TestimonialsSection />
-      <PricingSection />
+      <PricingSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       <FAQSection />
-      <CTASection />
+      <CTASection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
     </main>
   );
 }

@@ -18,6 +18,7 @@ import { CouponsPage } from '@/features/billing/CouponsPage';
 import { UsagePage } from '@/features/analytics/UsagePage';
 import { BroadcastPage } from '@/features/broadcasts/BroadcastPage';
 import { FeatureFlagsPage } from '@/features/flags/FeatureFlagsPage';
+import { WaitlistPage } from '@/features/waitlist/WaitlistPage';
 import { SettingsLayout } from '@/features/settings/SettingsLayout';
 import { AISettingsPage } from '@/features/settings/AISettingsPage';
 import { GoogleSettingsPage } from '@/features/settings/GoogleSettingsPage';
@@ -54,6 +55,7 @@ export function App() {
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="usage" element={<UsagePage />} />
           <Route path="broadcasts" element={<BroadcastPage />} />
+          <Route path="waitlist" element={<WaitlistPage />} />
           <Route path="flags" element={<FeatureFlagsPage />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="audit" element={<AuditPage />} />

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { WaitlistButton } from './WaitlistButton';
 
 export interface PricingPlan {
   id: string;
@@ -30,7 +31,7 @@ function calcDiscount(monthly_cents: number, annual_cents: number): number {
   return Math.round((1 - annual_cents / monthly_cents) * 100);
 }
 
-export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
+export function PricingToggle({ plans, waitlistEnabled = false, portalUrl = '' }: { plans: PricingPlan[]; waitlistEnabled?: boolean; portalUrl?: string }) {
   const [annual, setAnnual] = useState(false);
 
   const visiblePlans = plans;
@@ -145,16 +146,17 @@ export function PricingToggle({ plans }: { plans: PricingPlan[] }) {
                   Contact Sales Team
                 </a>
               ) : (
-                <Link
-                  href="https://appmoffu.vercel.app/auth/signup"
+                <WaitlistButton
+                  enabled={waitlistEnabled}
+                  label={waitlistEnabled ? 'Join Waitlist' : 'Get Started'}
+                  source="pricing"
+                  portalUrl={portalUrl}
                   className={`block w-full text-center py-3 rounded-lg text-sm font-semibold transition-colors duration-150 ${
                     plan.is_featured
                       ? 'bg-[#0D4C3C] hover:bg-[#083F32] text-white'
                       : 'border border-[#D1D5DB] text-[#374151] hover:bg-[#F8FAFB]'
                   }`}
-                >
-                  Get Started
-                </Link>
+                />
               )}
             </div>
           );

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { WaitlistButton } from '../../_components/WaitlistButton';
+import { createServerClient } from '../../../lib/supabase/server';
 
 export const metadata: Metadata = {
   title: 'Features — Brand Brain AI Review Responses | Moffu',
@@ -157,7 +159,15 @@ const faqSchema = {
   })),
 };
 
-export default function FeaturePage() {
+export default async function FeaturePage() {
+  const supabase = await createServerClient();
+  const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? '';
+  const { data: wSetting } = await supabase
+    .from('platform_settings')
+    .select('value')
+    .eq('key', 'waitlist_enabled')
+    .single();
+  const waitlistEnabled = wSetting?.value === 'true';
   return (
     <>
       <script
@@ -208,12 +218,13 @@ export default function FeaturePage() {
             your tone, rules, and preferences — and every Google review response sounds
             authentically like you.
           </p>
-          <Link
-            href="/signup"
+          <WaitlistButton
+            enabled={waitlistEnabled}
+            label={waitlistEnabled ? 'Join Waitlist' : 'Start Free Trial'}
+            source="feature_hero"
+            portalUrl={portalUrl}
             className="inline-block bg-[#0D4C3C] hover:bg-[#083F32] text-white px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
-          >
-            Start Free Trial
-          </Link>
+          />
         </section>
 
         {/* Features grid */}
@@ -284,12 +295,13 @@ export default function FeaturePage() {
             Connect your Google Business Profile and start responding to reviews
             in your brand voice — today.
           </p>
-          <Link
-            href="/signup"
+          <WaitlistButton
+            enabled={waitlistEnabled}
+            label={waitlistEnabled ? 'Join Waitlist' : 'Get Started Free'}
+            source="feature_cta"
+            portalUrl={portalUrl}
             className="inline-block bg-[#0D4C3C] hover:bg-[#083F32] text-white px-8 py-4 rounded-lg font-semibold text-sm transition-colors duration-150"
-          >
-            Get Started Free
-          </Link>
+          />
         </section>
       </main>
     </>
