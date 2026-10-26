@@ -339,6 +339,187 @@ async function PricingSection() {
 }
 
 // ---------------------------------------------------------------------------
+// Stats Bar
+// ---------------------------------------------------------------------------
+
+function StatsSection() {
+  const stats = [
+    { value: '2,400+', label: 'Businesses trust Moffu' },
+    { value: '180k+',  label: 'Reviews managed' },
+    { value: '4.8★',   label: 'Average rating boost' },
+    { value: '3 min',  label: 'Average setup time' },
+  ];
+  return (
+    <section className="border-y border-[#E5E7EB] bg-white py-10">
+      <div className="px-8 lg:px-16 max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center reveal">
+          {stats.map(s => (
+            <div key={s.label}>
+              <p className="text-3xl font-bold text-[#0D4C3C]">{s.value}</p>
+              <p className="text-sm text-[#6B7280] mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Testimonials
+// ---------------------------------------------------------------------------
+
+function TestimonialsSection() {
+  const testimonials = [
+    {
+      quote: "Moffu helped us go from 3.9 to 4.6 stars on Google in just 6 weeks. The AI replies save our team hours every week.",
+      name: 'Sarah M.',
+      role: 'Owner, The Bloom Café',
+      stars: 5,
+    },
+    {
+      quote: "We manage 12 locations and Moffu keeps everything in one place. The Brand Brain feature is a game-changer for consistent responses.",
+      name: 'James R.',
+      role: 'Operations Manager, FreshFit Gyms',
+      stars: 5,
+    },
+    {
+      quote: "Before Moffu I was manually replying to 40+ reviews a week. Now it takes 15 minutes. Absolute must-have.",
+      name: 'Aisha K.',
+      role: 'Founder, Nourish Bakehouse',
+      stars: 5,
+    },
+  ];
+
+  return (
+    <section className="py-20 bg-[#F8FAFB]">
+      <div className="px-8 lg:px-16">
+        <div className="text-center mb-12 reveal">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#0D4C3C] mb-3">What customers say</p>
+          <h2 className="text-[2rem] font-bold text-[#111827]">Loved by local businesses</h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {testimonials.map((t, i) => (
+            <div key={i} className="bg-white rounded-2xl p-6 shadow-sm reveal flex flex-col">
+              {/* Stars */}
+              <div className="flex gap-0.5 mb-4">
+                {Array.from({ length: t.stars }).map((_, j) => (
+                  <svg key={j} className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                  </svg>
+                ))}
+              </div>
+              <p className="text-[#374151] text-sm leading-relaxed flex-1">"{t.quote}"</p>
+              <div className="mt-5 pt-4 border-t border-[#F3F4F6]">
+                <p className="text-sm font-semibold text-[#111827]">{t.name}</p>
+                <p className="text-xs text-[#9CA3AF] mt-0.5">{t.role}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// FAQ
+// ---------------------------------------------------------------------------
+
+const FAQ_ITEMS = [
+  {
+    q: 'Does Moffu work with Google Business Profile?',
+    a: 'Yes. Moffu connects directly to your Google Business Profile to pull in reviews and let you publish AI-generated replies — all without leaving the dashboard.',
+  },
+  {
+    q: 'How does the AI generate replies?',
+    a: 'You set up your Brand Brain — your business identity, tone of voice, and reply rules. The AI uses that profile to craft replies that sound exactly like you, not a generic bot.',
+  },
+  {
+    q: 'Can I manage multiple locations?',
+    a: 'Absolutely. Every plan supports at least one location, and you can add more as add-ons. Higher-tier plans include multiple locations out of the box.',
+  },
+  {
+    q: 'What are Review Request Campaigns?',
+    a: 'Campaigns let you email your past customers and ask them to leave a Google review. You upload a contact list, customize the message with your branding, and track opens and clicks.',
+  },
+  {
+    q: 'Is there a free plan?',
+    a: 'Yes — the Free plan lets you get started at no cost with one location and limited replies per month. No credit card required.',
+  },
+  {
+    q: 'Can I cancel anytime?',
+    a: 'Yes. You can cancel your subscription at any time from the billing page. Your account stays active until the end of the billing period.',
+  },
+];
+
+function FAQSection() {
+  return (
+    <section id="faq" className="py-20 bg-white">
+      <div className="px-8 lg:px-16 max-w-3xl mx-auto">
+        <div className="text-center mb-12 reveal">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#0D4C3C] mb-3">FAQ</p>
+          <h2 className="text-[2rem] font-bold text-[#111827]">Common questions</h2>
+        </div>
+        <div className="space-y-4 reveal">
+          {FAQ_ITEMS.map((item, i) => (
+            <details key={i} className="group border border-[#E5E7EB] rounded-xl overflow-hidden">
+              <summary className="flex items-center justify-between px-5 py-4 cursor-pointer list-none select-none hover:bg-[#F8FAFB] transition-colors">
+                <span className="text-sm font-semibold text-[#111827] pr-4">{item.q}</span>
+                <svg className="w-4 h-4 text-[#9CA3AF] flex-shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+                </svg>
+              </summary>
+              <div className="px-5 pb-4 pt-1 text-sm text-[#6B7280] leading-relaxed border-t border-[#F3F4F6]">
+                {item.a}
+              </div>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Final CTA
+// ---------------------------------------------------------------------------
+
+function CTASection() {
+  const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? '';
+  return (
+    <section className="py-24 bg-[#0D4C3C]">
+      <div className="px-8 lg:px-16 text-center reveal">
+        <h2 className="text-[2.25rem] font-bold text-white mb-4 leading-tight">
+          Start growing your reputation today
+        </h2>
+        <p className="text-[#A7C4BB] text-lg mb-8 max-w-xl mx-auto">
+          Join 2,400+ businesses that use Moffu to manage reviews, build trust, and win more customers.
+        </p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <a
+            href={`${portalUrl}/auth/login`}
+            className="inline-flex items-center gap-2 bg-white text-[#0D4C3C] font-semibold px-7 py-3.5 rounded-xl text-sm hover:bg-[#F0F9F6] transition-colors"
+          >
+            Get started free
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+            </svg>
+          </a>
+          <a
+            href="#pricing"
+            className="inline-flex items-center gap-2 text-[#A7C4BB] font-medium px-7 py-3.5 rounded-xl text-sm hover:text-white transition-colors"
+          >
+            View pricing
+          </a>
+        </div>
+        <p className="text-[#6B9A8A] text-xs mt-5">No credit card required · Free plan available · Cancel anytime</p>
+      </div>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -349,11 +530,15 @@ export default function HomePage() {
         <HeroSection />
         <TrustedBySection />
       </div>
+      <StatsSection />
       <div className="flex flex-col h-screen">
         <HowItWorksSection />
         <BrandBrainSection />
       </div>
+      <TestimonialsSection />
       <PricingSection />
+      <FAQSection />
+      <CTASection />
     </main>
   );
 }
