@@ -551,7 +551,7 @@ function StatsSection() {
     { value: '3 min',  label: 'Average setup time' },
   ];
   return (
-    <section className="border-y border-[#E5E7EB] bg-white py-10">
+    <section className="bg-white py-10">
       <div className="px-8 lg:px-16 max-w-5xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center reveal">
           {stats.map(s => (
