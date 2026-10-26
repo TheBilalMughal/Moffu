@@ -740,7 +740,6 @@ export default async function HomePage() {
         <TrustedBySection />
       </div>
       <StatsSection />
-      <IntegrationsSection />
       <div className="flex flex-col h-screen">
         <HowItWorksSection />
         <BrandBrainSection />
