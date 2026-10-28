@@ -2,8 +2,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-// Base64(login:password) stored as a single secret
-const DATAFORSEO_AUTH = Deno.env.get('DATAFORSEO_AUTH')!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,70 +16,69 @@ function json(data: unknown, status = 200) {
   });
 }
 
-interface DFSReviewItem {
-  review_id?: string;
-  author_title?: string;
-  author_image_url?: string;
-  rating?: { value?: number };
-  review_text?: string;
-  timestamp?: string;
-  owner_answer?: string;
-  owner_timestamp?: string;
-}
+const STAR_MAP: Record<string, number> = {
+  ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5,
+};
 
-interface DFSResult {
-  place_id?: string;
-  items?: DFSReviewItem[];
-}
-
-interface DFSTask {
-  result?: DFSResult[];
-  status_code?: number;
-  status_message?: string;
-}
-
-interface DFSResponse {
-  tasks?: DFSTask[];
-}
-
-async function fetchReviewsFromDataForSEO(
-  keyword: string,
-  placeId: string | null,
-  depth = 100,
-): Promise<{ place_id: string | null; items: DFSReviewItem[] }> {
-  const body = placeId
-    ? [{ place_id: placeId, depth, sort_by: 'newest' }]
-    : [{ keyword, location_name: 'Pakistan', language_name: 'English', depth, sort_by: 'newest' }];
-
-  const res = await fetch(
-    'https://api.dataforseo.com/v3/business_data/google/reviews/live/advanced',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${DATAFORSEO_AUTH}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    },
-  );
-
-  if (!res.ok) {
-    console.error('DataForSEO HTTP error:', res.status, await res.text());
-    return { place_id: null, items: [] };
-  }
-
-  const data: DFSResponse = await res.json();
-  const task = data.tasks?.[0];
-  if (!task || task.status_code !== 20000) {
-    console.error('DataForSEO task error:', task?.status_code, task?.status_message);
-    return { place_id: null, items: [] };
-  }
-
-  const result = task.result?.[0];
+async function getGoogleCreds(supabase: ReturnType<typeof createClient>) {
+  const { data } = await supabase
+    .from('platform_settings')
+    .select('key, value')
+    .in('key', ['google_client_id', 'google_client_secret']);
+  const map: Record<string, string> = {};
+  (data ?? []).forEach((r: { key: string; value: string }) => { map[r.key] = r.value; });
   return {
-    place_id: result?.place_id ?? null,
-    items: result?.items ?? [],
+    clientId:     map['google_client_id']     || Deno.env.get('GOOGLE_CLIENT_ID')     || '',
+    clientSecret: map['google_client_secret'] || Deno.env.get('GOOGLE_CLIENT_SECRET') || '',
   };
+}
+
+async function refreshToken(refreshToken: string, clientId: string, clientSecret: string) {
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+    }),
+  });
+  if (!res.ok) throw new Error(`Token refresh failed: ${await res.text()}`);
+  return res.json() as Promise<{ access_token: string; expires_in: number }>;
+}
+
+async function fetchGBPReviews(locationName: string, accessToken: string) {
+  const reviews: GBPReview[] = [];
+  let pageToken = '';
+  do {
+    const url = `https://mybusinessreviews.googleapis.com/v1/${locationName}/reviews?pageSize=50${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!res.ok) {
+      console.error('GBP reviews error:', res.status, await res.text());
+      break;
+    }
+    const data: GBPReviewsResponse = await res.json();
+    reviews.push(...(data.reviews ?? []));
+    pageToken = data.nextPageToken ?? '';
+  } while (pageToken);
+  return reviews;
+}
+
+interface GBPReview {
+  name: string;
+  reviewId: string;
+  reviewer?: { displayName?: string; profilePhotoUrl?: string; isAnonymous?: boolean };
+  starRating?: string;
+  comment?: string;
+  createTime?: string;
+  updateTime?: string;
+  reviewReply?: { comment?: string; updateTime?: string };
+}
+
+interface GBPReviewsResponse {
+  reviews?: GBPReview[];
+  nextPageToken?: string;
 }
 
 Deno.serve(async (req) => {
@@ -97,82 +94,81 @@ Deno.serve(async (req) => {
     );
     if (userError || !user) return json({ error: 'Unauthorized' }, 401);
 
-    // Get active connection
+    const { clientId, clientSecret } = await getGoogleCreds(supabase);
+    if (!clientId || !clientSecret) {
+      return json({ error: 'Google credentials not configured in Admin → Settings → Google API.' }, 500);
+    }
+
     const { data: connection } = await supabase
       .from('google_connections')
-      .select('id, state')
+      .select('id, state, token_expiry')
       .eq('user_id', user.id)
       .eq('state', 'CONNECTED')
       .single();
-
     if (!connection) return json({ error: 'No active Google connection' }, 400);
 
-    // Get selected locations
+    const { data: tokenRow } = await supabase
+      .from('google_connection_tokens')
+      .select('access_token, refresh_token')
+      .eq('connection_id', connection.id)
+      .single();
+    if (!tokenRow) return json({ error: 'No tokens found' }, 400);
+
+    // Refresh access token if within 1 minute of expiry
+    let accessToken = tokenRow.access_token;
+    const expiry = connection.token_expiry ? new Date(connection.token_expiry) : new Date(0);
+    if (expiry <= new Date(Date.now() + 60_000)) {
+      const refreshed = await refreshToken(tokenRow.refresh_token, clientId, clientSecret);
+      accessToken = refreshed.access_token;
+      await supabase.from('google_connection_tokens')
+        .update({ access_token: accessToken })
+        .eq('connection_id', connection.id);
+      await supabase.from('google_connections')
+        .update({ token_expiry: new Date(Date.now() + refreshed.expires_in * 1000).toISOString() })
+        .eq('id', connection.id);
+    }
+
     const { data: locations } = await supabase
       .from('google_locations')
-      .select('id, display_name, address, dataforseo_place_id')
+      .select('id, google_location_name')
       .eq('connection_id', connection.id)
       .eq('is_selected', true);
 
-    if (!locations?.length) {
-      return json({ synced: 0, message: 'No locations selected' });
-    }
+    if (!locations?.length) return json({ synced: 0, message: 'No locations selected' });
 
     let totalSynced = 0;
 
     for (const location of locations) {
-      const keyword = [location.display_name, location.address]
-        .filter(Boolean)
-        .join(' ');
+      const reviews = await fetchGBPReviews(location.google_location_name, accessToken);
 
-      const { place_id, items } = await fetchReviewsFromDataForSEO(
-        keyword,
-        location.dataforseo_place_id ?? null,
-      );
-
-      // Store place_id for future syncs (avoids keyword search overhead)
-      if (place_id && place_id !== location.dataforseo_place_id) {
-        await supabase
-          .from('google_locations')
-          .update({ dataforseo_place_id: place_id })
-          .eq('id', location.id);
-      }
-
-      for (const item of items) {
-        if (!item.review_id) continue;
-
-        const rating = item.rating?.value ?? null;
-        const hasReply = !!item.owner_answer;
-
+      for (const review of reviews) {
+        const hasReply = !!review.reviewReply?.comment;
         const { error: upsertErr } = await supabase.from('reviews').upsert(
           {
             location_id: location.id,
             user_id: user.id,
-            google_review_id: item.review_id,
-            reviewer_name: item.author_title ?? null,
-            reviewer_photo_url: item.author_image_url ?? null,
-            rating,
-            body: item.review_text ?? null,
-            published_at: item.timestamp ?? null,
-            reply_text: item.owner_answer ?? null,
-            reply_published_at: item.owner_timestamp ?? null,
+            google_review_id: review.reviewId,
+            reviewer_name: review.reviewer?.isAnonymous ? null : (review.reviewer?.displayName ?? null),
+            reviewer_photo_url: review.reviewer?.profilePhotoUrl ?? null,
+            rating: review.starRating ? (STAR_MAP[review.starRating] ?? null) : null,
+            body: review.comment ?? null,
+            published_at: review.createTime ?? null,
+            reply_text: review.reviewReply?.comment ?? null,
+            reply_published_at: review.reviewReply?.updateTime ?? null,
             status: hasReply ? 'PUBLISHED' : 'NEW',
             last_synced_at: new Date().toISOString(),
           },
           { onConflict: 'location_id,google_review_id', ignoreDuplicates: false },
         );
-
         if (upsertErr) {
-          console.error('upsert error for review', item.review_id, upsertErr.message);
+          console.error('upsert error', review.reviewId, upsertErr.message);
           continue;
         }
-
         totalSynced++;
       }
     }
 
-    await supabase
-      .from('google_connections')
+    await supabase.from('google_connections')
       .update({ last_synced_at: new Date().toISOString() })
       .eq('id', connection.id);
 
