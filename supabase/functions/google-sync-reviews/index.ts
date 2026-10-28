@@ -89,7 +89,7 @@ interface GBPReviewsResponse {
   nextPageToken?: string;
 }
 
-async function fetchGBPReviews(locationName: string, accessToken: string): Promise<GBPReview[]> {
+async function fetchGBPReviews(locationName: string, accessToken: string, errors: string[]): Promise<GBPReview[]> {
   const reviews: GBPReview[] = [];
   let pageToken = '';
   do {
@@ -98,6 +98,7 @@ async function fetchGBPReviews(locationName: string, accessToken: string): Promi
     if (!res.ok) {
       const body = await res.text();
       console.error('GBP reviews error:', res.status, body);
+      errors.push(`GBP Reviews API ${res.status} for ${locationName}: ${body.substring(0, 300)}`);
       break;
     }
     const data: GBPReviewsResponse = await res.json();
@@ -180,7 +181,7 @@ Deno.serve(async (req) => {
           .eq('id', location.id);
       }
 
-      const reviews = await fetchGBPReviews(locationName, accessToken);
+      const reviews = await fetchGBPReviews(locationName, accessToken, errors);
 
       for (const review of reviews) {
         const hasReply = !!review.reviewReply?.comment;

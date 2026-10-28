@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { billingService, type Plan, type Subscription, type UsageSummary, type UsageDay } from './billing.service';
+import { LocationSelectionModal } from './LocationSelectionModal';
 
 // --- Helpers ---
 
@@ -142,10 +143,12 @@ const COMPARISON_ROWS: { label: string; key: string; section?: string }[] = [
   { label: 'Support',              key: 'support_tier' },
 ];
 
-function PlanComparisonModal({ plans, sub, billingInterval, onClose }: {
+function PlanComparisonModal({ plans, sub, billingInterval, currentPlan, onDowngrade, onClose }: {
   plans: Plan[];
   sub: Subscription | null;
   billingInterval: 'monthly' | 'annual';
+  currentPlan: Plan | null;
+  onDowngrade: (plan: Plan) => void;
   onClose: () => void;
 }) {
   return (
@@ -238,6 +241,8 @@ function PlanComparisonModal({ plans, sub, billingInterval, onClose }: {
             <div />
             {plans.map(plan => {
               const isCurrent = plan.id === sub?.plan_id;
+              const currentSortOrder = currentPlan?.sort_order ?? 0;
+              const isDowngrade = !isCurrent && plan.sort_order < currentSortOrder;
               return (
                 <div key={plan.id}>
                   {isCurrent ? (
@@ -248,8 +253,8 @@ function PlanComparisonModal({ plans, sub, billingInterval, onClose }: {
                     <a href="mailto:sales@moffu.com" className="w-full py-2 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl flex items-center justify-center hover:bg-[#0a3d30] transition-colors">
                       Contact Sales
                     </a>
-                  ) : plan.slug === 'free' ? (
-                    <button disabled className="w-full py-2 text-xs font-semibold text-[#9CA3AF] border border-[#E5EAE8] rounded-xl cursor-default">
+                  ) : isDowngrade ? (
+                    <button onClick={() => { onClose(); onDowngrade(plan); }} className="w-full py-2 text-xs font-semibold text-[#374151] border border-[#E5EAE8] rounded-xl hover:bg-[#F3F4F6] transition-colors">
                       Downgrade
                     </button>
                   ) : (
@@ -329,6 +334,8 @@ export function BillingPage() {
   const [showAddLocation, setShowAddLocation] = useState(false);
   const [overageProtection, setOverageProtection] = useState(true);
   const [overageToggling, setOverageToggling] = useState(false);
+  const [downgradePlan, setDowngradePlan] = useState<Plan | null>(null);
+  const [downgradeMsg, setDowngradeMsg] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -348,6 +355,21 @@ export function BillingPage() {
       setLoading(false);
     });
   }, []);
+
+  async function handleDowngradeClick(plan: Plan) {
+    if (!currentPlan) return;
+    const newLimit = plan.entitlements['locations']?.limit_value ?? 1;
+    const { data: activeLocs } = await (await import('@/lib/supabase')).supabase
+      .from('google_locations')
+      .select('id')
+      .eq('is_selected', true);
+    const activeCount = activeLocs?.length ?? 0;
+    if (activeCount > newLimit) {
+      setDowngradePlan(plan);
+    } else {
+      setDowngradeMsg(`Downgrade to ${plan.name} requested. Billing management coming soon.`);
+    }
+  }
 
   async function handleOverageToggle() {
     if (!sub || overageToggling) return;
@@ -409,11 +431,39 @@ export function BillingPage() {
           plans={plans}
           sub={sub}
           billingInterval={billingInterval}
+          currentPlan={currentPlan ?? null}
+          onDowngrade={handleDowngradeClick}
           onClose={() => setShowCompare(false)}
         />
       )}
       {showAddLocation && currentPlan && (
         <AddLocationDialog plan={currentPlan} onClose={() => setShowAddLocation(false)} />
+      )}
+      {downgradePlan && (
+        <LocationSelectionModal
+          newPlanName={downgradePlan.name}
+          locationLimit={downgradePlan.entitlements['locations']?.limit_value ?? 1}
+          onConfirm={async () => {
+            setDowngradePlan(null);
+            setDowngradeMsg(`Downgrade to ${downgradePlan.name} requested. Billing management coming soon.`);
+          }}
+        />
+      )}
+      {downgradeMsg && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+            <div className="w-10 h-10 rounded-full bg-[#E6F2EE] flex items-center justify-center mx-auto mb-3">
+              <svg className="w-5 h-5 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p className="text-sm font-semibold text-[#111827] mb-1">Locations updated</p>
+            <p className="text-xs text-[#6B7280] mb-4">{downgradeMsg}</p>
+            <button onClick={() => setDowngradeMsg(null)} className="px-5 py-2 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl hover:bg-[#0a3d30]">
+              Done
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Header */}
@@ -735,26 +785,32 @@ export function BillingPage() {
                   ))}
                 </ul>
 
-                {isCurrent ? (
-                  <button disabled className={`w-full py-2.5 text-xs font-semibold rounded-xl cursor-default border ${isScale ? 'border-stone-600 text-stone-500' : 'border-[#E5EAE8] text-[#9CA3AF]'}`}>
-                    Current plan
-                  </button>
-                ) : plan.contact_sales ? (
-                  <a
-                    href="mailto:sales@moffu.com"
-                    className={`w-full py-2.5 text-xs font-semibold rounded-xl flex items-center justify-center ${isScale ? 'bg-white text-[#1C1917] hover:bg-stone-100' : 'bg-[#0D4C3C] text-white hover:bg-[#0a3d30]'} transition-colors`}
-                  >
-                    Contact Sales Team
-                  </a>
-                ) : plan.slug === 'free' ? (
-                  <button disabled className="w-full py-2.5 text-xs font-semibold text-[#9CA3AF] border border-[#E5EAE8] rounded-xl cursor-default">
-                    Downgrade
-                  </button>
-                ) : (
-                  <button disabled title="Coming soon" className={`w-full py-2.5 text-xs font-semibold rounded-xl cursor-not-allowed opacity-50 ${isScale ? 'bg-white text-[#1C1917]' : 'bg-[#0D4C3C] text-white'}`}>
-                    Upgrade — coming soon
-                  </button>
-                )}
+                {(() => {
+                  const currentSortOrder = currentPlan?.sort_order ?? 0;
+                  const isDowngrade = !isCurrent && plan.sort_order < currentSortOrder;
+                  const isUpgrade = !isCurrent && plan.sort_order > currentSortOrder;
+                  if (isCurrent) return (
+                    <button disabled className={`w-full py-2.5 text-xs font-semibold rounded-xl cursor-default border ${isScale ? 'border-stone-600 text-stone-500' : 'border-[#E5EAE8] text-[#9CA3AF]'}`}>
+                      Current plan
+                    </button>
+                  );
+                  if (plan.contact_sales) return (
+                    <a href="mailto:sales@moffu.com" className={`w-full py-2.5 text-xs font-semibold rounded-xl flex items-center justify-center ${isScale ? 'bg-white text-[#1C1917] hover:bg-stone-100' : 'bg-[#0D4C3C] text-white hover:bg-[#0a3d30]'} transition-colors`}>
+                      Contact Sales Team
+                    </a>
+                  );
+                  if (isDowngrade) return (
+                    <button onClick={() => handleDowngradeClick(plan)} className="w-full py-2.5 text-xs font-semibold text-[#374151] border border-[#E5EAE8] rounded-xl hover:bg-[#F3F4F6] transition-colors">
+                      Downgrade
+                    </button>
+                  );
+                  if (isUpgrade) return (
+                    <button disabled title="Coming soon" className={`w-full py-2.5 text-xs font-semibold rounded-xl cursor-not-allowed opacity-50 ${isScale ? 'bg-white text-[#1C1917]' : 'bg-[#0D4C3C] text-white'}`}>
+                      Upgrade — coming soon
+                    </button>
+                  );
+                  return null;
+                })()}
               </div>
             </div>
           );

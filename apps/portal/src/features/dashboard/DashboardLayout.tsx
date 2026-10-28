@@ -6,6 +6,7 @@ import { useAuthStore } from '@/features/auth/auth.store';
 import { supabase } from '@/lib/supabase';
 import { useLocationStore } from '@/features/location/location.store';
 import { FeatureAccessContext } from '@/components/FeatureGate';
+import { LocationSelectionModal } from '@/features/billing/LocationSelectionModal';
 
 function StarIcon() {
   return (
@@ -669,6 +670,7 @@ export function DashboardLayout() {
   const [featureAccess, setFeatureAccess] = useState<Record<string, boolean>>({});
   const [featureLoading, setFeatureLoading] = useState(true);
   const [isFreePlan, setIsFreePlan] = useState(false);
+  const [adminDowngradePlan, setAdminDowngradePlan] = useState<{ name: string; locationLimit: number } | null>(null);
 
   useEffect(() => {
     supabase.from('google_locations').select('id, display_name').eq('is_selected', true).then(({ data }) => {
@@ -715,6 +717,66 @@ export function DashboardLayout() {
     loadFeatureAccess();
   }, []);
 
+  // Realtime: detect admin-triggered plan downgrades and enforce location limits
+  useEffect(() => {
+    let userId: string | null = null;
+    let prevPlanId: string | null = null;
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      userId = user.id;
+
+      const channel = supabase
+        .channel('subscription-plan-change')
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'subscriptions', filter: `user_id=eq.${user.id}` },
+          async (payload) => {
+            const newPlanId = (payload.new as { plan_id: string }).plan_id;
+            if (!prevPlanId || newPlanId === prevPlanId) { prevPlanId = newPlanId; return; }
+            prevPlanId = newPlanId;
+
+            // Fetch new plan details to compare sort_order
+            const { data: plans } = await supabase
+              .from('plans')
+              .select('id, name, sort_order, plan_entitlements(key, value_type, limit_value)')
+              .in('id', [newPlanId]);
+
+            const newPlan = plans?.[0];
+            if (!newPlan) return;
+
+            // Get current plan sort order from the old row
+            const oldPlanId = (payload.old as { plan_id?: string }).plan_id;
+            if (!oldPlanId) return;
+            const { data: oldPlans } = await supabase
+              .from('plans').select('sort_order').eq('id', oldPlanId).maybeSingle();
+            const oldSortOrder = oldPlans?.sort_order ?? 999;
+
+            if (newPlan.sort_order >= oldSortOrder) return; // upgrade or same, no action needed
+
+            const locEntitlement = (newPlan.plan_entitlements as Array<{ key: string; value_type: string; limit_value: number | null }>)
+              ?.find(e => e.key === 'locations');
+            const newLimit = locEntitlement?.value_type === 'UNLIMITED' ? Infinity : (locEntitlement?.limit_value ?? 1);
+
+            const { data: activeLocs } = await supabase
+              .from('google_locations').select('id').eq('is_selected', true);
+            const activeCount = activeLocs?.length ?? 0;
+
+            if (activeCount > newLimit) {
+              setAdminDowngradePlan({ name: newPlan.name, locationLimit: newLimit === Infinity ? activeCount : newLimit });
+            }
+          }
+        )
+        .subscribe();
+
+      // Store current plan_id so we can detect changes
+      supabase.from('subscriptions').select('plan_id').eq('user_id', user.id).eq('status', 'active').maybeSingle()
+        .then(({ data }) => { prevPlanId = data?.plan_id ?? null; });
+
+      return () => { supabase.removeChannel(channel); };
+    });
+  }, []);
+
   function isLocked(featureKey: string | null): boolean {
     if (!featureKey) return false;
     if (!(featureKey in featureAccess)) return false; // no entitlement set → accessible
@@ -723,6 +785,13 @@ export function DashboardLayout() {
 
   return (
     <FeatureAccessContext.Provider value={{ access: featureAccess, loading: featureLoading }}>
+    {adminDowngradePlan && (
+      <LocationSelectionModal
+        newPlanName={adminDowngradePlan.name}
+        locationLimit={adminDowngradePlan.locationLimit}
+        onConfirm={async () => { setAdminDowngradePlan(null); }}
+      />
+    )}
     <div className="flex h-screen bg-[#F8FAF9] overflow-hidden">
       {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 bg-white border-r border-[#E5EAE8] flex flex-col">
