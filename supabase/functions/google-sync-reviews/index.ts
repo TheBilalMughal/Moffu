@@ -33,7 +33,7 @@ async function getGoogleCreds(supabase: ReturnType<typeof createClient>) {
   };
 }
 
-async function refreshToken(refreshToken: string, clientId: string, clientSecret: string) {
+async function doRefreshToken(rt: string, clientId: string, clientSecret: string) {
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -41,28 +41,37 @@ async function refreshToken(refreshToken: string, clientId: string, clientSecret
       grant_type: 'refresh_token',
       client_id: clientId,
       client_secret: clientSecret,
-      refresh_token: refreshToken,
+      refresh_token: rt,
     }),
   });
   if (!res.ok) throw new Error(`Token refresh failed: ${await res.text()}`);
   return res.json() as Promise<{ access_token: string; expires_in: number }>;
 }
 
-async function fetchGBPReviews(locationName: string, accessToken: string) {
-  const reviews: GBPReview[] = [];
-  let pageToken = '';
-  do {
-    const url = `https://mybusinessreviews.googleapis.com/v1/${locationName}/reviews?pageSize=50${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
-    if (!res.ok) {
-      console.error('GBP reviews error:', res.status, await res.text());
-      break;
-    }
-    const data: GBPReviewsResponse = await res.json();
-    reviews.push(...(data.reviews ?? []));
-    pageToken = data.nextPageToken ?? '';
-  } while (pageToken);
-  return reviews;
+// Resolve account prefix and fix location names if they lack it
+async function resolveAccountPrefix(
+  supabase: ReturnType<typeof createClient>,
+  connectionId: string,
+  storedAccountId: string | null,
+  accessToken: string,
+): Promise<string | null> {
+  if (storedAccountId) return storedAccountId;
+
+  const res = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    console.error('accounts API error:', res.status, await res.text());
+    return null;
+  }
+  const data = await res.json();
+  const accountName: string | null = data.accounts?.[0]?.name ?? null; // "accounts/{id}"
+  if (accountName) {
+    await supabase.from('google_connections')
+      .update({ google_account_id: accountName })
+      .eq('id', connectionId);
+  }
+  return accountName;
 }
 
 interface GBPReview {
@@ -72,13 +81,30 @@ interface GBPReview {
   starRating?: string;
   comment?: string;
   createTime?: string;
-  updateTime?: string;
   reviewReply?: { comment?: string; updateTime?: string };
 }
 
 interface GBPReviewsResponse {
   reviews?: GBPReview[];
   nextPageToken?: string;
+}
+
+async function fetchGBPReviews(locationName: string, accessToken: string): Promise<GBPReview[]> {
+  const reviews: GBPReview[] = [];
+  let pageToken = '';
+  do {
+    const url = `https://mybusinessreviews.googleapis.com/v1/${locationName}/reviews?pageSize=50${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!res.ok) {
+      const body = await res.text();
+      console.error('GBP reviews error:', res.status, body);
+      break;
+    }
+    const data: GBPReviewsResponse = await res.json();
+    reviews.push(...(data.reviews ?? []));
+    pageToken = data.nextPageToken ?? '';
+  } while (pageToken);
+  return reviews;
 }
 
 Deno.serve(async (req) => {
@@ -101,7 +127,7 @@ Deno.serve(async (req) => {
 
     const { data: connection } = await supabase
       .from('google_connections')
-      .select('id, state, token_expiry')
+      .select('id, state, token_expiry, google_account_id')
       .eq('user_id', user.id)
       .eq('state', 'CONNECTED')
       .single();
@@ -114,11 +140,10 @@ Deno.serve(async (req) => {
       .single();
     if (!tokenRow) return json({ error: 'No tokens found' }, 400);
 
-    // Refresh access token if within 1 minute of expiry
     let accessToken = tokenRow.access_token;
     const expiry = connection.token_expiry ? new Date(connection.token_expiry) : new Date(0);
     if (expiry <= new Date(Date.now() + 60_000)) {
-      const refreshed = await refreshToken(tokenRow.refresh_token, clientId, clientSecret);
+      const refreshed = await doRefreshToken(tokenRow.refresh_token, clientId, clientSecret);
       accessToken = refreshed.access_token;
       await supabase.from('google_connection_tokens')
         .update({ access_token: accessToken })
@@ -127,6 +152,11 @@ Deno.serve(async (req) => {
         .update({ token_expiry: new Date(Date.now() + refreshed.expires_in * 1000).toISOString() })
         .eq('id', connection.id);
     }
+
+    // Resolve account prefix (fixes old connections that didn't store it)
+    const accountPrefix = await resolveAccountPrefix(
+      supabase, connection.id, connection.google_account_id, accessToken,
+    );
 
     const { data: locations } = await supabase
       .from('google_locations')
@@ -137,9 +167,20 @@ Deno.serve(async (req) => {
     if (!locations?.length) return json({ synced: 0, message: 'No locations selected' });
 
     let totalSynced = 0;
+    const errors: string[] = [];
 
     for (const location of locations) {
-      const reviews = await fetchGBPReviews(location.google_location_name, accessToken);
+      let locationName = location.google_location_name;
+
+      // Fix bare "locations/{id}" to "accounts/{id}/locations/{id}"
+      if (accountPrefix && !locationName.startsWith('accounts/')) {
+        locationName = `${accountPrefix}/${locationName}`;
+        await supabase.from('google_locations')
+          .update({ google_location_name: locationName })
+          .eq('id', location.id);
+      }
+
+      const reviews = await fetchGBPReviews(locationName, accessToken);
 
       for (const review of reviews) {
         const hasReply = !!review.reviewReply?.comment;
@@ -161,7 +202,7 @@ Deno.serve(async (req) => {
           { onConflict: 'location_id,google_review_id', ignoreDuplicates: false },
         );
         if (upsertErr) {
-          console.error('upsert error', review.reviewId, upsertErr.message);
+          errors.push(upsertErr.message);
           continue;
         }
         totalSynced++;
@@ -172,9 +213,9 @@ Deno.serve(async (req) => {
       .update({ last_synced_at: new Date().toISOString() })
       .eq('id', connection.id);
 
-    return json({ synced: totalSynced });
+    return json({ synced: totalSynced, errors });
   } catch (err) {
     console.error('google-sync-reviews error:', err);
-    return json({ error: 'Internal error' }, 500);
+    return json({ error: String(err) }, 500);
   }
 });

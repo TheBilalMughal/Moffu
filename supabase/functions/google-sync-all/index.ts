@@ -14,7 +14,6 @@ interface GBPReview {
   starRating?: string;
   comment?: string;
   createTime?: string;
-  updateTime?: string;
   reviewReply?: { comment?: string; updateTime?: string };
 }
 
@@ -51,6 +50,31 @@ async function doRefreshToken(rt: string, clientId: string, clientSecret: string
   return res.json() as Promise<{ access_token: string; expires_in: number }>;
 }
 
+async function resolveAccountPrefix(
+  supabase: ReturnType<typeof createClient>,
+  connectionId: string,
+  storedAccountId: string | null,
+  accessToken: string,
+): Promise<string | null> {
+  if (storedAccountId) return storedAccountId;
+
+  const res = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    console.error('accounts API error:', res.status, await res.text());
+    return null;
+  }
+  const data = await res.json();
+  const accountName: string | null = data.accounts?.[0]?.name ?? null;
+  if (accountName) {
+    await supabase.from('google_connections')
+      .update({ google_account_id: accountName })
+      .eq('id', connectionId);
+  }
+  return accountName;
+}
+
 async function fetchGBPReviews(locationName: string, accessToken: string): Promise<GBPReview[]> {
   const reviews: GBPReview[] = [];
   let pageToken = '';
@@ -58,7 +82,8 @@ async function fetchGBPReviews(locationName: string, accessToken: string): Promi
     const url = `https://mybusinessreviews.googleapis.com/v1/${locationName}/reviews?pageSize=50${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
     if (!res.ok) {
-      console.error('GBP reviews error:', res.status, await res.text());
+      const body = await res.text();
+      console.error('GBP reviews error:', res.status, body);
       break;
     }
     const data: GBPReviewsResponse = await res.json();
@@ -99,15 +124,12 @@ Deno.serve(async (req) => {
 
   const { clientId, clientSecret } = await getGoogleCreds(supabase);
   if (!clientId || !clientSecret) {
-    return new Response(
-      JSON.stringify({ error: 'Google credentials not configured' }),
-      { status: 500 },
-    );
+    return new Response(JSON.stringify({ error: 'Google credentials not configured' }), { status: 500 });
   }
 
   const { data: connections, error: connErr } = await supabase
     .from('google_connections')
-    .select('id, user_id, token_expiry')
+    .select('id, user_id, token_expiry, google_account_id')
     .eq('state', 'CONNECTED');
 
   if (connErr || !connections?.length) {
@@ -128,7 +150,6 @@ Deno.serve(async (req) => {
 
       if (!tokenRow) continue;
 
-      // Refresh if within 1 minute of expiry
       let accessToken = tokenRow.access_token;
       const expiry = connection.token_expiry ? new Date(connection.token_expiry) : new Date(0);
       if (expiry <= new Date(Date.now() + 60_000)) {
@@ -151,6 +172,11 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Resolve account prefix — fixes old connections that stored bare "locations/{id}"
+      const accountPrefix = await resolveAccountPrefix(
+        supabase, connection.id, connection.google_account_id, accessToken,
+      );
+
       const { data: locations } = await supabase
         .from('google_locations')
         .select('id, google_location_name')
@@ -163,7 +189,17 @@ Deno.serve(async (req) => {
       let userSynced = 0;
 
       for (const location of locations) {
-        const reviews = await fetchGBPReviews(location.google_location_name, accessToken);
+        let locationName = location.google_location_name;
+
+        // Upgrade bare "locations/{id}" to full "accounts/{id}/locations/{id}"
+        if (accountPrefix && !locationName.startsWith('accounts/')) {
+          locationName = `${accountPrefix}/${locationName}`;
+          await supabase.from('google_locations')
+            .update({ google_location_name: locationName })
+            .eq('id', location.id);
+        }
+
+        const reviews = await fetchGBPReviews(locationName, accessToken);
 
         for (const review of reviews) {
           const hasReply = !!review.reviewReply?.comment;

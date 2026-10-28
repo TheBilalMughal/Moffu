@@ -116,6 +116,14 @@ Deno.serve(async (req) => {
       const accountsData = await accountsRes.json();
       const accounts: Array<{ name: string }> = accountsData.accounts ?? [];
 
+      // Store the first account ID so reviews API can use full path
+      const firstAccount = accounts[0]?.name ?? null;
+      if (firstAccount) {
+        await supabase.from('google_connections')
+          .update({ google_account_id: firstAccount })
+          .eq('id', connection.id);
+      }
+
       for (const account of accounts) {
         const locRes = await fetch(
           `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?readMask=name,title,storefrontAddress`,
@@ -128,10 +136,12 @@ Deno.serve(async (req) => {
 
         for (const loc of locations) {
           const address = loc.storefrontAddress?.addressLines?.join(', ') ?? null;
+          // Store full path "accounts/{id}/locations/{id}" for Reviews API compatibility
+          const fullLocationName = `${account.name}/${loc.name}`;
           await supabase.from('google_locations').upsert({
             connection_id: connection.id,
             user_id: user.id,
-            google_location_name: loc.name,
+            google_location_name: fullLocationName,
             display_name: loc.title ?? null,
             address,
           }, { onConflict: 'connection_id,google_location_name' });
