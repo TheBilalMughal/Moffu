@@ -460,6 +460,8 @@ export function SettingsPage() {
   const [disconnecting, setDisconnecting] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [fetchingLocations, setFetchingLocations] = useState(false);
+  const [locationLimit, setLocationLimit] = useState<number | null>(null);
+  const [showLocationUpgrade, setShowLocationUpgrade] = useState(false);
 
   // Business search
   const [bizSearch, setBizSearch] = useState('');
@@ -655,6 +657,19 @@ export function SettingsPage() {
       showToast('Google Business Profile connected successfully.', 'success');
       setSearchParams({}, { replace: true });
     }
+    // Load plan location limit
+    (async () => {
+      const { data: { user: u } } = await supabase.auth.getUser();
+      if (!u) return;
+      const { data: sub } = await supabase
+        .from('subscriptions').select('plan_id').eq('user_id', u.id).eq('status', 'active').maybeSingle();
+      if (!sub) return;
+      const { data: ent } = await supabase
+        .from('plan_entitlements').select('value_type, limit_value')
+        .eq('plan_id', sub.plan_id).eq('key', 'locations').maybeSingle();
+      if (!ent) return;
+      setLocationLimit(ent.value_type === 'UNLIMITED' ? null : (ent.limit_value ?? 1));
+    })();
   }, []);
 
   async function handleConnect() {
@@ -722,6 +737,13 @@ export function SettingsPage() {
   }
 
   async function handleToggleLocation(id: string, current: boolean) {
+    if (!current && locationLimit !== null) {
+      const selectedCount = locations.filter(l => l.is_selected).length;
+      if (selectedCount >= locationLimit) {
+        setShowLocationUpgrade(true);
+        return;
+      }
+    }
     await googleService.toggleLocationSelected(id, !current);
     setLocations(prev => prev.map(l => l.id === id ? { ...l, is_selected: !current } : l));
   }
@@ -1010,21 +1032,66 @@ export function SettingsPage() {
               )}
               {isConnected && locations.length > 0 && (
                 <div className="mt-5 border-t border-[#F3F4F6] pt-4">
-                  <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-3">Locations to sync</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide">Locations to sync</p>
+                    {locationLimit !== null && (
+                      <span className="text-[11px] text-[#9CA3AF]">
+                        {locations.filter(l => l.is_selected).length}/{locationLimit} on your plan
+                      </span>
+                    )}
+                  </div>
                   <div className="space-y-2">
-                    {locations.map(loc => (
-                      <div key={loc.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-[#F8FAF9] transition-colors">
-                        <div>
-                          <p className="text-sm font-medium text-[#111827]">{loc.display_name ?? loc.google_location_name}</p>
-                          {loc.address && <p className="text-xs text-[#9CA3AF]">{loc.address}</p>}
+                    {locations.map(loc => {
+                      const selectedCount = locations.filter(l => l.is_selected).length;
+                      const wouldExceed = !loc.is_selected && locationLimit !== null && selectedCount >= locationLimit;
+                      return (
+                        <div key={loc.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-[#F8FAF9] transition-colors">
+                          <div>
+                            <p className="text-sm font-medium text-[#111827]">{loc.display_name ?? loc.google_location_name}</p>
+                            {loc.address && <p className="text-xs text-[#9CA3AF]">{loc.address}</p>}
+                          </div>
+                          <button
+                            onClick={() => handleToggleLocation(loc.id, loc.is_selected)}
+                            title={wouldExceed ? 'Upgrade to enable more locations' : undefined}
+                            className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${loc.is_selected ? 'bg-[#0D4C3C]' : wouldExceed ? 'bg-[#E5E7EB]' : 'bg-[#D1D5DB]'}`}
+                            role="switch" aria-checked={loc.is_selected}
+                          >
+                            <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${loc.is_selected ? 'translate-x-4' : ''}`} />
+                          </button>
                         </div>
-                        <button onClick={() => handleToggleLocation(loc.id, loc.is_selected)}
-                          className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${loc.is_selected ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}
-                          role="switch" aria-checked={loc.is_selected}>
-                          <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${loc.is_selected ? 'translate-x-4' : ''}`} />
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Location upgrade modal */}
+              {showLocationUpgrade && (
+                <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowLocationUpgrade(false)}>
+                  <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-7 text-center" onClick={e => e.stopPropagation()}>
+                    <div className="w-12 h-12 rounded-2xl bg-[#F3F4F6] flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-6 h-6 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                      </svg>
+                    </div>
+                    <h2 className="text-base font-bold text-[#111827] mb-1">Location limit reached</h2>
+                    <p className="text-sm text-[#6B7280] mb-5 leading-relaxed">
+                      Your current plan allows up to <strong>{locationLimit}</strong> location{locationLimit !== 1 ? 's' : ''}. Upgrade to manage more locations.
+                    </p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setShowLocationUpgrade(false)}
+                        className="flex-1 px-4 py-2.5 text-sm font-medium text-[#374151] border border-[#E5EAE8] rounded-xl hover:bg-[#F9FAFB] transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => { setShowLocationUpgrade(false); navigate('/billing'); }}
+                        className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] rounded-xl transition-colors"
+                      >
+                        View Plans
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

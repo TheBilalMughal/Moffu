@@ -701,22 +701,6 @@ export function DashboardLayout() {
         <nav className="flex-1 px-3 py-4 flex flex-col overflow-y-auto gap-0.5" aria-label="Main navigation">
           {navItems.map(({ to, label, icon, featureKey }) => {
             const locked = isLocked(featureKey);
-            if (locked) {
-              return (
-                <button
-                  key={to}
-                  onClick={() => navigate('/billing')}
-                  title={`Upgrade to access ${label}`}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-[#C4CAC8] hover:bg-[#F3F4F6] hover:text-[#9CA3AF] transition-colors w-full text-left"
-                >
-                  {icon}
-                  <span className="flex-1">{label}</span>
-                  <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                  </svg>
-                </button>
-              );
-            }
             return (
               <NavLink
                 key={to}
@@ -724,14 +708,21 @@ export function DashboardLayout() {
                 end={to === '/dashboard'}
                 className={({ isActive }) =>
                   `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-[#0D4C3C] text-white'
-                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
+                    locked
+                      ? 'text-[#C4CAC8] hover:bg-[#F3F4F6] hover:text-[#9CA3AF]'
+                      : isActive
+                        ? 'bg-[#0D4C3C] text-white'
+                        : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
                   }`
                 }
               >
                 {icon}
-                {label}
+                <span className="flex-1">{label}</span>
+                {locked && (
+                  <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                )}
               </NavLink>
             );
           })}
