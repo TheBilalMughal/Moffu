@@ -3,7 +3,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const DATAFORSEO_AUTH = Deno.env.get('DATAFORSEO_AUTH')!;
-const SYNC_SECRET = Deno.env.get('SYNC_REVIEWS_SECRET') ?? '';
 
 interface DFSReviewItem {
   review_id?: string;
@@ -86,13 +85,21 @@ Deno.serve(async (req) => {
   const syncSecret = req.headers.get('x-sync-secret') ?? '';
   const authHeader = req.headers.get('Authorization') ?? '';
   const isServiceRole = authHeader.replace('Bearer ', '') === SUPABASE_SERVICE_KEY;
-  const isValidSecret = SYNC_SECRET && syncSecret === SYNC_SECRET;
-
-  if (!isServiceRole && !isValidSecret) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-  }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+  if (!isServiceRole) {
+    // Read secret live from platform_settings so admin can rotate without redeploy
+    const { data: settingRow } = await supabase
+      .from('platform_settings')
+      .select('value')
+      .eq('key', 'sync_reviews_secret')
+      .maybeSingle();
+    const storedSecret = settingRow?.value ?? '';
+    if (!storedSecret || syncSecret !== storedSecret) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
+  }
 
   // Get all CONNECTED connections
   const { data: connections, error: connErr } = await supabase
