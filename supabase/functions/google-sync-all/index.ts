@@ -78,8 +78,10 @@ async function resolveAccountPrefix(
 async function fetchGBPReviews(locationName: string, accessToken: string, errors: string[]): Promise<GBPReview[]> {
   const reviews: GBPReview[] = [];
   let pageToken = '';
+  // Use v4 endpoint (Google My Business API — enabled via Cloud Console)
+  const baseUrl = `https://mybusiness.googleapis.com/v4/${locationName}/reviews`;
   do {
-    const url = `https://mybusinessreviews.googleapis.com/v1/${locationName}/reviews?pageSize=50${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
+    const url = `${baseUrl}?pageSize=50${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
     if (!res.ok) {
       const body = await res.text();

@@ -699,13 +699,7 @@ export function SettingsPage() {
       showToast(error, 'error');
     } else if (errors && errors.length > 0) {
       const firstErr = errors[0];
-      const is404 = firstErr.includes('404');
-      showToast(
-        is404
-          ? 'Google Reviews API is not enabled. Go to Google Cloud Console → APIs & Services and enable "My Business Reviews API".'
-          : `Sync error: ${firstErr.substring(0, 120)}`,
-        'error',
-      );
+      showToast(`Sync error: ${firstErr.substring(0, 160)}`, 'error');
     } else {
       showToast(`Synced ${synced} review${synced !== 1 ? 's' : ''}.`, 'success');
       await loadConnection();
