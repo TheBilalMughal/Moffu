@@ -698,7 +698,7 @@ export function SettingsPage() {
     if (error) {
       showToast(error, 'error');
     } else if (errors && errors.length > 0) {
-      const firstErr = errors[0];
+      const firstErr = errors[0] ?? 'Unknown sync error';
       showToast(`Sync error: ${firstErr.substring(0, 160)}`, 'error');
     } else {
       showToast(`Synced ${synced} review${synced !== 1 ? 's' : ''}.`, 'success');
