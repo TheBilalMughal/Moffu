@@ -12,9 +12,10 @@ interface Props {
   newPlanName: string;
   locationLimit: number;
   onConfirm: (keepIds: string[]) => Promise<void>;
+  onCancel?: () => void;
 }
 
-export function LocationSelectionModal({ newPlanName, locationLimit, onConfirm }: Props) {
+export function LocationSelectionModal({ newPlanName, locationLimit, onConfirm, onCancel }: Props) {
   const [locations, setLocations] = useState<LocationRow[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -81,12 +82,25 @@ export function LocationSelectionModal({ newPlanName, locationLimit, onConfirm }
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="px-6 py-5 border-b border-[#E5EAE8]">
-          <h3 className="text-sm font-bold text-[#111827]">Choose locations to keep</h3>
-          <p className="text-xs text-[#6B7280] mt-1">
-            The <span className="font-semibold text-[#111827]">{newPlanName}</span> plan includes{' '}
-            {locationLimit === 1 ? '1 location' : `${locationLimit} locations`}. Select which to keep active.
-          </p>
+        <div className="px-6 py-5 border-b border-[#E5EAE8] flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-bold text-[#111827]">Choose locations to keep</h3>
+            <p className="text-xs text-[#6B7280] mt-1">
+              The <span className="font-semibold text-[#111827]">{newPlanName}</span> plan includes{' '}
+              {locationLimit === 1 ? '1 location' : `${locationLimit} locations`}. Select which to keep active.
+            </p>
+          </div>
+          {onCancel && (
+            <button
+              onClick={onCancel}
+              className="w-7 h-7 flex-shrink-0 flex items-center justify-center rounded-lg hover:bg-[#F3F4F6] text-[#9CA3AF] hover:text-[#374151] transition-colors mt-0.5"
+              aria-label="Cancel"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Body */}
@@ -155,7 +169,7 @@ export function LocationSelectionModal({ newPlanName, locationLimit, onConfirm }
           </p>
           <button
             onClick={handleConfirm}
-            disabled={saving || loading || (selected.size === 0 && locationLimit > 0)}
+            disabled={saving || loading || selected.size === 0}
             className="w-full py-2.5 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl hover:bg-[#0a3d30] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {saving ? 'Saving…' : `Confirm — keep ${selected.size} location${selected.size !== 1 ? 's' : ''}`}

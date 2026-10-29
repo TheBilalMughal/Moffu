@@ -447,6 +447,7 @@ export function BillingPage() {
             setDowngradePlan(null);
             setDowngradeMsg(`Downgrade to ${downgradePlan.name} requested. Billing management coming soon.`);
           }}
+          onCancel={() => setDowngradePlan(null)}
         />
       )}
       {downgradeMsg && (

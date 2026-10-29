@@ -83,7 +83,7 @@ export const googleService = {
     return {};
   },
 
-  async syncReviews(): Promise<{ synced?: number; error?: string }> {
+  async syncReviews(): Promise<{ synced?: number; error?: string; errors?: string[] }> {
     const auth = await getAuthHeader();
     if (!auth) return { error: 'Not authenticated' };
 
@@ -93,7 +93,7 @@ export const googleService = {
     });
     const json = await res.json();
     if (!res.ok) return { error: json.error ?? 'Sync failed' };
-    return { synced: json.synced };
+    return { synced: json.synced, errors: json.errors };
   },
 
   async disconnect(): Promise<{ error?: string }> {

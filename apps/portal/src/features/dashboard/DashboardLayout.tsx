@@ -790,6 +790,7 @@ export function DashboardLayout() {
         newPlanName={adminDowngradePlan.name}
         locationLimit={adminDowngradePlan.locationLimit}
         onConfirm={async () => { setAdminDowngradePlan(null); }}
+        onCancel={() => setAdminDowngradePlan(null)}
       />
     )}
     <div className="flex h-screen bg-[#F8FAF9] overflow-hidden">
