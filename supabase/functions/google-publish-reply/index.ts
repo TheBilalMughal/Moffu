@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
     if (!review) return json({ error: 'Review not found' }, 404);
 
     // Allow publish from AWAITING_APPROVAL, DRAFT, or PUBLISH_FAILED states
-    const publishableStatuses = ['AWAITING_APPROVAL', 'DRAFT', 'PUBLISH_FAILED', 'NEW'];
+    const publishableStatuses = ['AWAITING_APPROVAL', 'DRAFT', 'PUBLISH_FAILED', 'NEW', 'PUBLISHING'];
     if (!publishableStatuses.includes(review.status)) {
       return json({ error: `Cannot publish from status: ${review.status}` }, 400);
     }
