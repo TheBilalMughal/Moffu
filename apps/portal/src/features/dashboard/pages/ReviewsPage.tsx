@@ -58,12 +58,13 @@ function getSentiment(rating: number) {
 }
 
 function exportCSV(reviews: Review[], locations: Location[]) {
-  const headers = ['Date','Reviewer','Rating','Location','Review','Status','Draft'];
+  const headers = ['Date','Reviewer','Rating','Location','Review','Status','Draft','Published Reply','Reply Date'];
   const esc = (s: string) => `"${s.replace(/"/g, '""')}"`;
   const rows = reviews.map(r => [
     fmtDate(r.published_at), r.reviewer_name ?? '', String(r.rating),
     locations.find(l => l.id === r.location_id)?.display_name ?? '',
     r.body ?? '', toUiStatus(r.status), r.reply_draft ?? '',
+    r.reply_text ?? '', fmtDate(r.reply_published_at),
   ].map(esc).join(','));
   const csv = [headers.join(','), ...rows].join('\n');
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
@@ -299,12 +300,14 @@ function smoothPath(pts: { x: number; y: number }[]): string {
   return d;
 }
 
-function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: replyRateProp, avgResponseTime: avgResponseTimeProp, showLines = true }: {
+function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: replyRateProp, avgResponseTime: avgResponseTimeProp, within24h, within48h, showLines = true }: {
   reviews: Review[];
   totalReviews: number;
   avgRatingStr: string;
   replyRate: string;
   avgResponseTime: string;
+  within24h: string;
+  within48h: string;
   showLines?: boolean;
 }) {
   const [period, setPeriod] = useState<ChartPeriod>('week');
@@ -540,25 +543,35 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
       </div>}
 
       {/* Stat cards — full width single row */}
-      <div className="flex items-center bg-[#F9FAFB] rounded-lg mt-4">
-        <div className="flex-1 px-4 py-3">
+      <div className="flex items-center bg-[#F9FAFB] rounded-lg mt-4 flex-wrap">
+        <div className="flex-1 min-w-[120px] px-4 py-3">
           <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Total Reviews</p>
           <p className="text-lg font-bold text-[#111827]">{totalReviews}</p>
         </div>
         <div className="w-px h-8 bg-[#E5EAE8] flex-shrink-0"/>
-        <div className="flex-1 px-4 py-3">
+        <div className="flex-1 min-w-[120px] px-4 py-3">
           <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Rating</p>
           <p className="text-lg font-bold text-amber-500">{avgRatingStr}</p>
         </div>
         <div className="w-px h-8 bg-[#E5EAE8] flex-shrink-0"/>
-        <div className="flex-1 px-4 py-3">
+        <div className="flex-1 min-w-[120px] px-4 py-3">
           <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Reply Rate</p>
-          <p className="text-lg font-bold text-[#111827]">{replyRateProp}</p>
+          <p className="text-lg font-bold text-[#0D4C3C]">{replyRateProp}</p>
         </div>
         <div className="w-px h-8 bg-[#E5EAE8] flex-shrink-0"/>
-        <div className="flex-1 px-4 py-3">
+        <div className="flex-1 min-w-[120px] px-4 py-3">
           <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg Response Time</p>
           <p className="text-lg font-bold text-[#111827]">{avgResponseTimeProp}</p>
+        </div>
+        <div className="w-px h-8 bg-[#E5EAE8] flex-shrink-0"/>
+        <div className="flex-1 min-w-[120px] px-4 py-3">
+          <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Replied ≤24h</p>
+          <p className={`text-lg font-bold ${within24h === '—' ? 'text-[#9CA3AF]' : 'text-emerald-600'}`}>{within24h}</p>
+        </div>
+        <div className="w-px h-8 bg-[#E5EAE8] flex-shrink-0"/>
+        <div className="flex-1 min-w-[120px] px-4 py-3">
+          <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Replied ≤48h</p>
+          <p className={`text-lg font-bold ${within48h === '—' ? 'text-[#9CA3AF]' : 'text-blue-600'}`}>{within48h}</p>
         </div>
       </div>
     </div>
@@ -1162,8 +1175,26 @@ export function ReviewsPage() {
   }
 
   useEffect(() => {
-    supabase.from('google_connections').select('state').eq('state','CONNECTED').maybeSingle()
-      .then(({ data }) => setIsConnected(!!data));
+    (async () => {
+      const { data: conn } = await supabase
+        .from('google_connections')
+        .select('state, auto_sync_enabled, auto_sync_interval, last_synced_at')
+        .maybeSingle();
+      setIsConnected(conn?.state === 'CONNECTED');
+
+      // Auto-sync check: if enabled and interval has elapsed since last sync
+      if (conn?.state === 'CONNECTED' && conn.auto_sync_enabled) {
+        const intervalHours: Record<string, number> = { '1h': 1, '4h': 4, '12h': 12, '24h': 24 };
+        const hours = intervalHours[conn.auto_sync_interval ?? '4h'] ?? 4;
+        const lastSync = conn.last_synced_at ? new Date(conn.last_synced_at).getTime() : 0;
+        const elapsed = (Date.now() - lastSync) / 3600000;
+        if (elapsed >= hours) {
+          setSyncing(true);
+          try { await googleService.syncReviews(); } catch {}
+          setSyncing(false);
+        }
+      }
+    })();
     loadReviews(); loadLocations();
   }, []);
 
@@ -1265,8 +1296,17 @@ export function ReviewsPage() {
   const repliedCount = activeReviews.filter(r => r.status === 'PUBLISHED').length;
   const replyRate = activeReviews.length > 0 ? `${(repliedCount / activeReviews.length * 100).toFixed(0)}%` : '—';
   const repliedWithTimes = activeReviews.filter(r => r.status === 'PUBLISHED' && r.reply_published_at && r.published_at);
-  const avgResponseTime = repliedWithTimes.length > 0
-    ? `${(repliedWithTimes.reduce((s, r) => s + Math.floor((new Date(r.reply_published_at!).getTime() - new Date(r.published_at!).getTime()) / 86400000), 0) / repliedWithTimes.length).toFixed(1)} days`
+  const avgHours = repliedWithTimes.length > 0
+    ? repliedWithTimes.reduce((s, r) => s + (new Date(r.reply_published_at!).getTime() - new Date(r.published_at!).getTime()), 0) / repliedWithTimes.length / 3600000
+    : null;
+  const avgResponseTime = avgHours !== null
+    ? avgHours < 24 ? `${avgHours.toFixed(1)}h` : `${(avgHours / 24).toFixed(1)} days`
+    : '—';
+  const within24h = repliedWithTimes.length > 0
+    ? `${((repliedWithTimes.filter(r => (new Date(r.reply_published_at!).getTime() - new Date(r.published_at!).getTime()) <= 86400000).length / repliedWithTimes.length) * 100).toFixed(0)}%`
+    : '—';
+  const within48h = repliedWithTimes.length > 0
+    ? `${((repliedWithTimes.filter(r => (new Date(r.reply_published_at!).getTime() - new Date(r.published_at!).getTime()) <= 172800000).length / repliedWithTimes.length) * 100).toFixed(0)}%`
     : '—';
 
   function locationName(id: string | null) { return id ? (locations.find(l => l.id === id)?.display_name ?? '') : ''; }
@@ -1274,16 +1314,14 @@ export function ReviewsPage() {
 
   async function handleSync() {
     setSyncing(true);
-    const { synced, error } = await googleService.syncReviews();
-    if (error) { setToast({ message: error, type: 'error' }); setSyncing(false); return; }
-    setToast({ message: `Synced ${synced} review${synced !== 1 ? 's' : ''}.`, type: 'success' });
-    await loadReviews();
-    const newReviews = reviews.filter(r => r.status === 'NEW');
-    if (newReviews.length > 0) {
-      for (const r of newReviews) { await googleService.generateDraft(r.id); }
+    try {
+      const { synced, error } = await googleService.syncReviews();
+      if (error) { setToast({ message: error, type: 'error' }); return; }
+      setToast({ message: `Synced ${synced ?? 0} review${synced !== 1 ? 's' : ''}.`, type: 'success' });
       await loadReviews();
+    } finally {
+      setSyncing(false);
     }
-    setSyncing(false);
   }
 
   async function handleGenerateDraft(id: string) {
@@ -1459,6 +1497,8 @@ async function handleFlag(id: string) {
           avgRatingStr={activeReviews.length ? `${(activeReviews.reduce((s,r) => s + r.rating, 0) / activeReviews.length).toFixed(1)} ★` : '—'}
           replyRate={replyRate}
           avgResponseTime={avgResponseTime}
+          within24h={within24h}
+          within48h={within48h}
           showLines={showChart}
         />
       </div>

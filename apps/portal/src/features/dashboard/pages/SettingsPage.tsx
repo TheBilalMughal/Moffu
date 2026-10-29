@@ -462,6 +462,9 @@ export function SettingsPage() {
   const [fetchingLocations, setFetchingLocations] = useState(false);
   const [locationLimit, setLocationLimit] = useState<number | null>(null);
   const [showLocationUpgrade, setShowLocationUpgrade] = useState(false);
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
+  const [autoSyncInterval, setAutoSyncInterval] = useState<import('@/features/google/google.service').AutoSyncInterval>('4h');
+  const [savingAutoSync, setSavingAutoSync] = useState(false);
 
   // Business search
   const [bizSearch, setBizSearch] = useState('');
@@ -647,8 +650,21 @@ export function SettingsPage() {
       googleService.getLocations(),
     ]);
     setConnection(conn ?? null);
+    if (conn) {
+      setAutoSyncEnabled(conn.auto_sync_enabled);
+      setAutoSyncInterval(conn.auto_sync_interval);
+    }
     setLocations(locs ?? []);
     setConnLoading(false);
+  }
+
+  async function handleAutoSyncSave(enabled: boolean, interval: typeof autoSyncInterval) {
+    if (!connection) return;
+    setSavingAutoSync(true);
+    const { error } = await googleService.updateAutoSync(connection.id, enabled, interval);
+    setSavingAutoSync(false);
+    if (error) showToast('Could not save auto-sync setting.', 'error');
+    else showToast('Auto-sync settings saved.', 'success');
   }
 
   useEffect(() => {
@@ -1158,6 +1174,43 @@ export function SettingsPage() {
               )}
               {isConnected && connection?.last_synced_at && (
                 <p className="mt-4 text-xs text-[#9CA3AF]">Last synced: {new Date(connection.last_synced_at).toLocaleString()}</p>
+              )}
+
+              {/* Auto-Sync Schedule */}
+              {isConnected && (
+                <div className="mt-5 pt-5 border-t border-[#F3F4F6]">
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div>
+                      <p className="text-sm font-medium text-[#111827]">Auto-Sync Reviews</p>
+                      <p className="text-xs text-[#9CA3AF] mt-0.5">Automatically fetch new reviews from Google on a schedule.</p>
+                    </div>
+                    {/* Toggle */}
+                    <button
+                      onClick={() => {
+                        const next = !autoSyncEnabled;
+                        setAutoSyncEnabled(next);
+                        handleAutoSyncSave(next, autoSyncInterval);
+                      }}
+                      className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${autoSyncEnabled ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}
+                    >
+                      <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ${autoSyncEnabled ? 'translate-x-4' : 'translate-x-0'}`}/>
+                    </button>
+                  </div>
+
+                  {autoSyncEnabled && (
+                    <div className="mt-3 flex items-center gap-2 flex-wrap">
+                      <p className="text-xs text-[#6B7280]">Sync every</p>
+                      {(['1h','4h','12h','24h'] as const).map(opt => (
+                        <button key={opt}
+                          onClick={() => { setAutoSyncInterval(opt); handleAutoSyncSave(true, opt); }}
+                          className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${autoSyncInterval === opt ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+                          {opt === '1h' ? '1 hour' : opt === '4h' ? '4 hours' : opt === '12h' ? '12 hours' : '24 hours'}
+                        </button>
+                      ))}
+                      {savingAutoSync && <span className="text-xs text-[#9CA3AF]">Saving…</span>}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}

@@ -4,6 +4,8 @@ export type GoogleConnectionState =
   | 'PENDING' | 'CONNECTED' | 'ATTENTION_REQUIRED'
   | 'REFRESH_FAILED' | 'REVOKED' | 'DISCONNECTED' | 'ERROR';
 
+export type AutoSyncInterval = '1h' | '4h' | '12h' | '24h';
+
 export interface GoogleConnection {
   id: string;
   state: GoogleConnectionState;
@@ -11,6 +13,8 @@ export interface GoogleConnection {
   connected_at: string | null;
   last_synced_at: string | null;
   error_message: string | null;
+  auto_sync_enabled: boolean;
+  auto_sync_interval: AutoSyncInterval;
 }
 
 export interface GoogleLocation {
@@ -41,10 +45,19 @@ export const googleService = {
   async getConnection(): Promise<{ data?: GoogleConnection | null; error?: string }> {
     const { data, error } = await supabase
       .from('google_connections')
-      .select('id, state, google_email, connected_at, last_synced_at, error_message')
+      .select('id, state, google_email, connected_at, last_synced_at, error_message, auto_sync_enabled, auto_sync_interval')
       .maybeSingle();
     if (error) return { error: error.message };
     return { data };
+  },
+
+  async updateAutoSync(connectionId: string, enabled: boolean, interval: AutoSyncInterval): Promise<{ error?: string }> {
+    const { error } = await supabase
+      .from('google_connections')
+      .update({ auto_sync_enabled: enabled, auto_sync_interval: interval })
+      .eq('id', connectionId);
+    if (error) return { error: error.message };
+    return {};
   },
 
   async getLocations(): Promise<{ data?: GoogleLocation[]; error?: string }> {
