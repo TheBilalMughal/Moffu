@@ -16,6 +16,7 @@ interface SavedFilters {
   search: string; statusFilter: 'all' | UiStatus;
   ratingFilter: number; locationFilter: string;
   dateFrom: string; dateTo: string; sortBy: SortKey;
+  withBody?: boolean;
 }
 interface Review {
   id: string; reviewer_name: string; rating: number;
@@ -868,14 +869,13 @@ function PageSizeDropdown({ value, onChange }: { value: number; onChange: (n: nu
 }
 
 function ReviewRow({ review, locationName, expanded, selected, focused, onToggle, onSelect,
-  onGenerateDraft, onPublish, onDiscard, onSaveNote, onFlag }: {
+  onGenerateDraft, onPublish, onDiscard, onFlag }: {
   review: Review; locationName: string; expanded: boolean;
   selected: boolean; focused: boolean;
   onToggle: () => void; onSelect: (e: React.MouseEvent) => void;
   onGenerateDraft: (id: string) => void;
   onPublish: (id: string, draft: string) => Promise<{ error?: string }>;
   onDiscard: (id: string) => Promise<void>;
-  onSaveNote: (id: string, note: string) => Promise<void>;
   onFlag: (id: string) => void;
 }) {
   const uiStatus = toUiStatus(review.status);
@@ -883,8 +883,6 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
   const [modalOpen, setModalOpen] = useState(false);
   const [modalInitialText, setModalInitialText] = useState<string | undefined>(undefined);
   const [historyTab, setHistoryTab] = useState(false);
-  const [note, setNote] = useState(review.notes ?? '');
-  const [savingNote, setSavingNote] = useState(false);
   const [showManual, setShowManual] = useState(false);
   const [manualText, setManualText] = useState('');
   const isDrafting = review.status === 'DRAFTING';
@@ -892,15 +890,6 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
   const initials = (review.reviewer_name ?? '?').split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
   const age = fmtAge(review.published_at, uiStatus);
   const sentiment = getSentiment(review.rating);
-
-  useEffect(() => { setNote(review.notes ?? ''); }, [review.notes]);
-
-  async function handleNoteSave() {
-    if (note === (review.notes ?? '')) return;
-    setSavingNote(true);
-    await onSaveNote(review.id, note);
-    setSavingNote(false);
-  }
 
   // Response time for replied reviews
   const responseTimeDays = uiStatus === 'replied' && review.reply_published_at && review.published_at
@@ -923,7 +912,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
       )}
 
       <tr onClick={onToggle}
-        className={`group cursor-pointer border-b border-[#F3F4F6] transition-colors ${focused ? 'ring-1 ring-inset ring-[#0D4C3C]/30' : ''} ${expanded ? 'bg-[#F8FAF9]' : 'hover:bg-[#FAFAFA]'} ${selected ? 'bg-[#F0F7F5]' : ''}`}>
+        className={`group cursor-pointer border-b border-[#F3F4F6] transition-colors ${focused ? 'ring-1 ring-inset ring-[#0D4C3C]/30' : ''} ${expanded ? 'bg-[#F0F7F5]' : selected ? 'bg-[#E6F2EE] hover:bg-[#DCF0E8]' : 'hover:bg-[#F0F4F2]'}`}>
 
         {/* Checkbox — hidden for PUBLISHED reviews */}
         <td className="pl-10 pr-2 py-1.5 w-10" onClick={e => { e.stopPropagation(); if (uiStatus !== 'replied') onSelect(e); }}>
@@ -1112,14 +1101,6 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
                 </div>
               )}
 
-              {/* Internal notes */}
-              <div>
-                <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-1.5">Internal Note <span className="normal-case font-normal">(private, not published)</span></p>
-                <textarea value={note} onChange={e => setNote(e.target.value)} onBlur={handleNoteSave} rows={2}
-                  placeholder="Add a note for your team…"
-                  className="w-full text-sm text-[#374151] border border-[#D1D5DB] rounded-lg px-3 py-2 focus:outline-none focus:border-[#0D4C3C] resize-none transition-colors"/>
-                {savingNote && <p className="text-xs text-[#9CA3AF] mt-1">Saving…</p>}
-              </div>
             </div>
           </td>
         </tr>
@@ -1148,6 +1129,7 @@ export function ReviewsPage() {
   const [dateTo, setDateTo] = useState('');
   const [sortBy, setSortBy] = useState<SortKey>('newest');
   const [flagFilter, setFlagFilter] = useState(false);
+  const [withBodyFilter, setWithBodyFilter] = useState(false);
 
   // Presets
   const [presets, setPresets] = useState<FilterPreset[]>(loadPresets);
@@ -1250,6 +1232,7 @@ export function ReviewsPage() {
       if (dateFrom && r.published_at && r.published_at < dateFrom) return false;
       if (dateTo && r.published_at && r.published_at > dateTo + 'T23:59:59') return false;
       if (flagFilter && r.status !== 'NEEDS_ATTENTION') return false;
+      if (withBodyFilter && !r.body?.trim()) return false;
       return true;
     });
     if (sortBy === 'oldest')     list = [...list].sort((a,b) => (a.published_at ?? '') < (b.published_at ?? '') ? -1 : 1);
@@ -1262,7 +1245,7 @@ export function ReviewsPage() {
       return (a.published_at ?? '') < (b.published_at ?? '') ? -1 : 1;
     });
     return list;
-  }, [reviews, locations, statusFilter, ratingFilter, globalLocationId, locationFilter, search, dateFrom, dateTo, sortBy, flagFilter]);
+  }, [reviews, locations, statusFilter, ratingFilter, globalLocationId, locationFilter, search, dateFrom, dateTo, sortBy, flagFilter, withBodyFilter]);
 
   useEffect(() => { filteredRef.current = filtered; }, [filtered]);
 
@@ -1276,7 +1259,7 @@ export function ReviewsPage() {
     replied:    activeReviews.filter(r => toUiStatus(r.status) === 'replied').length,
   };
   const avgRating = activeReviews.length ? (activeReviews.reduce((s,r) => s + r.rating, 0) / activeReviews.length).toFixed(1) : '—';
-  const hasFilters = !!(search || statusFilter !== 'all' || ratingFilter > 0 || locationFilter || dateFrom || dateTo || flagFilter);
+  const hasFilters = !!(search || statusFilter !== 'all' || ratingFilter > 0 || locationFilter || dateFrom || dateTo || flagFilter || withBodyFilter);
 
   // Stats bar computations
   const repliedCount = activeReviews.filter(r => r.status === 'PUBLISHED').length;
@@ -1287,7 +1270,7 @@ export function ReviewsPage() {
     : '—';
 
   function locationName(id: string | null) { return id ? (locations.find(l => l.id === id)?.display_name ?? '') : ''; }
-  function clearAll() { setSearch(''); setStatusFilter('all'); setRatingFilter(0); setLocationFilter(''); setDateFrom(''); setDateTo(''); setSortBy('newest'); setFlagFilter(false); setPage(1); }
+  function clearAll() { setSearch(''); setStatusFilter('all'); setRatingFilter(0); setLocationFilter(''); setDateFrom(''); setDateTo(''); setSortBy('newest'); setFlagFilter(false); setWithBodyFilter(false); setPage(1); }
 
   async function handleSync() {
     setSyncing(true);
@@ -1326,12 +1309,7 @@ export function ReviewsPage() {
     await loadReviews(); setExpandedId(null);
   }
 
-  async function handleSaveNote(id: string, note: string) {
-    await supabase.from('reviews').update({ notes: note || null }).eq('id', id);
-    setReviews(p => p.map(r => r.id === id ? { ...r, notes: note || null } : r));
-  }
-
-  async function handleFlag(id: string) {
+async function handleFlag(id: string) {
     const review = reviews.find(r => r.id === id);
     if (!review) return;
     const newStatus: DbStatus = review.status === 'NEEDS_ATTENTION' ? 'NEW' : 'NEEDS_ATTENTION';
@@ -1392,7 +1370,7 @@ export function ReviewsPage() {
     if (!presetName.trim()) return;
     const p: FilterPreset = {
       id: Date.now().toString(), name: presetName.trim(),
-      filters: { search, statusFilter, ratingFilter, locationFilter, dateFrom, dateTo, sortBy },
+      filters: { search, statusFilter, ratingFilter, locationFilter, dateFrom, dateTo, sortBy, withBody: withBodyFilter },
     };
     const updated = [...presets, p];
     setPresets(updated); savePresets(updated);
@@ -1403,6 +1381,7 @@ export function ReviewsPage() {
     const f = p.filters;
     setSearch(f.search); setStatusFilter(f.statusFilter); setRatingFilter(f.ratingFilter);
     setLocationFilter(f.locationFilter); setDateFrom(f.dateFrom); setDateTo(f.dateTo); setSortBy(f.sortBy);
+    setWithBodyFilter(f.withBody ?? false);
     setPage(1);
   }
 
@@ -1539,6 +1518,16 @@ export function ReviewsPage() {
               Flagged
             </button>
 
+            <button
+              onClick={() => { setWithBodyFilter(f => !f); setPage(1); }}
+              title="Show only reviews with written text"
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium border transition-colors ${withBodyFilter ? 'bg-[#E6F2EE] border-[#0D4C3C] text-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+              </svg>
+              Has Review
+            </button>
+
             {reviews.length > 0 && (
               <>
                 <div className="w-px h-5 bg-[#E5E7EB] mx-0.5 flex-shrink-0"/>
@@ -1624,7 +1613,6 @@ export function ReviewsPage() {
                   onGenerateDraft={handleGenerateDraft}
                   onPublish={handlePublish}
                   onDiscard={handleDiscard}
-                  onSaveNote={handleSaveNote}
                   onFlag={handleFlag}
                 />
               ))}
