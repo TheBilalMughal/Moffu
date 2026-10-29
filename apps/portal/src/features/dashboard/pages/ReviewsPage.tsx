@@ -669,24 +669,33 @@ function PublishModal({ review, locationName, onClose, onPublish, initialText }:
 
 // ── Bulk Action Bar ───────────────────────────────────────────────────────────
 
-function BulkActionBar({ count, generating, onGenerate, onClear, onMarkAttention, onExportSelected }: {
-  count: number; generating: boolean;
-  onGenerate: () => void; onClear: () => void;
+function BulkActionBar({ count, generating, publishing, publishableCount, onGenerate, onPublish, onClear, onMarkAttention, onExportSelected }: {
+  count: number; generating: boolean; publishing: boolean; publishableCount: number;
+  onGenerate: () => void; onPublish: () => void; onClear: () => void;
   onMarkAttention: () => void; onExportSelected: () => void;
 }) {
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[#111827] text-white rounded-xl px-5 py-3 shadow-xl">
       <span className="text-sm font-medium">{count} selected</span>
       <div className="w-px h-4 bg-white/20"/>
-      <button onClick={onGenerate} disabled={generating}
+      <button onClick={onGenerate} disabled={generating || publishing}
         className="flex items-center gap-1.5 text-sm font-semibold text-[#0D4C3C] bg-white hover:bg-[#F0F7F5] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
         <svg className={`w-3.5 h-3.5 ${generating ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
         </svg>
         {generating ? 'Generating…' : `Generate Drafts (${count})`}
       </button>
-      <button onClick={onMarkAttention}
-        className="flex items-center gap-1.5 text-sm font-semibold text-amber-600 bg-white hover:bg-amber-50 px-3 py-1.5 rounded-lg transition-colors">
+      {publishableCount > 0 && (
+        <button onClick={onPublish} disabled={publishing || generating}
+          className="flex items-center gap-1.5 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+          <svg className={`w-3.5 h-3.5 ${publishing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
+          </svg>
+          {publishing ? 'Publishing…' : `Publish Drafts (${publishableCount})`}
+        </button>
+      )}
+      <button onClick={onMarkAttention} disabled={generating || publishing}
+        className="flex items-center gap-1.5 text-sm font-semibold text-amber-600 bg-white hover:bg-amber-50 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21V5a2 2 0 012-2h14l-3 5 3 5H5v8"/>
         </svg>
@@ -916,11 +925,15 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
       <tr onClick={onToggle}
         className={`group cursor-pointer border-b border-[#F3F4F6] transition-colors ${focused ? 'ring-1 ring-inset ring-[#0D4C3C]/30' : ''} ${expanded ? 'bg-[#F8FAF9]' : 'hover:bg-[#FAFAFA]'} ${selected ? 'bg-[#F0F7F5]' : ''}`}>
 
-        {/* Checkbox */}
-        <td className="pl-10 pr-2 py-1.5 w-10" onClick={e => { e.stopPropagation(); onSelect(e); }}>
-          <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${selected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] group-hover:border-[#0D4C3C]'}`}>
-            {selected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
-          </div>
+        {/* Checkbox — hidden for PUBLISHED reviews */}
+        <td className="pl-10 pr-2 py-1.5 w-10" onClick={e => { e.stopPropagation(); if (uiStatus !== 'replied') onSelect(e); }}>
+          {uiStatus !== 'replied' ? (
+            <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${selected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] group-hover:border-[#0D4C3C]'}`}>
+              {selected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
+            </div>
+          ) : (
+            <div className="w-4 h-4"/>
+          )}
         </td>
 
         {/* Date */}
@@ -1148,6 +1161,7 @@ export function ReviewsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [focusedIdx, setFocusedIdx] = useState(-1);
   const [bulkGenerating, setBulkGenerating] = useState(false);
+  const [bulkPublishing, setBulkPublishing] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showChart, setShowChart] = useState(true);
 
@@ -1333,6 +1347,20 @@ export function ReviewsPage() {
     setToast({ message: `Generated drafts for ${ids.length} review${ids.length !== 1 ? 's' : ''}.`, type: 'success' });
   }
 
+  async function handleBulkPublish() {
+    setBulkPublishing(true);
+    const draftReady = reviews.filter(r => selectedIds.has(r.id) && r.status === 'DRAFT_READY' && r.reply_draft);
+    let published = 0;
+    for (const r of draftReady) {
+      const result = await googleService.publishReply(r.id, r.reply_draft!);
+      if (!result.error) published++;
+    }
+    await loadReviews();
+    setSelectedIds(new Set());
+    setBulkPublishing(false);
+    setToast({ message: `Published ${published} repl${published !== 1 ? 'ies' : 'y'} to Google.`, type: 'success' });
+  }
+
   async function handleBulkMarkAttention() {
     const count = selectedIds.size;
     await supabase.from('reviews').update({ status: 'NEEDS_ATTENTION' }).in('id', [...selectedIds]);
@@ -1351,8 +1379,8 @@ export function ReviewsPage() {
   }
 
   function toggleSelectAll() {
-    const pageIds = paginated.map(r => r.id);
-    const allSelected = pageIds.every(id => selectedIds.has(id));
+    const pageIds = paginated.filter(r => r.status !== 'PUBLISHED').map(r => r.id);
+    const allSelected = pageIds.length > 0 && pageIds.every(id => selectedIds.has(id));
     setSelectedIds(prev => {
       const s = new Set(prev);
       if (allSelected) pageIds.forEach(id => s.delete(id)); else pageIds.forEach(id => s.add(id));
@@ -1383,7 +1411,12 @@ export function ReviewsPage() {
     setPresets(updated); savePresets(updated);
   }
 
-  const allPageSelected = paginated.length > 0 && paginated.every(r => selectedIds.has(r.id));
+  const selectablePage = paginated.filter(r => r.status !== 'PUBLISHED');
+  const allPageSelected = selectablePage.length > 0 && selectablePage.every(r => selectedIds.has(r.id));
+  const publishableCount = [...selectedIds].filter(id => {
+    const r = reviews.find(rev => rev.id === id);
+    return r && r.status === 'DRAFT_READY' && r.reply_draft;
+  }).length;
 
   return (
     <div className="h-full flex flex-col">
@@ -1393,7 +1426,10 @@ export function ReviewsPage() {
         <BulkActionBar
           count={selectedIds.size}
           generating={bulkGenerating}
+          publishing={bulkPublishing}
+          publishableCount={publishableCount}
           onGenerate={handleBulkGenerate}
+          onPublish={handleBulkPublish}
           onClear={() => setSelectedIds(new Set())}
           onMarkAttention={handleBulkMarkAttention}
           onExportSelected={handleExportSelected}
