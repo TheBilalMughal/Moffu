@@ -555,7 +555,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
       </div>}
 
       {/* Stat cards — full width single row */}
-      <div className="flex items-center bg-[#F9FAFB] rounded-lg mt-4 flex-wrap">
+      <div className="flex items-center bg-white/60 backdrop-blur-sm border border-white/60 rounded-xl mt-4 flex-wrap">
         <div className="flex-1 min-w-[120px] px-4 py-3">
           <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Total Reviews</p>
           <p className="text-lg font-bold text-[#111827]">{totalReviews}</p>
@@ -1518,7 +1518,11 @@ async function handleFlag(id: string) {
   }).length;
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="relative h-full flex flex-col">
+      {/* Ambient blobs */}
+      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
+
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)}/>}
       {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
       {autoModal === 'sync' && (
@@ -1546,7 +1550,7 @@ async function handleFlag(id: string) {
       )}
 
       {/* Header */}
-      <div className="px-10 py-4 flex items-center justify-between gap-4 flex-shrink-0">
+      <div className="relative z-10 px-10 py-4 flex items-center justify-between gap-4 flex-shrink-0 bg-white/60 backdrop-blur-sm border-b border-white/60">
         <div>
           <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
         </div>
@@ -1618,6 +1622,9 @@ async function handleFlag(id: string) {
 
       {/* Chart — full width */}
       <div className="px-10 pt-4 pb-5 flex-shrink-0">
+        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 px-6 py-5">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl"/>
+          <div className="relative">
         <ReviewsLineChart
           reviews={activeReviews}
           totalReviews={activeReviews.length}
@@ -1628,13 +1635,15 @@ async function handleFlag(id: string) {
           within48h={within48h}
           showLines={showChart}
         />
+          </div>
+        </div>
       </div>
 
       {/* Filter bar + Table */}
       <div className="flex-1 flex flex-col min-h-0">
 
         {/* Filter bar — outside scroll, always visible */}
-        <div className="flex-shrink-0 border-b border-[#E5EAE8] px-10 py-2.5">
+        <div className="flex-shrink-0 border-b border-[#E5EAE8]/60 bg-white/60 backdrop-blur-sm px-10 py-2.5">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Status tabs */}
             {(['all','pending','draft_ready','replied'] as const).map(key => {
@@ -1736,7 +1745,7 @@ async function handleFlag(id: string) {
         {/* Scrollable table area */}
         <div className="flex-1 overflow-auto">
         {loading ? (
-          <div className="px-10 py-4 space-y-2">{[1,2,3,4,5].map(n => <div key={n} className="h-12 bg-[#F3F4F6] rounded-lg animate-pulse"/>)}</div>
+          <div className="px-10 py-4 space-y-2">{[1,2,3,4,5].map(n => <div key={n} className="h-12 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 animate-pulse"/>)}</div>
         ) : paginated.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-10">
             <svg className="w-10 h-10 text-[#D1D5DB] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1749,7 +1758,7 @@ async function handleFlag(id: string) {
           </div>
         ) : (
           <table className="w-full">
-            <thead className="bg-[#FAFAFA] border-b border-[#E5EAE8] sticky top-0 z-10">
+            <thead className="bg-white/80 backdrop-blur-sm border-b border-[#E5EAE8]/60 sticky top-0 z-10">
               <tr>
                 <th className="pl-10 pr-2 py-2.5 w-10">
                   <div onClick={toggleSelectAll}
@@ -1766,7 +1775,7 @@ async function handleFlag(id: string) {
                 <th className="w-6"/>
               </tr>
             </thead>
-            <tbody className="bg-white">
+            <tbody className="bg-white/80">
               {paginated.map((review, idx) => (
                 <ReviewRow
                   key={`${review.id}-${review.status}-${review.reply_draft??''}`}
@@ -1789,7 +1798,7 @@ async function handleFlag(id: string) {
       </div>
 
       {/* Pagination */}
-      <div className="px-10 py-2.5 border-t border-[#E5EAE8] bg-white flex items-center justify-between flex-shrink-0">
+      <div className="px-10 py-2.5 border-t border-[#E5EAE8]/60 bg-white/70 backdrop-blur-sm flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
           <p className="text-xs text-[#9CA3AF]">
             {filtered.length === 0
