@@ -44,7 +44,6 @@ async function doRefreshToken(rt: string, clientId: string, clientSecret: string
   return res.json() as Promise<{ access_token: string; expires_in: number }>;
 }
 
-// Extract numeric location ID from "locations/123" or "accounts/xxx/locations/123"
 function extractLocationId(name: string): string | null {
   const m = name.match(/locations\/(\d+)$/);
   return m ? m[1]! : null;
@@ -52,7 +51,7 @@ function extractLocationId(name: string): string | null {
 
 function dateRange(days: number): { start: Date; end: Date } {
   const end = new Date();
-  end.setDate(end.getDate() - 2); // Google data has ~2 day delay
+  end.setDate(end.getDate() - 2);
   const start = new Date(end);
   start.setDate(start.getDate() - days + 1);
   return { start, end };
@@ -82,7 +81,6 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    // Auth
     const authHeader = req.headers.get('authorization');
     if (!authHeader) return json({ error: 'Missing authorization' }, 401);
 
@@ -96,10 +94,10 @@ Deno.serve(async (req) => {
     const startDateStr: string | null = body.start_date ?? null;
     const endDateStr:   string | null = body.end_date   ?? null;
 
-    // Get connection
+    // Get connection (now includes baseline_snapshot)
     const { data: conn } = await supabase
       .from('google_connections')
-      .select('id, state, token_expiry')
+      .select('id, state, token_expiry, baseline_snapshot')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -107,7 +105,6 @@ Deno.serve(async (req) => {
       return json({ error: 'Google not connected' }, 400);
     }
 
-    // Get tokens from separate table
     const { data: tokenRow } = await supabase
       .from('google_connection_tokens')
       .select('access_token, refresh_token')
@@ -120,7 +117,6 @@ Deno.serve(async (req) => {
 
     const { clientId, clientSecret } = await getGoogleCreds(supabase);
 
-    // Use existing access token if still valid, otherwise refresh
     let access_token = tokenRow.access_token;
     const expiry = conn.token_expiry ? new Date(conn.token_expiry) : new Date(0);
     if (expiry <= new Date(Date.now() + 60_000)) {
@@ -134,7 +130,6 @@ Deno.serve(async (req) => {
         .eq('id', conn.id);
     }
 
-    // Get selected locations
     let locQuery = supabase
       .from('google_locations')
       .select('id, google_location_name, display_name')
@@ -148,7 +143,7 @@ Deno.serve(async (req) => {
     );
 
     if (validLocs.length === 0) {
-      return json({ metrics: [], totals: {}, queries: [], locations: [] });
+      return json({ metrics: [], totals: {}, queries: [], locations: [], baseline: conn.baseline_snapshot });
     }
 
     let start: Date, end: Date;
@@ -162,7 +157,6 @@ Deno.serve(async (req) => {
     const startParam = toDateParam(start);
     const endParam = toDateParam(end);
 
-    // Fetch metrics for each location and aggregate
     const allDailyMap = new Map<string, {
       views_search: number; views_maps: number;
       calls: number; website_clicks: number; direction_requests: number;
@@ -229,12 +223,30 @@ Deno.serve(async (req) => {
       locResults.push({ id: loc.id, display_name: loc.display_name, total_views: locViews });
     }
 
-    // Sort metrics by date
     const metrics = [...allDailyMap.entries()]
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, vals]) => ({ date, ...vals }));
 
-    // Fetch search queries for first valid location (or filtered)
+    // Save baseline snapshot on first successful fetch
+    const currentTotals = {
+      views_search: totalViewsSearch,
+      views_maps: totalViewsMaps,
+      calls: totalCalls,
+      website_clicks: totalWebsite,
+      direction_requests: totalDirections,
+      total_views: totalViewsSearch + totalViewsMaps,
+      captured_at: new Date().toISOString().slice(0, 10),
+    };
+    if (!conn.baseline_snapshot && metrics.length > 0) {
+      await supabase.from('google_connections')
+        .update({
+          baseline_snapshot: currentTotals,
+          baseline_captured_at: new Date().toISOString(),
+        })
+        .eq('id', conn.id);
+    }
+
+    // Fetch search queries
     let queries: { query: string; count: number }[] = [];
     const firstLoc = validLocs[0];
     if (firstLoc) {
@@ -257,17 +269,11 @@ Deno.serve(async (req) => {
 
     return json({
       metrics,
-      totals: {
-        views_search: totalViewsSearch,
-        views_maps: totalViewsMaps,
-        calls: totalCalls,
-        website_clicks: totalWebsite,
-        direction_requests: totalDirections,
-        total_views: totalViewsSearch + totalViewsMaps,
-      },
+      totals: currentTotals,
       queries,
       locations: locResults,
       date_range: { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) },
+      baseline: conn.baseline_snapshot ?? currentTotals,
     });
 
   } catch (err) {
