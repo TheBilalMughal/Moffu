@@ -1550,7 +1550,7 @@ async function handleFlag(id: string) {
       )}
 
       {/* Header */}
-      <div className="relative z-10 px-10 py-4 flex items-center justify-between gap-4 flex-shrink-0 bg-white/60 backdrop-blur-sm border-b border-white/60">
+      <div className="relative z-10 px-10 py-4 flex items-center justify-between gap-4 flex-shrink-0 backdrop-blur-sm border-b border-white/60">
         <div>
           <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
         </div>
