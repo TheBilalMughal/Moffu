@@ -412,29 +412,32 @@ function StatCard({
       : null;
 
   return (
-    <div className="bg-white rounded-xl border border-[#E5EAE8] px-5 py-4">
-      <div className="flex items-start justify-between mb-1">
-        <p className="text-xs text-[#6B7280]">{label}</p>
-        {trend != null && (
-          <span className={`flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md flex-shrink-0 ${
-            trend >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
-          }`}>
-            {trend >= 0 ? '▲' : '▼'} {Math.abs(trend)}%
-          </span>
+    <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 px-5 py-4">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/4 via-transparent to-transparent pointer-events-none" />
+      <div className="relative">
+        <div className="flex items-start justify-between mb-1">
+          <p className="text-xs text-[#6B7280]">{label}</p>
+          {trend != null && (
+            <span className={`flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md flex-shrink-0 ${
+              trend >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+            }`}>
+              {trend >= 0 ? '▲' : '▼'} {Math.abs(trend)}%
+            </span>
+          )}
+        </div>
+        <p className={`text-2xl font-bold ${color}`}>{fmt(rawValue)}</p>
+        {sub && <p className="text-xs text-[#9CA3AF] mt-0.5">{sub}</p>}
+        {baselineValue != null && baseChange != null && (
+          <div className="mt-1.5 flex items-center gap-1.5">
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
+              baseChange >= 0 ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'
+            }`}>
+              {baseChange >= 0 ? '↑' : '↓'} {Math.abs(baseChange)}%
+            </span>
+            <span className="text-[10px] text-[#9CA3AF]">since joined</span>
+          </div>
         )}
       </div>
-      <p className={`text-2xl font-bold ${color}`}>{fmt(rawValue)}</p>
-      {sub && <p className="text-xs text-[#9CA3AF] mt-0.5">{sub}</p>}
-      {baselineValue != null && baseChange != null && (
-        <div className="mt-1.5 flex items-center gap-1.5">
-          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
-            baseChange >= 0 ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'
-          }`}>
-            {baseChange >= 0 ? '↑' : '↓'} {Math.abs(baseChange)}%
-          </span>
-          <span className="text-[10px] text-[#9CA3AF]">since joined</span>
-        </div>
-      )}
     </div>
   );
 }
@@ -443,17 +446,20 @@ function StatCard({
 
 function NotConnectedState() {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center px-4">
-      <div className="w-12 h-12 rounded-xl bg-[#F0F7F4] flex items-center justify-center mb-4">
-        <svg className="w-6 h-6 text-[#0D4C3C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-            d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-        </svg>
+    <div className="relative mx-6 my-6 overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 flex flex-col items-center justify-center py-24 text-center px-4">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/5 via-transparent to-transparent pointer-events-none" />
+      <div className="relative">
+        <div className="w-14 h-14 rounded-2xl bg-[#0D4C3C]/10 flex items-center justify-center mb-4 mx-auto">
+          <svg className="w-7 h-7 text-[#0D4C3C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+              d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+          </svg>
+        </div>
+        <h3 className="text-sm font-semibold text-[#111827] mb-1">Google not connected</h3>
+        <p className="text-xs text-[#6B7280] max-w-xs">
+          Connect your Google Business Profile in Settings to see performance insights.
+        </p>
       </div>
-      <h3 className="text-sm font-semibold text-[#111827] mb-1">Google not connected</h3>
-      <p className="text-xs text-[#6B7280] max-w-xs">
-        Connect your Google Business Profile in Settings to see performance insights.
-      </p>
     </div>
   );
 }
@@ -570,9 +576,15 @@ export function GoogleProfilePage() {
   const needsWeeks = metrics.length > 45;
 
   return (
-    <div className="w-full px-6 py-6 space-y-6">
+    <div className="relative w-full px-6 py-6 space-y-6">
+      {/* Ambient blobs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#0D4C3C]/5 blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 w-56 h-56 rounded-full bg-[#0D4C3C]/4 blur-3xl" />
+      </div>
+
       {/* ── Header ── */}
-      <div className="flex flex-wrap items-center gap-3 justify-between">
+      <div className="relative flex flex-wrap items-center gap-3 justify-between">
         <div>
           <h1 className="text-lg font-bold text-[#111827]">Google Profile</h1>
           <p className="text-xs text-[#9CA3AF] mt-0.5">Business performance insights</p>
@@ -583,10 +595,10 @@ export function GoogleProfilePage() {
           {baseline && (
             <button
               onClick={() => setShowBaselineCompare(o => !o)}
-              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
+              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl border backdrop-blur-sm transition-colors ${
                 showBaselineCompare
-                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                  : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#374151]'
+                  ? 'bg-blue-50/80 text-blue-700 border-blue-200'
+                  : 'bg-white/60 border-white/70 text-[#6B7280] hover:border-[#374151] hover:text-[#374151] shadow-sm'
               }`}
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -601,7 +613,7 @@ export function GoogleProfilePage() {
           <button
             onClick={() => downloadCSV(metrics, rangeLabel)}
             disabled={!metrics.length}
-            className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#374151] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl border bg-white/60 backdrop-blur-sm border-white/70 text-[#6B7280] hover:border-[#374151] hover:text-[#374151] transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -613,10 +625,10 @@ export function GoogleProfilePage() {
           {/* Range presets */}
           {(['7d', '30d', '90d'] as const).map(p => (
             <button key={p} onClick={() => setRange(p)}
-              className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
+              className={`text-xs font-medium px-3 py-1.5 rounded-xl border backdrop-blur-sm transition-colors ${
                 range === p
-                  ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]'
-                  : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#374151]'
+                  ? 'bg-[#0D4C3C] text-white border-[#0D4C3C] shadow-md shadow-[#0D4C3C]/20'
+                  : 'bg-white/60 border-white/70 text-[#6B7280] hover:border-[#374151] hover:text-[#374151] shadow-sm'
               }`}>
               {p}
             </button>
@@ -637,7 +649,7 @@ export function GoogleProfilePage() {
 
           {/* Refresh */}
           <button onClick={fetchData} disabled={loading}
-            className="p-1.5 rounded-lg border border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#374151] transition-colors disabled:opacity-40">
+            className="p-1.5 rounded-xl border bg-white/60 backdrop-blur-sm border-white/70 text-[#6B7280] hover:border-[#374151] hover:text-[#374151] transition-colors shadow-sm disabled:opacity-40">
             <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -653,9 +665,9 @@ export function GoogleProfilePage() {
 
       {/* Skeleton */}
       {loading && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="relative grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-[#E5EAE8] px-5 py-4 animate-pulse">
+            <div key={i} className="bg-white/60 backdrop-blur-md rounded-2xl border border-white/60 shadow-md px-5 py-4 animate-pulse">
               <div className="h-3 bg-[#F3F4F6] rounded w-2/3 mb-3"/>
               <div className="h-7 bg-[#F3F4F6] rounded w-1/2"/>
             </div>
@@ -686,7 +698,7 @@ export function GoogleProfilePage() {
 
           {/* Baseline info banner */}
           {showBaselineCompare && baseline?.captured_at && (
-            <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5 flex items-center gap-2">
+            <div className="bg-blue-50/80 backdrop-blur-sm border border-blue-100 rounded-xl px-4 py-2.5 flex items-center gap-2">
               <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -701,86 +713,103 @@ export function GoogleProfilePage() {
 
           {/* ── Views chart + donut ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2 bg-white rounded-xl border border-[#E5EAE8] p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-sm font-semibold text-[#111827]">Views over time</p>
-                  <p className="text-xs text-[#9CA3AF] mt-0.5">{needsWeeks ? 'Grouped by week' : 'Daily'}</p>
-                </div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-0.5 rounded-full bg-[#0D4C3C]"/>
-                    <span className="text-[11px] text-[#6B7280]">Total</span>
+            <div className="relative overflow-hidden lg:col-span-2 bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-sm font-semibold text-[#111827]">Views over time</p>
+                    <p className="text-xs text-[#9CA3AF] mt-0.5">{needsWeeks ? 'Grouped by week' : 'Daily'}</p>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-0.5 rounded-full bg-[#4FA882]"/>
-                    <span className="text-[11px] text-[#6B7280]">Search</span>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-0.5 rounded-full bg-[#0D4C3C]"/>
+                      <span className="text-[11px] text-[#6B7280]">Total</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-0.5 rounded-full bg-[#4FA882]"/>
+                      <span className="text-[11px] text-[#6B7280]">Search</span>
+                    </div>
+                    <button
+                      onClick={() => setShowReviewOverlay(o => !o)}
+                      className={`text-[11px] font-medium px-2 py-0.5 rounded-lg border transition-colors ${
+                        showReviewOverlay
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-white/60 border-white/70 text-[#9CA3AF] hover:text-[#6B7280]'
+                      }`}
+                    >
+                      {reviewLoading ? '…' : showReviewOverlay ? '● Reviews' : 'Reviews'}
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setShowReviewOverlay(o => !o)}
-                    className={`text-[11px] font-medium px-2 py-0.5 rounded-md border transition-colors ${
-                      showReviewOverlay
-                        ? 'bg-amber-50 text-amber-700 border-amber-200'
-                        : 'border-[#D1D5DB] text-[#9CA3AF] hover:text-[#6B7280]'
-                    }`}
-                  >
-                    {reviewLoading ? '…' : showReviewOverlay ? '● Reviews' : 'Reviews'}
-                  </button>
                 </div>
+                <ViewsChart metrics={metrics} reviewCounts={showReviewOverlay ? reviewCounts : null} />
               </div>
-              <ViewsChart metrics={metrics} reviewCounts={showReviewOverlay ? reviewCounts : null} />
             </div>
-            <div className="bg-white rounded-xl border border-[#E5EAE8] p-5 flex flex-col items-center justify-center">
-              <p className="text-sm font-semibold text-[#111827] mb-4 self-start">Views split</p>
-              <ViewsSplitRing search={totals.views_search} maps={totals.views_maps} />
+            <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+              <div className="relative w-full">
+                <p className="text-sm font-semibold text-[#111827] mb-4">Views split</p>
+                <ViewsSplitRing search={totals.views_search} maps={totals.views_maps} />
+              </div>
             </div>
           </div>
 
           {/* ── Actions chart ── */}
-          <div className="bg-white rounded-xl border border-[#E5EAE8] p-5">
-            <p className="text-sm font-semibold text-[#111827] mb-1">Customer actions</p>
-            <p className="text-xs text-[#9CA3AF] mb-4">{needsWeeks ? 'Grouped by week' : 'Daily'}</p>
-            <ActionsChart metrics={metrics} />
+          <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+            <div className="relative">
+              <p className="text-sm font-semibold text-[#111827] mb-1">Customer actions</p>
+              <p className="text-xs text-[#9CA3AF] mb-4">{needsWeeks ? 'Grouped by week' : 'Daily'}</p>
+              <ActionsChart metrics={metrics} />
+            </div>
           </div>
 
           {/* ── Day-of-week heatmap ── */}
-          <div className="bg-white rounded-xl border border-[#E5EAE8] p-5">
-            <p className="text-sm font-semibold text-[#111827] mb-1">Day-of-week patterns</p>
-            <p className="text-xs text-[#9CA3AF] mb-4">Which days drive the most activity</p>
-            <DayOfWeekHeatmap metrics={metrics} />
+          <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+            <div className="relative">
+              <p className="text-sm font-semibold text-[#111827] mb-1">Day-of-week patterns</p>
+              <p className="text-xs text-[#9CA3AF] mb-4">Which days drive the most activity</p>
+              <DayOfWeekHeatmap metrics={metrics} />
+            </div>
           </div>
 
           {/* ── Bottom row ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Search queries */}
             {data.queries.length > 0 && (
-              <div className="bg-white rounded-xl border border-[#E5EAE8] p-5">
-                <p className="text-sm font-semibold text-[#111827] mb-4">Top search queries</p>
-                <div className="space-y-2">
-                  {data.queries.slice(0, 10).map((q, i) => {
-                    const maxQ = data.queries[0]?.count ?? 1;
-                    const pct = Math.round((q.count / maxQ) * 100);
-                    return (
-                      <div key={i} className="flex items-center gap-3">
-                        <span className="text-[11px] text-[#9CA3AF] w-4 text-right">{i + 1}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="text-xs text-[#374151] truncate">{q.query}</span>
-                            <span className="text-[11px] text-[#9CA3AF] ml-2 flex-shrink-0">{fmt(q.count)}</span>
-                          </div>
-                          <div className="h-1 bg-[#F3F4F6] rounded-full overflow-hidden">
-                            <div className="h-1 bg-[#0D4C3C] rounded-full" style={{ width: `${pct}%` }}/>
+              <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+                <div className="relative">
+                  <p className="text-sm font-semibold text-[#111827] mb-4">Top search queries</p>
+                  <div className="space-y-2">
+                    {data.queries.slice(0, 10).map((q, i) => {
+                      const maxQ = data.queries[0]?.count ?? 1;
+                      const pct = Math.round((q.count / maxQ) * 100);
+                      return (
+                        <div key={i} className="flex items-center gap-3">
+                          <span className="text-[11px] text-[#9CA3AF] w-4 text-right">{i + 1}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <span className="text-xs text-[#374151] truncate">{q.query}</span>
+                              <span className="text-[11px] text-[#9CA3AF] ml-2 flex-shrink-0">{fmt(q.count)}</span>
+                            </div>
+                            <div className="h-1 bg-[#F3F4F6] rounded-full overflow-hidden">
+                              <div className="h-1 bg-[#0D4C3C] rounded-full" style={{ width: `${pct}%` }}/>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Actions breakdown */}
-            <div className="bg-white rounded-xl border border-[#E5EAE8] p-5">
+            <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+              <div className="relative">
               <p className="text-sm font-semibold text-[#111827] mb-4">Actions breakdown</p>
               {(() => {
                 const actionTotal = totals.calls + totals.website_clicks + totals.direction_requests;
@@ -817,12 +846,15 @@ export function GoogleProfilePage() {
                   </div>
                 );
               })()}
+              </div>
             </div>
           </div>
 
           {/* Location breakdown */}
           {data.locations.length > 1 && (
-            <div className="bg-white rounded-xl border border-[#E5EAE8] p-5">
+            <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+              <div className="relative">
               <p className="text-sm font-semibold text-[#111827] mb-4">By location</p>
               <div className="space-y-2">
                 {[...data.locations].sort((a, b) => b.total_views - a.total_views).map(loc => {
@@ -839,13 +871,14 @@ export function GoogleProfilePage() {
                   );
                 })}
               </div>
+              </div>
             </div>
           )}
         </>
       )}
 
       {!loading && !error && !totals && isConnected && (
-        <div className="text-center py-16 text-sm text-[#9CA3AF]">
+        <div className="relative overflow-hidden bg-white/60 backdrop-blur-md rounded-2xl border border-white/60 shadow-md text-center py-16 text-sm text-[#9CA3AF]">
           No data for this period. Google Performance data may have a 2-day delay.
         </div>
       )}
