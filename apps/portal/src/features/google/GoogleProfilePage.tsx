@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useLocationStore } from '@/features/location/location.store';
+import { DateRangePicker } from '@/components/DateRangePicker';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -465,8 +466,6 @@ export function GoogleProfilePage() {
   const [range, setRange] = useState<RangePreset>('30d');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
-  const [showCustom, setShowCustom] = useState(false);
-  const customRef = useRef<HTMLDivElement>(null);
 
   const [isConnected, setIsConnected] = useState(false);
   const [data, setData] = useState<InsightsData | null>(null);
@@ -480,19 +479,7 @@ export function GoogleProfilePage() {
   const [showBaselineCompare, setShowBaselineCompare] = useState(false);
   const [baseline, setBaseline] = useState<Totals | null>(null);
 
-  const today = new Date().toISOString().slice(0, 10);
   const RANGE_DAYS: Record<string, number> = { '7d': 7, '30d': 30, '90d': 90 };
-
-  // Close custom picker on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (customRef.current && !customRef.current.contains(e.target as Node)) {
-        setShowCustom(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   // Check Google connection
   useEffect(() => {
@@ -511,7 +498,7 @@ export function GoogleProfilePage() {
       if (!session) throw new Error('Not authenticated');
 
       const body: Record<string, unknown> = {};
-      if (range === 'custom' && customFrom && customTo) {
+      if (customFrom && customTo) {
         body.start_date = customFrom;
         body.end_date   = customTo;
       } else {
@@ -571,17 +558,9 @@ export function GoogleProfilePage() {
       });
   }, [showReviewOverlay, data?.date_range]);
 
-  const handleCustomApply = () => {
-    if (customFrom && customTo && customFrom <= customTo) {
-      setRange('custom');
-      setShowCustom(false);
-    }
-  };
-
-  const customLabel = customFrom && customTo
-    ? `${fmtDate(customFrom)} – ${fmtDate(customTo)}`
-    : 'Custom';
-  const rangeLabel = range === 'custom' ? customLabel : range;
+  const rangeLabel = customFrom && customTo
+    ? `${fmtDate(customFrom)}-${fmtDate(customTo)}`
+    : range;
 
   if (!isConnected && !loading) return <NotConnectedState />;
 
@@ -644,48 +623,17 @@ export function GoogleProfilePage() {
           ))}
 
           {/* Custom date picker */}
-          <div ref={customRef} className="relative">
-            <button
-              onClick={() => setShowCustom(o => !o)}
-              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
-                range === 'custom'
-                  ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]'
-                  : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#374151]'
-              }`}
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-              {range === 'custom' ? customLabel : 'Custom'}
-            </button>
-            {showCustom && (
-              <div className="absolute right-0 top-full mt-1.5 bg-white rounded-xl border border-[#E5EAE8] shadow-lg z-30 p-4 w-64">
-                <p className="text-xs font-semibold text-[#374151] mb-3">Custom date range</p>
-                <div className="space-y-2.5 mb-3">
-                  <div>
-                    <label className="block text-[11px] text-[#6B7280] mb-1">From</label>
-                    <input type="date" value={customFrom} max={customTo || today}
-                      onChange={e => setCustomFrom(e.target.value)}
-                      className="w-full text-xs border border-[#D1D5DB] rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0D4C3C]"/>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] text-[#6B7280] mb-1">To</label>
-                    <input type="date" value={customTo} min={customFrom} max={today}
-                      onChange={e => setCustomTo(e.target.value)}
-                      className="w-full text-xs border border-[#D1D5DB] rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#0D4C3C]"/>
-                  </div>
-                </div>
-                <button
-                  onClick={handleCustomApply}
-                  disabled={!customFrom || !customTo || customFrom > customTo}
-                  className="w-full text-xs font-semibold py-2 rounded-lg bg-[#0D4C3C] text-white hover:bg-[#0a3d31] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  Apply
-                </button>
-              </div>
-            )}
-          </div>
+          <DateRangePicker
+            from={customFrom}
+            to={customTo}
+            onChange={(f, t) => {
+              setCustomFrom(f);
+              setCustomTo(t);
+              if (f && t) setRange('custom');
+              else if (!f && !t) setRange('30d');
+            }}
+            alignRight
+          />
 
           {/* Refresh */}
           <button onClick={fetchData} disabled={loading}
