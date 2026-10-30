@@ -94,19 +94,43 @@ Deno.serve(async (req) => {
     const rangeDays: number = body.range_days ?? 30;
     const locationIdFilter: string | null = body.location_id ?? null;
 
-    // Get connection + refresh token
+    // Get connection
     const { data: conn } = await supabase
       .from('google_connections')
-      .select('id, state, refresh_token')
+      .select('id, state, token_expiry')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (!conn || conn.state !== 'CONNECTED' || !conn.refresh_token) {
+    if (!conn || conn.state !== 'CONNECTED') {
       return json({ error: 'Google not connected' }, 400);
     }
 
+    // Get tokens from separate table
+    const { data: tokenRow } = await supabase
+      .from('google_connection_tokens')
+      .select('access_token, refresh_token')
+      .eq('connection_id', conn.id)
+      .single();
+
+    if (!tokenRow?.refresh_token) {
+      return json({ error: 'No Google tokens found' }, 400);
+    }
+
     const { clientId, clientSecret } = await getGoogleCreds(supabase);
-    const { access_token } = await doRefreshToken(conn.refresh_token, clientId, clientSecret);
+
+    // Use existing access token if still valid, otherwise refresh
+    let access_token = tokenRow.access_token;
+    const expiry = conn.token_expiry ? new Date(conn.token_expiry) : new Date(0);
+    if (expiry <= new Date(Date.now() + 60_000)) {
+      const refreshed = await doRefreshToken(tokenRow.refresh_token, clientId, clientSecret);
+      access_token = refreshed.access_token;
+      await supabase.from('google_connection_tokens')
+        .update({ access_token })
+        .eq('connection_id', conn.id);
+      await supabase.from('google_connections')
+        .update({ token_expiry: new Date(Date.now() + refreshed.expires_in * 1000).toISOString() })
+        .eq('id', conn.id);
+    }
 
     // Get selected locations
     let locQuery = supabase
