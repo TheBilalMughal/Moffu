@@ -6,6 +6,8 @@ export type GoogleConnectionState =
 
 export type AutoSyncInterval = '1h' | '4h' | '12h' | '24h';
 
+export interface AutoSchedule { type: 'always' | 'scheduled'; from: string; to: string; }
+
 export interface GoogleConnection {
   id: string;
   state: GoogleConnectionState;
@@ -15,6 +17,10 @@ export interface GoogleConnection {
   error_message: string | null;
   auto_sync_enabled: boolean;
   auto_sync_interval: AutoSyncInterval;
+  auto_draft_enabled: boolean;
+  auto_draft_schedule: AutoSchedule;
+  auto_publish_enabled: boolean;
+  auto_publish_schedule: AutoSchedule;
 }
 
 export interface GoogleLocation {
@@ -45,7 +51,7 @@ export const googleService = {
   async getConnection(): Promise<{ data?: GoogleConnection | null; error?: string }> {
     const { data, error } = await supabase
       .from('google_connections')
-      .select('id, state, google_email, connected_at, last_synced_at, error_message, auto_sync_enabled, auto_sync_interval')
+      .select('id, state, google_email, connected_at, last_synced_at, error_message, auto_sync_enabled, auto_sync_interval, auto_draft_enabled, auto_draft_schedule, auto_publish_enabled, auto_publish_schedule')
       .maybeSingle();
     if (error) return { error: error.message };
     return { data };
@@ -55,6 +61,18 @@ export const googleService = {
     const { error } = await supabase
       .from('google_connections')
       .update({ auto_sync_enabled: enabled, auto_sync_interval: interval })
+      .eq('id', connectionId);
+    if (error) return { error: error.message };
+    return {};
+  },
+
+  async updateAutoDraftPublish(connectionId: string, updates: Partial<{
+    auto_draft_enabled: boolean; auto_draft_schedule: AutoSchedule;
+    auto_publish_enabled: boolean; auto_publish_schedule: AutoSchedule;
+  }>): Promise<{ error?: string }> {
+    const { error } = await supabase
+      .from('google_connections')
+      .update(updates)
       .eq('id', connectionId);
     if (error) return { error: error.message };
     return {};

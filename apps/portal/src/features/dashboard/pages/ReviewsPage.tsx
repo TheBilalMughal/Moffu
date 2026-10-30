@@ -9,6 +9,7 @@ import { Toast } from '@/components/Toast';
 type DbStatus = 'NEW' | 'DRAFTING' | 'DRAFT_READY' | 'AWAITING_APPROVAL' | 'NEEDS_ATTENTION' | 'PUBLISHING' | 'PUBLISHED' | 'PUBLISH_FAILED';
 type UiStatus = 'pending' | 'draft_ready' | 'replied';
 type SortKey = 'newest' | 'oldest' | 'unanswered' | 'highest' | 'lowest';
+interface AutoSchedule { type: 'always' | 'scheduled'; from: string; to: string; }
 
 interface DraftHistoryItem { draft: string; created_at: string; }
 interface FilterPreset { id: string; name: string; filters: SavedFilters; }
@@ -70,6 +71,18 @@ function exportCSV(reviews: Review[], locations: Location[]) {
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
   Object.assign(document.createElement('a'), { href: url, download: `reviews-${new Date().toISOString().split('T')[0]}.csv` }).click();
   URL.revokeObjectURL(url);
+}
+
+function isScheduleActive(schedule: AutoSchedule): boolean {
+  if (schedule.type === 'always') return true;
+  const now = new Date();
+  const current = now.getHours() * 60 + now.getMinutes();
+  const [fH, fM] = schedule.from.split(':').map(Number);
+  const [tH, tM] = schedule.to.split(':').map(Number);
+  const from = (fH ?? 0) * 60 + (fM ?? 0);
+  const to = (tH ?? 0) * 60 + (tM ?? 0);
+  if (from <= to) return current >= from && current <= to;
+  return current >= from || current <= to;
 }
 
 function loadPresets(): FilterPreset[] {
@@ -1122,6 +1135,76 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
   );
 }
 
+// ── AutoScheduleModal ─────────────────────────────────────────────────────────
+
+const DEFAULT_SCHEDULE: AutoSchedule = { type: 'always', from: '09:00', to: '18:00' };
+
+function AutoScheduleModal({ mode, onConfirm, onCancel }: {
+  mode: 'draft' | 'publish';
+  onConfirm: (schedule: AutoSchedule) => void;
+  onCancel: () => void;
+}) {
+  const [schedType, setSchedType] = useState<'always' | 'scheduled'>('always');
+  const [from, setFrom] = useState('09:00');
+  const [to, setTo] = useState('18:00');
+
+  const title = mode === 'draft' ? 'Enable Auto Draft' : 'Enable Auto Publish';
+  const desc = mode === 'draft'
+    ? 'After each sync, AI will automatically generate reply drafts for all new reviews.'
+    : 'After each sync, all Draft Ready reviews with a saved draft will be published directly to Google.';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={e => { if (e.target === e.currentTarget) onCancel(); }}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+        <h2 className="text-base font-semibold text-[#111827] mb-1">{title}</h2>
+        <p className="text-sm text-[#6B7280] mb-4">{desc}</p>
+
+        {mode === 'publish' && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-xs text-amber-800 font-medium">
+              Replies will be sent to Google without manual review. Use with caution.
+            </p>
+          </div>
+        )}
+
+        <p className="text-xs font-semibold text-[#374151] uppercase tracking-wide mb-3">When should this run?</p>
+        <div className="space-y-3 mb-6">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input type="radio" name="sched" value="always" checked={schedType === 'always'} onChange={() => setSchedType('always')} className="accent-[#0D4C3C]"/>
+            <span className="text-sm font-medium text-[#374151]">Always active</span>
+          </label>
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input type="radio" name="sched" value="scheduled" checked={schedType === 'scheduled'} onChange={() => setSchedType('scheduled')} className="accent-[#0D4C3C] mt-0.5"/>
+            <div className="flex-1">
+              <span className="text-sm font-medium text-[#374151]">Custom schedule</span>
+              {schedType === 'scheduled' && (
+                <div className="flex items-center gap-2 mt-2">
+                  <input type="time" value={from} onChange={e => setFrom(e.target.value)}
+                    className="text-sm border border-[#D1D5DB] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#0D4C3C]"/>
+                  <span className="text-sm text-[#6B7280]">to</span>
+                  <input type="time" value={to} onChange={e => setTo(e.target.value)}
+                    className="text-sm border border-[#D1D5DB] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#0D4C3C]"/>
+                </div>
+              )}
+            </div>
+          </label>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <button onClick={onCancel}
+            className="px-4 py-2 text-sm text-[#6B7280] hover:text-[#111827] transition-colors rounded-lg hover:bg-[#F3F4F6]">
+            Cancel
+          </button>
+          <button onClick={() => onConfirm({ type: schedType, from, to })}
+            className="px-4 py-2 text-sm font-semibold bg-[#0D4C3C] text-white rounded-lg hover:bg-[#083F32] transition-colors">
+            Enable
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function ReviewsPage() {
@@ -1131,6 +1214,13 @@ export function ReviewsPage() {
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [connId, setConnId] = useState<string | null>(null);
+  const [autoDraftEnabled, setAutoDraftEnabled] = useState(false);
+  const [autoDraftSchedule, setAutoDraftSchedule] = useState<AutoSchedule>(DEFAULT_SCHEDULE);
+  const [autoPublishEnabled, setAutoPublishEnabled] = useState(false);
+  const [autoPublishSchedule, setAutoPublishSchedule] = useState<AutoSchedule>(DEFAULT_SCHEDULE);
+  const [autoModal, setAutoModal] = useState<'draft' | 'publish' | null>(null);
+  const [autoRunning, setAutoRunning] = useState<'draft' | 'publish' | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Filters
@@ -1178,9 +1268,14 @@ export function ReviewsPage() {
     (async () => {
       const { data: conn } = await supabase
         .from('google_connections')
-        .select('state, auto_sync_enabled, auto_sync_interval, last_synced_at')
+        .select('id, state, auto_sync_enabled, auto_sync_interval, last_synced_at, auto_draft_enabled, auto_draft_schedule, auto_publish_enabled, auto_publish_schedule')
         .maybeSingle();
       setIsConnected(conn?.state === 'CONNECTED');
+      if (conn?.id) setConnId(conn.id);
+      if (conn?.auto_draft_enabled) setAutoDraftEnabled(true);
+      if (conn?.auto_draft_schedule) setAutoDraftSchedule(conn.auto_draft_schedule as AutoSchedule);
+      if (conn?.auto_publish_enabled) setAutoPublishEnabled(true);
+      if (conn?.auto_publish_schedule) setAutoPublishSchedule(conn.auto_publish_schedule as AutoSchedule);
 
       // Auto-sync check: if enabled and interval has elapsed since last sync
       if (conn?.state === 'CONNECTED' && conn.auto_sync_enabled) {
@@ -1319,8 +1414,69 @@ export function ReviewsPage() {
       if (error) { setToast({ message: error, type: 'error' }); return; }
       setToast({ message: `Synced ${synced ?? 0} review${synced !== 1 ? 's' : ''}.`, type: 'success' });
       await loadReviews();
+      await runAutoOperations();
     } finally {
       setSyncing(false);
+      setAutoRunning(null);
+    }
+  }
+
+  async function runAutoOperations() {
+    // Auto Draft: generate drafts for all NEW reviews if enabled + schedule active
+    if (autoDraftEnabled && isScheduleActive(autoDraftSchedule)) {
+      const { data: newReviews } = await supabase
+        .from('reviews').select('id, status').eq('status', 'NEW');
+      const toGenerate = newReviews ?? [];
+      if (toGenerate.length > 0) {
+        setAutoRunning('draft');
+        let draftedCount = 0;
+        for (const r of toGenerate) {
+          const res = await googleService.generateDraft(r.id);
+          if (!res.error) draftedCount++;
+        }
+        await loadReviews();
+        if (draftedCount > 0) setToast({ message: `Auto-drafted ${draftedCount} review${draftedCount !== 1 ? 's' : ''}.`, type: 'success' });
+      }
+    }
+    // Auto Publish: publish all DRAFT_READY reviews with a draft if enabled + schedule active
+    if (autoPublishEnabled && isScheduleActive(autoPublishSchedule)) {
+      const { data: readyReviews } = await supabase
+        .from('reviews').select('id, status, reply_draft').eq('status', 'DRAFT_READY');
+      const toPublish = (readyReviews ?? []).filter((r: { reply_draft: string | null }) => r.reply_draft);
+      if (toPublish.length > 0) {
+        setAutoRunning('publish');
+        let publishedCount = 0;
+        for (const r of toPublish) {
+          const res = await googleService.publishReply(r.id, r.reply_draft as string);
+          if (!res.error) publishedCount++;
+        }
+        await loadReviews();
+        if (publishedCount > 0) setToast({ message: `Auto-published ${publishedCount} repl${publishedCount !== 1 ? 'ies' : 'y'} to Google.`, type: 'success' });
+      }
+    }
+  }
+
+  async function handleAutoModalConfirm(schedule: AutoSchedule) {
+    const mode = autoModal!;
+    setAutoModal(null);
+    if (mode === 'draft') {
+      setAutoDraftEnabled(true);
+      setAutoDraftSchedule(schedule);
+      if (connId) await googleService.updateAutoDraftPublish(connId, { auto_draft_enabled: true, auto_draft_schedule: schedule });
+    } else {
+      setAutoPublishEnabled(true);
+      setAutoPublishSchedule(schedule);
+      if (connId) await googleService.updateAutoDraftPublish(connId, { auto_publish_enabled: true, auto_publish_schedule: schedule });
+    }
+  }
+
+  async function handleAutoToggleOff(mode: 'draft' | 'publish') {
+    if (mode === 'draft') {
+      setAutoDraftEnabled(false);
+      if (connId) await googleService.updateAutoDraftPublish(connId, { auto_draft_enabled: false });
+    } else {
+      setAutoPublishEnabled(false);
+      if (connId) await googleService.updateAutoDraftPublish(connId, { auto_publish_enabled: false });
     }
   }
 
@@ -1439,6 +1595,13 @@ async function handleFlag(id: string) {
     <div className="h-full flex flex-col">
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)}/>}
       {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
+      {autoModal && (
+        <AutoScheduleModal
+          mode={autoModal}
+          onConfirm={handleAutoModalConfirm}
+          onCancel={() => setAutoModal(null)}
+        />
+      )}
       {selectedIds.size > 0 && (
         <BulkActionBar
           count={selectedIds.size}
@@ -1478,6 +1641,31 @@ async function handleFlag(id: string) {
             </svg>
             Export
           </button>
+
+          {/* Auto Draft toggle */}
+          <button
+            onClick={() => autoDraftEnabled ? handleAutoToggleOff('draft') : setAutoModal('draft')}
+            disabled={!isConnected}
+            title={!isConnected ? 'Connect Google Business Profile first' : autoDraftEnabled ? `Auto Draft ON${autoDraftSchedule.type === 'scheduled' ? ` (${autoDraftSchedule.from}–${autoDraftSchedule.to})` : ''} — click to disable` : 'Enable Auto Draft'}
+            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoDraftEnabled ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
+            {autoRunning === 'draft'
+              ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              : <span className={`w-2 h-2 rounded-full flex-shrink-0 ${autoDraftEnabled ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}/>}
+            Auto Draft
+          </button>
+
+          {/* Auto Publish toggle */}
+          <button
+            onClick={() => autoPublishEnabled ? handleAutoToggleOff('publish') : setAutoModal('publish')}
+            disabled={!isConnected}
+            title={!isConnected ? 'Connect Google Business Profile first' : autoPublishEnabled ? `Auto Publish ON${autoPublishSchedule.type === 'scheduled' ? ` (${autoPublishSchedule.from}–${autoPublishSchedule.to})` : ''} — click to disable` : 'Enable Auto Publish'}
+            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoPublishEnabled ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
+            {autoRunning === 'publish'
+              ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              : <span className={`w-2 h-2 rounded-full flex-shrink-0 ${autoPublishEnabled ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}/>}
+            Auto Publish
+          </button>
+
           <button onClick={handleSync} disabled={syncing || !isConnected}
             title={!isConnected ? 'Connect Google Business Profile first' : 'Sync latest reviews'}
             className="flex items-center gap-2 bg-[#0D4C3C] disabled:opacity-40 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:bg-[#083F32] disabled:cursor-not-allowed">
