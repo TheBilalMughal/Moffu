@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useLocationStore } from '@/features/location/location.store';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type DateRange = '7d' | '30d' | '90d';
+type RangePreset = '7d' | '30d' | '90d' | 'custom';
 
 interface DailyMetric {
   date: string;
@@ -26,12 +26,13 @@ interface Totals {
 
 interface SearchQuery { query: string; count: number; }
 interface LocationResult { id: string; display_name: string | null; total_views: number; }
+
 interface InsightsData {
   metrics: DailyMetric[];
   totals: Totals;
   queries: SearchQuery[];
   locations: LocationResult[];
-  date_range: { start: string; end: string };
+  date_range: { start: string; end: string } | null;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -43,102 +44,230 @@ function fmt(n: number) {
 }
 
 function fmtDate(iso: string) {
-  const d = new Date(iso);
+  const d = new Date(iso + 'T00:00:00');
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-const RANGE_DAYS: Record<DateRange, number> = { '7d': 7, '30d': 30, '90d': 90 };
+function computeTrend(metrics: DailyMetric[], key: keyof Omit<DailyMetric, 'date'>): number | null {
+  if (metrics.length < 14) return null;
+  const half = Math.floor(metrics.length / 2);
+  const prev = metrics.slice(0, half).reduce((s, m) => s + m[key], 0);
+  const curr = metrics.slice(half).reduce((s, m) => s + m[key], 0);
+  if (prev === 0) return null;
+  return Math.round(((curr - prev) / prev) * 100);
+}
 
+const RANGE_DAYS: Record<Exclude<RangePreset, 'custom'>, number> = { '7d': 7, '30d': 30, '90d': 90 };
 const BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
-async function fetchInsights(rangeDays: number, locationId: string | null): Promise<InsightsData | null> {
+async function fetchInsights(
+  params: { rangeDays?: number; startDate?: string; endDate?: string },
+  locationId: string | null
+): Promise<InsightsData | null> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return null;
+  const body: Record<string, unknown> = { location_id: locationId };
+  if (params.startDate && params.endDate) {
+    body.start_date = params.startDate;
+    body.end_date   = params.endDate;
+  } else {
+    body.range_days = params.rangeDays ?? 30;
+  }
   const res = await fetch(`${BASE}/google-fetch-insights`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ range_days: rangeDays, location_id: locationId }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) return null;
   return res.json();
 }
 
-// ── ViewsChart (SVG line chart) ───────────────────────────────────────────────
+// ── Shared chart helper ───────────────────────────────────────────────────────
 
-function ViewsChart({ metrics, range }: { metrics: DailyMetric[]; range: DateRange }) {
+function groupByWeek<T extends { date: string }>(
+  items: T[],
+  reducer: (acc: Record<string, number>, item: T) => Record<string, number>
+): ({ date: string } & Record<string, number>)[] {
+  const weeks = new Map<string, Record<string, number>>();
+  for (const item of items) {
+    const d = new Date(item.date + 'T00:00:00');
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const mon = new Date(d); mon.setDate(diff);
+    const k = mon.toISOString().slice(0, 10);
+    weeks.set(k, reducer(weeks.get(k) ?? {}, item));
+  }
+  return [...weeks.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, vals]) => ({ date, ...vals }));
+}
+
+function buildSvgPath(data: { x: number; y: number }[]) {
+  return data.map(({ x, y }, i) => `${i === 0 ? 'M' : 'L'}${x},${y}`).join(' ');
+}
+
+// ── ViewsChart ────────────────────────────────────────────────────────────────
+
+function ViewsChart({ metrics, range }: { metrics: DailyMetric[]; range: RangePreset }) {
   const W = 700, H = 180;
-  const PAD = { top: 16, right: 16, bottom: 36, left: 44 };
+  const PAD = { top: 16, right: 16, bottom: 36, left: 48 };
 
   const data = useMemo(() => {
     if (metrics.length === 0) return [];
-    // For 90d, group into weeks
-    if (range === '90d') {
-      const weeks = new Map<string, { search: number; maps: number }>();
-      for (const m of metrics) {
-        const d = new Date(m.date);
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        const mon = new Date(d); mon.setDate(diff);
-        const k = mon.toISOString().slice(0, 10);
-        const cur = weeks.get(k) ?? { search: 0, maps: 0 };
-        cur.search += m.views_search; cur.maps += m.views_maps;
-        weeks.set(k, cur);
-      }
-      return [...weeks.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, v]) => ({ date, ...v }));
+    if (range === '90d' || (range === 'custom' && metrics.length > 45)) {
+      return groupByWeek(metrics, (acc, m) => ({
+        search: (acc.search ?? 0) + m.views_search,
+        maps:   (acc.maps   ?? 0) + m.views_maps,
+      })) as { date: string; search: number; maps: number }[];
     }
     return metrics.map(m => ({ date: m.date, search: m.views_search, maps: m.views_maps }));
   }, [metrics, range]);
 
-  if (data.length < 2) {
-    return (
-      <div className="flex items-center justify-center h-[180px] text-sm text-[#9CA3AF]">
-        Not enough data for this period
-      </div>
-    );
-  }
+  if (data.length < 2) return (
+    <div className="flex items-center justify-center h-[180px] text-sm text-[#9CA3AF]">Not enough data for this period</div>
+  );
 
-  const maxVal = Math.max(...data.map(d => d.search + d.maps), 1);
-  const xScale = (i: number) => PAD.left + (i / (data.length - 1)) * (W - PAD.left - PAD.right);
-  const yScale = (v: number) => PAD.top + (1 - v / maxVal) * (H - PAD.top - PAD.bottom);
+  const maxVal = Math.max(...data.map(d => Math.max(d.search, d.maps)), 1);
+  const xS = (i: number) => PAD.left + (i / (data.length - 1)) * (W - PAD.left - PAD.right);
+  const yS = (v: number) => PAD.top  + (1 - v / maxVal) * (H - PAD.top - PAD.bottom);
 
-  const searchPath = data.map((d, i) => `${i === 0 ? 'M' : 'L'}${xScale(i)},${yScale(d.search)}`).join(' ');
-  const mapsPath   = data.map((d, i) => `${i === 0 ? 'M' : 'L'}${xScale(i)},${yScale(d.maps)}`).join(' ');
+  const searchPts = data.map((d, i) => ({ x: xS(i), y: yS(d.search) }));
+  const mapsPts   = data.map((d, i) => ({ x: xS(i), y: yS(d.maps) }));
 
-  // X labels — show ~6 evenly spaced
   const labelStep = Math.max(1, Math.floor(data.length / 6));
   const labels = data.filter((_, i) => i % labelStep === 0 || i === data.length - 1);
-
-  // Y grid lines
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map(t => ({ v: Math.round(maxVal * t), y: yScale(maxVal * t) }));
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map(t => ({ v: Math.round(maxVal * t), y: yS(maxVal * t) }));
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
-      {/* Y grid */}
       {yTicks.map(t => (
         <g key={t.v}>
           <line x1={PAD.left} y1={t.y} x2={W - PAD.right} y2={t.y} stroke="#F3F4F6" strokeWidth={1}/>
           <text x={PAD.left - 6} y={t.y + 4} textAnchor="end" fontSize={10} fill="#9CA3AF">{fmt(t.v)}</text>
         </g>
       ))}
-      {/* Search line */}
-      <path d={searchPath} fill="none" stroke="#0D4C3C" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
-      {/* Maps line */}
-      <path d={mapsPath} fill="none" stroke="#4FA882" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 2"/>
-      {/* X labels */}
+      <path d={buildSvgPath(searchPts)} fill="none" stroke="#0D4C3C" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+      <path d={buildSvgPath(mapsPts)}   fill="none" stroke="#4FA882" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 2"/>
       {labels.map(d => {
         const i = data.indexOf(d);
-        return <text key={d.date} x={xScale(i)} y={H - 6} textAnchor="middle" fontSize={10} fill="#9CA3AF">{fmtDate(d.date)}</text>;
+        return <text key={d.date} x={xS(i)} y={H - 6} textAnchor="middle" fontSize={10} fill="#9CA3AF">{fmtDate(d.date)}</text>;
       })}
     </svg>
   );
 }
 
+// ── ActionsChart ──────────────────────────────────────────────────────────────
+
+function ActionsChart({ metrics, range }: { metrics: DailyMetric[]; range: RangePreset }) {
+  const W = 700, H = 160;
+  const PAD = { top: 16, right: 16, bottom: 36, left: 48 };
+
+  const data = useMemo(() => {
+    if (metrics.length === 0) return [];
+    if (range === '90d' || (range === 'custom' && metrics.length > 45)) {
+      return groupByWeek(metrics, (acc, m) => ({
+        calls:      (acc.calls      ?? 0) + m.calls,
+        website:    (acc.website    ?? 0) + m.website_clicks,
+        directions: (acc.directions ?? 0) + m.direction_requests,
+      })) as { date: string; calls: number; website: number; directions: number }[];
+    }
+    return metrics.map(m => ({ date: m.date, calls: m.calls, website: m.website_clicks, directions: m.direction_requests }));
+  }, [metrics, range]);
+
+  if (data.length < 2) return (
+    <div className="flex items-center justify-center h-[160px] text-sm text-[#9CA3AF]">Not enough data for this period</div>
+  );
+
+  const maxVal = Math.max(...data.map(d => Math.max(d.calls, d.website, d.directions)), 1);
+  const xS = (i: number) => PAD.left + (i / (data.length - 1)) * (W - PAD.left - PAD.right);
+  const yS = (v: number) => PAD.top  + (1 - v / maxVal) * (H - PAD.top - PAD.bottom);
+
+  const callsPts     = data.map((d, i) => ({ x: xS(i), y: yS(d.calls) }));
+  const websitePts   = data.map((d, i) => ({ x: xS(i), y: yS(d.website) }));
+  const directionPts = data.map((d, i) => ({ x: xS(i), y: yS(d.directions) }));
+
+  const labelStep = Math.max(1, Math.floor(data.length / 6));
+  const labels = data.filter((_, i) => i % labelStep === 0 || i === data.length - 1);
+  const yTicks = [0, 0.5, 1].map(t => ({ v: Math.round(maxVal * t), y: yS(maxVal * t) }));
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
+      {yTicks.map(t => (
+        <g key={t.v}>
+          <line x1={PAD.left} y1={t.y} x2={W - PAD.right} y2={t.y} stroke="#F3F4F6" strokeWidth={1}/>
+          <text x={PAD.left - 6} y={t.y + 4} textAnchor="end" fontSize={10} fill="#9CA3AF">{fmt(t.v)}</text>
+        </g>
+      ))}
+      <path d={buildSvgPath(callsPts)}     fill="none" stroke="#0D4C3C" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+      <path d={buildSvgPath(websitePts)}   fill="none" stroke="#4FA882" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 2"/>
+      <path d={buildSvgPath(directionPts)} fill="none" stroke="#94C4B0" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 2"/>
+      {labels.map(d => {
+        const i = data.indexOf(d);
+        return <text key={d.date} x={xS(i)} y={H - 6} textAnchor="middle" fontSize={10} fill="#9CA3AF">{fmtDate(d.date)}</text>;
+      })}
+    </svg>
+  );
+}
+
+// ── ViewsSplitRing ────────────────────────────────────────────────────────────
+
+function ViewsSplitRing({ searchViews, mapsViews }: { searchViews: number; mapsViews: number }) {
+  const total = searchViews + mapsViews;
+  if (total === 0) return <p className="text-sm text-[#9CA3AF] text-center">No data yet</p>;
+
+  const searchPct = Math.round((searchViews / total) * 100);
+  const mapsPct   = 100 - searchPct;
+  const R = 52, CX = 64, CY = 64, SW = 12;
+  const circ       = 2 * Math.PI * R;
+  const searchDash = (searchPct / 100) * circ;
+  const mapsDash   = (mapsPct   / 100) * circ;
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-2">
+      <svg width={128} height={128} viewBox="0 0 128 128">
+        <circle cx={CX} cy={CY} r={R} fill="none" stroke="#F3F4F6" strokeWidth={SW}/>
+        {/* maps arc (drawn first, behind search) */}
+        <circle cx={CX} cy={CY} r={R} fill="none" stroke="#4FA882" strokeWidth={SW}
+          strokeDasharray={`${mapsDash} ${circ}`}
+          strokeDashoffset={-(searchDash)}
+          transform={`rotate(-90 ${CX} ${CY})`}/>
+        {/* search arc */}
+        <circle cx={CX} cy={CY} r={R} fill="none" stroke="#0D4C3C" strokeWidth={SW}
+          strokeDasharray={`${searchDash} ${circ}`}
+          strokeDashoffset={0}
+          transform={`rotate(-90 ${CX} ${CY})`}/>
+        <text x={CX} y={CY - 5}  textAnchor="middle" fontSize={20} fontWeight="700" fill="#111827">{searchPct}%</text>
+        <text x={CX} y={CY + 12} textAnchor="middle" fontSize={9}  fill="#9CA3AF">via Search</text>
+      </svg>
+      <div className="flex items-center gap-4">
+        <span className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#0D4C3C] inline-block"/>Search {searchPct}%
+        </span>
+        <span className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#4FA882] inline-block"/>Maps {mapsPct}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ── StatCard ──────────────────────────────────────────────────────────────────
 
-function StatCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color: string }) {
+function StatCard({ label, value, sub, color, trend }: {
+  label: string; value: string; sub?: string; color: string; trend?: number | null;
+}) {
   return (
     <div className="bg-white rounded-xl border border-[#E5EAE8] px-5 py-4">
-      <p className="text-xs text-[#6B7280] mb-1">{label}</p>
+      <div className="flex items-start justify-between mb-1">
+        <p className="text-xs text-[#6B7280]">{label}</p>
+        {trend != null && (
+          <span className={`flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md flex-shrink-0 ${
+            trend >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
+          }`}>
+            {trend >= 0 ? '▲' : '▼'} {Math.abs(trend)}%
+          </span>
+        )}
+      </div>
       <p className={`text-2xl font-bold ${color}`}>{value}</p>
       {sub && <p className="text-xs text-[#9CA3AF] mt-0.5">{sub}</p>}
     </div>
@@ -172,47 +301,79 @@ function NotConnectedState() {
 
 export function GoogleProfilePage() {
   const { selectedId: globalLocationId } = useLocationStore();
-  const [range, setRange] = useState<DateRange>('30d');
+  const [range, setRange]       = useState<RangePreset>('30d');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo,   setCustomTo]   = useState('');
+  const [showCustom, setShowCustom] = useState(false);
+  const customRef = useRef<HTMLDivElement>(null);
+
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
-  const [data, setData] = useState<InsightsData | null>(null);
+  const [data,    setData]    = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error,   setError]   = useState<string | null>(null);
+
+  // Close custom picker on outside click
+  useEffect(() => {
+    function h(e: MouseEvent) {
+      if (customRef.current && !customRef.current.contains(e.target as Node)) setShowCustom(false);
+    }
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
 
   // Load connection state once
   useEffect(() => {
     (async () => {
-      const { data: conn } = await supabase
-        .from('google_connections').select('state').maybeSingle();
+      const { data: conn } = await supabase.from('google_connections').select('state').maybeSingle();
       setIsConnected(conn?.state === 'CONNECTED');
       if (conn?.state !== 'CONNECTED') setLoading(false);
     })();
   }, []);
 
-  // Load insights whenever range / global location changes (and connected)
+  // Load insights
   useEffect(() => {
     if (isConnected === null || isConnected === false) return;
+    if (range === 'custom' && (!customFrom || !customTo)) return;
     setLoading(true); setError(null);
-    fetchInsights(RANGE_DAYS[range], globalLocationId ?? null).then(d => {
+    const params = range === 'custom'
+      ? { startDate: customFrom, endDate: customTo }
+      : { rangeDays: RANGE_DAYS[range] };
+    fetchInsights(params, globalLocationId ?? null).then(d => {
       if (!d) setError('Could not load insights. Google Performance data may not be available for your locations yet.');
       else setData(d);
       setLoading(false);
     });
-  }, [range, globalLocationId, isConnected]);
+  }, [range, customFrom, customTo, globalLocationId, isConnected]);
 
   if (isConnected === false) return <NotConnectedState />;
 
-  const totals = data?.totals;
+  const totals  = data?.totals;
   const metrics = data?.metrics ?? [];
   const queries = data?.queries ?? [];
 
   const totalActions = (totals?.calls ?? 0) + (totals?.website_clicks ?? 0) + (totals?.direction_requests ?? 0);
   const actionPct = (n: number) => totalActions > 0 ? Math.round((n / totalActions) * 100) : 0;
 
+  const trendViews   = computeTrend(metrics, 'views_search');
+  const trendCalls   = computeTrend(metrics, 'calls');
+  const trendWebsite = computeTrend(metrics, 'website_clicks');
+  const trendDirs    = computeTrend(metrics, 'direction_requests');
+
+  const today       = new Date().toISOString().slice(0, 10);
+  const customLabel = customFrom && customTo ? `${fmtDate(customFrom)} – ${fmtDate(customTo)}` : 'Custom';
+
+  function handleCustomApply() {
+    if (customFrom && customTo && customFrom <= customTo) {
+      setRange('custom');
+      setShowCustom(false);
+    }
+  }
+
   return (
     <div className="h-full flex flex-col">
 
       {/* Header */}
-      <div className="px-10 py-4 flex items-center justify-between gap-4 flex-shrink-0">
+      <div className="px-10 py-4 flex items-center justify-between gap-4 flex-shrink-0 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-[#111827]">Google Profile</h1>
           {data?.date_range && (
@@ -221,20 +382,60 @@ export function GoogleProfilePage() {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          {/* Date range pills */}
-          {(['7d','30d','90d'] as DateRange[]).map(r => (
-            <button key={r} onClick={() => setRange(r)}
-              className={`text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors ${range === r ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#111827]'}`}>
+
+        {/* Date range controls */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {(['7d', '30d', '90d'] as const).map(r => (
+            <button key={r} onClick={() => { setRange(r); setShowCustom(false); }}
+              className={`text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors ${
+                range === r ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#111827]'
+              }`}>
               {r === '7d' ? '7 days' : r === '30d' ? '30 days' : '90 days'}
             </button>
           ))}
+
+          {/* Custom picker */}
+          <div ref={customRef} className="relative">
+            <button onClick={() => setShowCustom(o => !o)}
+              className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors ${
+                range === 'custom' ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#111827]'
+              }`}>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              {range === 'custom' ? customLabel : 'Custom'}
+            </button>
+
+            {showCustom && (
+              <div className="absolute right-0 top-full mt-1.5 bg-white rounded-xl border border-[#E5EAE8] shadow-lg z-30 p-4 w-64">
+                <p className="text-xs font-semibold text-[#374151] mb-3">Custom date range</p>
+                <div className="space-y-2.5 mb-3">
+                  <div>
+                    <label className="text-[11px] text-[#9CA3AF] mb-1 block">From</label>
+                    <input type="date" value={customFrom} max={customTo || today}
+                      onChange={e => setCustomFrom(e.target.value)}
+                      className="w-full text-sm text-[#374151] border border-[#D1D5DB] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0D4C3C]"/>
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-[#9CA3AF] mb-1 block">To</label>
+                    <input type="date" value={customTo} min={customFrom} max={today}
+                      onChange={e => setCustomTo(e.target.value)}
+                      className="w-full text-sm text-[#374151] border border-[#D1D5DB] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0D4C3C]"/>
+                  </div>
+                </div>
+                <button onClick={handleCustomApply}
+                  disabled={!customFrom || !customTo || customFrom > customTo}
+                  className="w-full bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-40 text-white text-sm font-semibold py-2 rounded-lg transition-colors">
+                  Apply
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-10 pb-10">
-
         {loading ? (
           <div className="flex items-center justify-center py-24">
             <svg className="w-6 h-6 animate-spin text-[#0D4C3C]" fill="none" viewBox="0 0 24 24">
@@ -250,40 +451,71 @@ export function GoogleProfilePage() {
         ) : (
           <>
             {/* Stat cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6 mt-2">
-              <StatCard label="Total Profile Views" value={fmt(totals?.total_views ?? 0)} sub="Search + Maps" color="text-[#111827]"/>
-              <StatCard label="Search Views" value={fmt(totals?.views_search ?? 0)} color="text-[#0D4C3C]"/>
-              <StatCard label="Maps Views" value={fmt(totals?.views_maps ?? 0)} color="text-[#4FA882]"/>
-              <StatCard label="Calls" value={fmt(totals?.calls ?? 0)} color="text-[#111827]"/>
-              <StatCard label="Website Clicks" value={fmt(totals?.website_clicks ?? 0)} color="text-[#111827]"/>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5 mt-2">
+              <StatCard label="Total Profile Views"   value={fmt(totals?.total_views    ?? 0)} sub="Search + Maps"  color="text-[#111827]" trend={trendViews}/>
+              <StatCard label="Search Views"          value={fmt(totals?.views_search   ?? 0)}                      color="text-[#0D4C3C]"/>
+              <StatCard label="Maps Views"            value={fmt(totals?.views_maps     ?? 0)}                      color="text-[#4FA882]"/>
+              <StatCard label="Calls"                 value={fmt(totals?.calls          ?? 0)}                      color="text-[#111827]" trend={trendCalls}/>
+              <StatCard label="Website Clicks"        value={fmt(totals?.website_clicks ?? 0)}                      color="text-[#111827]" trend={trendWebsite}/>
             </div>
 
-            {/* Views chart */}
+            {/* Views chart + split donut */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
+              <div className="lg:col-span-2 bg-white rounded-xl border border-[#E5EAE8] p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm font-semibold text-[#111827]">Profile Views Over Time</p>
+                  <div className="flex items-center gap-4">
+                    <span className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+                      <span className="w-5 h-0.5 bg-[#0D4C3C] inline-block rounded"/>Search
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+                      <span className="w-5 h-0.5 bg-[#4FA882] inline-block rounded"
+                        style={{ backgroundImage: 'repeating-linear-gradient(90deg,#4FA882 0 4px,transparent 4px 6px)' }}/>Maps
+                    </span>
+                  </div>
+                </div>
+                <ViewsChart metrics={metrics} range={range}/>
+              </div>
+
+              <div className="bg-white rounded-xl border border-[#E5EAE8] p-5 flex flex-col">
+                <p className="text-sm font-semibold text-[#111827] mb-3">Views Split</p>
+                <div className="flex-1 flex items-center justify-center">
+                  <ViewsSplitRing searchViews={totals?.views_search ?? 0} mapsViews={totals?.views_maps ?? 0}/>
+                </div>
+              </div>
+            </div>
+
+            {/* Customer Actions chart */}
             <div className="bg-white rounded-xl border border-[#E5EAE8] p-5 mb-5">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-semibold text-[#111827]">Profile Views Over Time</p>
+                <p className="text-sm font-semibold text-[#111827]">Customer Actions Over Time</p>
                 <div className="flex items-center gap-4">
                   <span className="flex items-center gap-1.5 text-xs text-[#6B7280]">
-                    <span className="w-5 h-0.5 bg-[#0D4C3C] inline-block rounded"/>Search
+                    <span className="w-5 h-0.5 bg-[#0D4C3C] inline-block rounded"/>Calls
                   </span>
                   <span className="flex items-center gap-1.5 text-xs text-[#6B7280]">
-                    <span className="w-5 h-0.5 bg-[#4FA882] inline-block rounded" style={{ backgroundImage: 'repeating-linear-gradient(90deg,#4FA882 0 4px,transparent 4px 6px)' }}/>Maps
+                    <span className="w-5 h-0.5 bg-[#4FA882] inline-block rounded"
+                      style={{ backgroundImage: 'repeating-linear-gradient(90deg,#4FA882 0 4px,transparent 4px 6px)' }}/>Website
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+                    <span className="w-5 h-0.5 bg-[#94C4B0] inline-block rounded"
+                      style={{ backgroundImage: 'repeating-linear-gradient(90deg,#94C4B0 0 2px,transparent 2px 4px)' }}/>Directions
                   </span>
                 </div>
               </div>
-              <ViewsChart metrics={metrics} range={range}/>
+              <ActionsChart metrics={metrics} range={range}/>
             </div>
 
-            {/* Bottom row: queries + actions */}
+            {/* Bottom row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
               {/* Search Queries */}
               <div className="bg-white rounded-xl border border-[#E5EAE8] p-5">
                 <p className="text-sm font-semibold text-[#111827] mb-4">Top Search Queries</p>
                 {queries.length === 0 ? (
-                  <p className="text-sm text-[#9CA3AF] py-4 text-center">No query data available yet</p>
+                  <p className="text-sm text-[#9CA3AF] py-6 text-center">No query data available yet</p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {queries.map((q, i) => {
                       const maxCount = queries[0]?.count ?? 1;
                       const pct = Math.round((q.count / maxCount) * 100);
@@ -308,36 +540,36 @@ export function GoogleProfilePage() {
 
               {/* Actions breakdown */}
               <div className="bg-white rounded-xl border border-[#E5EAE8] p-5">
-                <p className="text-sm font-semibold text-[#111827] mb-4">Customer Actions</p>
-                <div className="space-y-4">
-                  {[
-                    { label: 'Calls', value: totals?.calls ?? 0, color: 'bg-[#0D4C3C]' },
-                    { label: 'Website clicks', value: totals?.website_clicks ?? 0, color: 'bg-[#4FA882]' },
-                    { label: 'Direction requests', value: totals?.direction_requests ?? 0, color: 'bg-[#94C4B0]' },
-                  ].map(item => (
-                    <div key={item.label}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-sm text-[#374151]">{item.label}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-[#111827]">{fmt(item.value)}</span>
-                          <span className="text-xs text-[#9CA3AF]">{actionPct(item.value)}%</span>
+                <p className="text-sm font-semibold text-[#111827] mb-4">Customer Actions Breakdown</p>
+                {totalActions === 0 ? (
+                  <p className="text-sm text-[#9CA3AF] py-6 text-center">No action data available yet</p>
+                ) : (
+                  <div className="space-y-4">
+                    {[
+                      { label: 'Calls',               value: totals?.calls              ?? 0, color: 'bg-[#0D4C3C]', trend: trendCalls },
+                      { label: 'Website clicks',       value: totals?.website_clicks     ?? 0, color: 'bg-[#4FA882]', trend: trendWebsite },
+                      { label: 'Direction requests',   value: totals?.direction_requests ?? 0, color: 'bg-[#94C4B0]', trend: trendDirs },
+                    ].map(item => (
+                      <div key={item.label}>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-sm text-[#374151]">{item.label}</span>
+                          <div className="flex items-center gap-2">
+                            {item.trend != null && (
+                              <span className={`text-[10px] font-semibold px-1 py-0.5 rounded ${item.trend >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                                {item.trend >= 0 ? '▲' : '▼'}{Math.abs(item.trend)}%
+                              </span>
+                            )}
+                            <span className="text-sm font-semibold text-[#111827]">{fmt(item.value)}</span>
+                            <span className="text-xs text-[#9CA3AF]">{actionPct(item.value)}%</span>
+                          </div>
+                        </div>
+                        <div className="h-2 bg-[#F3F4F6] rounded-full overflow-hidden">
+                          <div className={`h-full ${item.color} rounded-full transition-all`} style={{ width: `${actionPct(item.value)}%` }}/>
                         </div>
                       </div>
-                      <div className="h-2 bg-[#F3F4F6] rounded-full overflow-hidden">
-                        <div className={`h-full ${item.color} rounded-full transition-all`} style={{ width: `${actionPct(item.value)}%` }}/>
-                      </div>
-                    </div>
-                  ))}
-                  {totalActions === 0 && (
-                    <p className="text-sm text-[#9CA3AF] py-4 text-center">No action data available yet</p>
-                  )}
-                </div>
-
-                {/* Direction requests as separate stat */}
-                <div className="mt-5 pt-4 border-t border-[#F3F4F6]">
-                  <p className="text-xs text-[#9CA3AF] mb-2">Direction Requests</p>
-                  <p className="text-2xl font-bold text-[#111827]">{fmt(totals?.direction_requests ?? 0)}</p>
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
             </div>

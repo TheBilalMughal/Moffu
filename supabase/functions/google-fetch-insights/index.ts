@@ -93,6 +93,8 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const rangeDays: number = body.range_days ?? 30;
     const locationIdFilter: string | null = body.location_id ?? null;
+    const startDateStr: string | null = body.start_date ?? null;
+    const endDateStr:   string | null = body.end_date   ?? null;
 
     // Get connection
     const { data: conn } = await supabase
@@ -149,7 +151,14 @@ Deno.serve(async (req) => {
       return json({ metrics: [], totals: {}, queries: [], locations: [] });
     }
 
-    const { start, end } = dateRange(rangeDays);
+    let start: Date, end: Date;
+    if (startDateStr && endDateStr) {
+      start = new Date(startDateStr + 'T00:00:00');
+      end   = new Date(endDateStr   + 'T00:00:00');
+    } else {
+      const r = dateRange(rangeDays);
+      start = r.start; end = r.end;
+    }
     const startParam = toDateParam(start);
     const endParam = toDateParam(end);
 
