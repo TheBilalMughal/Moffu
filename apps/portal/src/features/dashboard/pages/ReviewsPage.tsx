@@ -1518,7 +1518,7 @@ async function handleFlag(id: string) {
   }).length;
 
   return (
-    <div className="relative h-full flex flex-col">
+    <div className="relative h-full flex flex-col overflow-hidden">
       {/* Ambient blobs */}
       <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
       <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
@@ -1743,7 +1743,7 @@ async function handleFlag(id: string) {
         </div>
 
         {/* Scrollable table area */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {loading ? (
           <div className="px-10 py-4 space-y-2">{[1,2,3,4,5].map(n => <div key={n} className="h-12 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 animate-pulse"/>)}</div>
         ) : paginated.length === 0 ? (
@@ -1758,7 +1758,7 @@ async function handleFlag(id: string) {
           </div>
         ) : (
           <table className="w-full">
-            <thead className="bg-white/80 backdrop-blur-sm border-b border-[#E5EAE8]/60 sticky top-0 z-10">
+            <thead className="bg-white/90 backdrop-blur-md border-b border-[#E5EAE8]/60 sticky top-0 z-10">
               <tr>
                 <th className="pl-10 pr-2 py-2.5 w-10">
                   <div onClick={toggleSelectAll}
@@ -1775,7 +1775,7 @@ async function handleFlag(id: string) {
                 <th className="w-6"/>
               </tr>
             </thead>
-            <tbody className="bg-white/80">
+            <tbody>
               {paginated.map((review, idx) => (
                 <ReviewRow
                   key={`${review.id}-${review.status}-${review.reply_draft??''}`}
