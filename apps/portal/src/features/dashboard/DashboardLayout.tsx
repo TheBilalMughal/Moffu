@@ -119,7 +119,7 @@ function SidebarProfile() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-[#F3F8F6] transition-colors group"
+        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/60 transition-colors group"
       >
         <div className="w-8 h-8 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
           {initials}
@@ -237,7 +237,7 @@ function GlobalSearch() {
   return (
     <div ref={wrapRef} className="relative">
       <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border-0 transition-all duration-200 ${
-        focused ? 'bg-[#F3F4F6] w-56' : 'bg-transparent w-40 hover:bg-[#F3F4F6]'
+        focused ? 'bg-white/70 backdrop-blur-sm border border-white/60 w-56' : 'bg-transparent w-40 hover:bg-white/50'
       }`}>
         {loading
           ? <svg className="w-3.5 h-3.5 text-[#9CA3AF] animate-spin flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -804,11 +804,11 @@ export function DashboardLayout() {
         onCancel={() => setAdminDowngradePlan(null)}
       />
     )}
-    <div className="flex h-screen bg-[#F8FAF9] overflow-hidden">
+    <div className="flex h-screen bg-[#F0F5F3] overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-56 flex-shrink-0 bg-white border-r border-[#E5EAE8] flex flex-col">
+      <aside className="w-56 flex-shrink-0 bg-white/75 backdrop-blur-xl border-r border-white/60 shadow-[1px_0_12px_rgba(0,0,0,0.04)] flex flex-col">
         {/* Logo */}
-        <div className="px-5 py-4">
+        <div className="px-5 py-4 border-b border-white/50">
           <img src="/images/logo.png" alt="Moffu" className="h-7 w-auto" />
         </div>
 
@@ -822,12 +822,12 @@ export function DashboardLayout() {
                 to={to}
                 end={to === '/dashboard'}
                 className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  `flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                     locked
-                      ? 'text-[#C4CAC8] hover:bg-[#F3F4F6] hover:text-[#9CA3AF]'
+                      ? 'text-[#C4CAC8] hover:bg-white/50 hover:text-[#9CA3AF]'
                       : isActive
-                        ? 'bg-[#0D4C3C] text-white'
-                        : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
+                        ? 'bg-[#0D4C3C] text-white shadow-sm'
+                        : 'text-[#374151] hover:bg-white/60 hover:text-[#111827]'
                   }`
                 }
               >
@@ -843,17 +843,17 @@ export function DashboardLayout() {
           })}
 
           {/* Settings — pinned to bottom */}
-          <div className="mt-auto pt-2">
+          <div className="mt-auto pt-2 border-t border-white/50">
             {isFreePlan && <UpgradeWidget />}
             {navSettings.map(({ to, label, icon }) => (
               <NavLink
                 key={to}
                 to={to}
                 className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  `flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-[#0D4C3C] text-white'
-                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
+                      ? 'bg-[#0D4C3C] text-white shadow-sm'
+                      : 'text-[#374151] hover:bg-white/60 hover:text-[#111827]'
                   }`
                 }
               >
@@ -868,23 +868,23 @@ export function DashboardLayout() {
 
       {/* Page content */}
       <main className="flex-1 overflow-hidden flex flex-col">
-        {/* Topbar — transparent, no border */}
-        <div className="flex-shrink-0 flex items-center justify-between px-8 py-3 gap-4">
+        {/* Topbar */}
+        <div className="flex-shrink-0 flex items-center justify-between px-8 py-3 gap-4 bg-white/60 backdrop-blur-md border-b border-white/60 shadow-sm">
           <div className="flex items-center gap-2.5">
             <TopbarLocationPicker />
             <QuickStatsPill />
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-px h-5 bg-[#E5EAE8] mx-0.5 flex-shrink-0"/>
+            <div className="w-px h-5 bg-[#E5EAE8]/80 mx-0.5 flex-shrink-0"/>
             <GlobalSearch />
-            <div className="w-px h-5 bg-[#E5EAE8] mx-0.5 flex-shrink-0"/>
+            <div className="w-px h-5 bg-[#E5EAE8]/80 mx-0.5 flex-shrink-0"/>
             <NotificationsBell />
             <TopbarProfile />
           </div>
         </div>
 
         {/* Scrollable page area */}
-        <div className="flex-1 overflow-y-auto min-h-0 bg-[#F8FAF9]">
+        <div className="flex-1 overflow-y-auto min-h-0">
           <Outlet />
         </div>
       </main>
