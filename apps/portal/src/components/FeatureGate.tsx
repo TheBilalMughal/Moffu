@@ -25,6 +25,10 @@ const FEATURE_META: Record<string, { name: string; description: string }> = {
     name: 'Insights',
     description: 'Analytics, trends, and performance data across all your review locations.',
   },
+  feature_google_profile: {
+    name: 'Google Profile',
+    description: 'View profile views, search queries, calls, and customer actions from Google Business Profile.',
+  },
   feature_brand_brain: {
     name: 'Brand Brain',
     description: 'Configure your brand voice, tone, and response guidelines powered by AI.',

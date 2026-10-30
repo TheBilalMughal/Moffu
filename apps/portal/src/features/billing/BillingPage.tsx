@@ -137,6 +137,7 @@ const COMPARISON_ROWS: { label: string; key: string; section?: string }[] = [
   { label: 'AI Drafts',            key: 'ai_drafts' },
   { label: 'Team members',         key: 'team_members' },
   { label: 'Brand Brain profiles', key: 'brand_brain_profiles' },
+  { label: 'Google Profile',       key: 'feature_google_profile' },
   { label: 'Email Campaigns',      key: 'campaign_emails',    section: 'Campaigns' },
   { label: 'SMS Campaigns',        key: 'campaign_sms',       section: 'Campaigns' },
   { label: 'WhatsApp Campaigns',   key: 'campaign_whatsapp',  section: 'Campaigns' },

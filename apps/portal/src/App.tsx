@@ -14,6 +14,7 @@ import { ReviewsPage } from '@/features/dashboard/pages/ReviewsPage';
 import { SettingsPage } from '@/features/dashboard/pages/SettingsPage';
 import { BrandBrainPage } from '@/features/brand-brain/BrandBrainPage';
 import { InsightsPage } from '@/features/insights/InsightsPage';
+import { GoogleProfilePage } from '@/features/google/GoogleProfilePage';
 import { BillingPage } from '@/features/billing/BillingPage';
 import { GoogleCallbackPage } from '@/features/google/GoogleCallbackPage';
 import { TeamPage } from '@/features/team/TeamPage';
@@ -60,6 +61,7 @@ export function App() {
           <Route path="/dashboard" element={<OverviewPage />} />
           <Route path="/reviews"   element={<ReviewsPage />} />
           <Route path="/insights"  element={<FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage>} />
+          <Route path="/google-profile" element={<FeatureGatePage feature="feature_google_profile"><GoogleProfilePage /></FeatureGatePage>} />
           <Route path="/brand-brain" element={<FeatureGatePage feature="feature_brand_brain"><BrandBrainPage /></FeatureGatePage>} />
           <Route path="/billing"   element={<BillingPage />} />
           <Route path="/settings"  element={<SettingsPage />} />

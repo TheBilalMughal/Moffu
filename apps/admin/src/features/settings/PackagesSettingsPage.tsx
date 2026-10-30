@@ -45,6 +45,7 @@ interface LimitsForm {
   team_members: string;
   brand_brain_steps: string; // bitmask 0–63: bit0=step1 … bit5=step6
   support_tier: string;
+  feature_google_profile: boolean;
   feature_insights: boolean;
   campaign_emails_unlimited: boolean;
   campaign_emails_limit: string;
@@ -90,6 +91,7 @@ const DEFAULT_LIMITS: LimitsForm = {
   team_members: '1',
   brand_brain_steps: '63',
   support_tier: 'help_guides',
+  feature_google_profile: true,
   feature_insights: true,
   campaign_emails_unlimited: false,
   campaign_emails_limit: '500',
@@ -132,6 +134,7 @@ function entsToLimits(ents: Record<string, PlanEntitlement>): LimitsForm {
     team_members:        String(team?.limit_value ?? 1),
     brand_brain_steps:   String(ents['brand_brain_steps']?.limit_value ?? 63),
     support_tier:        sup?.enum_value ?? 'help_guides',
+    feature_google_profile: ents['feature_google_profile']?.bool_value !== false,
     feature_insights:    ents['feature_insights']?.bool_value !== false,
     campaign_emails_unlimited: ents['campaign_emails']?.value_type === 'UNLIMITED',
     campaign_emails_limit:     String(ents['campaign_emails']?.limit_value ?? 500),
@@ -307,6 +310,7 @@ export function PackagesSettingsPage() {
       { plan_id: planId, key: 'team_members',        value_type: 'LIMIT',     limit_value: parseInt(L.team_members) || 1,         bool_value: null, enum_value: null,            usage_reset: null },
       { plan_id: planId, key: 'brand_brain_steps',   value_type: 'LIMIT', limit_value: (parseInt(L.brand_brain_steps) || 0) & 63, bool_value: null, enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'support_tier',        value_type: 'ENUM',      limit_value: null,                                  bool_value: null, enum_value: L.support_tier,  usage_reset: null },
+      { plan_id: planId, key: 'feature_google_profile', value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_google_profile, enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'feature_insights',    value_type: 'BOOLEAN',   limit_value: null, bool_value: L.feature_insights,    enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'campaign_emails',    value_type: L.campaign_emails_unlimited    ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_emails_unlimited    ? null : parseInt(L.campaign_emails_limit) || 0,    bool_value: null, enum_value: null, usage_reset: 'monthly' },
       { plan_id: planId, key: 'campaign_sms',       value_type: L.campaign_sms_unlimited       ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_sms_unlimited       ? null : parseInt(L.campaign_sms_limit) || 0,       bool_value: null, enum_value: null, usage_reset: 'monthly' },
@@ -512,6 +516,21 @@ export function PackagesSettingsPage() {
                 <div>
                   <p className="text-xs font-semibold text-[#374151] mb-2">Feature Access</p>
                   <div className="border border-[#E5EAE8] rounded-lg divide-y divide-[#F3F4F6]">
+                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#F8FAF9] transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={form.limits.feature_google_profile}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_google_profile: e.target.checked } }))}
+                        className="w-4 h-4 accent-[#0D4C3C] rounded flex-shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-[#111827]">Google Profile</p>
+                        <p className="text-[11px] text-[#9CA3AF] mt-0.5">Profile views, search queries, calls, direction requests</p>
+                      </div>
+                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_google_profile ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+                        {form.limits.feature_google_profile ? 'On' : 'Off'}
+                      </span>
+                    </label>
                     <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#F8FAF9] transition-colors">
                       <input
                         type="checkbox"

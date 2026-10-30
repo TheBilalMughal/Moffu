@@ -49,6 +49,14 @@ function InsightsIcon() {
   );
 }
 
+function GoogleProfileIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+    </svg>
+  );
+}
+
 function BillingIcon() {
   return (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -74,9 +82,10 @@ function CampaignIcon() {
 }
 
 const navItems: { to: string; label: string; icon: React.ReactNode; featureKey: string | null }[] = [
-  { to: '/dashboard',   label: 'Overview',    icon: <ChartBarIcon />,   featureKey: null },
-  { to: '/reviews',     label: 'Reviews',     icon: <StarIcon />,       featureKey: null },
-  { to: '/insights',    label: 'Insights',    icon: <InsightsIcon />,   featureKey: 'feature_insights' },
+  { to: '/dashboard',      label: 'Overview',       icon: <ChartBarIcon />,       featureKey: null },
+  { to: '/google-profile', label: 'Google Profile', icon: <GoogleProfileIcon />,  featureKey: 'feature_google_profile' },
+  { to: '/reviews',        label: 'Reviews',        icon: <StarIcon />,           featureKey: null },
+  { to: '/insights',       label: 'Insights',       icon: <InsightsIcon />,       featureKey: 'feature_insights' },
   { to: '/brand-brain', label: 'Brand Brain', icon: <SlidersIcon />,    featureKey: 'feature_brand_brain' },
   { to: '/campaigns',   label: 'Campaigns',   icon: <CampaignIcon />,   featureKey: null },
   { to: '/team',        label: 'Team',        icon: <TeamIcon />,       featureKey: 'feature_team' },
@@ -701,7 +710,9 @@ export function DashboardLayout() {
         .eq('plan_id', sub.plan_id);
       const map: Record<string, boolean> = {};
       for (const e of ents ?? []) {
-        if (e.key === 'feature_insights') {
+        if (e.key === 'feature_google_profile') {
+          map['feature_google_profile'] = e.bool_value !== false;
+        } else if (e.key === 'feature_insights') {
           map['feature_insights'] = e.bool_value !== false;
         } else if (e.key === 'brand_brain_steps') {
           // locked when all steps are disabled (mask === 0); UNLIMITED = all accessible
