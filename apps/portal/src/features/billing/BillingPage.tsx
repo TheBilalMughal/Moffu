@@ -244,20 +244,25 @@ function PlanComparisonModal({ plans, sub, billingInterval, currentPlan, onDowng
               const isCurrent = plan.id === sub?.plan_id;
               const currentSortOrder = currentPlan?.sort_order ?? 0;
               const isDowngrade = !isCurrent && plan.sort_order < currentSortOrder;
+              const isScale = plan.slug === 'scale';
               return (
                 <div key={plan.id}>
-                  {isCurrent ? (
+                  {isScale ? (
+                    <button disabled className="w-full py-2 text-xs font-semibold text-stone-400 bg-stone-800 rounded-xl cursor-not-allowed">
+                      Coming soon
+                    </button>
+                  ) : isCurrent ? (
                     <button disabled className="w-full py-2 text-xs font-semibold text-[#9CA3AF] border border-[#E5EAE8] rounded-xl cursor-default">
                       Current
+                    </button>
+                  ) : isDowngrade ? (
+                    <button onClick={() => { onClose(); onDowngrade(plan); }} className="w-full py-2 text-xs font-semibold text-[#374151] border border-[#E5EAE8] rounded-xl hover:bg-[#F3F4F6] transition-colors">
+                      Downgrade
                     </button>
                   ) : plan.contact_sales ? (
                     <a href="mailto:sales@moffu.com" className="w-full py-2 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl flex items-center justify-center hover:bg-[#0a3d30] transition-colors">
                       Contact Sales
                     </a>
-                  ) : isDowngrade ? (
-                    <button onClick={() => { onClose(); onDowngrade(plan); }} className="w-full py-2 text-xs font-semibold text-[#374151] border border-[#E5EAE8] rounded-xl hover:bg-[#F3F4F6] transition-colors">
-                      Downgrade
-                    </button>
                   ) : (
                     <button disabled title="Coming soon" className="w-full py-2 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl opacity-50 cursor-not-allowed">
                       Upgrade
@@ -791,23 +796,28 @@ export function BillingPage() {
                   const currentSortOrder = currentPlan?.sort_order ?? 0;
                   const isDowngrade = !isCurrent && plan.sort_order < currentSortOrder;
                   const isUpgrade = !isCurrent && plan.sort_order > currentSortOrder;
-                  if (isCurrent) return (
-                    <button disabled className={`w-full py-2.5 text-xs font-semibold rounded-xl cursor-default border ${isScale ? 'border-stone-600 text-stone-500' : 'border-[#E5EAE8] text-[#9CA3AF]'}`}>
-                      Current plan
+                  if (isScale) return (
+                    <button disabled className="w-full py-2.5 text-xs font-semibold rounded-xl cursor-not-allowed bg-stone-700 text-stone-400">
+                      Coming soon
                     </button>
                   );
-                  if (plan.contact_sales) return (
-                    <a href="mailto:sales@moffu.com" className={`w-full py-2.5 text-xs font-semibold rounded-xl flex items-center justify-center ${isScale ? 'bg-white text-[#1C1917] hover:bg-stone-100' : 'bg-[#0D4C3C] text-white hover:bg-[#0a3d30]'} transition-colors`}>
-                      Contact Sales Team
-                    </a>
+                  if (isCurrent) return (
+                    <button disabled className="w-full py-2.5 text-xs font-semibold rounded-xl cursor-default border border-[#E5EAE8] text-[#9CA3AF]">
+                      Current plan
+                    </button>
                   );
                   if (isDowngrade) return (
                     <button onClick={() => handleDowngradeClick(plan)} className="w-full py-2.5 text-xs font-semibold text-[#374151] border border-[#E5EAE8] rounded-xl hover:bg-[#F3F4F6] transition-colors">
                       Downgrade
                     </button>
                   );
+                  if (plan.contact_sales) return (
+                    <a href="mailto:sales@moffu.com" className="w-full py-2.5 text-xs font-semibold rounded-xl flex items-center justify-center bg-[#0D4C3C] text-white hover:bg-[#0a3d30] transition-colors">
+                      Contact Sales Team
+                    </a>
+                  );
                   if (isUpgrade) return (
-                    <button disabled title="Coming soon" className={`w-full py-2.5 text-xs font-semibold rounded-xl cursor-not-allowed opacity-50 ${isScale ? 'bg-white text-[#1C1917]' : 'bg-[#0D4C3C] text-white'}`}>
+                    <button disabled title="Coming soon" className="w-full py-2.5 text-xs font-semibold rounded-xl cursor-not-allowed opacity-50 bg-[#0D4C3C] text-white">
                       Upgrade — coming soon
                     </button>
                   );
