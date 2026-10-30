@@ -817,7 +817,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
         className={`group cursor-pointer border-b border-[#F3F4F6] transition-colors ${focused ? 'ring-1 ring-inset ring-[#0D4C3C]/30' : ''} ${expanded ? 'bg-[#F0F7F5]' : selected ? 'bg-[#E6F2EE] hover:bg-[#DCF0E8]' : 'hover:bg-[#F0F4F2]'}`}>
 
         {/* Checkbox — hidden for PUBLISHED reviews */}
-        <td className="pl-10 pr-2 py-1.5 w-10" onClick={e => { e.stopPropagation(); if (uiStatus !== 'replied') onSelect(e); }}>
+        <td className="pl-4 pr-2 py-1.5 w-10" onClick={e => { e.stopPropagation(); if (uiStatus !== 'replied') onSelect(e); }}>
           {uiStatus !== 'replied' ? (
             <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${selected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] group-hover:border-[#0D4C3C]'}`}>
               {selected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
@@ -911,7 +911,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
       {/* Expanded */}
       {expanded && (
         <tr className="bg-[#F8FAF9] border-b border-[#E5EAE8]">
-          <td colSpan={8} className="pl-10 pr-10 py-4">
+          <td colSpan={8} className="pl-4 pr-4 py-4">
             <div className="space-y-4">
               {/* Full review */}
               {review.body && (
@@ -1743,11 +1743,11 @@ async function handleFlag(id: string) {
         </div>
 
         {/* Scrollable table area */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-4">
         {loading ? (
-          <div className="px-10 py-4 space-y-2">{[1,2,3,4,5].map(n => <div key={n} className="h-12 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 animate-pulse"/>)}</div>
+          <div className="space-y-2">{[1,2,3,4,5].map(n => <div key={n} className="h-12 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 animate-pulse"/>)}</div>
         ) : paginated.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center px-10">
+          <div className="flex flex-col items-center justify-center py-20 text-center">
             <svg className="w-10 h-10 text-[#D1D5DB] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
             </svg>
@@ -1757,10 +1757,11 @@ async function handleFlag(id: string) {
             {hasFilters && <button onClick={clearAll} className="text-xs text-[#0D4C3C] underline mt-1">Clear filters</button>}
           </div>
         ) : (
+          <div className="bg-white rounded-2xl border border-[#E5EAE8] shadow-sm">
           <table className="w-full">
-            <thead className="bg-white/90 backdrop-blur-md border-b border-[#E5EAE8]/60 sticky top-0 z-10">
+            <thead className="bg-white border-b border-[#E5EAE8] sticky top-0 z-10">
               <tr>
-                <th className="pl-10 pr-2 py-2.5 w-10">
+                <th className="pl-4 pr-2 py-2.5 w-10">
                   <div onClick={toggleSelectAll}
                     className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${allPageSelected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] hover:border-[#0D4C3C]'}`}>
                     {allPageSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
@@ -1771,7 +1772,7 @@ async function handleFlag(id: string) {
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-32">Location</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Review</th>
                 <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-28">Status</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-44 pr-10">Action</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-44 pr-4">Action</th>
                 <th className="w-6"/>
               </tr>
             </thead>
@@ -1794,6 +1795,7 @@ async function handleFlag(id: string) {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

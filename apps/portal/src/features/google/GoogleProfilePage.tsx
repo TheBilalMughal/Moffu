@@ -595,10 +595,10 @@ export function GoogleProfilePage() {
           {baseline && (
             <button
               onClick={() => setShowBaselineCompare(o => !o)}
-              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl border backdrop-blur-sm transition-colors ${
+              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
                 showBaselineCompare
-                  ? 'bg-blue-50/80 text-blue-700 border-blue-200'
-                  : 'bg-white/60 border-white/70 text-[#6B7280] hover:border-[#374151] hover:text-[#374151] shadow-sm'
+                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                  : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#111827]'
               }`}
             >
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -613,7 +613,7 @@ export function GoogleProfilePage() {
           <button
             onClick={() => downloadCSV(metrics, rangeLabel)}
             disabled={!metrics.length}
-            className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl border bg-white/60 backdrop-blur-sm border-white/70 text-[#6B7280] hover:border-[#374151] hover:text-[#374151] transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#111827] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -625,10 +625,10 @@ export function GoogleProfilePage() {
           {/* Range presets */}
           {(['7d', '30d', '90d'] as const).map(p => (
             <button key={p} onClick={() => setRange(p)}
-              className={`text-xs font-medium px-3 py-1.5 rounded-xl border backdrop-blur-sm transition-colors ${
+              className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
                 range === p
-                  ? 'bg-[#0D4C3C] text-white border-[#0D4C3C] shadow-md shadow-[#0D4C3C]/20'
-                  : 'bg-white/60 border-white/70 text-[#6B7280] hover:border-[#374151] hover:text-[#374151] shadow-sm'
+                  ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]'
+                  : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#111827]'
               }`}>
               {p}
             </button>

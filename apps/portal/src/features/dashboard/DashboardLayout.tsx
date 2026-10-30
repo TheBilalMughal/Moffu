@@ -529,7 +529,7 @@ function TopbarLocationPicker() {
       </button>
 
       {open && (
-        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 min-w-[200px]">
+        <div className="absolute top-full mt-1.5 left-0 z-[200] bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 min-w-[200px]">
           <button
             onClick={() => { setSelectedId(null); setOpen(false); }}
             className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${!selectedId ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
@@ -822,12 +822,12 @@ export function DashboardLayout() {
                 to={to}
                 end={to === '/dashboard'}
                 className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     locked
-                      ? 'text-[#C4CAC8] hover:bg-white/50 hover:text-[#9CA3AF]'
+                      ? 'text-[#C4CAC8] hover:bg-[#F3F4F6] hover:text-[#9CA3AF]'
                       : isActive
-                        ? 'bg-[#0D4C3C] text-white shadow-sm'
-                        : 'text-[#374151] hover:bg-white/60 hover:text-[#111827]'
+                        ? 'bg-[#0D4C3C] text-white'
+                        : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
                   }`
                 }
               >
@@ -843,17 +843,17 @@ export function DashboardLayout() {
           })}
 
           {/* Settings — pinned to bottom */}
-          <div className="mt-auto pt-2 border-t border-white/50">
+          <div className="mt-auto pt-2">
             {isFreePlan && <UpgradeWidget />}
             {navSettings.map(({ to, label, icon }) => (
               <NavLink
                 key={to}
                 to={to}
                 className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                  `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-[#0D4C3C] text-white shadow-sm'
-                      : 'text-[#374151] hover:bg-white/60 hover:text-[#111827]'
+                      ? 'bg-[#0D4C3C] text-white'
+                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
                   }`
                 }
               >
@@ -869,7 +869,7 @@ export function DashboardLayout() {
       {/* Page content */}
       <main className="flex-1 overflow-hidden flex flex-col">
         {/* Topbar */}
-        <div className="flex-shrink-0 flex items-center justify-between px-8 py-3 gap-4 bg-white/60 backdrop-blur-md border-b border-white/60 shadow-sm">
+        <div className="flex-shrink-0 flex items-center justify-between px-8 py-3 gap-4">
           <div className="flex items-center gap-2.5">
             <TopbarLocationPicker />
             <QuickStatsPill />
