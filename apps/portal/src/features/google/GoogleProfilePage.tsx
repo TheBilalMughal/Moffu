@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useLocationStore } from '@/features/location/location.store';
 
@@ -26,8 +26,6 @@ interface Totals {
 
 interface SearchQuery { query: string; count: number; }
 interface LocationResult { id: string; display_name: string | null; total_views: number; }
-interface GLocation { id: string; display_name: string | null; }
-
 interface InsightsData {
   metrics: DailyMetric[];
   totals: Totals;
@@ -175,47 +173,31 @@ function NotConnectedState() {
 export function GoogleProfilePage() {
   const { selectedId: globalLocationId } = useLocationStore();
   const [range, setRange] = useState<DateRange>('30d');
-  const [locationFilter, setLocationFilter] = useState<string>('');
-  const [gLocations, setGLocations] = useState<GLocation[]>([]);
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [data, setData] = useState<InsightsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const dropRef = useRef<HTMLDivElement>(null);
-  const [dropOpen, setDropOpen] = useState(false);
 
-  // Load connection state + locations once
+  // Load connection state once
   useEffect(() => {
     (async () => {
       const { data: conn } = await supabase
         .from('google_connections').select('state').maybeSingle();
       setIsConnected(conn?.state === 'CONNECTED');
-      if (conn?.state !== 'CONNECTED') { setLoading(false); return; }
-
-      const { data: locs } = await supabase
-        .from('google_locations').select('id, display_name').eq('is_selected', true);
-      setGLocations(locs ?? []);
+      if (conn?.state !== 'CONNECTED') setLoading(false);
     })();
   }, []);
 
-  // Load insights whenever range / location changes (and connected)
+  // Load insights whenever range / global location changes (and connected)
   useEffect(() => {
     if (isConnected === null || isConnected === false) return;
-    const effectiveLocation = locationFilter || globalLocationId || null;
     setLoading(true); setError(null);
-    fetchInsights(RANGE_DAYS[range], effectiveLocation).then(d => {
+    fetchInsights(RANGE_DAYS[range], globalLocationId ?? null).then(d => {
       if (!d) setError('Could not load insights. Google Performance data may not be available for your locations yet.');
       else setData(d);
       setLoading(false);
     });
-  }, [range, locationFilter, globalLocationId, isConnected]);
-
-  // Close location dropdown on outside click
-  useEffect(() => {
-    function h(e: MouseEvent) { if (dropRef.current && !dropRef.current.contains(e.target as Node)) setDropOpen(false); }
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, []);
+  }, [range, globalLocationId, isConnected]);
 
   if (isConnected === false) return <NotConnectedState />;
 
@@ -225,8 +207,6 @@ export function GoogleProfilePage() {
 
   const totalActions = (totals?.calls ?? 0) + (totals?.website_clicks ?? 0) + (totals?.direction_requests ?? 0);
   const actionPct = (n: number) => totalActions > 0 ? Math.round((n / totalActions) * 100) : 0;
-
-  const activeLocation = gLocations.find(l => l.id === locationFilter);
 
   return (
     <div className="h-full flex flex-col">
@@ -242,36 +222,6 @@ export function GoogleProfilePage() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          {/* Location filter */}
-          {gLocations.length > 1 && (
-            <div ref={dropRef} className="relative">
-              <button onClick={() => setDropOpen(o => !o)}
-                className="flex items-center gap-1.5 text-sm text-[#6B7280] border border-[#D1D5DB] hover:border-[#374151] px-3 py-1.5 rounded-xl transition-colors">
-                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                <span className="max-w-[140px] truncate">{activeLocation?.display_name ?? 'All locations'}</span>
-                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
-                </svg>
-              </button>
-              {dropOpen && (
-                <div className="absolute right-0 top-full mt-1 bg-white rounded-xl border border-[#E5EAE8] shadow-lg z-20 min-w-[180px] py-1">
-                  <button onClick={() => { setLocationFilter(''); setDropOpen(false); }}
-                    className={`w-full text-left px-4 py-2 text-sm ${!locationFilter ? 'text-[#0D4C3C] font-medium' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}>
-                    All locations
-                  </button>
-                  {gLocations.map(l => (
-                    <button key={l.id} onClick={() => { setLocationFilter(l.id); setDropOpen(false); }}
-                      className={`w-full text-left px-4 py-2 text-sm ${locationFilter === l.id ? 'text-[#0D4C3C] font-medium' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}>
-                      {l.display_name ?? l.id}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
           {/* Date range pills */}
           {(['7d','30d','90d'] as DateRange[]).map(r => (
             <button key={r} onClick={() => setRange(r)}
