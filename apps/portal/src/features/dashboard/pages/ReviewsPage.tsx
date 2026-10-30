@@ -1205,6 +1205,40 @@ function AutoScheduleModal({ mode, onConfirm, onCancel }: {
   );
 }
 
+// ── AutoSyncModal ─────────────────────────────────────────────────────────────
+
+function AutoSyncModal({ onConfirm, onCancel }: {
+  onConfirm: (interval: import('@/features/google/google.service').AutoSyncInterval) => void;
+  onCancel: () => void;
+}) {
+  const [interval, setInterval] = useState<import('@/features/google/google.service').AutoSyncInterval>('4h');
+  const opts: { value: import('@/features/google/google.service').AutoSyncInterval; label: string }[] = [
+    { value: '1h', label: '1 hour' }, { value: '4h', label: '4 hours' },
+    { value: '12h', label: '12 hours' }, { value: '24h', label: '24 hours' },
+  ];
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={e => { if (e.target === e.currentTarget) onCancel(); }}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <h2 className="text-base font-semibold text-[#111827] mb-1">Enable Auto Sync</h2>
+        <p className="text-sm text-[#6B7280] mb-5">Automatically fetch new reviews from Google on a schedule.</p>
+        <p className="text-xs font-semibold text-[#374151] uppercase tracking-wide mb-3">Sync every</p>
+        <div className="flex gap-2 flex-wrap mb-6">
+          {opts.map(o => (
+            <button key={o.value} onClick={() => setInterval(o.value)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${interval === o.value ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+        <div className="flex justify-end gap-2">
+          <button onClick={onCancel} className="px-4 py-2 text-sm text-[#6B7280] hover:text-[#111827] transition-colors rounded-lg hover:bg-[#F3F4F6]">Cancel</button>
+          <button onClick={() => onConfirm(interval)} className="px-4 py-2 text-sm font-semibold bg-[#0D4C3C] text-white rounded-lg hover:bg-[#083F32] transition-colors">Enable</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function ReviewsPage() {
@@ -1219,7 +1253,9 @@ export function ReviewsPage() {
   const [autoDraftSchedule, setAutoDraftSchedule] = useState<AutoSchedule>(DEFAULT_SCHEDULE);
   const [autoPublishEnabled, setAutoPublishEnabled] = useState(false);
   const [autoPublishSchedule, setAutoPublishSchedule] = useState<AutoSchedule>(DEFAULT_SCHEDULE);
-  const [autoModal, setAutoModal] = useState<'draft' | 'publish' | null>(null);
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
+  const [autoSyncInterval, setAutoSyncInterval] = useState<import('@/features/google/google.service').AutoSyncInterval>('4h');
+  const [autoModal, setAutoModal] = useState<'sync' | 'draft' | 'publish' | null>(null);
   const [autoRunning, setAutoRunning] = useState<'draft' | 'publish' | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -1272,6 +1308,8 @@ export function ReviewsPage() {
         .maybeSingle();
       setIsConnected(conn?.state === 'CONNECTED');
       if (conn?.id) setConnId(conn.id);
+      if (conn?.auto_sync_enabled) setAutoSyncEnabled(true);
+      if (conn?.auto_sync_interval) setAutoSyncInterval(conn.auto_sync_interval as import('@/features/google/google.service').AutoSyncInterval);
       if (conn?.auto_draft_enabled) setAutoDraftEnabled(true);
       if (conn?.auto_draft_schedule) setAutoDraftSchedule(conn.auto_draft_schedule as AutoSchedule);
       if (conn?.auto_publish_enabled) setAutoPublishEnabled(true);
@@ -1480,6 +1518,18 @@ export function ReviewsPage() {
     }
   }
 
+  async function handleAutoSyncModalConfirm(interval: import('@/features/google/google.service').AutoSyncInterval) {
+    setAutoModal(null);
+    setAutoSyncEnabled(true);
+    setAutoSyncInterval(interval);
+    if (connId) await googleService.updateAutoSync(connId, true, interval);
+  }
+
+  async function handleAutoSyncToggleOff() {
+    setAutoSyncEnabled(false);
+    if (connId) await googleService.updateAutoSync(connId, false, autoSyncInterval);
+  }
+
   async function handleGenerateDraft(id: string) {
     const review = reviews.find(r => r.id === id);
     if (review?.reply_draft) {
@@ -1595,7 +1645,10 @@ async function handleFlag(id: string) {
     <div className="h-full flex flex-col">
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)}/>}
       {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
-      {autoModal && (
+      {autoModal === 'sync' && (
+        <AutoSyncModal onConfirm={handleAutoSyncModalConfirm} onCancel={() => setAutoModal(null)}/>
+      )}
+      {(autoModal === 'draft' || autoModal === 'publish') && (
         <AutoScheduleModal
           mode={autoModal}
           onConfirm={handleAutoModalConfirm}
@@ -1640,6 +1693,16 @@ async function handleFlag(id: string) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
             Export
+          </button>
+
+          {/* Auto Sync toggle */}
+          <button
+            onClick={() => autoSyncEnabled ? handleAutoSyncToggleOff() : setAutoModal('sync')}
+            disabled={!isConnected}
+            title={!isConnected ? 'Connect Google Business Profile first' : autoSyncEnabled ? `Auto Sync ON every ${autoSyncInterval} — click to disable` : 'Enable Auto Sync'}
+            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoSyncEnabled ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${autoSyncEnabled ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}/>
+            {autoSyncEnabled ? `Auto Sync · ${autoSyncInterval}` : 'Auto Sync'}
           </button>
 
           {/* Auto Draft toggle */}
