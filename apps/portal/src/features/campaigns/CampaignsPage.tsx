@@ -545,7 +545,7 @@ export function CampaignsPage() {
       )}
 
       {/* Header */}
-      <div className="relative z-10 px-8 py-4 flex-shrink-0 border-b border-white/60 flex items-center justify-between gap-4">
+      <div className="relative z-10 px-4 md:px-8 py-4 flex-shrink-0 border-b border-white/60 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#111827]">Review Request Campaigns</h1>
           <p className="text-sm text-[#6B7280] mt-0.5">Ask customers to leave a review via email</p>
@@ -558,7 +558,7 @@ export function CampaignsPage() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-8 py-6">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6">
 
       {/* Email quota bar */}
       {quota !== null && (
@@ -596,7 +596,7 @@ export function CampaignsPage() {
       )}
 
       {/* KPI cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
           { label: 'Campaigns',    value: campaigns.length,                  color: 'text-[#111827]' },
           { label: 'Emails Sent',  value: totalSent.toLocaleString(),         color: 'text-[#1D4ED8]' },

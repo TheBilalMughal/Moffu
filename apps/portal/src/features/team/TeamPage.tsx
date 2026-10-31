@@ -328,7 +328,7 @@ export function TeamPage() {
       <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-8 py-8">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8">
 
       {/* Page header */}
       <div className="flex items-start justify-between mb-6">
@@ -350,7 +350,7 @@ export function TeamPage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         {[
           { label: 'Total members',      value: members.length },
           { label: 'Pending invitations', value: invitations.length },

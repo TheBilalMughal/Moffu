@@ -795,7 +795,7 @@ export function SettingsPage() {
       <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-8 py-8">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8">
       <div className="mb-7">
         <h1 className="text-[1.5rem] font-bold text-[#111827]">Settings</h1>
         <p className="text-sm text-[#6B7280] mt-0.5">Manage your account and preferences.</p>

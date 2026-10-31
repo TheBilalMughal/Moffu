@@ -94,7 +94,7 @@ export function CampaignDetailPage() {
 
   if (loading) {
     return (
-      <div className="px-8 py-6 flex items-center justify-center min-h-[300px]">
+      <div className="px-4 md:px-8 py-6 flex items-center justify-center min-h-[300px]">
         <p className="text-sm text-[#9CA3AF]">Loading…</p>
       </div>
     );
@@ -102,7 +102,7 @@ export function CampaignDetailPage() {
 
   if (!campaign) {
     return (
-      <div className="px-8 py-6">
+      <div className="px-4 md:px-8 py-6">
         <p className="text-sm text-[#374151]">Campaign not found.</p>
         <Link to="/campaigns" className="text-xs text-[#0D4C3C] hover:underline mt-2 inline-block">← Back to Campaigns</Link>
       </div>
@@ -118,7 +118,7 @@ export function CampaignDetailPage() {
   const statusCounts = contacts.reduce<Record<string, number>>((acc, c) => { acc[c.status] = (acc[c.status] ?? 0) + 1; return acc; }, {});
 
   return (
-    <div className="px-8 py-6">
+    <div className="px-4 md:px-8 py-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 mb-6">
         <Link to="/campaigns" className="text-sm text-[#6B7280] hover:text-[#0D4C3C] transition-colors">Campaigns</Link>

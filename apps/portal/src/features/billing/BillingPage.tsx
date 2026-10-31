@@ -389,15 +389,15 @@ export function BillingPage() {
 
   if (loading) {
     return (
-      <div className="px-8 py-8">
+      <div className="px-4 md:px-8 py-8">
         <div className="animate-pulse space-y-5">
           <div className="h-7 bg-[#F3F4F6] rounded w-48" />
           <div className="h-36 bg-[#F3F4F6] rounded-2xl" />
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div className="h-40 bg-[#F3F4F6] rounded-2xl" />
             <div className="h-40 bg-[#F3F4F6] rounded-2xl" />
           </div>
-          <div className="grid grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             {[...Array(4)].map((_, i) => <div key={i} className="h-80 bg-[#F3F4F6] rounded-2xl" />)}
           </div>
         </div>
@@ -436,7 +436,7 @@ export function BillingPage() {
       <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-8 py-8">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8">
 
       {/* Modals */}
       {showCompare && (
@@ -519,7 +519,7 @@ export function BillingPage() {
       )}
 
       {/* Current plan + usage -- 2 equal columns */}
-      <div className="grid grid-cols-2 gap-5 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
         {/* Current plan card */}
         <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
           <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
@@ -638,7 +638,7 @@ export function BillingPage() {
       </div>
 
       {/* Usage history + Add-ons -- 2 columns */}
-      <div className="grid grid-cols-2 gap-5 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
         {/* Usage history chart */}
         <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
           <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
@@ -730,7 +730,7 @@ export function BillingPage() {
       </div>
 
       {/* Plan cards */}
-      <div className="grid grid-cols-4 gap-5 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-4">
         {plans.map(plan => {
           const isCurrent = plan.id === sub?.plan_id;
           const price = plan.prices.find(p => p.interval === billingInterval) ?? plan.prices.find(p => p.interval === 'monthly');

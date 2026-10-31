@@ -205,7 +205,7 @@ function StepIndicator({ current, steps, completed, stepMask, onJump }: {
   current: number; steps: typeof WIZARD_STEPS; completed: Set<number>; stepMask: number; onJump: (n: number) => void;
 }) {
   return (
-    <div className="relative z-10 flex items-center gap-0 px-10 py-4 border-b border-white/60 overflow-x-auto flex-shrink-0">
+    <div className="relative z-10 flex items-center gap-0 px-4 md:px-10 py-4 border-b border-white/60 overflow-x-auto flex-shrink-0">
       {steps.map((step, idx) => {
         const isActive = step.id === current;
         const isDone = completed.has(step.id) && !isActive;
@@ -273,7 +273,7 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
         <p className="text-sm text-[#6B7280]">Basic details that personalise every AI-generated reply.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Left — Global defaults */}
         <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
           <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
@@ -454,7 +454,7 @@ function Step2({ data, onChange, onAnalyzeVoice }: {
         <p className="text-sm text-[#6B7280]">Pick the voice that best matches your brand.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Left — Tone presets */}
         <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
           <div className="px-5 py-3 bg-white border-b border-[#E5EAE8] flex items-center justify-between">
@@ -513,7 +513,7 @@ function Step3({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
         <p className="text-sm text-[#6B7280]">Control how AI structures and formats each reply.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Left — Length + Behaviour */}
         <div className="space-y-5">
           <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
@@ -606,7 +606,7 @@ function Step4({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
         <p className="text-sm text-[#6B7280]">Language settings, negative handling, and per-star overrides.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-5 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
         {/* Left column — Language + Negative handling */}
         <div className="space-y-5">
 
@@ -714,7 +714,7 @@ function Step5({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
         <p className="text-sm text-[#6B7280]">Set boundaries, inject context, and control approval flow.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Left — Prohibited phrases + Keyword contexts */}
         <div className="space-y-5">
 
@@ -1042,7 +1042,7 @@ function Step7({ data, onGeneratePreview, onSave, saving }: {
         <p className="text-sm text-[#6B7280]">Generate a sample reply using your Brand Brain settings before saving.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Left — Test review config */}
         <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3 bg-white border-b border-[#E5EAE8]">
@@ -1360,7 +1360,7 @@ export function BrandBrainPage() {
 
   if (loading) {
     return (
-      <div className="px-10 py-8">
+      <div className="px-4 md:px-10 py-8">
         <div className="h-8 w-48 bg-[#F3F4F6] rounded-lg animate-pulse mb-2"/>
         <div className="flex gap-2 mb-8">{[1,2,3,4,5,6,7].map(i => <div key={i} className="h-8 w-24 bg-[#F3F4F6] rounded-full animate-pulse"/>)}</div>
         {[1,2,3].map(i => <div key={i} className="bg-white rounded-xl border border-[#E5EAE8] h-32 mb-5 animate-pulse"/>)}
@@ -1377,7 +1377,7 @@ export function BrandBrainPage() {
       {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
 
       {/* Header */}
-      <div className="relative z-10 px-10 py-4 border-b border-white/60 flex items-center justify-between flex-shrink-0">
+      <div className="relative z-10 px-4 md:px-10 py-4 border-b border-white/60 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-xl font-bold text-[#111827]">Brand Brain</h1>
@@ -1405,7 +1405,7 @@ export function BrandBrainPage() {
       <StepIndicator current={step} steps={visibleSteps} completed={completed} stepMask={stepMask} onJump={jumpTo}/>
 
       {/* Step content */}
-      <div className="flex-1 overflow-y-auto px-8 py-7">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-7">
         {step !== 7 && !(stepMask & (1 << (step - 1))) ? (
           <div className="flex flex-col items-center justify-center h-full gap-6 py-16">
             <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] flex items-center justify-center">
@@ -1436,7 +1436,7 @@ export function BrandBrainPage() {
       </div>
 
       {/* Navigation footer */}
-      <div className="relative z-10 px-10 py-4 border-t border-white/60 flex items-center justify-between flex-shrink-0">
+      <div className="relative z-10 px-4 md:px-10 py-4 border-t border-white/60 flex items-center justify-between flex-shrink-0">
         <button onClick={goPrev} disabled={isFirstStep}
           className="flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#111827] px-4 py-2 rounded-xl hover:bg-[#F3F4F6] disabled:opacity-0 transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
