@@ -1649,11 +1649,13 @@ async function handleFlag(id: string) {
         </div>
       )}
 
-      {/* Filter bar + Table */}
+      {/* Filter bar + Table — unified card, same horizontal margin */}
       <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 min-h-0 px-3 md:px-6 pt-4 flex flex-col">
+          <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-[#E5EAE8] shadow-sm">
 
-        {/* Filter bar — single row, outside scroll */}
-        <div className="relative z-[50] flex-shrink-0 bg-white border-b border-[#E5EAE8] px-3 md:px-6 py-2.5">
+        {/* Filter bar — top of card; no overflow-hidden here so dropdowns escape */}
+        <div className="relative z-[50] flex-shrink-0 bg-white border-b border-[#E5EAE8] px-3 md:px-4 py-2.5 rounded-t-2xl">
           <div className="flex items-center gap-2 flex-wrap">
 
             {/* Status tabs */}
@@ -1761,10 +1763,10 @@ async function handleFlag(id: string) {
           )}
         </div>
 
-        {/* Table area — card is the scroll container so thead sticky works */}
-        <div className="flex-1 min-h-0 px-3 md:px-6 pt-4 pb-6 flex flex-col">
+        {/* Table content — overflow-hidden only here so corners clip correctly */}
+        <div className="flex-1 min-h-0 flex flex-col bg-white rounded-b-2xl overflow-hidden">
         {loading ? (
-          <div className="space-y-2">{[1,2,3,4,5].map(n => <div key={n} className="h-12 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 animate-pulse"/>)}</div>
+          <div className="p-4 space-y-2">{[1,2,3,4,5].map(n => <div key={n} className="h-12 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 animate-pulse"/>)}</div>
         ) : paginated.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <svg className="w-10 h-10 text-[#D1D5DB] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1776,7 +1778,7 @@ async function handleFlag(id: string) {
             {hasFilters && <button onClick={clearAll} className="text-xs text-[#0D4C3C] underline mt-1">Clear filters</button>}
           </div>
         ) : (
-          <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-[#E5EAE8] shadow-sm bg-white overflow-hidden">
+          <div className="flex-1 min-h-0 flex flex-col">
             {/* Table header — never scrolls */}
             <div className="flex-shrink-0 border-b border-[#E5EAE8] bg-[#F8FAF9] overflow-x-auto">
               <table className="w-full min-w-[700px]">
@@ -1834,7 +1836,8 @@ async function handleFlag(id: string) {
             </div>
           </div>
         )}
-      </div>
+          </div>
+        </div>
 
       {/* Pagination */}
       <div className="px-4 md:px-10 py-2.5 border-t border-[#E5EAE8]/60 bg-white/70 backdrop-blur-sm flex items-center justify-between flex-shrink-0">
@@ -1874,6 +1877,7 @@ async function handleFlag(id: string) {
           </button>
         </div>
       </div>
+        </div>
       </div>{/* end filter bar + table flex col */}
     </div>
   );
