@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
 
     const { data: location } = locationId
       ? await locQuery.eq('id', locationId).maybeSingle()
-      : await locQuery.eq('is_selected', true).maybeSingle();
+      : await locQuery.eq('is_selected', true).limit(1).maybeSingle();
 
     if (!location) return json({ error: 'No location found' }, 404);
 
@@ -131,6 +131,10 @@ Deno.serve(async (req) => {
     if (!apiRes.ok) {
       const errText = await apiRes.text();
       console.error('Insights API error:', apiRes.status, errText);
+      // 404 = location has no GBP data yet; return empty summary instead of erroring
+      if (apiRes.status === 404) {
+        return json({ ok: true, rows_synced: 0, summary: { impressions: 0, direction_requests: 0, call_clicks: 0, website_clicks: 0, trend: [] } });
+      }
       return json({ error: `Insights API error (${apiRes.status})` }, 502);
     }
 
