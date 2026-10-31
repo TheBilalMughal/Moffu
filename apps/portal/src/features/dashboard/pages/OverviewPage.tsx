@@ -1,8 +1,9 @@
-﻿import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { useOrgStore } from '@/features/onboarding/org.store';
+import { useLocationStore } from '@/features/location/location.store';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -22,11 +23,6 @@ interface ReviewRow {
   body: string | null;
   reviewer_name: string | null;
   location_id: string | null;
-}
-
-interface LocationOption {
-  id: string;
-  display_name: string | null;
 }
 
 interface DashboardData {
@@ -184,71 +180,6 @@ function computeDash(rows: ReviewRow[]): DashboardData | null {
   };
 }
 
-// ─── Location Filter Dropdown ─────────────────────────────────────────────────
-
-function LocationDropdown({ locations, value, onChange }: {
-  locations: LocationOption[];
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const active = value !== '';
-  const selectedLabel = locations.find(l => l.id === value)?.display_name ?? 'All Locations';
-
-  useEffect(() => {
-    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener('mousedown', fn);
-    return () => document.removeEventListener('mousedown', fn);
-  }, []);
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border transition-colors ${
-          active
-            ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium'
-            : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'
-        }`}
-      >
-        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
-            d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
-        </svg>
-        <span className="max-w-[140px] truncate">{active ? selectedLabel : 'All Locations'}</span>
-        {active
-          ? <span onClick={e => { e.stopPropagation(); onChange(''); setOpen(false); }} className="ml-0.5 hover:text-red-500 transition-colors">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-            </span>
-          : <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
-        }
-      </button>
-      {open && (
-        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 min-w-[180px]">
-          <button
-            onClick={() => { onChange(''); setOpen(false); }}
-            className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-xs transition-colors ${!active ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
-          >
-            <span>All Locations</span>
-            {!active && <svg className="w-3.5 h-3.5 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
-          </button>
-          {locations.map(loc => {
-            const sel = loc.id === value;
-            return (
-              <button key={loc.id} onClick={() => { onChange(loc.id); setOpen(false); }}
-                className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-xs transition-colors ${sel ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}>
-                <span className="truncate">{loc.display_name ?? 'Unnamed location'}</span>
-                {sel && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Setup Guide ──────────────────────────────────────────────────────────────
 
 const DISMISS_KEY = 'moffu_setup_dismissed_v2';
@@ -381,50 +312,49 @@ function SetupGuide({ status }: { status: SetupStatus }) {
 
 // ─── Weekly Highlight Banner ──────────────────────────────────────────────────
 
-function WeeklyHighlightBanner({ dash }: { dash: DashboardData }) {
+function WeeklyHighlight({ dash }: { dash: DashboardData }) {
   const oldestPendingUrgent = dash.oldestPendingDays != null && dash.oldestPendingDays >= 3;
   const perfectWeek = dash.thisWeekTotal > 0 && dash.thisWeekReplied === dash.thisWeekTotal;
   const weekGrowth = dash.thisWeekCount > 0 && dash.lastWeekCount > 0 && dash.thisWeekCount > dash.lastWeekCount;
 
   if (!oldestPendingUrgent && !perfectWeek && !weekGrowth) return null;
 
-  let msg: string;
-  let subtext: string;
-  let color: string;
-  let icon: string;
+  type Variant = { dot: string; label: string; msg: string; sub: string; cta?: React.ReactNode };
+  let v: Variant;
 
   if (oldestPendingUrgent) {
-    msg = `${dash.pending} review${dash.pending !== 1 ? 's' : ''} waiting for a reply`;
-    subtext = `Oldest unanswered review is ${dash.oldestPendingDays} days old`;
-    color = 'border-amber-200/60 bg-amber-50/60';
-    icon = '⏳';
+    v = {
+      dot: 'bg-amber-400',
+      label: 'Action needed',
+      msg: `${dash.pending} review${dash.pending !== 1 ? 's' : ''} waiting for a reply`,
+      sub: `Oldest is ${dash.oldestPendingDays} days old`,
+      cta: <Link to="/reviews" className="text-[11px] font-semibold text-[#0D4C3C] hover:underline whitespace-nowrap">Reply now →</Link>,
+    };
   } else if (perfectWeek) {
-    msg = `All ${dash.thisWeekTotal} review${dash.thisWeekTotal !== 1 ? 's' : ''} replied this week`;
-    subtext = 'Perfect reply rate — keep it going';
-    color = 'border-emerald-200/60 bg-emerald-50/60';
-    icon = '✓';
+    v = {
+      dot: 'bg-emerald-400',
+      label: 'This week',
+      msg: `All ${dash.thisWeekTotal} review${dash.thisWeekTotal !== 1 ? 's' : ''} replied`,
+      sub: 'Perfect reply rate — keep it going',
+    };
   } else {
     const diff = dash.thisWeekCount - dash.lastWeekCount;
-    msg = `${dash.thisWeekCount} reviews this week — ${diff} more than last week`;
-    subtext = 'Your visibility is improving';
-    color = 'border-[#0D4C3C]/15 bg-[#0D4C3C]/4';
-    icon = '↑';
+    v = {
+      dot: 'bg-[#0D4C3C]',
+      label: 'This week',
+      msg: `${dash.thisWeekCount} reviews — ${diff} more than last week`,
+      sub: 'Visibility is improving',
+    };
   }
 
   return (
-    <div className={`relative flex items-center gap-3 px-4 py-3 rounded-xl border backdrop-blur-sm ${color} mb-5`}>
-      <div className="w-7 h-7 rounded-lg bg-white/60 flex items-center justify-center text-sm flex-shrink-0">
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold text-[#111827]">{msg}</p>
-        <p className="text-[11px] text-[#6B7280]">{subtext}</p>
-      </div>
-      {oldestPendingUrgent && (
-        <Link to="/reviews" className="flex-shrink-0 text-[11px] font-semibold text-amber-700 hover:underline">
-          Reply now →
-        </Link>
-      )}
+    <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[#F8FAF9] border border-[#E5EAE8] mb-5">
+      <span className={`w-2 h-2 rounded-full flex-shrink-0 ${v.dot}`} />
+      <span className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide flex-shrink-0">{v.label}</span>
+      <span className="w-px h-3 bg-[#E5EAE8] flex-shrink-0" />
+      <span className="text-xs font-semibold text-[#111827]">{v.msg}</span>
+      <span className="text-[11px] text-[#9CA3AF] hidden sm:inline">{v.sub}</span>
+      {v.cta && <span className="ml-auto">{v.cta}</span>}
     </div>
   );
 }
@@ -760,19 +690,18 @@ function EmptyState() {
 // ─── OverviewPage ──────────────────────────────────────────────────────────────
 
 export function OverviewPage() {
-  const user  = useAuthStore(s => s.user);
-  const orgId = useOrgStore(s => s.orgId);
+  const user       = useAuthStore(s => s.user);
+  const orgId      = useOrgStore(s => s.orgId);
+  const selectedLocId = useLocationStore(s => s.selectedId);
 
   const [setup, setSetup] = useState<SetupStatus>({
     googleConnected: false, locationSelected: false,
     brandBrainDone: false, firstReplyDone: false, loading: true,
   });
-  const [allRows, setAllRows]           = useState<ReviewRow[]>([]);
-  const [locations, setLocations]       = useState<LocationOption[]>([]);
-  const [selectedLocId, setSelectedLocId] = useState('');
-  const [dash, setDash]                 = useState<DashboardData | null>(null);
-  const [loadingDash, setLoadingDash]   = useState(true);
-  const [campaignStats, setCampaignStats] = useState<CampaignStats | null>(null);
+  const [allRows, setAllRows]         = useState<ReviewRow[]>([]);
+  const [dash, setDash]               = useState<DashboardData | null>(null);
+  const [loadingDash, setLoadingDash] = useState(true);
+  const [campaignStats, setCampaignStats]       = useState<CampaignStats | null>(null);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
 
   // ── Load setup + reviews + locations ──────────────────────────────────────
@@ -780,7 +709,7 @@ export function OverviewPage() {
     if (!user) return;
 
     async function load() {
-      const [connRes, locRes, brainRes, replyRes, reviewsRes, locListRes] = await Promise.all([
+      const [connRes, locRes, brainRes, replyRes, reviewsRes] = await Promise.all([
         supabase.from('google_connections').select('id').eq('user_id', user!.id).eq('state', 'CONNECTED').limit(1),
         supabase.from('google_locations').select('id').eq('user_id', user!.id).eq('is_selected', true).limit(1),
         supabase.from('brand_brain').select('id').eq('user_id', user!.id).limit(1),
@@ -789,10 +718,6 @@ export function OverviewPage() {
           .select('id, rating, status, published_at, body, reviewer_name, location_id')
           .eq('user_id', user!.id)
           .order('published_at', { ascending: false }),
-        supabase.from('google_locations')
-          .select('id, display_name')
-          .eq('user_id', user!.id)
-          .order('display_name', { ascending: true }),
       ]);
 
       setSetup({
@@ -804,9 +729,7 @@ export function OverviewPage() {
       });
 
       const rows = (reviewsRes.data ?? []) as ReviewRow[];
-      const locs = (locListRes.data ?? []) as LocationOption[];
       setAllRows(rows);
-      setLocations(locs);
       setDash(computeDash(rows));
       setLoadingDash(false);
     }
@@ -814,7 +737,7 @@ export function OverviewPage() {
     load();
   }, [user]);
 
-  // ── Re-compute when location filter changes ────────────────────────────────
+  // ── Re-compute when global location selection changes ─────────────────────
   useEffect(() => {
     if (loadingDash) return;
     const filtered = selectedLocId
@@ -843,7 +766,6 @@ export function OverviewPage() {
   }, [orgId]);
 
   const displayName = user?.user_metadata?.full_name ?? user?.email;
-  const showLocationFilter = locations.length >= 2;
 
   return (
     <div className="relative min-h-full px-6 py-6">
@@ -863,13 +785,6 @@ export function OverviewPage() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            {showLocationFilter && (
-              <LocationDropdown
-                locations={locations}
-                value={selectedLocId}
-                onChange={setSelectedLocId}
-              />
-            )}
             {dash && dash.pending > 0 && (
               <Link
                 to="/reviews"
@@ -886,8 +801,8 @@ export function OverviewPage() {
         </div>
       </div>
 
-      {/* Weekly highlight banner */}
-      {!loadingDash && dash && <WeeklyHighlightBanner dash={dash} />}
+      {/* Weekly highlight */}
+      {!loadingDash && dash && <WeeklyHighlight dash={dash} />}
 
       {/* Setup guide */}
       {!setup.loading && <SetupGuide status={setup} />}
