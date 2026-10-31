@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/features/auth/auth.store';
@@ -21,6 +21,12 @@ interface ReviewRow {
   published_at: string | null;
   body: string | null;
   reviewer_name: string | null;
+  location_id: string | null;
+}
+
+interface LocationOption {
+  id: string;
+  display_name: string | null;
 }
 
 interface DashboardData {
@@ -32,19 +38,15 @@ interface DashboardData {
   ratingBreakdown: number[];
   trend: { date: string; count: number }[];
   recent: ReviewRow[];
-  // Trend vs previous period
   trendTotal: number | null;
   trendAvgRating: number | null;
   trendReplyRate: number | null;
-  // Response urgency
   oldestPendingDays: number | null;
   pendingRows: ReviewRow[];
-  // Weekly context
   thisWeekCount: number;
   lastWeekCount: number;
   thisWeekReplied: number;
   thisWeekTotal: number;
-  // Activity feed
   activityItems: ReviewRow[];
 }
 
@@ -92,6 +94,159 @@ function stars(n: number | null) {
 function pctChange(curr: number, prev: number): number | null {
   if (prev === 0) return curr > 0 ? 100 : null;
   return Math.round(((curr - prev) / prev) * 100);
+}
+
+function computeDash(rows: ReviewRow[]): DashboardData | null {
+  if (rows.length === 0) return null;
+
+  const total     = rows.length;
+  const ratings   = rows.map(r => r.rating).filter((r): r is number => r != null);
+  const avgRating = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
+  const pending   = rows.filter(r => r.status === 'PENDING').length;
+  const replied   = rows.filter(r => r.status === 'PUBLISHED').length;
+  const replyRate = total > 0 ? Math.round((replied / total) * 100) : 0;
+
+  const breakdown = [0, 0, 0, 0, 0];
+  for (const r of rows) {
+    if (r.rating != null && r.rating >= 1 && r.rating <= 5) breakdown[r.rating - 1]!++;
+  }
+
+  const now = new Date();
+  const trend: { date: string; count: number }[] = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    trend.push({ date: d.toISOString().slice(0, 10), count: 0 });
+  }
+  for (const r of rows) {
+    const d = r.published_at?.slice(0, 10);
+    if (!d) continue;
+    const slot = trend.find(t => t.date === d);
+    if (slot) slot.count++;
+  }
+
+  const now30 = Date.now();
+  const ms30  = 30 * 86400000;
+  const rowsLast30 = rows.filter(r => r.published_at && now30 - new Date(r.published_at).getTime() <= ms30);
+  const rowsPrev30 = rows.filter(r => {
+    if (!r.published_at) return false;
+    const age = now30 - new Date(r.published_at).getTime();
+    return age > ms30 && age <= ms30 * 2;
+  });
+
+  const last30Ratings  = rowsLast30.map(r => r.rating).filter((r): r is number => r != null);
+  const prev30Ratings  = rowsPrev30.map(r => r.rating).filter((r): r is number => r != null);
+  const last30Avg      = last30Ratings.length > 0 ? last30Ratings.reduce((a, b) => a + b, 0) / last30Ratings.length : null;
+  const prev30Avg      = prev30Ratings.length > 0 ? prev30Ratings.reduce((a, b) => a + b, 0) / prev30Ratings.length : null;
+  const last30Replied  = rowsLast30.filter(r => r.status === 'PUBLISHED').length;
+  const prev30Replied  = rowsPrev30.filter(r => r.status === 'PUBLISHED').length;
+  const last30Rate     = rowsLast30.length > 0 ? Math.round((last30Replied / rowsLast30.length) * 100) : 0;
+  const prev30Rate     = rowsPrev30.length > 0 ? Math.round((prev30Replied / rowsPrev30.length) * 100) : 0;
+
+  const trendTotal     = pctChange(rowsLast30.length, rowsPrev30.length);
+  const trendAvgRating = last30Avg != null && prev30Avg != null
+    ? pctChange(Math.round(last30Avg * 10), Math.round(prev30Avg * 10)) : null;
+  const trendReplyRate = pctChange(last30Rate, prev30Rate);
+
+  const pendingRows       = rows.filter(r => r.status === 'PENDING');
+  const oldestPending     = pendingRows[pendingRows.length - 1];
+  const oldestPendingDays = oldestPending?.published_at ? daysSince(oldestPending.published_at) : null;
+
+  const todayDate      = new Date();
+  const dayOfWeek      = todayDate.getDay();
+  const startOfWeek    = new Date(todayDate);
+  startOfWeek.setDate(todayDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+  startOfWeek.setHours(0, 0, 0, 0);
+  const startOfLastWeek = new Date(startOfWeek);
+  startOfLastWeek.setDate(startOfWeek.getDate() - 7);
+
+  const thisWeekRows  = rows.filter(r => r.published_at && new Date(r.published_at) >= startOfWeek);
+  const lastWeekRows  = rows.filter(r => {
+    if (!r.published_at) return false;
+    const d = new Date(r.published_at);
+    return d >= startOfLastWeek && d < startOfWeek;
+  });
+
+  const twoWeeksAgo   = new Date();
+  twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+  return {
+    total, avgRating, pending, replied, replyRate,
+    ratingBreakdown: breakdown, trend,
+    recent: rows.slice(0, 5),
+    trendTotal, trendAvgRating, trendReplyRate,
+    oldestPendingDays, pendingRows: pendingRows.slice(0, 3),
+    thisWeekCount:   thisWeekRows.length,
+    lastWeekCount:   lastWeekRows.length,
+    thisWeekTotal:   thisWeekRows.length,
+    thisWeekReplied: thisWeekRows.filter(r => r.status === 'PUBLISHED').length,
+    activityItems:   rows.filter(r => r.published_at && new Date(r.published_at) >= twoWeeksAgo).slice(0, 8),
+  };
+}
+
+// ─── Location Filter Dropdown ─────────────────────────────────────────────────
+
+function LocationDropdown({ locations, value, onChange }: {
+  locations: LocationOption[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const active = value !== '';
+  const selectedLabel = locations.find(l => l.id === value)?.display_name ?? 'All Locations';
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', fn);
+    return () => document.removeEventListener('mousedown', fn);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl border transition-colors ${
+          active
+            ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium'
+            : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'
+        }`}
+      >
+        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+            d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
+        </svg>
+        <span className="max-w-[140px] truncate">{active ? selectedLabel : 'All Locations'}</span>
+        {active
+          ? <span onClick={e => { e.stopPropagation(); onChange(''); setOpen(false); }} className="ml-0.5 hover:text-red-500 transition-colors">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+            </span>
+          : <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+        }
+      </button>
+      {open && (
+        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 min-w-[180px]">
+          <button
+            onClick={() => { onChange(''); setOpen(false); }}
+            className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-xs transition-colors ${!active ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
+          >
+            <span>All Locations</span>
+            {!active && <svg className="w-3.5 h-3.5 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
+          </button>
+          {locations.map(loc => {
+            const sel = loc.id === value;
+            return (
+              <button key={loc.id} onClick={() => { onChange(loc.id); setOpen(false); }}
+                className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-xs transition-colors ${sel ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}>
+                <span className="truncate">{loc.display_name ?? 'Unnamed location'}</span>
+                {sel && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── Setup Guide ──────────────────────────────────────────────────────────────
@@ -227,7 +382,6 @@ function SetupGuide({ status }: { status: SetupStatus }) {
 // ─── Weekly Highlight Banner ──────────────────────────────────────────────────
 
 function WeeklyHighlightBanner({ dash }: { dash: DashboardData }) {
-  // Priority: urgent (old pending) > achievement > growth
   const oldestPendingUrgent = dash.oldestPendingDays != null && dash.oldestPendingDays >= 3;
   const perfectWeek = dash.thisWeekTotal > 0 && dash.thisWeekReplied === dash.thisWeekTotal;
   const weekGrowth = dash.thisWeekCount > 0 && dash.lastWeekCount > 0 && dash.thisWeekCount > dash.lastWeekCount;
@@ -267,10 +421,7 @@ function WeeklyHighlightBanner({ dash }: { dash: DashboardData }) {
         <p className="text-[11px] text-[#6B7280]">{subtext}</p>
       </div>
       {oldestPendingUrgent && (
-        <Link
-          to="/reviews"
-          className="flex-shrink-0 text-[11px] font-semibold text-amber-700 hover:underline"
-        >
+        <Link to="/reviews" className="flex-shrink-0 text-[11px] font-semibold text-amber-700 hover:underline">
           Reply now →
         </Link>
       )}
@@ -278,7 +429,7 @@ function WeeklyHighlightBanner({ dash }: { dash: DashboardData }) {
   );
 }
 
-// ─── Stat card ────────────────────────────────────────────────────────────────
+// ─── Glass Card ───────────────────────────────────────────────────────────────
 
 function GlassCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -288,16 +439,14 @@ function GlassCard({ children, className = '' }: { children: React.ReactNode; cl
   );
 }
 
+// ─── Stat Card ────────────────────────────────────────────────────────────────
+
 function StatCard({
   label, value, sub, trend, icon, accent = false, urgent = false,
 }: {
-  label: string;
-  value: string | number;
-  sub?: string;
+  label: string; value: string | number; sub?: string;
   trend?: { value: number; label: string } | null;
-  icon: React.ReactNode;
-  accent?: boolean;
-  urgent?: boolean;
+  icon: React.ReactNode; accent?: boolean; urgent?: boolean;
 }) {
   return (
     <GlassCard>
@@ -307,9 +456,7 @@ function StatCard({
         <div className="flex items-start justify-between mb-3">
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
             accent ? 'bg-[#0D4C3C]/10 text-[#0D4C3C]' : urgent ? 'bg-amber-100 text-amber-600' : 'bg-[#F3F4F6] text-[#6B7280]'
-          }`}>
-            {icon}
-          </div>
+          }`}>{icon}</div>
           {trend != null && (
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${
               trend.value > 0 ? 'bg-emerald-50 text-emerald-600' : trend.value < 0 ? 'bg-red-50 text-red-500' : 'bg-[#F3F4F6] text-[#9CA3AF]'
@@ -336,15 +483,11 @@ function RatingChart({ breakdown }: { breakdown: number[] }) {
     <div className="space-y-2.5">
       {[4, 3, 2, 1, 0].map(i => {
         const pct = Math.round((breakdown[i]! / max) * 100);
-        const star = i + 1;
         return (
           <div key={i} className="flex items-center gap-2.5">
-            <span className="text-[11px] font-medium text-[#6B7280] w-5 text-right flex-shrink-0">{star}★</span>
+            <span className="text-[11px] font-medium text-[#6B7280] w-5 text-right flex-shrink-0">{i + 1}★</span>
             <div className="flex-1 h-5 bg-[#F3F4F6] rounded-lg overflow-hidden">
-              <div
-                className="h-full rounded-lg transition-all duration-700"
-                style={{ width: `${pct}%`, backgroundColor: COLORS[i] }}
-              />
+              <div className="h-full rounded-lg transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: COLORS[i] }} />
             </div>
             <span className="text-[11px] font-semibold text-[#374151] w-5 flex-shrink-0">{breakdown[i]}</span>
           </div>
@@ -361,13 +504,11 @@ function TrendChart({ trend }: { trend: { date: string; count: number }[] }) {
   const max = Math.max(...last14.map(d => d.count), 1);
   const hasData = last14.some(d => d.count > 0);
 
-  if (!hasData) {
-    return (
-      <div className="h-20 flex items-center justify-center">
-        <p className="text-xs text-[#9CA3AF]">No reviews in the last 14 days</p>
-      </div>
-    );
-  }
+  if (!hasData) return (
+    <div className="h-20 flex items-center justify-center">
+      <p className="text-xs text-[#9CA3AF]">No reviews in the last 14 days</p>
+    </div>
+  );
 
   return (
     <div>
@@ -387,11 +528,7 @@ function TrendChart({ trend }: { trend: { date: string; count: number }[] }) {
       <div className="flex gap-1 mt-1.5">
         {last14.map((day, i) => (
           <div key={day.date} className="flex-1 text-center">
-            {i % 3 === 0 && (
-              <span className="text-[9px] text-[#D1D5DB]">
-                {new Date(day.date + 'T12:00:00').getDate()}
-              </span>
-            )}
+            {i % 3 === 0 && <span className="text-[9px] text-[#D1D5DB]">{new Date(day.date + 'T12:00:00').getDate()}</span>}
           </div>
         ))}
       </div>
@@ -415,20 +552,12 @@ function ResponseTimeCard({ dash }: { dash: DashboardData }) {
     high:   'bg-red-50 text-red-500 border-red-200/40',
   }[urgencyLevel];
 
-  const urgencyLabel = {
-    none:   'All caught up',
-    low:    'Within target',
-    medium: 'Needs attention',
-    high:   'Overdue',
-  }[urgencyLevel];
-
+  const urgencyLabel = { none: 'All caught up', low: 'Within target', medium: 'Needs attention', high: 'Overdue' }[urgencyLevel];
   const oldest3 = dash.pendingRows.slice(0, 3);
 
   return (
     <div className="relative">
       <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Response Urgency</p>
-
-      {/* Status badge */}
       <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold mb-4 ${urgencyColor}`}>
         <span className={`w-1.5 h-1.5 rounded-full ${
           urgencyLevel === 'none' || urgencyLevel === 'low' ? 'bg-emerald-500' :
@@ -436,7 +565,6 @@ function ResponseTimeCard({ dash }: { dash: DashboardData }) {
         }`} />
         {urgencyLabel}
       </div>
-
       {dash.pending === 0 ? (
         <p className="text-xs text-[#9CA3AF]">No pending reviews — great work!</p>
       ) : (
@@ -446,29 +574,22 @@ function ResponseTimeCard({ dash }: { dash: DashboardData }) {
             <span className="text-xs text-[#9CA3AF]">pending</span>
           </div>
           {dash.oldestPendingDays != null && (
-            <p className="text-[11px] text-[#9CA3AF] mb-4">
-              Oldest: {dash.oldestPendingDays} day{dash.oldestPendingDays !== 1 ? 's' : ''} ago
-            </p>
+            <p className="text-[11px] text-[#9CA3AF] mb-4">Oldest: {dash.oldestPendingDays} day{dash.oldestPendingDays !== 1 ? 's' : ''} ago</p>
           )}
           {oldest3.length > 0 && (
             <div className="space-y-2">
-              {oldest3.map(r => {
-                const days = daysSince(r.published_at);
-                return (
-                  <div key={r.id} className="flex items-center gap-2 px-2.5 py-2 bg-[#F8FAF9]/60 rounded-xl">
-                    <div className="w-6 h-6 rounded-lg bg-[#0D4C3C]/10 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-[#0D4C3C]">
-                      {(r.reviewer_name ?? '?')[0]?.toUpperCase() ?? '?'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-semibold text-[#374151] truncate">{r.reviewer_name ?? 'Anonymous'}</p>
-                      <p className="text-[10px] text-[#9CA3AF]">{r.rating != null ? `${r.rating}★` : '—'} · {days}d waiting</p>
-                    </div>
-                    <Link to="/reviews" className="text-[10px] font-semibold text-[#0D4C3C] hover:underline flex-shrink-0">
-                      Reply →
-                    </Link>
+              {oldest3.map(r => (
+                <div key={r.id} className="flex items-center gap-2 px-2.5 py-2 bg-[#F8FAF9]/60 rounded-xl">
+                  <div className="w-6 h-6 rounded-lg bg-[#0D4C3C]/10 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-[#0D4C3C]">
+                    {(r.reviewer_name ?? '?')[0]?.toUpperCase() ?? '?'}
                   </div>
-                );
-              })}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-semibold text-[#374151] truncate">{r.reviewer_name ?? 'Anonymous'}</p>
+                    <p className="text-[10px] text-[#9CA3AF]">{r.rating != null ? `${r.rating}★` : '—'} · {daysSince(r.published_at)}d waiting</p>
+                  </div>
+                  <Link to="/reviews" className="text-[10px] font-semibold text-[#0D4C3C] hover:underline flex-shrink-0">Reply →</Link>
+                </div>
+              ))}
             </div>
           )}
         </>
@@ -480,23 +601,19 @@ function ResponseTimeCard({ dash }: { dash: DashboardData }) {
 // ─── Activity Feed ────────────────────────────────────────────────────────────
 
 function ActivityFeed({ items }: { items: ReviewRow[] }) {
-  if (!items.length) {
-    return (
-      <div className="flex items-center justify-center h-20">
-        <p className="text-xs text-[#9CA3AF]">No activity in the last 14 days</p>
-      </div>
-    );
-  }
+  if (!items.length) return (
+    <div className="flex items-center justify-center h-20">
+      <p className="text-xs text-[#9CA3AF]">No activity in the last 14 days</p>
+    </div>
+  );
 
   return (
     <div className="space-y-2.5">
       {items.map(r => (
         <div key={r.id} className="flex items-start gap-2.5">
-          {/* Timeline dot */}
           <div className="flex flex-col items-center flex-shrink-0 mt-1">
             <div className={`w-2 h-2 rounded-full ${
-              r.status === 'PUBLISHED' ? 'bg-emerald-500' :
-              r.status === 'PENDING' ? 'bg-amber-400' : 'bg-[#D1D5DB]'
+              r.status === 'PUBLISHED' ? 'bg-emerald-500' : r.status === 'PENDING' ? 'bg-amber-400' : 'bg-[#D1D5DB]'
             }`} />
             <div className="w-px flex-1 bg-[#F3F4F6] mt-1" style={{ minHeight: 12 }} />
           </div>
@@ -507,8 +624,7 @@ function ActivityFeed({ items }: { items: ReviewRow[] }) {
             </p>
             <div className="flex items-center gap-2 mt-0.5">
               <span className={`text-[10px] font-medium ${
-                r.status === 'PUBLISHED' ? 'text-emerald-600' :
-                r.status === 'PENDING' ? 'text-amber-600' : 'text-[#9CA3AF]'
+                r.status === 'PUBLISHED' ? 'text-emerald-600' : r.status === 'PENDING' ? 'text-amber-600' : 'text-[#9CA3AF]'
               }`}>
                 {r.status === 'PUBLISHED' ? 'Replied' : r.status === 'PENDING' ? 'Pending' : r.status}
               </span>
@@ -525,9 +641,7 @@ function ActivityFeed({ items }: { items: ReviewRow[] }) {
 // ─── Campaign Summary Card ────────────────────────────────────────────────────
 
 function CampaignSummaryCard({ stats, loading }: { stats: CampaignStats | null; loading: boolean }) {
-  const openRate = stats && stats.totalSent > 0
-    ? Math.round((stats.totalOpened / stats.totalSent) * 100)
-    : null;
+  const openRate = stats && stats.totalSent > 0 ? Math.round((stats.totalOpened / stats.totalSent) * 100) : null;
 
   return (
     <div className="relative">
@@ -535,20 +649,12 @@ function CampaignSummaryCard({ stats, loading }: { stats: CampaignStats | null; 
         <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Campaign Performance</p>
         <Link to="/campaigns" className="text-[11px] font-semibold text-[#0D4C3C] hover:underline">View all →</Link>
       </div>
-
       {loading ? (
-        <div className="space-y-2">
-          {[1, 2, 3].map(i => <div key={i} className="h-8 rounded-xl bg-[#F3F4F6] animate-pulse" />)}
-        </div>
+        <div className="space-y-2">{[1, 2, 3].map(i => <div key={i} className="h-8 rounded-xl bg-[#F3F4F6] animate-pulse" />)}</div>
       ) : !stats || stats.total === 0 ? (
         <div className="text-center py-6">
           <p className="text-xs text-[#9CA3AF] mb-3">No campaigns yet</p>
-          <Link
-            to="/campaigns"
-            className="text-[11px] font-semibold text-[#0D4C3C] hover:underline"
-          >
-            Create your first campaign →
-          </Link>
+          <Link to="/campaigns" className="text-[11px] font-semibold text-[#0D4C3C] hover:underline">Create your first campaign →</Link>
         </div>
       ) : (
         <>
@@ -564,7 +670,6 @@ function CampaignSummaryCard({ stats, loading }: { stats: CampaignStats | null; 
               </div>
             ))}
           </div>
-
           {stats.sent > 0 && (
             <div className="space-y-1">
               <div className="flex items-center justify-between">
@@ -572,10 +677,8 @@ function CampaignSummaryCard({ stats, loading }: { stats: CampaignStats | null; 
                 <p className="text-[10px] font-semibold text-[#374151]">{stats.sent} of {stats.total}</p>
               </div>
               <div className="h-1.5 bg-[#F3F4F6] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-[#0D4C3C] to-[#1a6b55] rounded-full"
-                  style={{ width: `${Math.round((stats.sent / stats.total) * 100)}%` }}
-                />
+                <div className="h-full bg-gradient-to-r from-[#0D4C3C] to-[#1a6b55] rounded-full"
+                  style={{ width: `${Math.round((stats.sent / stats.total) * 100)}%` }} />
               </div>
             </div>
           )}
@@ -589,11 +692,7 @@ function CampaignSummaryCard({ stats, loading }: { stats: CampaignStats | null; 
 
 function RatingStars({ n }: { n: number | null }) {
   if (n == null) return <span className="text-[#9CA3AF] text-xs">—</span>;
-  return (
-    <span className="text-xs font-medium text-amber-500">
-      {'★'.repeat(Math.round(n))}{'☆'.repeat(5 - Math.round(n))}
-    </span>
-  );
+  return <span className="text-xs font-medium text-amber-500">{'★'.repeat(Math.round(n))}{'☆'.repeat(5 - Math.round(n))}</span>;
 }
 
 function RecentReviews({ reviews }: { reviews: ReviewRow[] }) {
@@ -618,15 +717,11 @@ function RecentReviews({ reviews }: { reviews: ReviewRow[] }) {
                 <span className="text-[10px] text-[#9CA3AF]">{fmtDate(r.published_at)}</span>
               </div>
             </div>
-            {r.body && (
-              <p className="text-[11px] text-[#6B7280] line-clamp-2 leading-relaxed">{r.body}</p>
-            )}
+            {r.body && <p className="text-[11px] text-[#6B7280] line-clamp-2 leading-relaxed">{r.body}</p>}
             <span className={`inline-flex mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md ${
-              r.status === 'PUBLISHED'
-                ? 'bg-emerald-50 text-emerald-600'
-                : r.status === 'PENDING'
-                ? 'bg-amber-50 text-amber-600'
-                : 'bg-[#F3F4F6] text-[#9CA3AF]'
+              r.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-600'
+              : r.status === 'PENDING' ? 'bg-amber-50 text-amber-600'
+              : 'bg-[#F3F4F6] text-[#9CA3AF]'
             }`}>
               {r.status === 'PUBLISHED' ? 'Replied' : r.status === 'PENDING' ? 'Awaiting reply' : r.status}
             </span>
@@ -637,7 +732,7 @@ function RecentReviews({ reviews }: { reviews: ReviewRow[] }) {
   );
 }
 
-// ─── Empty (not connected) state ──────────────────────────────────────────────
+// ─── Empty State ──────────────────────────────────────────────────────────────
 
 function EmptyState() {
   return (
@@ -654,10 +749,7 @@ function EmptyState() {
         <p className="text-sm text-[#6B7280] max-w-xs mx-auto mb-5">
           Connect your Google Business Profile to start seeing and responding to reviews.
         </p>
-        <Link
-          to="/settings"
-          className="inline-flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
-        >
+        <Link to="/settings" className="inline-flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
           Connect Google
         </Link>
       </div>
@@ -672,156 +764,69 @@ export function OverviewPage() {
   const orgId = useOrgStore(s => s.orgId);
 
   const [setup, setSetup] = useState<SetupStatus>({
-    googleConnected: false,
-    locationSelected: false,
-    brandBrainDone: false,
-    firstReplyDone: false,
-    loading: true,
+    googleConnected: false, locationSelected: false,
+    brandBrainDone: false, firstReplyDone: false, loading: true,
   });
-  const [dash, setDash] = useState<DashboardData | null>(null);
-  const [loadingDash, setLoadingDash] = useState(true);
+  const [allRows, setAllRows]           = useState<ReviewRow[]>([]);
+  const [locations, setLocations]       = useState<LocationOption[]>([]);
+  const [selectedLocId, setSelectedLocId] = useState('');
+  const [dash, setDash]                 = useState<DashboardData | null>(null);
+  const [loadingDash, setLoadingDash]   = useState(true);
   const [campaignStats, setCampaignStats] = useState<CampaignStats | null>(null);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
 
+  // ── Load setup + reviews + locations ──────────────────────────────────────
   useEffect(() => {
     if (!user) return;
 
     async function load() {
-      const [connRes, locRes, brainRes, replyRes, reviewsRes] = await Promise.all([
+      const [connRes, locRes, brainRes, replyRes, reviewsRes, locListRes] = await Promise.all([
         supabase.from('google_connections').select('id').eq('user_id', user!.id).eq('state', 'CONNECTED').limit(1),
         supabase.from('google_locations').select('id').eq('user_id', user!.id).eq('is_selected', true).limit(1),
         supabase.from('brand_brain').select('id').eq('user_id', user!.id).limit(1),
         supabase.from('reviews').select('id').eq('user_id', user!.id).eq('status', 'PUBLISHED').limit(1),
         supabase.from('reviews')
-          .select('id, rating, status, published_at, body, reviewer_name')
+          .select('id, rating, status, published_at, body, reviewer_name, location_id')
           .eq('user_id', user!.id)
           .order('published_at', { ascending: false }),
+        supabase.from('google_locations')
+          .select('id, display_name')
+          .eq('user_id', user!.id)
+          .order('display_name', { ascending: true }),
       ]);
 
-      const googleConnected = (connRes.data?.length ?? 0) > 0;
-
       setSetup({
-        googleConnected,
-        locationSelected: (locRes.data?.length   ?? 0) > 0,
+        googleConnected:  (connRes.data?.length ?? 0) > 0,
+        locationSelected: (locRes.data?.length  ?? 0) > 0,
         brandBrainDone:   (brainRes.data?.length ?? 0) > 0,
         firstReplyDone:   (replyRes.data?.length ?? 0) > 0,
         loading: false,
       });
 
       const rows = (reviewsRes.data ?? []) as ReviewRow[];
-      if (rows.length > 0) {
-        const total   = rows.length;
-        const ratings = rows.map(r => r.rating).filter((r): r is number => r != null);
-        const avgRating = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
-        const pending   = rows.filter(r => r.status === 'PENDING').length;
-        const replied   = rows.filter(r => r.status === 'PUBLISHED').length;
-        const replyRate = total > 0 ? Math.round((replied / total) * 100) : 0;
-
-        const breakdown = [0, 0, 0, 0, 0];
-        for (const r of rows) {
-          if (r.rating != null && r.rating >= 1 && r.rating <= 5) {
-            breakdown[r.rating - 1]!++;
-          }
-        }
-
-        // Last 14 days trend chart
-        const now = new Date();
-        const trend: { date: string; count: number }[] = [];
-        for (let i = 13; i >= 0; i--) {
-          const d = new Date(now);
-          d.setDate(d.getDate() - i);
-          const iso = d.toISOString().slice(0, 10);
-          trend.push({ date: iso, count: 0 });
-        }
-        for (const r of rows) {
-          const d = r.published_at?.slice(0, 10);
-          if (!d) continue;
-          const slot = trend.find(t => t.date === d);
-          if (slot) slot.count++;
-        }
-
-        // ── Trend arrows: last 30 days vs previous 30 days ──────────────────
-        const now30 = Date.now();
-        const ms30  = 30 * 86400000;
-        const rowsLast30 = rows.filter(r => r.published_at && now30 - new Date(r.published_at).getTime() <= ms30);
-        const rowsPrev30 = rows.filter(r => {
-          if (!r.published_at) return false;
-          const age = now30 - new Date(r.published_at).getTime();
-          return age > ms30 && age <= ms30 * 2;
-        });
-
-        const last30Total   = rowsLast30.length;
-        const prev30Total   = rowsPrev30.length;
-        const trendTotal    = pctChange(last30Total, prev30Total);
-
-        const last30Ratings = rowsLast30.map(r => r.rating).filter((r): r is number => r != null);
-        const prev30Ratings = rowsPrev30.map(r => r.rating).filter((r): r is number => r != null);
-        const last30Avg     = last30Ratings.length > 0 ? last30Ratings.reduce((a, b) => a + b, 0) / last30Ratings.length : null;
-        const prev30Avg     = prev30Ratings.length > 0 ? prev30Ratings.reduce((a, b) => a + b, 0) / prev30Ratings.length : null;
-        const trendAvgRating = last30Avg != null && prev30Avg != null
-          ? pctChange(Math.round(last30Avg * 10), Math.round(prev30Avg * 10))
-          : null;
-
-        const last30Replied = rowsLast30.filter(r => r.status === 'PUBLISHED').length;
-        const prev30Replied = rowsPrev30.filter(r => r.status === 'PUBLISHED').length;
-        const last30Rate    = last30Total > 0 ? Math.round((last30Replied / last30Total) * 100) : 0;
-        const prev30Rate    = prev30Total > 0 ? Math.round((prev30Replied / prev30Total) * 100) : 0;
-        const trendReplyRate = pctChange(last30Rate, prev30Rate);
-
-        // ── Response urgency ─────────────────────────────────────────────────
-        const pendingRows = rows.filter(r => r.status === 'PENDING');
-        const oldestPending = pendingRows[pendingRows.length - 1]; // sorted desc, so last = oldest
-        const oldestPendingDays = oldestPending?.published_at ? daysSince(oldestPending.published_at) : null;
-
-        // ── Weekly context ────────────────────────────────────────────────────
-        const todayDate = new Date();
-        const dayOfWeek = todayDate.getDay(); // 0=Sun
-        const startOfWeek = new Date(todayDate);
-        startOfWeek.setDate(todayDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-        startOfWeek.setHours(0, 0, 0, 0);
-
-        const startOfLastWeek = new Date(startOfWeek);
-        startOfLastWeek.setDate(startOfWeek.getDate() - 7);
-
-        const thisWeekRows = rows.filter(r => r.published_at && new Date(r.published_at) >= startOfWeek);
-        const lastWeekRows = rows.filter(r => {
-          if (!r.published_at) return false;
-          const d = new Date(r.published_at);
-          return d >= startOfLastWeek && d < startOfWeek;
-        });
-
-        const thisWeekCount   = thisWeekRows.length;
-        const lastWeekCount   = lastWeekRows.length;
-        const thisWeekTotal   = thisWeekRows.length;
-        const thisWeekReplied = thisWeekRows.filter(r => r.status === 'PUBLISHED').length;
-
-        // ── Activity feed (last 14 days reviews, max 8) ───────────────────────
-        const twoWeeksAgo = new Date();
-        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-        const activityItems = rows
-          .filter(r => r.published_at && new Date(r.published_at) >= twoWeeksAgo)
-          .slice(0, 8);
-
-        setDash({
-          total, avgRating, pending, replied, replyRate, ratingBreakdown: breakdown, trend,
-          recent: rows.slice(0, 5),
-          trendTotal, trendAvgRating, trendReplyRate,
-          oldestPendingDays, pendingRows: pendingRows.slice(0, 3),
-          thisWeekCount, lastWeekCount, thisWeekTotal, thisWeekReplied,
-          activityItems,
-        });
-      }
+      const locs = (locListRes.data ?? []) as LocationOption[];
+      setAllRows(rows);
+      setLocations(locs);
+      setDash(computeDash(rows));
       setLoadingDash(false);
     }
 
     load();
   }, [user]);
 
-  // ── Campaign stats ──────────────────────────────────────────────────────────
+  // ── Re-compute when location filter changes ────────────────────────────────
+  useEffect(() => {
+    if (loadingDash) return;
+    const filtered = selectedLocId
+      ? allRows.filter(r => r.location_id === selectedLocId)
+      : allRows;
+    setDash(computeDash(filtered));
+  }, [selectedLocId, allRows, loadingDash]);
+
+  // ── Campaign stats ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!orgId) return;
     setLoadingCampaigns(true);
-
     supabase
       .from('campaigns')
       .select('id,status,sent_count,opened_count,total_contacts')
@@ -838,6 +843,7 @@ export function OverviewPage() {
   }, [orgId]);
 
   const displayName = user?.user_metadata?.full_name ?? user?.email;
+  const showLocationFilter = locations.length >= 2;
 
   return (
     <div className="relative min-h-full px-6 py-6">
@@ -849,25 +855,34 @@ export function OverviewPage() {
 
       {/* Header */}
       <div className="relative mb-5">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-[#111827]">{greet(displayName)}</h1>
             <p className="text-sm text-[#6B7280] mt-0.5">
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </p>
           </div>
-          {dash && dash.pending > 0 && (
-            <Link
-              to="/reviews"
-              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-[#0D4C3C] to-[#1a6b55] rounded-xl shadow-md shadow-[#0D4C3C]/20 hover:shadow-lg transition-shadow"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/>
-              </svg>
-              {dash.pending} pending {dash.pending === 1 ? 'reply' : 'replies'}
-            </Link>
-          )}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {showLocationFilter && (
+              <LocationDropdown
+                locations={locations}
+                value={selectedLocId}
+                onChange={setSelectedLocId}
+              />
+            )}
+            {dash && dash.pending > 0 && (
+              <Link
+                to="/reviews"
+                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-[#0D4C3C] to-[#1a6b55] rounded-xl shadow-md shadow-[#0D4C3C]/20 hover:shadow-lg transition-shadow"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/>
+                </svg>
+                {dash.pending} pending {dash.pending === 1 ? 'reply' : 'replies'}
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 
@@ -877,66 +892,51 @@ export function OverviewPage() {
       {/* Setup guide */}
       {!setup.loading && <SetupGuide status={setup} />}
 
-      {/* Stat cards with trend arrows */}
+      {/* Stat cards */}
       <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         {loadingDash ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-28 rounded-2xl bg-white/50 animate-pulse" />
-          ))
+          Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-28 rounded-2xl bg-white/50 animate-pulse" />)
         ) : dash ? (
           <>
-            <StatCard
-              label="Total Reviews"
-              value={dash.total}
-              sub={`${dash.total} synced`}
+            <StatCard label="Total Reviews" value={dash.total} sub={`${dash.total} synced`}
               trend={dash.trendTotal != null ? { value: dash.trendTotal, label: 'vs prev 30 days' } : null}
               accent
               icon={<svg style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>}
             />
-            <StatCard
-              label="Avg. Rating"
-              value={dash.avgRating != null ? dash.avgRating.toFixed(1) : '—'}
+            <StatCard label="Avg. Rating" value={dash.avgRating != null ? dash.avgRating.toFixed(1) : '—'}
               sub={dash.avgRating != null ? stars(dash.avgRating) : 'No ratings yet'}
               trend={dash.trendAvgRating != null ? { value: dash.trendAvgRating, label: 'vs prev 30 days' } : null}
               icon={<svg style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>}
             />
-            <StatCard
-              label="Reply Rate"
-              value={`${dash.replyRate}%`}
-              sub={`${dash.replied} of ${dash.total} replied`}
+            <StatCard label="Reply Rate" value={`${dash.replyRate}%`} sub={`${dash.replied} of ${dash.total} replied`}
               trend={dash.trendReplyRate != null ? { value: dash.trendReplyRate, label: 'vs prev 30 days' } : null}
               accent={dash.replyRate >= 80}
               icon={<svg style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>}
             />
-            <StatCard
-              label="Pending Reply"
-              value={dash.pending}
+            <StatCard label="Pending Reply" value={dash.pending}
               sub={dash.pending > 0 ? 'Need attention' : 'All caught up!'}
               urgent={dash.pending > 0}
               icon={<svg style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
             />
           </>
         ) : (
-          <>
-            {[
-              { label: 'Total Reviews', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg> },
-              { label: 'Avg. Rating', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg> },
-              { label: 'Reply Rate', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg> },
-              { label: 'Pending Reply', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> },
-            ].map(({ label, icon }) => (
-              <StatCard key={label} label={label} value="—" sub="Connect Google to see data" icon={icon} />
-            ))}
-          </>
+          [
+            { label: 'Total Reviews', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg> },
+            { label: 'Avg. Rating', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg> },
+            { label: 'Reply Rate', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg> },
+            { label: 'Pending Reply', icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> },
+          ].map(({ label, icon }) => (
+            <StatCard key={label} label={label} value="—" sub="Connect Google to see data" icon={icon} />
+          ))
         )}
       </div>
 
-      {/* Charts row */}
+      {/* Charts + data rows */}
       {!loadingDash && !dash ? (
         <EmptyState />
       ) : !loadingDash && dash ? (
         <>
           <div className="relative grid grid-cols-3 gap-4 mb-4">
-            {/* Rating distribution */}
             <GlassCard className="p-5">
               <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
               <div className="relative">
@@ -945,7 +945,6 @@ export function OverviewPage() {
               </div>
             </GlassCard>
 
-            {/* Trend chart */}
             <GlassCard className="p-5">
               <div className="relative">
                 <div className="flex items-center justify-between mb-4">
@@ -956,16 +955,12 @@ export function OverviewPage() {
               </div>
             </GlassCard>
 
-            {/* Response urgency */}
             <GlassCard className="p-5">
               <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-              <div className="relative">
-                <ResponseTimeCard dash={dash} />
-              </div>
+              <div className="relative"><ResponseTimeCard dash={dash} /></div>
             </GlassCard>
           </div>
 
-          {/* Bottom row: Recent Reviews | Activity Feed | Campaign Summary */}
           <div className="relative grid grid-cols-3 gap-4">
             <GlassCard className="p-5">
               <div className="relative">
