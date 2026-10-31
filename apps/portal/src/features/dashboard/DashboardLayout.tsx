@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type React from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '@/features/auth/auth.service';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { supabase } from '@/lib/supabase';
@@ -175,6 +175,14 @@ function GlobalSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Clear search when navigating to a different page
+  useEffect(() => {
+    setQuery('');
+    setResults([]);
+    setFocused(false);
+  }, [location.pathname]);
 
   const open = focused && (query.trim().length > 0 || loading);
 
@@ -249,6 +257,8 @@ function GlobalSearch() {
           onChange={e => setQuery(e.target.value)}
           onFocus={() => setFocused(true)}
           placeholder={focused ? 'Search reviews, reviewers…' : 'Search anything'}
+          autoComplete="off"
+          spellCheck={false}
           className="flex-1 text-xs text-[#111827] placeholder-[#9CA3AF] focus:outline-none bg-transparent min-w-0"
         />
         {query && (
@@ -598,7 +608,7 @@ function TopbarProfile() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+        className="flex items-center gap-2 bg-transparent hover:opacity-90 transition-opacity"
         title={displayName || email}
       >
         <div className="w-8 h-8 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
