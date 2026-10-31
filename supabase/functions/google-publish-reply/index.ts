@@ -1,5 +1,63 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { checkAndRecordUsage } from '../_shared/billing.ts';
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+type UsageEventType = 'ai_draft' | 'published_reply';
+const ENTITLEMENT_KEY: Record<UsageEventType, string> = {
+  ai_draft: 'ai_drafts',
+  published_reply: 'published_replies',
+};
+
+async function checkAndRecordUsage(
+  supabase: SupabaseClient,
+  userId: string,
+  eventType: UsageEventType,
+): Promise<{ allowed: boolean; used: number; limit: number | null }> {
+  const entKey = ENTITLEMENT_KEY[eventType];
+
+  const { data: sub } = await supabase
+    .from('subscriptions')
+    .select('current_period_start, current_period_end, plan_id')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (!sub) return { allowed: false, used: 0, limit: 0 };
+
+  const { data: ent } = await supabase
+    .from('plan_entitlements')
+    .select('value_type, limit_value, usage_reset')
+    .eq('plan_id', sub.plan_id)
+    .eq('key', entKey)
+    .maybeSingle();
+
+  if (!ent || ent.value_type === 'UNLIMITED') return { allowed: true, used: 0, limit: null };
+
+  const resetCadence = (ent.usage_reset as string | null) ?? 'monthly';
+  let periodStart: string;
+  let periodEnd: string;
+
+  if (resetCadence === 'weekly') {
+    const now = new Date();
+    const start = new Date(now);
+    start.setDate(now.getDate() - 7);
+    periodStart = start.toISOString();
+    periodEnd = now.toISOString();
+  } else {
+    periodStart = sub.current_period_start;
+    periodEnd = sub.current_period_end;
+  }
+
+  const { count } = await supabase
+    .from('usage_events')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('event_type', eventType)
+    .gte('created_at', periodStart)
+    .lte('created_at', periodEnd);
+
+  const used = count ?? 0;
+  const limit = ent.limit_value ?? 0;
+  return used >= limit ? { allowed: false, used, limit } : { allowed: true, used, limit };
+}
 
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')!;
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')!;
@@ -72,7 +130,7 @@ Deno.serve(async (req) => {
     }
 
     // Check published_reply limit before hitting Google
-    const limitCheck = await checkAndRecordUsage(supabase, user.id, 'published_reply', review_id);
+    const limitCheck = await checkAndRecordUsage(supabase, user.id, 'published_reply');
     if (!limitCheck.allowed) {
       return json({
         error: 'Published reply limit reached for this period',
