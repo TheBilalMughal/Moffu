@@ -166,6 +166,25 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 - ONBOARD-005: Brand Brain quick-setup step in wizard
 - ONBOARD-006: Synthetic test review (FUTURE)
 
+## Dashboard Polish (post-Phase 6, 2026-10)
+**COMPLETE** ✅
+
+**Glassmorphic design system applied across portal:**
+- DashboardLayout — topbar with global location selector, glassmorphic nav
+- OverviewPage — 5 advanced features added: response time card, rating trend arrows (30-day %, vs prev period), recent activity feed, weekly highlight strip, campaign performance summary
+- OverviewPage — location filter wired to global `useLocationStore` (topbar); all metrics filter client-side on selectedId change
+- ReviewsPage — glassmorphic filter bar, custom FilterDropdown popovers (no native select), full-width layout
+- Review Insights — filters and chart background fixed
+- Brand Brain — glassmorphic design
+- Settings — glassmorphic design
+- Campaigns, Team, Billing pages — glassmorphic design
+
+**UX standards locked:**
+- `LocationDropdown` per-page pattern removed; `useLocationStore(s => s.selectedId)` is global source of truth
+- Weekly Highlight: flat inline strip (dot + label + divider + message), not a banner
+- All dropdowns use custom FilterDropdown popover pattern (rounded-xl, no overflow-hidden on parent cards)
+- formatId() wraps all ref_id display (shows 0001 not ORG-00001)
+
 ## Phase 7 — Admin Portal
 - Internal platform management
 - Depends on core feature set being stable
