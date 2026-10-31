@@ -128,7 +128,7 @@ export function FeedbackInboxPage() {
   const happyPct = total > 0 ? Math.round(((total - unhappy) / total) * 100) : null;
 
   return (
-    <div className="relative min-h-full px-6 py-6">
+    <div className="relative min-h-full px-4 md:px-6 py-5 md:py-6">
 
       {/* Ambient blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -137,14 +137,14 @@ export function FeedbackInboxPage() {
       </div>
 
       {/* Header */}
-      <div className="relative mb-6 flex items-start justify-between gap-4">
+      <div className="relative mb-6 flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-[#111827]">Feedback Inbox</h1>
-          <p className="text-sm text-[#6B7280] mt-0.5">Private customer feedback — not visible on Google</p>
+          <p className="text-sm text-[#6B7280] mt-0.5 hidden sm:block">Private customer feedback — not visible on Google</p>
         </div>
         <Link
           to="/feedback/new"
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#0D4C3C] to-[#1a6b55] text-white text-sm font-semibold rounded-xl hover:shadow-lg transition-shadow shadow-md shadow-[#0D4C3C]/20"
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#0D4C3C] to-[#1a6b55] text-white text-sm font-semibold rounded-xl hover:shadow-lg transition-shadow shadow-md shadow-[#0D4C3C]/20 flex-shrink-0"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15"/>
@@ -202,7 +202,8 @@ export function FeedbackInboxPage() {
       </div>
 
       {/* Table */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/70 backdrop-blur-md shadow-lg shadow-black/5">
+      <div className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/70 backdrop-blur-md shadow-lg shadow-black/5 overflow-x-auto">
+        <div className="min-w-[540px]">
 
         {loading ? (
           <div className="divide-y divide-white/60">
@@ -347,6 +348,7 @@ export function FeedbackInboxPage() {
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   );
