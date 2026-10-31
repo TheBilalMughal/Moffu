@@ -641,28 +641,25 @@ function RecentReviews({ reviews }: { reviews: ReviewRow[] }) {
   );
 
   return (
-    <div className="space-y-3">
-      {reviews.map(r => (
-        <div key={r.id} className="flex items-start gap-3 p-3 bg-[#F8FAF9]/60 rounded-xl">
-          <div className="w-8 h-8 rounded-xl bg-[#0D4C3C]/10 flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-[#0D4C3C]">
+    <div>
+      {reviews.map((r, idx) => (
+        <div key={r.id} className={`flex items-start gap-3 px-5 py-3 hover:bg-[#F8FAF9]/60 transition-colors ${idx !== reviews.length - 1 ? 'border-b border-[#E5EAE8]/50' : ''}`}>
+          <div className="w-7 h-7 rounded-lg bg-[#0D4C3C]/10 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-[#0D4C3C] mt-0.5">
             {(r.reviewer_name ?? '?')[0]?.toUpperCase() ?? '?'}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2 mb-0.5">
               <span className="text-xs font-semibold text-[#111827] truncate">{r.reviewer_name ?? 'Anonymous'}</span>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <RatingStars n={r.rating} />
-                <span className="text-[10px] text-[#9CA3AF]">{fmtDate(r.published_at)}</span>
-              </div>
+              <span className={`inline-flex text-[10px] font-semibold px-1.5 py-0.5 rounded-md flex-shrink-0 ${
+                r.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-700'
+                : r.status === 'PENDING' ? 'bg-amber-50 text-amber-700'
+                : 'bg-blue-50 text-blue-700'
+              }`}>
+                {r.status === 'PUBLISHED' ? 'Replied' : r.status === 'PENDING' ? 'Pending' : 'Draft ready'}
+              </span>
             </div>
-            {r.body && <p className="text-[11px] text-[#6B7280] line-clamp-2 leading-relaxed">{r.body}</p>}
-            <span className={`inline-flex mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded-md ${
-              r.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-600'
-              : r.status === 'PENDING' ? 'bg-amber-50 text-amber-600'
-              : 'bg-[#F3F4F6] text-[#9CA3AF]'
-            }`}>
-              {r.status === 'PUBLISHED' ? 'Replied' : r.status === 'PENDING' ? 'Awaiting reply' : r.status}
-            </span>
+            <RatingStars n={r.rating} />
+            {r.body && <p className="text-[11px] text-[#6B7280] truncate mt-0.5">{r.body}</p>}
           </div>
         </div>
       ))}
@@ -1021,54 +1018,36 @@ export function OverviewPage() {
         <EmptyState />
       ) : !loadingDash && dash ? (
         <>
-          <div className="relative grid grid-cols-3 gap-4 mb-4">
-            <GlassCard className="p-5">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-              <div className="relative">
-                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Rating Breakdown</p>
-                <RatingChart breakdown={dash.ratingBreakdown} />
+          <div className="relative grid grid-cols-3 gap-4">
+            {/* Left — Recent Reviews */}
+            <GlassCard className="overflow-hidden">
+              <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[#E5EAE8]/50">
+                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Recent Reviews</p>
+                <Link to="/reviews" className="text-[11px] font-semibold text-[#0D4C3C] hover:underline">View all →</Link>
               </div>
+              <RecentReviews reviews={dash.recent} />
             </GlassCard>
 
-            <GlassCard className="p-5">
-              <div className="relative">
+            {/* Middle — Trend + Rating stacked */}
+            <div className="flex flex-col gap-4">
+              <GlassCard className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Reviews · Last 14 Days</p>
                   <span className="text-xs font-bold text-[#111827]">{dash.trend.reduce((s, d) => s + d.count, 0)} total</span>
                 </div>
                 <TrendChart trend={dash.trend} />
-              </div>
-            </GlassCard>
+              </GlassCard>
 
-            <GlassCard className="p-5">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-              <div className="relative"><ResponseTimeCard dash={dash} /></div>
-            </GlassCard>
-          </div>
+              <GlassCard className="p-5">
+                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Rating Breakdown</p>
+                <RatingChart breakdown={dash.ratingBreakdown} />
+              </GlassCard>
+            </div>
 
-          <div className="relative grid grid-cols-3 gap-4">
+            {/* Right — Activity Feed */}
             <GlassCard className="p-5">
-              <div className="relative">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Recent Reviews</p>
-                  <Link to="/reviews" className="text-[11px] font-semibold text-[#0D4C3C] hover:underline">View all →</Link>
-                </div>
-                <RecentReviews reviews={dash.recent} />
-              </div>
-            </GlassCard>
-
-            <GlassCard className="p-5">
-              <div className="relative">
-                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Recent Activity</p>
-                <ActivityFeed items={dash.activityItems} />
-              </div>
-            </GlassCard>
-
-            <GlassCard className="p-5">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-              <div className="relative">
-                <CampaignSummaryCard stats={campaignStats} loading={loadingCampaigns} />
-              </div>
+              <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Recent Activity</p>
+              <ActivityFeed items={dash.activityItems} />
             </GlassCard>
           </div>
 
