@@ -1628,30 +1628,32 @@ async function handleFlag(id: string) {
         </div>
       </div>
 
-      {/* Chart — full width */}
-      <div className="px-4 md:px-10 pt-4 pb-5 flex-shrink-0">
-        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 px-6 py-5">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl"/>
-          <div className="relative">
-        <ReviewsLineChart
-          reviews={activeReviews}
-          totalReviews={activeReviews.length}
-          avgRatingStr={activeReviews.length ? `${(activeReviews.reduce((s,r) => s + r.rating, 0) / activeReviews.length).toFixed(1)} ★` : '—'}
-          replyRate={replyRate}
-          avgResponseTime={avgResponseTime}
-          within24h={within24h}
-          within48h={within48h}
-          showLines={showChart}
-        />
+      {/* Chart — full width, only rendered when visible */}
+      {showChart && (
+        <div className="px-4 md:px-10 pt-4 pb-5 flex-shrink-0">
+          <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 px-6 py-5">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl"/>
+            <div className="relative">
+              <ReviewsLineChart
+                reviews={activeReviews}
+                totalReviews={activeReviews.length}
+                avgRatingStr={activeReviews.length ? `${(activeReviews.reduce((s,r) => s + r.rating, 0) / activeReviews.length).toFixed(1)} ★` : '—'}
+                replyRate={replyRate}
+                avgResponseTime={avgResponseTime}
+                within24h={within24h}
+                within48h={within48h}
+                showLines={showChart}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Filter bar + Table */}
       <div className="flex-1 flex flex-col min-h-0">
 
         {/* Filter bar — single row, outside scroll */}
-        <div className="relative z-[50] flex-shrink-0 bg-white border-b border-[#E5EAE8] px-4 md:px-6 py-2.5">
+        <div className="relative z-[50] flex-shrink-0 bg-white border-b border-[#E5EAE8] px-3 md:px-6 py-2.5">
           <div className="flex items-center gap-2 flex-wrap">
 
             {/* Status tabs */}
