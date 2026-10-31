@@ -577,10 +577,8 @@ function ReviewDrawer({ keyword, reviews, onClose }: { keyword: string; reviews:
           ) : matched.map(r => {
             const stars = r.rating;
             const color = stars >= 4 ? 'text-emerald-600 bg-emerald-50' : stars <= 2 ? 'text-red-500 bg-red-50' : 'text-amber-600 bg-amber-50';
-            const highlighted = r.body.replace(
-              new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-              '<mark class="bg-yellow-100 text-yellow-900 rounded px-0.5">$1</mark>'
-            );
+            const escapedKw = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const parts = r.body.split(new RegExp(`(${escapedKw})`, 'gi'));
             return (
               <div key={r.id} className="border border-[#E5EAE8]/60 rounded-2xl p-4 bg-white/70 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-2">
@@ -591,7 +589,13 @@ function ReviewDrawer({ keyword, reviews, onClose }: { keyword: string; reviews:
                     <span className="text-[10px] text-[#9CA3AF] ml-auto">{new Date(r.published_at).toLocaleDateString()}</span>
                   )}
                 </div>
-                <p className="text-xs text-[#374151] leading-relaxed" dangerouslySetInnerHTML={{ __html: highlighted }}/>
+                <p className="text-xs text-[#374151] leading-relaxed">
+                  {parts.map((part, i) =>
+                    part.toLowerCase() === keyword.toLowerCase()
+                      ? <mark key={i} className="bg-yellow-100 text-yellow-900 rounded px-0.5">{part}</mark>
+                      : part
+                  )}
+                </p>
               </div>
             );
           })}
