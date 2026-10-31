@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
 
   const { data: connections, error: connErr } = await supabase
     .from('google_connections')
-    .select('id, user_id, token_expiry, google_account_id')
+    .select('id, user_id, token_expiry, google_account_id, auto_sync_enabled, auto_sync_interval, last_synced_at')
     .eq('state', 'CONNECTED');
 
   if (connErr || !connections?.length) {
@@ -145,6 +145,14 @@ Deno.serve(async (req) => {
 
   for (const connection of connections) {
     try {
+      // Skip if auto-sync disabled for this user
+      if (!connection.auto_sync_enabled) continue;
+
+      // Skip if not enough time has passed since last sync
+      const intervalHours = parseInt((connection.auto_sync_interval ?? '24h').replace('h', ''), 10) || 24;
+      const lastSync = connection.last_synced_at ? new Date(connection.last_synced_at) : new Date(0);
+      if (Date.now() - lastSync.getTime() < intervalHours * 3_600_000) continue;
+
       const { data: tokenRow } = await supabase
         .from('google_connection_tokens')
         .select('access_token, refresh_token')

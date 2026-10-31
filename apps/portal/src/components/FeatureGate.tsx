@@ -37,6 +37,10 @@ const FEATURE_META: Record<string, { name: string; description: string }> = {
     name: 'Team Management',
     description: 'Invite team members and manage access to your account.',
   },
+  feature_auto_sync: {
+    name: 'Auto Sync',
+    description: 'Automatically sync your Google reviews on a schedule.',
+  },
 };
 
 // ── Upgrade wall ──────────────────────────────────────────────────────────────

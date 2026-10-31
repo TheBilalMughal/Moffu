@@ -4,6 +4,7 @@ import { useAuthStore } from '@/features/auth/auth.store';
 import { supabase } from '@/lib/supabase';
 import { googleService, type GoogleConnection, type GoogleLocation, type BusinessSearchResult } from '@/features/google/google.service';
 import { Toast, useToast } from '@/components/Toast';
+import { useFeatureAccess } from '@/components/FeatureGate';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -463,6 +464,14 @@ export function SettingsPage() {
   const [locationLimit, setLocationLimit] = useState<number | null>(null);
   const [showLocationUpgrade, setShowLocationUpgrade] = useState(false);
 
+  // Auto-sync
+  const { access: featureAccess } = useFeatureAccess();
+  const autoSyncLocked = 'feature_auto_sync' in featureAccess && featureAccess['feature_auto_sync'] === false;
+  const [autoEnabled, setAutoEnabled] = useState(false);
+  const [autoInterval, setAutoInterval] = useState<'12h' | '24h' | 'custom'>('12h');
+  const [customHours, setCustomHours] = useState('24');
+  const [savingSync, setSavingSync] = useState(false);
+
   // Business search
   const [bizSearch, setBizSearch] = useState('');
   const [bizSearching, setBizSearching] = useState(false);
@@ -648,12 +657,27 @@ export function SettingsPage() {
     ]);
     setConnection(conn ?? null);
     if (conn) {
-      // auto-sync settings are now managed in ReviewsPage
+      setAutoEnabled(conn.auto_sync_enabled ?? false);
+      const iv = conn.auto_sync_interval ?? '12h';
+      if (iv === '12h' || iv === '24h') {
+        setAutoInterval(iv);
+      } else {
+        setAutoInterval('custom');
+        setCustomHours(iv.replace('h', ''));
+      }
     }
     setLocations(locs ?? []);
     setConnLoading(false);
   }
 
+  async function saveAutoSync(enabled: boolean, interval: string) {
+    if (!connection?.id) return;
+    setSavingSync(true);
+    const { error } = await googleService.updateAutoSync(connection.id, enabled, interval);
+    setSavingSync(false);
+    if (error) showToast(error, 'error');
+    else { showToast('Auto-sync settings saved.', 'success'); await loadConnection(); }
+  }
 
   useEffect(() => {
     loadConnection();
@@ -1175,7 +1199,106 @@ export function SettingsPage() {
                 <p className="mt-4 text-xs text-[#9CA3AF]">Last synced: {new Date(connection.last_synced_at).toLocaleString()}</p>
               )}
 
-              {/* Auto-Sync is managed in the Reviews page header */}
+              {/* Auto-Sync */}
+              {isConnected && connection && (
+                <div className="mt-5 pt-5 border-t border-[#F3F4F6]">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-[#111827]">Auto Sync</p>
+                      {autoSyncLocked && (
+                        <span className="text-xs text-[#9CA3AF] border border-[#E5E7EB] px-2 py-0.5 rounded-lg">
+                          Paid plan
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      disabled={autoSyncLocked}
+                      onClick={() => {
+                        const next = !autoEnabled;
+                        setAutoEnabled(next);
+                        const iv = autoInterval === 'custom' ? `${customHours}h` : autoInterval;
+                        saveAutoSync(next, iv);
+                      }}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                        autoEnabled && !autoSyncLocked ? 'bg-[#0D4C3C]' : 'bg-[#E5E7EB]'
+                      } ${autoSyncLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      <span
+                        className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transform transition-transform ${
+                          autoEnabled && !autoSyncLocked ? 'translate-x-4' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {autoEnabled && !autoSyncLocked && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-[#6B7280]">Sync interval</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {(['12h', '24h'] as const).map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => setAutoInterval(opt)}
+                            className={`text-xs px-3 py-1.5 rounded-xl border transition-colors ${
+                              autoInterval === opt
+                                ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]'
+                                : 'text-[#374151] border-[#E5E7EB] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'
+                            }`}
+                          >
+                            Every {opt}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setAutoInterval('custom')}
+                          className={`text-xs px-3 py-1.5 rounded-xl border transition-colors ${
+                            autoInterval === 'custom'
+                              ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]'
+                              : 'text-[#374151] border-[#E5E7EB] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'
+                          }`}
+                        >
+                          Custom
+                        </button>
+                      </div>
+
+                      {autoInterval === 'custom' && (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min={1}
+                            max={168}
+                            value={customHours}
+                            onChange={(e) => setCustomHours(e.target.value)}
+                            className="w-20 text-sm border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[#111827] focus:outline-none focus:ring-1 focus:ring-[#0D4C3C] focus:border-[#0D4C3C]"
+                          />
+                          <span className="text-xs text-[#6B7280]">hours</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        disabled={savingSync || (autoInterval === 'custom' && (!customHours || parseInt(customHours) < 1))}
+                        onClick={() => {
+                          const iv = autoInterval === 'custom' ? `${customHours}h` : autoInterval;
+                          saveAutoSync(autoEnabled, iv);
+                        }}
+                        className="text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-40 px-3.5 py-1.5 rounded-lg transition-colors"
+                      >
+                        {savingSync ? 'Saving...' : 'Save interval'}
+                      </button>
+                    </div>
+                  )}
+
+                  {!autoEnabled && !autoSyncLocked && (
+                    <p className="text-xs text-[#9CA3AF]">Reviews will only sync when you click Sync now.</p>
+                  )}
+                  {autoSyncLocked && (
+                    <p className="text-xs text-[#9CA3AF]">Upgrade to a paid plan to enable automatic review syncing.</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

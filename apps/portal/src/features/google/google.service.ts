@@ -4,7 +4,7 @@ export type GoogleConnectionState =
   | 'PENDING' | 'CONNECTED' | 'ATTENTION_REQUIRED'
   | 'REFRESH_FAILED' | 'REVOKED' | 'DISCONNECTED' | 'ERROR';
 
-export type AutoSyncInterval = '1h' | '4h' | '12h' | '24h';
+export type AutoSyncInterval = '12h' | '24h' | (string & {});
 
 export interface AutoSchedule { type: 'always' | 'scheduled'; from: string; to: string; }
 
