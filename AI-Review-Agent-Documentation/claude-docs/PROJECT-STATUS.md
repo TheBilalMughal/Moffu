@@ -94,17 +94,26 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 **Verified working:** bilalxmughal@gmail.com connected successfully. "No locations" expected — account has no verified Google Business Profile. Real customers with verified profiles will see locations list.
 
 ## Phase 5 — AI Response Generation
-**COMPLETE** ✅
+**COMPLETE** ✅ (full Brand Brain integration shipped 2026-10-31)
 
-**Edge function:** `ai-generate-draft` (Supabase, ACTIVE)
-- Loads brand_brain profile for authenticated user
-- Builds context: review text + rating + brand tone/language/reply settings
-- Calls Gemini API (`GEMINI_API_KEY` set in Supabase secrets)
-- Returns structured draft text; stored on `reviews.ai_draft`
+**Edge function:** `ai-generate-draft` v38 (Supabase, ACTIVE) — complete rewrite
+- Multi-provider support: Anthropic, OpenAI, Groq, Gemini
+- Loads `brand_brain` (global) + `brand_brain_overrides` (per-location) and merges them
+- Per-star-rating tone/length overrides (`five_star`/`mid_star`/`low_star` buckets)
+- Business context: `business_name`, `business_type`, `business_desc` in prompt
+- `custom_tone_instructions` appended to tone requirement
+- `reply_signature` appended after draft with `\n\n` separator
+- `keyword_contexts`: scans review body, injects matched context strings
+- `reviewer_lang_behaviour`: `match` = detect reviewer language; `primary` = use configured language
+- `example_reply`: passed as style reference to AI
+- `approval_rules`: sets `NEEDS_APPROVAL` vs `DRAFT_READY` status on review
+- `negative_rule`: manual/cautious/normal handling for ≤2★ reviews
+- `prohibited_phrases`: enforced via prompt instruction
+- Server-side billing check (inlined `checkAndRecordUsage`): queries `subscriptions` + `plan_entitlements` + `usage_events`; returns 429 when limit reached
 
 **Portal UI:** ReviewsPage — "Generate Draft" button calls edge function, populates editable textarea; "Approve & Publish" calls `google-publish-reply`
 
-**Usage tracking:** `billingService.recordUsage('ai_draft')` called after successful draft generation; `recordUsage('published_reply')` after successful publish.
+**Usage tracking:** Server-side in edge function (`usage_events` insert after successful draft generation)
 
 ## Phase 6 — Billing & Subscription (Stripe)
 **PARTIAL** — schema + UI + client-side usage tracking COMPLETE; Stripe + server-side enforcement PENDING
@@ -140,7 +149,7 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 - Nav item in DashboardLayout
 
 **Pending (needs Stripe or further work):**
-- Server-side limit enforcement in `ai-generate-draft` + `google-publish-reply` edge functions
+- Server-side limit enforcement in `google-publish-reply` edge function (ai-generate-draft is ✅ done)
 - Stripe Checkout, webhooks, subscription lifecycle, invoices, upgrade/downgrade flow
 
 ## Phase 8 — Onboarding Flow
@@ -184,6 +193,26 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 - Weekly Highlight: flat inline strip (dot + label + divider + message), not a banner
 - All dropdowns use custom FilterDropdown popover pattern (rounded-xl, no overflow-hidden on parent cards)
 - formatId() wraps all ref_id display (shows 0001 not ORG-00001)
+
+## Review Gating / Feedback Funnel
+**COMPLETE** ✅ (shipped 2026-10-31)
+
+**DB migration applied (`kgttncfkzdrgswfkkdji`):**
+- `feedback_requests` — token (UUID), org_id, user_id, location_id, customer_name, customer_email, google_review_url, channel, sentiment, feedback_text, rating, status (PENDING/OPENED/HAPPY/UNHAPPY/SUBMITTED), expires_at, sent_at, open_count, last_opened_at, clicked_at
+- `increment_feedback_open(p_token)` — security definer RPC for atomic open counter
+
+**Edge Functions deployed (ACTIVE):**
+- `feedback-send-email` v3 — sends branded HTML email via Resend; embeds 1×1 tracking pixel + click-through links; marks `sent_at` + `channel='email'`
+- `feedback-track` v1 — serves 1×1 transparent GIF; increments `open_count`/`last_opened_at` on open; sets `clicked_at` once on click; `verify_jwt: false`
+
+**Portal UI:**
+- `FeedbackInboxPage` (`/feedback`) — glassmorphic table with per-row tracking badges (sent Xh ago / opened N× / not opened yet) when `channel='email'`
+- `NewFeedbackRequestPage` (`/feedback/new`) — create request form; success state shows "Send via email to {address}" button when email is on file; green confirmation after send
+- `FeedbackResponsePage` (on `apps/web`) — customer-facing happy/unhappy flow
+
+**Email sending:**
+- Requires `RESEND_API_KEY` and `WEB_URL` secrets set in Supabase (`supabase secrets set ...`)
+- From: `feedback@moffu.co` (domain must be verified in Resend account)
 
 ## Phase 7 — Admin Portal
 - Internal platform management
