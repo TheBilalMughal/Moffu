@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/features/auth/auth.store';
+import { useOrgStore } from '@/features/onboarding/org.store';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,9 +29,30 @@ interface DashboardData {
   pending: number;
   replied: number;
   replyRate: number;
-  ratingBreakdown: number[];   // index 0 = 1★ … index 4 = 5★
+  ratingBreakdown: number[];
   trend: { date: string; count: number }[];
   recent: ReviewRow[];
+  // Trend vs previous period
+  trendTotal: number | null;
+  trendAvgRating: number | null;
+  trendReplyRate: number | null;
+  // Response urgency
+  oldestPendingDays: number | null;
+  pendingRows: ReviewRow[];
+  // Weekly context
+  thisWeekCount: number;
+  lastWeekCount: number;
+  thisWeekReplied: number;
+  thisWeekTotal: number;
+  // Activity feed
+  activityItems: ReviewRow[];
+}
+
+interface CampaignStats {
+  total: number;
+  sent: number;
+  totalSent: number;
+  totalOpened: number;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -46,9 +68,30 @@ function fmtDate(iso: string | null) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+function timeAgo(iso: string | null): string {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
+function daysSince(iso: string | null): number {
+  if (!iso) return 0;
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+}
+
 function stars(n: number | null) {
   if (n == null) return '—';
   return '★'.repeat(Math.round(n)) + '☆'.repeat(5 - Math.round(n));
+}
+
+function pctChange(curr: number, prev: number): number | null {
+  if (prev === 0) return curr > 0 ? 100 : null;
+  return Math.round(((curr - prev) / prev) * 100);
 }
 
 // ─── Setup Guide ──────────────────────────────────────────────────────────────
@@ -127,9 +170,7 @@ function SetupGuide({ status }: { status: SetupStatus }) {
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-[#0D4C3C]/15 bg-white/70 backdrop-blur-md shadow-lg shadow-[#0D4C3C]/5 mb-6">
-      {/* Decorative gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/4 via-transparent to-transparent pointer-events-none" />
-
       <div className="relative px-5 py-4 border-b border-[#E5EAE8]/60 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold text-[#111827]">Get started</span>
@@ -147,7 +188,6 @@ function SetupGuide({ status }: { status: SetupStatus }) {
           </svg>
         </button>
       </div>
-
       <div className="relative grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#E5EAE8]/60">
         {STEPS.map((step, idx) => {
           const done = status[step.key];
@@ -184,6 +224,60 @@ function SetupGuide({ status }: { status: SetupStatus }) {
   );
 }
 
+// ─── Weekly Highlight Banner ──────────────────────────────────────────────────
+
+function WeeklyHighlightBanner({ dash }: { dash: DashboardData }) {
+  // Priority: urgent (old pending) > achievement > growth
+  const oldestPendingUrgent = dash.oldestPendingDays != null && dash.oldestPendingDays >= 3;
+  const perfectWeek = dash.thisWeekTotal > 0 && dash.thisWeekReplied === dash.thisWeekTotal;
+  const weekGrowth = dash.thisWeekCount > 0 && dash.lastWeekCount > 0 && dash.thisWeekCount > dash.lastWeekCount;
+
+  if (!oldestPendingUrgent && !perfectWeek && !weekGrowth) return null;
+
+  let msg: string;
+  let subtext: string;
+  let color: string;
+  let icon: string;
+
+  if (oldestPendingUrgent) {
+    msg = `${dash.pending} review${dash.pending !== 1 ? 's' : ''} waiting for a reply`;
+    subtext = `Oldest unanswered review is ${dash.oldestPendingDays} days old`;
+    color = 'border-amber-200/60 bg-amber-50/60';
+    icon = '⏳';
+  } else if (perfectWeek) {
+    msg = `All ${dash.thisWeekTotal} review${dash.thisWeekTotal !== 1 ? 's' : ''} replied this week`;
+    subtext = 'Perfect reply rate — keep it going';
+    color = 'border-emerald-200/60 bg-emerald-50/60';
+    icon = '✓';
+  } else {
+    const diff = dash.thisWeekCount - dash.lastWeekCount;
+    msg = `${dash.thisWeekCount} reviews this week — ${diff} more than last week`;
+    subtext = 'Your visibility is improving';
+    color = 'border-[#0D4C3C]/15 bg-[#0D4C3C]/4';
+    icon = '↑';
+  }
+
+  return (
+    <div className={`relative flex items-center gap-3 px-4 py-3 rounded-xl border backdrop-blur-sm ${color} mb-5`}>
+      <div className="w-7 h-7 rounded-lg bg-white/60 flex items-center justify-center text-sm flex-shrink-0">
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold text-[#111827]">{msg}</p>
+        <p className="text-[11px] text-[#6B7280]">{subtext}</p>
+      </div>
+      {oldestPendingUrgent && (
+        <Link
+          to="/reviews"
+          className="flex-shrink-0 text-[11px] font-semibold text-amber-700 hover:underline"
+        >
+          Reply now →
+        </Link>
+      )}
+    </div>
+  );
+}
+
 // ─── Stat card ────────────────────────────────────────────────────────────────
 
 function GlassCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -200,7 +294,7 @@ function StatCard({
   label: string;
   value: string | number;
   sub?: string;
-  trend?: { value: number; label: string };
+  trend?: { value: number; label: string } | null;
   icon: React.ReactNode;
   accent?: boolean;
   urgent?: boolean;
@@ -216,17 +310,18 @@ function StatCard({
           }`}>
             {icon}
           </div>
-          {trend && (
+          {trend != null && (
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${
-              trend.value >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'
+              trend.value > 0 ? 'bg-emerald-50 text-emerald-600' : trend.value < 0 ? 'bg-red-50 text-red-500' : 'bg-[#F3F4F6] text-[#9CA3AF]'
             }`}>
-              {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value)}%
+              {trend.value > 0 ? '↑' : trend.value < 0 ? '↓' : '—'} {trend.value !== 0 ? `${Math.abs(trend.value)}%` : 'same'}
             </span>
           )}
         </div>
         <p className="text-[11px] font-medium text-[#9CA3AF] uppercase tracking-wide mb-1">{label}</p>
         <p className="text-2xl font-bold text-[#111827] leading-none mb-1">{value}</p>
         {sub && <p className="text-[11px] text-[#9CA3AF]">{sub}</p>}
+        {trend != null && <p className="text-[10px] text-[#D1D5DB] mt-0.5">{trend.label}</p>}
       </div>
     </GlassCard>
   );
@@ -300,6 +395,192 @@ function TrendChart({ trend }: { trend: { date: string; count: number }[] }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── Response Time Card ───────────────────────────────────────────────────────
+
+function ResponseTimeCard({ dash }: { dash: DashboardData }) {
+  const urgencyLevel =
+    dash.oldestPendingDays == null ? 'none'
+    : dash.oldestPendingDays >= 7 ? 'high'
+    : dash.oldestPendingDays >= 3 ? 'medium'
+    : 'low';
+
+  const urgencyColor = {
+    none:   'bg-emerald-50 text-emerald-600 border-emerald-200/40',
+    low:    'bg-emerald-50 text-emerald-600 border-emerald-200/40',
+    medium: 'bg-amber-50 text-amber-600 border-amber-200/40',
+    high:   'bg-red-50 text-red-500 border-red-200/40',
+  }[urgencyLevel];
+
+  const urgencyLabel = {
+    none:   'All caught up',
+    low:    'Within target',
+    medium: 'Needs attention',
+    high:   'Overdue',
+  }[urgencyLevel];
+
+  const oldest3 = dash.pendingRows.slice(0, 3);
+
+  return (
+    <div className="relative">
+      <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Response Urgency</p>
+
+      {/* Status badge */}
+      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold mb-4 ${urgencyColor}`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${
+          urgencyLevel === 'none' || urgencyLevel === 'low' ? 'bg-emerald-500' :
+          urgencyLevel === 'medium' ? 'bg-amber-500' : 'bg-red-500'
+        }`} />
+        {urgencyLabel}
+      </div>
+
+      {dash.pending === 0 ? (
+        <p className="text-xs text-[#9CA3AF]">No pending reviews — great work!</p>
+      ) : (
+        <>
+          <div className="flex items-baseline gap-1 mb-1">
+            <span className="text-2xl font-bold text-[#111827]">{dash.pending}</span>
+            <span className="text-xs text-[#9CA3AF]">pending</span>
+          </div>
+          {dash.oldestPendingDays != null && (
+            <p className="text-[11px] text-[#9CA3AF] mb-4">
+              Oldest: {dash.oldestPendingDays} day{dash.oldestPendingDays !== 1 ? 's' : ''} ago
+            </p>
+          )}
+          {oldest3.length > 0 && (
+            <div className="space-y-2">
+              {oldest3.map(r => {
+                const days = daysSince(r.published_at);
+                return (
+                  <div key={r.id} className="flex items-center gap-2 px-2.5 py-2 bg-[#F8FAF9]/60 rounded-xl">
+                    <div className="w-6 h-6 rounded-lg bg-[#0D4C3C]/10 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-[#0D4C3C]">
+                      {(r.reviewer_name ?? '?')[0]?.toUpperCase() ?? '?'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-semibold text-[#374151] truncate">{r.reviewer_name ?? 'Anonymous'}</p>
+                      <p className="text-[10px] text-[#9CA3AF]">{r.rating != null ? `${r.rating}★` : '—'} · {days}d waiting</p>
+                    </div>
+                    <Link to="/reviews" className="text-[10px] font-semibold text-[#0D4C3C] hover:underline flex-shrink-0">
+                      Reply →
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── Activity Feed ────────────────────────────────────────────────────────────
+
+function ActivityFeed({ items }: { items: ReviewRow[] }) {
+  if (!items.length) {
+    return (
+      <div className="flex items-center justify-center h-20">
+        <p className="text-xs text-[#9CA3AF]">No activity in the last 14 days</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2.5">
+      {items.map(r => (
+        <div key={r.id} className="flex items-start gap-2.5">
+          {/* Timeline dot */}
+          <div className="flex flex-col items-center flex-shrink-0 mt-1">
+            <div className={`w-2 h-2 rounded-full ${
+              r.status === 'PUBLISHED' ? 'bg-emerald-500' :
+              r.status === 'PENDING' ? 'bg-amber-400' : 'bg-[#D1D5DB]'
+            }`} />
+            <div className="w-px flex-1 bg-[#F3F4F6] mt-1" style={{ minHeight: 12 }} />
+          </div>
+          <div className="flex-1 min-w-0 pb-1">
+            <p className="text-[11px] text-[#374151] leading-snug">
+              <span className="font-semibold">{r.reviewer_name ?? 'Anonymous'}</span>
+              {' '}left a {r.rating != null ? `${r.rating}★` : ''} review
+            </p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className={`text-[10px] font-medium ${
+                r.status === 'PUBLISHED' ? 'text-emerald-600' :
+                r.status === 'PENDING' ? 'text-amber-600' : 'text-[#9CA3AF]'
+              }`}>
+                {r.status === 'PUBLISHED' ? 'Replied' : r.status === 'PENDING' ? 'Pending' : r.status}
+              </span>
+              <span className="text-[10px] text-[#D1D5DB]">·</span>
+              <span className="text-[10px] text-[#9CA3AF]">{timeAgo(r.published_at)}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Campaign Summary Card ────────────────────────────────────────────────────
+
+function CampaignSummaryCard({ stats, loading }: { stats: CampaignStats | null; loading: boolean }) {
+  const openRate = stats && stats.totalSent > 0
+    ? Math.round((stats.totalOpened / stats.totalSent) * 100)
+    : null;
+
+  return (
+    <div className="relative">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Campaign Performance</p>
+        <Link to="/campaigns" className="text-[11px] font-semibold text-[#0D4C3C] hover:underline">View all →</Link>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map(i => <div key={i} className="h-8 rounded-xl bg-[#F3F4F6] animate-pulse" />)}
+        </div>
+      ) : !stats || stats.total === 0 ? (
+        <div className="text-center py-6">
+          <p className="text-xs text-[#9CA3AF] mb-3">No campaigns yet</p>
+          <Link
+            to="/campaigns"
+            className="text-[11px] font-semibold text-[#0D4C3C] hover:underline"
+          >
+            Create your first campaign →
+          </Link>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {[
+              { label: 'Campaigns', value: stats.total },
+              { label: 'Sent', value: stats.totalSent },
+              { label: 'Open Rate', value: openRate != null ? `${openRate}%` : '—' },
+            ].map(item => (
+              <div key={item.label} className="text-center px-2 py-2.5 bg-[#F8FAF9]/60 rounded-xl">
+                <p className="text-base font-bold text-[#111827]">{item.value}</p>
+                <p className="text-[10px] text-[#9CA3AF] mt-0.5">{item.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {stats.sent > 0 && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] text-[#9CA3AF]">Sent campaigns</p>
+                <p className="text-[10px] font-semibold text-[#374151]">{stats.sent} of {stats.total}</p>
+              </div>
+              <div className="h-1.5 bg-[#F3F4F6] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[#0D4C3C] to-[#1a6b55] rounded-full"
+                  style={{ width: `${Math.round((stats.sent / stats.total) * 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -387,7 +668,8 @@ function EmptyState() {
 // ─── OverviewPage ──────────────────────────────────────────────────────────────
 
 export function OverviewPage() {
-  const user = useAuthStore(s => s.user);
+  const user  = useAuthStore(s => s.user);
+  const orgId = useOrgStore(s => s.orgId);
 
   const [setup, setSetup] = useState<SetupStatus>({
     googleConnected: false,
@@ -398,6 +680,8 @@ export function OverviewPage() {
   });
   const [dash, setDash] = useState<DashboardData | null>(null);
   const [loadingDash, setLoadingDash] = useState(true);
+  const [campaignStats, setCampaignStats] = useState<CampaignStats | null>(null);
+  const [loadingCampaigns, setLoadingCampaigns] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -440,7 +724,7 @@ export function OverviewPage() {
           }
         }
 
-        // last 14 days
+        // Last 14 days trend chart
         const now = new Date();
         const trend: { date: string; count: number }[] = [];
         for (let i = 13; i >= 0; i--) {
@@ -456,13 +740,102 @@ export function OverviewPage() {
           if (slot) slot.count++;
         }
 
-        setDash({ total, avgRating, pending, replied, replyRate, ratingBreakdown: breakdown, trend, recent: rows.slice(0, 5) });
+        // ── Trend arrows: last 30 days vs previous 30 days ──────────────────
+        const now30 = Date.now();
+        const ms30  = 30 * 86400000;
+        const rowsLast30 = rows.filter(r => r.published_at && now30 - new Date(r.published_at).getTime() <= ms30);
+        const rowsPrev30 = rows.filter(r => {
+          if (!r.published_at) return false;
+          const age = now30 - new Date(r.published_at).getTime();
+          return age > ms30 && age <= ms30 * 2;
+        });
+
+        const last30Total   = rowsLast30.length;
+        const prev30Total   = rowsPrev30.length;
+        const trendTotal    = pctChange(last30Total, prev30Total);
+
+        const last30Ratings = rowsLast30.map(r => r.rating).filter((r): r is number => r != null);
+        const prev30Ratings = rowsPrev30.map(r => r.rating).filter((r): r is number => r != null);
+        const last30Avg     = last30Ratings.length > 0 ? last30Ratings.reduce((a, b) => a + b, 0) / last30Ratings.length : null;
+        const prev30Avg     = prev30Ratings.length > 0 ? prev30Ratings.reduce((a, b) => a + b, 0) / prev30Ratings.length : null;
+        const trendAvgRating = last30Avg != null && prev30Avg != null
+          ? pctChange(Math.round(last30Avg * 10), Math.round(prev30Avg * 10))
+          : null;
+
+        const last30Replied = rowsLast30.filter(r => r.status === 'PUBLISHED').length;
+        const prev30Replied = rowsPrev30.filter(r => r.status === 'PUBLISHED').length;
+        const last30Rate    = last30Total > 0 ? Math.round((last30Replied / last30Total) * 100) : 0;
+        const prev30Rate    = prev30Total > 0 ? Math.round((prev30Replied / prev30Total) * 100) : 0;
+        const trendReplyRate = pctChange(last30Rate, prev30Rate);
+
+        // ── Response urgency ─────────────────────────────────────────────────
+        const pendingRows = rows.filter(r => r.status === 'PENDING');
+        const oldestPending = pendingRows[pendingRows.length - 1]; // sorted desc, so last = oldest
+        const oldestPendingDays = oldestPending?.published_at ? daysSince(oldestPending.published_at) : null;
+
+        // ── Weekly context ────────────────────────────────────────────────────
+        const todayDate = new Date();
+        const dayOfWeek = todayDate.getDay(); // 0=Sun
+        const startOfWeek = new Date(todayDate);
+        startOfWeek.setDate(todayDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const startOfLastWeek = new Date(startOfWeek);
+        startOfLastWeek.setDate(startOfWeek.getDate() - 7);
+
+        const thisWeekRows = rows.filter(r => r.published_at && new Date(r.published_at) >= startOfWeek);
+        const lastWeekRows = rows.filter(r => {
+          if (!r.published_at) return false;
+          const d = new Date(r.published_at);
+          return d >= startOfLastWeek && d < startOfWeek;
+        });
+
+        const thisWeekCount   = thisWeekRows.length;
+        const lastWeekCount   = lastWeekRows.length;
+        const thisWeekTotal   = thisWeekRows.length;
+        const thisWeekReplied = thisWeekRows.filter(r => r.status === 'PUBLISHED').length;
+
+        // ── Activity feed (last 14 days reviews, max 8) ───────────────────────
+        const twoWeeksAgo = new Date();
+        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+        const activityItems = rows
+          .filter(r => r.published_at && new Date(r.published_at) >= twoWeeksAgo)
+          .slice(0, 8);
+
+        setDash({
+          total, avgRating, pending, replied, replyRate, ratingBreakdown: breakdown, trend,
+          recent: rows.slice(0, 5),
+          trendTotal, trendAvgRating, trendReplyRate,
+          oldestPendingDays, pendingRows: pendingRows.slice(0, 3),
+          thisWeekCount, lastWeekCount, thisWeekTotal, thisWeekReplied,
+          activityItems,
+        });
       }
       setLoadingDash(false);
     }
 
     load();
   }, [user]);
+
+  // ── Campaign stats ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!orgId) return;
+    setLoadingCampaigns(true);
+
+    supabase
+      .from('campaigns')
+      .select('id,status,sent_count,opened_count,total_contacts')
+      .eq('org_id', orgId)
+      .then(({ data }) => {
+        if (!data) { setLoadingCampaigns(false); return; }
+        const total       = data.length;
+        const sent        = data.filter(c => c.status === 'sent').length;
+        const totalSent   = data.reduce((s, c) => s + (c.sent_count ?? 0), 0);
+        const totalOpened = data.reduce((s, c) => s + (c.opened_count ?? 0), 0);
+        setCampaignStats({ total, sent, totalSent, totalOpened });
+        setLoadingCampaigns(false);
+      });
+  }, [orgId]);
 
   const displayName = user?.user_metadata?.full_name ?? user?.email;
 
@@ -475,7 +848,7 @@ export function OverviewPage() {
       </div>
 
       {/* Header */}
-      <div className="relative mb-6">
+      <div className="relative mb-5">
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-xl font-bold text-[#111827]">{greet(displayName)}</h1>
@@ -498,10 +871,13 @@ export function OverviewPage() {
         </div>
       </div>
 
+      {/* Weekly highlight banner */}
+      {!loadingDash && dash && <WeeklyHighlightBanner dash={dash} />}
+
       {/* Setup guide */}
       {!setup.loading && <SetupGuide status={setup} />}
 
-      {/* Stat cards */}
+      {/* Stat cards with trend arrows */}
       <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         {loadingDash ? (
           Array.from({ length: 4 }).map((_, i) => (
@@ -513,28 +889,31 @@ export function OverviewPage() {
               label="Total Reviews"
               value={dash.total}
               sub={`${dash.total} synced`}
+              trend={dash.trendTotal != null ? { value: dash.trendTotal, label: 'vs prev 30 days' } : null}
               accent
-              icon={<svg className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>}
+              icon={<svg style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>}
             />
             <StatCard
               label="Avg. Rating"
               value={dash.avgRating != null ? dash.avgRating.toFixed(1) : '—'}
               sub={dash.avgRating != null ? stars(dash.avgRating) : 'No ratings yet'}
-              icon={<svg className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>}
+              trend={dash.trendAvgRating != null ? { value: dash.trendAvgRating, label: 'vs prev 30 days' } : null}
+              icon={<svg style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>}
             />
             <StatCard
               label="Reply Rate"
               value={`${dash.replyRate}%`}
               sub={`${dash.replied} of ${dash.total} replied`}
+              trend={dash.trendReplyRate != null ? { value: dash.trendReplyRate, label: 'vs prev 30 days' } : null}
               accent={dash.replyRate >= 80}
-              icon={<svg className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>}
+              icon={<svg style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>}
             />
             <StatCard
               label="Pending Reply"
               value={dash.pending}
               sub={dash.pending > 0 ? 'Need attention' : 'All caught up!'}
               urgent={dash.pending > 0}
-              icon={<svg className="w-4.5 h-4.5" style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
+              icon={<svg style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
             />
           </>
         ) : (
@@ -551,135 +930,69 @@ export function OverviewPage() {
         )}
       </div>
 
-      {/* Charts + recent */}
+      {/* Charts row */}
       {!loadingDash && !dash ? (
         <EmptyState />
       ) : !loadingDash && dash ? (
-        <div className="relative grid grid-cols-3 gap-4 mb-4">
-          {/* Rating distribution */}
-          <GlassCard className="p-5">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-            <div className="relative">
-              <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Rating Breakdown</p>
-              <RatingChart breakdown={dash.ratingBreakdown} />
-            </div>
-          </GlassCard>
-
-          {/* Trend chart */}
-          <GlassCard className="p-5">
-            <div className="relative">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Reviews · Last 14 Days</p>
-                <span className="text-xs font-bold text-[#111827]">{dash.trend.reduce((s, d) => s + d.count, 0)} total</span>
+        <>
+          <div className="relative grid grid-cols-3 gap-4 mb-4">
+            {/* Rating distribution */}
+            <GlassCard className="p-5">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+              <div className="relative">
+                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Rating Breakdown</p>
+                <RatingChart breakdown={dash.ratingBreakdown} />
               </div>
-              <TrendChart trend={dash.trend} />
-            </div>
-          </GlassCard>
+            </GlassCard>
 
-          {/* Quick actions */}
-          <GlassCard className="p-5">
-            <div className="relative">
-              <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Quick Actions</p>
-              <div className="space-y-2">
-                {[
-                  { to: '/reviews', label: 'View Reviews', icon: '★', desc: `${dash.pending > 0 ? `${dash.pending} pending` : 'All replied'}` },
-                  { to: '/google-profile', label: 'Google Profile', icon: '↗', desc: 'Performance insights' },
-                  { to: '/brand-brain', label: 'Brand Brain', icon: '✦', desc: setup.brandBrainDone ? 'Configured' : 'Not set up yet' },
-                  { to: '/settings', label: 'Settings', icon: '⚙', desc: 'Manage integrations' },
-                ].map(item => (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#0D4C3C]/5 transition-colors group"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-[#F3F4F6] group-hover:bg-[#0D4C3C]/10 flex items-center justify-center text-xs text-[#6B7280] group-hover:text-[#0D4C3C] transition-colors flex-shrink-0">
-                      {item.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-[#374151] group-hover:text-[#0D4C3C] transition-colors">{item.label}</p>
-                      <p className="text-[10px] text-[#9CA3AF]">{item.desc}</p>
-                    </div>
-                    <svg className="w-3.5 h-3.5 text-[#9CA3AF] group-hover:text-[#0D4C3C] transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                ))}
+            {/* Trend chart */}
+            <GlassCard className="p-5">
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Reviews · Last 14 Days</p>
+                  <span className="text-xs font-bold text-[#111827]">{dash.trend.reduce((s, d) => s + d.count, 0)} total</span>
+                </div>
+                <TrendChart trend={dash.trend} />
               </div>
-            </div>
-          </GlassCard>
-        </div>
+            </GlassCard>
+
+            {/* Response urgency */}
+            <GlassCard className="p-5">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+              <div className="relative">
+                <ResponseTimeCard dash={dash} />
+              </div>
+            </GlassCard>
+          </div>
+
+          {/* Bottom row: Recent Reviews | Activity Feed | Campaign Summary */}
+          <div className="relative grid grid-cols-3 gap-4">
+            <GlassCard className="p-5">
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Recent Reviews</p>
+                  <Link to="/reviews" className="text-[11px] font-semibold text-[#0D4C3C] hover:underline">View all →</Link>
+                </div>
+                <RecentReviews reviews={dash.recent} />
+              </div>
+            </GlassCard>
+
+            <GlassCard className="p-5">
+              <div className="relative">
+                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Recent Activity</p>
+                <ActivityFeed items={dash.activityItems} />
+              </div>
+            </GlassCard>
+
+            <GlassCard className="p-5">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+              <div className="relative">
+                <CampaignSummaryCard stats={campaignStats} loading={loadingCampaigns} />
+              </div>
+            </GlassCard>
+          </div>
+        </>
       ) : null}
-
-      {/* Recent reviews */}
-      {!loadingDash && dash && (
-        <div className="relative grid grid-cols-2 gap-4">
-          <GlassCard className="p-5">
-            <div className="relative">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Recent Reviews</p>
-                <Link to="/reviews" className="text-[11px] font-semibold text-[#0D4C3C] hover:underline">View all →</Link>
-              </div>
-              <RecentReviews reviews={dash.recent} />
-            </div>
-          </GlassCard>
-
-          {/* Reply rate ring + summary */}
-          <GlassCard className="p-5">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/5 via-transparent to-transparent pointer-events-none rounded-2xl" />
-            <div className="relative">
-              <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Reply Performance</p>
-              <div className="flex items-center gap-6">
-                {/* SVG ring */}
-                <div className="flex-shrink-0">
-                  <svg width="80" height="80" viewBox="0 0 80 80">
-                    <circle cx="40" cy="40" r="32" fill="none" stroke="#E5EAE8" strokeWidth="8"/>
-                    <circle
-                      cx="40" cy="40" r="32" fill="none"
-                      stroke="url(#ringGrad)" strokeWidth="8"
-                      strokeLinecap="round"
-                      strokeDasharray={`${2 * Math.PI * 32}`}
-                      strokeDashoffset={`${2 * Math.PI * 32 * (1 - dash.replyRate / 100)}`}
-                      transform="rotate(-90 40 40)"
-                    />
-                    <defs>
-                      <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#0D4C3C"/>
-                        <stop offset="100%" stopColor="#1a6b55"/>
-                      </linearGradient>
-                    </defs>
-                    <text x="40" y="44" textAnchor="middle" className="text-[13px] font-bold fill-[#111827]" fontSize="13" fontWeight="700" fill="#111827">
-                      {dash.replyRate}%
-                    </text>
-                  </svg>
-                </div>
-                <div className="flex-1 space-y-3">
-                  {[
-                    { label: 'Total reviews', value: dash.total, color: 'bg-[#0D4C3C]' },
-                    { label: 'Replied', value: dash.replied, color: 'bg-emerald-500' },
-                    { label: 'Pending', value: dash.pending, color: dash.pending > 0 ? 'bg-amber-400' : 'bg-[#E5EAE8]' },
-                  ].map(row => (
-                    <div key={row.label} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${row.color}`} />
-                        <span className="text-xs text-[#6B7280]">{row.label}</span>
-                      </div>
-                      <span className="text-xs font-semibold text-[#111827]">{row.value}</span>
-                    </div>
-                  ))}
-                  {dash.avgRating != null && (
-                    <div className="pt-2 border-t border-[#F3F4F6]">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-[#6B7280]">Avg. rating</span>
-                        <span className="text-xs font-bold text-amber-500">{dash.avgRating.toFixed(1)} ★</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </GlassCard>
-        </div>
-      )}
     </div>
   );
 }
