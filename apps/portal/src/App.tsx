@@ -22,6 +22,8 @@ import { AcceptInvitePage } from '@/features/team/AcceptInvitePage';
 import { FeatureGatePage } from '@/components/FeatureGate';
 import { CampaignsPage } from '@/features/campaigns/CampaignsPage';
 import { CampaignDetailPage } from '@/features/campaigns/CampaignDetailPage';
+import { FeedbackInboxPage } from '@/features/feedback/FeedbackInboxPage';
+import { NewFeedbackRequestPage } from '@/features/feedback/NewFeedbackRequestPage';
 
 export function App() {
   const initialize  = useAuthStore((s) => s.initialize);
@@ -68,6 +70,8 @@ export function App() {
           <Route path="/team"      element={<FeatureGatePage feature="feature_team"><TeamPage /></FeatureGatePage>} />
           <Route path="/campaigns"     element={<CampaignsPage />} />
           <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
+          <Route path="/feedback"      element={<FeedbackInboxPage />} />
+          <Route path="/feedback/new"  element={<NewFeedbackRequestPage />} />
         </Route>
 
         {/* Invite acceptance — no auth required to view */}
