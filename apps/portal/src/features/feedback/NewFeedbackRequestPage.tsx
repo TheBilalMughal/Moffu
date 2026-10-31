@@ -15,8 +15,11 @@ export function NewFeedbackRequestPage() {
   const [googleUrl, setGoogleUrl]         = useState('');
   const [saving, setSaving]               = useState(false);
   const [error, setError]                 = useState('');
-  const [created, setCreated]             = useState<{ token: string; link: string } | null>(null);
+  const [created, setCreated]             = useState<{ id: string; token: string; link: string; email: string | null } | null>(null);
   const [copied, setCopied]               = useState(false);
+  const [sendingEmail, setSendingEmail]   = useState(false);
+  const [emailSent, setEmailSent]         = useState(false);
+  const [emailError, setEmailError]       = useState('');
 
   const webBase = import.meta.env.VITE_WEB_URL ?? 'https://moffu.vercel.app';
 
@@ -38,12 +41,17 @@ export function NewFeedbackRequestPage() {
         google_review_url: googleUrl.trim(),
         channel:           'manual',
       })
-      .select('token')
+      .select('id, token')
       .single();
 
     setSaving(false);
     if (dbErr || !data) { setError('Failed to create request. Please try again.'); return; }
-    setCreated({ token: data.token, link: `${webBase}/f/${data.token}` });
+    setCreated({
+      id:    data.id,
+      token: data.token,
+      link:  `${webBase}/f/${data.token}`,
+      email: customerEmail.trim() || null,
+    });
   }
 
   async function copyLink() {
@@ -51,6 +59,28 @@ export function NewFeedbackRequestPage() {
     await navigator.clipboard.writeText(created.link);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function sendEmail() {
+    if (!created || !user) return;
+    setSendingEmail(true);
+    setEmailError('');
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/feedback-send-email`, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${session?.access_token ?? ''}`,
+      },
+      body: JSON.stringify({ request_id: created.id }),
+    });
+    setSendingEmail(false);
+    if (res.ok) {
+      setEmailSent(true);
+    } else {
+      const body = await res.json().catch(() => ({}));
+      setEmailError(body.error ?? 'Failed to send email.');
+    }
   }
 
   // ── Success state ─────────────────────────────────────────────────────────
@@ -73,7 +103,7 @@ export function NewFeedbackRequestPage() {
               <h2 className="text-lg font-bold text-[#111827] mb-2">Feedback link created</h2>
               <p className="text-sm text-[#6B7280] mb-6">Share this link with your customer. Happy → Google review. Unhappy → private form.</p>
 
-              <div className="flex items-center gap-2 px-3.5 py-2.5 bg-white/60 backdrop-blur-sm border border-white/60 rounded-xl mb-5">
+              <div className="flex items-center gap-2 px-3.5 py-2.5 bg-white/60 backdrop-blur-sm border border-white/60 rounded-xl mb-3">
                 <span className="flex-1 text-xs text-[#374151] truncate text-left font-mono">{created.link}</span>
                 <button onClick={copyLink}
                   className={`flex-shrink-0 text-[11px] font-semibold transition-colors ${copied ? 'text-emerald-600' : 'text-[#0D4C3C] hover:text-[#083F32]'}`}>
@@ -81,9 +111,43 @@ export function NewFeedbackRequestPage() {
                 </button>
               </div>
 
+              {/* Email send */}
+              {created.email && (
+                <div className="mb-5">
+                  {emailSent ? (
+                    <div className="flex items-center gap-2 px-3.5 py-2.5 bg-emerald-50/80 backdrop-blur-sm border border-emerald-100 rounded-xl">
+                      <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
+                      </svg>
+                      <span className="text-xs font-semibold text-emerald-700">Email sent to {created.email}</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <button
+                        onClick={sendEmail}
+                        disabled={sendingEmail}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white/60 backdrop-blur-sm border border-white/60 rounded-xl text-sm font-semibold text-[#374151] hover:bg-white/80 transition-colors disabled:opacity-50"
+                      >
+                        {sendingEmail ? (
+                          <><span className="w-3.5 h-3.5 border-2 border-[#9CA3AF]/30 border-t-[#9CA3AF] rounded-full animate-spin" />Sending…</>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4 text-[#6B7280]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
+                            </svg>
+                            Send via email to {created.email}
+                          </>
+                        )}
+                      </button>
+                      {emailError && <p className="text-xs text-red-500 text-center">{emailError}</p>}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex gap-3">
                 <button
-                  onClick={() => { setCreated(null); setCustomerName(''); setCustomerEmail(''); setGoogleUrl(''); }}
+                  onClick={() => { setCreated(null); setCustomerName(''); setCustomerEmail(''); setGoogleUrl(''); setEmailSent(false); setEmailError(''); }}
                   className="flex-1 py-2.5 text-sm font-semibold text-[#374151] bg-white/60 backdrop-blur-sm border border-white/60 rounded-xl hover:bg-white/80 transition-colors">
                   New request
                 </button>

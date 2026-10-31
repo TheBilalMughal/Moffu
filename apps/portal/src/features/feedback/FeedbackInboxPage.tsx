@@ -20,6 +20,9 @@ interface FeedbackRow {
   customer_email: string | null;
   channel: string;
   location_name: string | null;
+  sent_at: string | null;
+  open_count: number;
+  last_opened_at: string | null;
 }
 
 type SentimentFilter = 'all' | 'unhappy' | 'happy';
@@ -65,6 +68,7 @@ export function FeedbackInboxPage() {
         resolved, resolved_at, responded_at,
         feedback_requests (
           customer_name, customer_email, channel,
+          sent_at, open_count, last_opened_at,
           google_locations ( display_name )
         )
       `)
@@ -87,6 +91,9 @@ export function FeedbackInboxPage() {
             customer_email: req?.customer_email as string | null ?? null,
             channel:        req?.channel as string ?? 'manual',
             location_name:  loc?.display_name as string | null ?? null,
+            sent_at:        req?.sent_at as string | null ?? null,
+            open_count:     (req?.open_count as number) ?? 0,
+            last_opened_at: req?.last_opened_at as string | null ?? null,
           };
         });
         setRows(mapped);
@@ -272,6 +279,32 @@ export function FeedbackInboxPage() {
                   ) : r.sentiment === 'happy' ? (
                     <p className="text-xs text-emerald-600">Redirected to Google review page</p>
                   ) : null}
+                  {/* Email tracking badge */}
+                  {r.channel === 'email' && (
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      {r.sent_at ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-[#6B7280] bg-white/70 backdrop-blur-sm border border-white/60 px-1.5 py-0.5 rounded-lg">
+                          <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/>
+                          </svg>
+                          Sent {timeAgo(r.sent_at)}
+                        </span>
+                      ) : null}
+                      {r.open_count > 0 ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-[#0D4C3C] bg-[#F0F7F5] border border-[#D1EAE4] px-1.5 py-0.5 rounded-lg">
+                          <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178z"/>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                          </svg>
+                          Opened {r.open_count}×{r.last_opened_at ? ` · last ${timeAgo(r.last_opened_at)}` : ''}
+                        </span>
+                      ) : r.sent_at ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-[#9CA3AF] px-1.5 py-0.5">
+                          Not opened yet
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
 
                 {/* Sentiment */}
