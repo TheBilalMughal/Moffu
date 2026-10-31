@@ -814,12 +814,12 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
       )}
 
       <tr onClick={onToggle}
-        className={`group cursor-pointer border-b border-[#F3F4F6] transition-colors ${focused ? 'ring-1 ring-inset ring-[#0D4C3C]/30' : ''} ${expanded ? 'bg-[#F0F7F5]' : selected ? 'bg-[#E6F2EE] hover:bg-[#DCF0E8]' : 'hover:bg-[#F0F4F2]'}`}>
+        className={`group cursor-pointer border-b border-[#F3F4F6] last:border-0 transition-colors ${focused ? 'ring-1 ring-inset ring-[#0D4C3C]/30' : ''} ${expanded ? 'bg-[#F0F7F5]' : selected ? 'bg-[#E6F2EE] hover:bg-[#DCF0E8]' : 'hover:bg-[#F8FAF9]'}`}>
 
         {/* Checkbox — hidden for PUBLISHED reviews */}
-        <td className="pl-4 pr-2 py-1.5 w-10" onClick={e => { e.stopPropagation(); if (uiStatus !== 'replied') onSelect(e); }}>
+        <td className="pl-4 pr-2 py-3 w-10" onClick={e => { e.stopPropagation(); if (uiStatus !== 'replied') onSelect(e); }}>
           {uiStatus !== 'replied' ? (
-            <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${selected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] group-hover:border-[#0D4C3C]'}`}>
+            <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${selected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] group-hover:border-[#9CA3AF]'}`}>
               {selected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
             </div>
           ) : (
@@ -828,48 +828,54 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
         </td>
 
         {/* Date */}
-        <td className="px-3 py-1.5 w-32 text-xs text-[#6B7280] whitespace-nowrap font-mono">{fmtDate(review.published_at)}</td>
+        <td className="px-3 py-3 w-28 text-xs text-[#6B7280] whitespace-nowrap">{fmtDate(review.published_at)}</td>
 
         {/* Reviewer */}
-        <td className="px-3 py-1.5 w-44">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-xs font-semibold flex-shrink-0">{initials}</div>
+        <td className="px-3 py-3 w-44">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-xs font-bold flex-shrink-0">{initials}</div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-[#111827] truncate">{review.reviewer_name ?? 'Anonymous'}</p>
+              <p className="text-sm font-medium text-[#111827] truncate leading-tight">{review.reviewer_name ?? 'Anonymous'}</p>
               <Stars rating={review.rating}/>
             </div>
           </div>
         </td>
 
         {/* Location */}
-        <td className="px-3 py-1.5 w-32">
-          <span className="text-xs text-[#6B7280] truncate block max-w-[120px]">{locationName || '—'}</span>
+        <td className="px-3 py-3 w-32">
+          <span className="text-xs text-[#6B7280] truncate block max-w-[120px]">{locationName || <span className="text-[#D1D5DB]">—</span>}</span>
         </td>
 
         {/* Review + sentiment */}
-        <td className="px-3 py-1.5">
-          <div className="flex items-center gap-2">
-            <span className={`text-[10px] font-medium flex-shrink-0 ${sentiment.cls}`}>{sentiment.label}</span>
-            <p className="text-sm text-[#6B7280] truncate max-w-xs">{review.body || <span className="italic text-[#9CA3AF]">No text</span>}</p>
+        <td className="px-3 py-3">
+          <div className="flex flex-col gap-0.5">
+            <p className="text-sm text-[#374151] truncate max-w-sm">{review.body || <span className="italic text-[#C4C9D4]">No written review</span>}</p>
+            <span className={`text-[10px] font-medium ${sentiment.cls}`}>{sentiment.label}</span>
           </div>
         </td>
 
-        {/* Status + age + response time */}
-        <td className="px-3 py-1.5 w-28">
-          <span className="inline-flex items-center gap-1.5 text-xs text-[#6B7280]">
-            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot}`}/>
-            {statusLabel}
-          </span>
-          {age && <p className={`text-[10px] mt-0.5 ml-3 ${age.urgency}`}>{age.label}</p>}
-          {responseTimeDays !== null && (
-            <p className={`text-[10px] mt-0.5 ml-3 ${responseTimeDays <= 1 ? 'text-emerald-500' : 'text-[#9CA3AF]'}`}>
-              {responseTimeDays}d response
-            </p>
-          )}
+        {/* Status badge + age + response time */}
+        <td className="px-3 py-3 w-32">
+          <div className="flex flex-col gap-1">
+            <span className={`inline-flex items-center gap-1.5 w-fit px-2 py-0.5 rounded-lg text-xs font-medium ${
+              uiStatus === 'replied'    ? 'bg-emerald-50 text-emerald-700' :
+              uiStatus === 'draft_ready'? 'bg-blue-50 text-blue-700' :
+                                          'bg-amber-50 text-amber-700'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot}`}/>
+              {statusLabel}
+            </span>
+            {age && <span className={`text-[10px] font-medium ${age.urgency}`}>{age.label}</span>}
+            {responseTimeDays !== null && (
+              <span className={`text-[10px] ${responseTimeDays <= 1 ? 'text-emerald-600' : 'text-[#9CA3AF]'}`}>
+                {responseTimeDays === 0 ? 'Same day' : `${responseTimeDays}d response`}
+              </span>
+            )}
+          </div>
         </td>
 
         {/* Inline action + flag */}
-        <td className="px-3 py-1.5 w-44 pr-4" onClick={e => e.stopPropagation()}>
+        <td className="px-3 py-3 w-44 pr-4" onClick={e => e.stopPropagation()}>
           <div className="flex items-center gap-2">
             {uiStatus === 'pending' && (
               <button onClick={() => onGenerateDraft(review.id)} disabled={isDrafting}
@@ -1643,30 +1649,37 @@ async function handleFlag(id: string) {
       <div className="flex-1 flex flex-col min-h-0">
 
         {/* Filter bar — outside scroll, always visible */}
-        <div className="relative z-[50] flex-shrink-0 border-b border-[#E5EAE8]/60 px-6 py-2.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Status tabs */}
+        <div className="relative z-[50] flex-shrink-0 bg-white border-b border-[#E5EAE8]">
+
+          {/* Row 1: Status tabs */}
+          <div className="flex items-center gap-1 px-6 pt-3 pb-0">
             {(['all','pending','draft_ready','replied'] as const).map(key => {
-              const labels = { all:'All', pending:'Pending', draft_ready:'Draft Ready', replied:'Replied' };
+              const labels = { all: 'All', pending: 'Pending', draft_ready: 'Draft Ready', replied: 'Replied' };
+              const active = statusFilter === key;
               return (
                 <button key={key} onClick={() => { setStatusFilter(key); setPage(1); }}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${statusFilter===key ? 'bg-[#0D4C3C] text-white' : 'text-[#6B7280] hover:text-[#111827] hover:bg-[#F3F4F6]'}`}>
+                  className={`relative flex items-center gap-1.5 px-3.5 pb-2.5 pt-1 text-sm font-medium transition-colors focus:outline-none ${
+                    active ? 'text-[#0D4C3C]' : 'text-[#6B7280] hover:text-[#374151]'
+                  }`}>
                   {labels[key]}
-                  <span className={`ml-1.5 text-xs ${statusFilter===key ? 'text-white/70' : 'text-[#9CA3AF]'}`}>{counts[key]}</span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded-lg font-medium ${
+                    active ? 'bg-[#0D4C3C] text-white' : 'bg-[#F3F4F6] text-[#9CA3AF]'
+                  }`}>{counts[key]}</span>
+                  {active && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0D4C3C] rounded-t-full"/>}
                 </button>
               );
             })}
+          </div>
 
-            {/* Divider */}
-            <div className="w-px h-5 bg-[#E5E7EB] mx-1 flex-shrink-0"/>
-
+          {/* Row 2: Search + filters */}
+          <div className="flex items-center gap-2 flex-wrap px-6 py-2.5">
             <div className="relative">
               <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
               </svg>
               <input type="text" placeholder="Search reviewer or review…" value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1); }}
-                className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-xl focus:outline-none focus:border-[#0D4C3C] w-56 transition-colors"/>
+                className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-xl focus:outline-none focus:border-[#0D4C3C] w-56 transition-colors bg-[#FAFAFA] focus:bg-white"/>
             </div>
 
             <FilterDropdown label="Rating" value={String(ratingFilter)}
@@ -1674,7 +1687,6 @@ async function handleFlag(id: string) {
               icon={<svg className="w-3.5 h-3.5 text-amber-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>}
               options={[{value:'0',label:'All ratings'},{value:'5',label:'5 stars'},{value:'4',label:'4 stars'},{value:'3',label:'3 stars'},{value:'2',label:'2 stars'},{value:'1',label:'1 star'}]}
             />
-
 
             <DateRangePicker from={dateFrom} to={dateTo} onChange={(f,t) => { setDateFrom(f); setDateTo(t); setPage(1); }}/>
 
@@ -1711,29 +1723,30 @@ async function handleFlag(id: string) {
               </>
             )}
 
-            {hasFilters && <button onClick={clearAll} className="text-xs text-[#9CA3AF] hover:text-red-500 font-medium transition-colors">Clear all</button>}
-            {hasFilters && <span className="text-xs text-[#9CA3AF] ml-auto">{filtered.length} result{filtered.length!==1?'s':''}</span>}
-
-            {hasFilters && !showPresetInput && (
-              <button onClick={() => setShowPresetInput(true)} className="text-xs text-[#0D4C3C] font-medium hover:underline transition-colors">Save preset</button>
-            )}
-            {showPresetInput && (
-              <div className="flex items-center gap-1.5">
-                <input autoFocus type="text" value={presetName} onChange={e => setPresetName(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') setShowPresetInput(false); }}
-                  placeholder="Preset name…"
-                  className="text-xs border border-[#D1D5DB] rounded-lg px-2 py-1 focus:outline-none focus:border-[#0D4C3C] w-32"/>
-                <button onClick={savePreset} className="text-xs text-white bg-[#0D4C3C] px-2 py-1 rounded-lg hover:bg-[#083F32]">Save</button>
-                <button onClick={() => setShowPresetInput(false)} className="text-xs text-[#9CA3AF] hover:text-red-500">×</button>
-              </div>
-            )}
+            <div className="ml-auto flex items-center gap-2">
+              {hasFilters && <span className="text-xs text-[#9CA3AF]">{filtered.length} result{filtered.length!==1?'s':''}</span>}
+              {hasFilters && <button onClick={clearAll} className="text-xs text-[#9CA3AF] hover:text-red-500 font-medium transition-colors">Clear all</button>}
+              {hasFilters && !showPresetInput && (
+                <button onClick={() => setShowPresetInput(true)} className="text-xs text-[#0D4C3C] font-medium hover:underline transition-colors">Save preset</button>
+              )}
+              {showPresetInput && (
+                <div className="flex items-center gap-1.5">
+                  <input autoFocus type="text" value={presetName} onChange={e => setPresetName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') setShowPresetInput(false); }}
+                    placeholder="Preset name…"
+                    className="text-xs border border-[#D1D5DB] rounded-lg px-2 py-1 focus:outline-none focus:border-[#0D4C3C] w-32"/>
+                  <button onClick={savePreset} className="text-xs text-white bg-[#0D4C3C] px-2 py-1 rounded-lg hover:bg-[#083F32]">Save</button>
+                  <button onClick={() => setShowPresetInput(false)} className="text-xs text-[#9CA3AF] hover:text-red-500">×</button>
+                </div>
+              )}
+            </div>
           </div>
 
           {presets.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap px-6 pb-2">
               <span className="text-xs text-[#9CA3AF]">Presets:</span>
               {presets.map(p => (
-                <div key={p.id} className="flex items-center gap-0.5 bg-[#F3F4F6] rounded-md px-2 py-0.5">
+                <div key={p.id} className="flex items-center gap-0.5 bg-[#F3F4F6] rounded-lg px-2 py-0.5">
                   <button onClick={() => applyPreset(p)} className="text-xs text-[#374151] hover:text-[#0D4C3C] font-medium">{p.name}</button>
                   <button onClick={() => deletePreset(p.id)} className="text-[#9CA3AF] hover:text-red-500 ml-1 text-xs leading-none">×</button>
                 </div>
@@ -1757,22 +1770,22 @@ async function handleFlag(id: string) {
             {hasFilters && <button onClick={clearAll} className="text-xs text-[#0D4C3C] underline mt-1">Clear filters</button>}
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-[#E5EAE8] shadow-sm">
+          <div className="bg-white rounded-2xl border border-[#E5EAE8] shadow-sm overflow-hidden">
           <table className="w-full">
-            <thead className="bg-[#F0F5F3] border-b border-[#E5EAE8] sticky top-0 z-10">
-              <tr>
-                <th className="pl-4 pr-2 py-2.5 w-10">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-[#F8FAF9] border-b border-[#E5EAE8]">
+                <th className="pl-4 pr-2 py-3 w-10">
                   <div onClick={toggleSelectAll}
                     className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${allPageSelected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] hover:border-[#0D4C3C]'}`}>
                     {allPageSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
                   </div>
                 </th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#374151] uppercase tracking-wide w-32">Date</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#374151] uppercase tracking-wide w-44">Reviewer</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#374151] uppercase tracking-wide w-32">Location</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#374151] uppercase tracking-wide">Review</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#374151] uppercase tracking-wide w-28">Status</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#374151] uppercase tracking-wide w-44 pr-4">Action</th>
+                <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-28">Date</th>
+                <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-44">Reviewer</th>
+                <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-32">Location</th>
+                <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider">Review</th>
+                <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-32">Status</th>
+                <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-44 pr-4">Action</th>
                 <th className="w-6"/>
               </tr>
             </thead>
