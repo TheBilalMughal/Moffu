@@ -1643,7 +1643,7 @@ async function handleFlag(id: string) {
       <div className="flex-1 flex flex-col min-h-0">
 
         {/* Filter bar — outside scroll, always visible */}
-        <div className="flex-shrink-0 border-b border-[#E5EAE8]/60 bg-white/60 backdrop-blur-sm px-6 py-2.5">
+        <div className="relative z-[50] flex-shrink-0 border-b border-[#E5EAE8]/60 px-6 py-2.5">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Status tabs */}
             {(['all','pending','draft_ready','replied'] as const).map(key => {
@@ -1743,7 +1743,7 @@ async function handleFlag(id: string) {
         </div>
 
         {/* Scrollable table area */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 py-4">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-4 pb-6">
         {loading ? (
           <div className="space-y-2">{[1,2,3,4,5].map(n => <div key={n} className="h-12 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 animate-pulse"/>)}</div>
         ) : paginated.length === 0 ? (
