@@ -1764,7 +1764,7 @@ async function handleFlag(id: string) {
         </div>
 
         {/* Table content — overflow-hidden only here so corners clip correctly */}
-        <div className="flex-1 min-h-0 flex flex-col bg-white rounded-b-2xl overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden">
         {loading ? (
           <div className="p-4 space-y-2">{[1,2,3,4,5].map(n => <div key={n} className="h-12 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 animate-pulse"/>)}</div>
         ) : paginated.length === 0 ? (
@@ -1837,47 +1837,48 @@ async function handleFlag(id: string) {
           </div>
         )}
           </div>
-        </div>
 
-      {/* Pagination */}
-      <div className="px-4 md:px-10 py-2.5 border-t border-[#E5EAE8]/60 flex items-center justify-between flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <p className="text-xs text-[#9CA3AF]">
-            {filtered.length === 0
-              ? 'No results'
-              : `${(page-1)*pageSize+1}–${Math.min(page*pageSize,filtered.length)} of ${filtered.length} reviews`}
-          </p>
-          <PageSizeDropdown value={pageSize} onChange={n => { setPageSize(n); setPage(1); }}/>
-        </div>
-        <div className="flex items-center gap-1">
-          <button onClick={() => setPage(1)} disabled={page===1}
-            className="p-1.5 rounded-md text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
-          </button>
-          <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1}
-            className="p-1.5 rounded-md text-[#6B7280] hover:text-[#374151] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
-          </button>
-          {Array.from({length:totalPages},(_,i)=>i+1).filter(n=>n===1||n===totalPages||Math.abs(n-page)<=1).reduce<(number|'...')[]>((acc,n,i,arr)=>{
-            if(i>0&&n-(arr[i-1] as number)>1) acc.push('...');
-            acc.push(n); return acc;
-          },[]).map((n,i)=>
-            n==='...'
-              ? <span key={`e${i}`} className="w-7 h-7 flex items-center justify-center text-xs text-[#9CA3AF]">…</span>
-              : <button key={n} onClick={()=>setPage(n as number)}
-                  className={`w-7 h-7 rounded-md text-xs font-medium transition-colors ${page===n?'bg-[#0D4C3C] text-white':'text-[#6B7280] hover:bg-[#F3F4F6]'}`}>{n}</button>
-          )}
-          <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages}
-            className="p-1.5 rounded-md text-[#6B7280] hover:text-[#374151] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
-          </button>
-          <button onClick={() => setPage(totalPages)} disabled={page===totalPages}
-            className="p-1.5 rounded-md text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
-          </button>
-        </div>
-      </div>
-        </div>
+          {/* Pagination — inside card */}
+          <div className="px-4 md:px-6 py-2.5 border-t border-[#E5EAE8]/60 flex items-center justify-between flex-shrink-0 bg-white rounded-b-2xl">
+            <div className="flex items-center gap-3">
+              <p className="text-xs text-[#9CA3AF]">
+                {filtered.length === 0
+                  ? 'No results'
+                  : `${(page-1)*pageSize+1}–${Math.min(page*pageSize,filtered.length)} of ${filtered.length} reviews`}
+              </p>
+              <PageSizeDropdown value={pageSize} onChange={n => { setPageSize(n); setPage(1); }}/>
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setPage(1)} disabled={page===1}
+                className="p-1.5 rounded-md text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+              </button>
+              <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1}
+                className="p-1.5 rounded-md text-[#6B7280] hover:text-[#374151] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
+              </button>
+              {Array.from({length:totalPages},(_,i)=>i+1).filter(n=>n===1||n===totalPages||Math.abs(n-page)<=1).reduce<(number|'...')[]>((acc,n,i,arr)=>{
+                if(i>0&&n-(arr[i-1] as number)>1) acc.push('...');
+                acc.push(n); return acc;
+              },[]).map((n,i)=>
+                n==='...'
+                  ? <span key={`e${i}`} className="w-7 h-7 flex items-center justify-center text-xs text-[#9CA3AF]">…</span>
+                  : <button key={n} onClick={()=>setPage(n as number)}
+                      className={`w-7 h-7 rounded-md text-xs font-medium transition-colors ${page===n?'bg-[#0D4C3C] text-white':'text-[#6B7280] hover:bg-[#F3F4F6]'}`}>{n}</button>
+              )}
+              <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages}
+                className="p-1.5 rounded-md text-[#6B7280] hover:text-[#374151] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+              </button>
+              <button onClick={() => setPage(totalPages)} disabled={page===totalPages}
+                className="p-1.5 rounded-md text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          </div>
+
+        </div>{/* closes card */}
+      </div>{/* closes padded area */}
       </div>{/* end filter bar + table flex col */}
     </div>
   );
