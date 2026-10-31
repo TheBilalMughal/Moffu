@@ -53,6 +53,14 @@ interface CampaignStats {
   totalOpened: number;
 }
 
+interface InsightsSummary {
+  impressions: number;
+  direction_requests: number;
+  call_clicks: number;
+  website_clicks: number;
+  trend: { date: string; impressions: number }[];
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function greet(name: string | undefined) {
@@ -662,6 +670,139 @@ function RecentReviews({ reviews }: { reviews: ReviewRow[] }) {
   );
 }
 
+// ─── Insights Chart ───────────────────────────────────────────────────────────
+
+function InsightsChart({ trend }: { trend: { date: string; impressions: number }[] }) {
+  const max = Math.max(...trend.map(d => d.impressions), 1);
+  const hasData = trend.some(d => d.impressions > 0);
+
+  if (!hasData) return (
+    <div className="h-20 flex items-center justify-center">
+      <p className="text-xs text-[#9CA3AF]">No impression data for this period</p>
+    </div>
+  );
+
+  const show = trend.slice(-30);
+  return (
+    <div>
+      <div className="flex items-end gap-0.5 h-16">
+        {show.map(day => {
+          const pct = Math.round((day.impressions / max) * 100);
+          return (
+            <div key={day.date} className="flex-1 flex flex-col justify-end h-full" title={`${day.date}: ${day.impressions}`}>
+              <div
+                className="w-full bg-gradient-to-t from-[#0D4C3C] to-[#1a6b55] rounded-t-sm transition-all"
+                style={{ height: day.impressions > 0 ? `${Math.max(pct, 6)}%` : '2px', opacity: day.impressions > 0 ? 1 : 0.15 }}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex gap-0.5 mt-1.5">
+        {show.map((day, i) => (
+          <div key={day.date} className="flex-1 text-center">
+            {i % 7 === 0 && <span className="text-[9px] text-[#D1D5DB]">{new Date(day.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Insights Section ─────────────────────────────────────────────────────────
+
+function InsightsSection({ insights, loading }: { insights: InsightsSummary | null; loading: boolean }) {
+  const CARDS = insights ? [
+    {
+      label: 'Profile Views',
+      value: insights.impressions.toLocaleString(),
+      sub: 'Maps + Search (30 days)',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178z M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Directions',
+      value: insights.direction_requests.toLocaleString(),
+      sub: 'Direction requests (30 days)',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Call Clicks',
+      value: insights.call_clicks.toLocaleString(),
+      sub: 'Phone taps (30 days)',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Website Clicks',
+      value: insights.website_clicks.toLocaleString(),
+      sub: 'Website taps (30 days)',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"/>
+        </svg>
+      ),
+    },
+  ] : [];
+
+  return (
+    <div className="relative mt-5">
+      <div className="flex items-center gap-3 mb-4">
+        <p className="text-sm font-semibold text-[#111827]">Google Profile Performance</p>
+        <span className="text-[10px] text-[#9CA3AF] bg-[#F8FAF9] border border-[#E5EAE8] px-2 py-0.5 rounded-lg">Last 30 days</span>
+      </div>
+
+      {loading ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-28 rounded-2xl bg-white/50 animate-pulse" />)}
+        </div>
+      ) : !insights ? (
+        <GlassCard className="py-10 text-center">
+          <div className="relative">
+            <p className="text-sm font-medium text-[#374151] mb-1">No profile performance data</p>
+            <p className="text-xs text-[#9CA3AF]">Data appears once your Google Business Profile has activity.</p>
+          </div>
+        </GlassCard>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            {CARDS.map(card => (
+              <GlassCard key={card.label}>
+                <div className="px-5 py-5">
+                  <div className="w-9 h-9 rounded-xl bg-[#F3F4F6] text-[#6B7280] flex items-center justify-center mb-3">
+                    {card.icon}
+                  </div>
+                  <p className="text-[11px] font-medium text-[#9CA3AF] uppercase tracking-wide mb-1">{card.label}</p>
+                  <p className="text-2xl font-bold text-[#111827] leading-none mb-1">{card.value}</p>
+                  <p className="text-[11px] text-[#9CA3AF]">{card.sub}</p>
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+
+          <GlassCard className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Profile Views · Daily</p>
+              <span className="text-xs font-bold text-[#111827]">{insights.impressions.toLocaleString()} total</span>
+            </div>
+            <InsightsChart trend={insights.trend} />
+          </GlassCard>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── Empty State ──────────────────────────────────────────────────────────────
 
 function EmptyState() {
@@ -703,6 +844,8 @@ export function OverviewPage() {
   const [loadingDash, setLoadingDash] = useState(true);
   const [campaignStats, setCampaignStats]       = useState<CampaignStats | null>(null);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
+  const [insights, setInsights]                 = useState<InsightsSummary | null>(null);
+  const [loadingInsights, setLoadingInsights]   = useState(false);
 
   // ── Load setup + reviews + locations ──────────────────────────────────────
   useEffect(() => {
@@ -745,6 +888,33 @@ export function OverviewPage() {
       : allRows;
     setDash(computeDash(filtered));
   }, [selectedLocId, allRows, loadingDash]);
+
+  // ── Google Profile Insights ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user || !setup.googleConnected || setup.loading) return;
+    setLoadingInsights(true);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) { setLoadingInsights(false); return; }
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-fetch-insights`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify(selectedLocId ? { location_id: selectedLocId } : {}),
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.summary) setInsights(data.summary as InsightsSummary);
+        }
+      } catch { /* non-fatal */ }
+      setLoadingInsights(false);
+    });
+  }, [user, setup.googleConnected, setup.loading, selectedLocId]);
 
   // ── Campaign stats ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -901,6 +1071,11 @@ export function OverviewPage() {
               </div>
             </GlassCard>
           </div>
+
+          {/* Google Profile Performance */}
+          {setup.googleConnected && (
+            <InsightsSection insights={insights} loading={loadingInsights} />
+          )}
         </>
       ) : null}
     </div>

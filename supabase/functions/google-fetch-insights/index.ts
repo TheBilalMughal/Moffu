@@ -1,9 +1,11 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const GOOGLE_CLIENT_ID     = Deno.env.get('GOOGLE_CLIENT_ID')!;
+const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')!;
+const SUPABASE_URL         = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-const corsHeaders = {
+const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -12,272 +14,209 @@ const corsHeaders = {
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    headers: { 'Content-Type': 'application/json', ...CORS },
   });
 }
 
-async function getGoogleCreds(supabase: ReturnType<typeof createClient>) {
-  const { data } = await supabase
-    .from('platform_settings')
-    .select('key, value')
-    .in('key', ['google_client_id', 'google_client_secret']);
-  const map: Record<string, string> = {};
-  (data ?? []).forEach((r: { key: string; value: string }) => { map[r.key] = r.value; });
-  return {
-    clientId:     map['google_client_id']     || Deno.env.get('GOOGLE_CLIENT_ID')     || '',
-    clientSecret: map['google_client_secret'] || Deno.env.get('GOOGLE_CLIENT_SECRET') || '',
-  };
-}
-
-async function doRefreshToken(rt: string, clientId: string, clientSecret: string) {
+async function refreshAccessToken(refreshToken: string): Promise<string | null> {
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      client_id: clientId,
-      client_secret: clientSecret,
-      refresh_token: rt,
+      refresh_token: refreshToken,
+      client_id:     GOOGLE_CLIENT_ID,
+      client_secret: GOOGLE_CLIENT_SECRET,
+      grant_type:    'refresh_token',
     }),
   });
-  if (!res.ok) throw new Error(`Token refresh failed: ${await res.text()}`);
-  return res.json() as Promise<{ access_token: string; expires_in: number }>;
+  if (!res.ok) return null;
+  const d = await res.json();
+  return d.access_token ?? null;
 }
 
-function extractLocationId(name: string): string | null {
-  const m = name.match(/locations\/(\d+)$/);
-  return m ? m[1]! : null;
+// Extract "locations/12345" from "accounts/123/locations/12345"
+function toPerformanceName(fullLocationName: string): string {
+  const parts = fullLocationName.split('/');
+  return parts.slice(-2).join('/');
 }
 
-function dateRange(days: number): { start: Date; end: Date } {
-  const end = new Date();
-  end.setDate(end.getDate() - 2);
-  const start = new Date(end);
-  start.setDate(start.getDate() - days + 1);
-  return { start, end };
+function dateToIso(d: { year: number; month: number; day: number }): string {
+  return `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
 }
-
-function toDateParam(d: Date) {
-  return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
-}
-
-function dateStr(d: { year: number; month: number; day: number }) {
-  return `${d.year}-${String(d.month).padStart(2,'0')}-${String(d.day).padStart(2,'0')}`;
-}
-
-const PERF_BASE = 'https://businessprofileperformance.googleapis.com/v1';
-
-const METRICS = [
-  'BUSINESS_IMPRESSIONS_DESKTOP_SEARCH',
-  'BUSINESS_IMPRESSIONS_DESKTOP_MAPS',
-  'BUSINESS_IMPRESSIONS_MOBILE_SEARCH',
-  'BUSINESS_IMPRESSIONS_MOBILE_MAPS',
-  'CALL_CLICKS',
-  'WEBSITE_CLICKS',
-  'BUSINESS_DIRECTION_REQUESTS',
-];
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
 
   try {
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) return json({ error: 'Missing authorization' }, 401);
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) return json({ error: 'Unauthorized' }, 401);
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    const { data: { user }, error: authErr } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (authErr || !user) return json({ error: 'Unauthorized' }, 401);
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+    if (userError || !user) return json({ error: 'Unauthorized' }, 401);
 
     const body = await req.json().catch(() => ({}));
-    const rangeDays: number = body.range_days ?? 30;
-    const locationIdFilter: string | null = body.location_id ?? null;
-    const startDateStr: string | null = body.start_date ?? null;
-    const endDateStr:   string | null = body.end_date   ?? null;
+    const locationId: string | null = body.location_id ?? null;
 
-    // Get connection (now includes baseline_snapshot)
-    const { data: conn } = await supabase
-      .from('google_connections')
-      .select('id, state, token_expiry, baseline_snapshot')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (!conn || conn.state !== 'CONNECTED') {
-      return json({ error: 'Google not connected' }, 400);
-    }
-
-    const { data: tokenRow } = await supabase
-      .from('google_connection_tokens')
-      .select('access_token, refresh_token')
-      .eq('connection_id', conn.id)
-      .single();
-
-    if (!tokenRow?.refresh_token) {
-      return json({ error: 'No Google tokens found' }, 400);
-    }
-
-    const { clientId, clientSecret } = await getGoogleCreds(supabase);
-
-    let access_token = tokenRow.access_token;
-    const expiry = conn.token_expiry ? new Date(conn.token_expiry) : new Date(0);
-    if (expiry <= new Date(Date.now() + 60_000)) {
-      const refreshed = await doRefreshToken(tokenRow.refresh_token, clientId, clientSecret);
-      access_token = refreshed.access_token;
-      await supabase.from('google_connection_tokens')
-        .update({ access_token })
-        .eq('connection_id', conn.id);
-      await supabase.from('google_connections')
-        .update({ token_expiry: new Date(Date.now() + refreshed.expires_in * 1000).toISOString() })
-        .eq('id', conn.id);
-    }
-
-    let locQuery = supabase
+    // Get the location — either specified or the user's selected one
+    const locQuery = supabase
       .from('google_locations')
-      .select('id, google_location_name, display_name')
-      .eq('is_selected', true)
-      .eq('connection_id', conn.id);
-    if (locationIdFilter) locQuery = locQuery.eq('id', locationIdFilter);
-    const { data: locations } = await locQuery;
+      .select('id, google_location_name, connection_id')
+      .eq('user_id', user.id);
 
-    const validLocs = (locations ?? []).filter((l: { google_location_name: string }) =>
-      extractLocationId(l.google_location_name) !== null
+    const { data: location } = locationId
+      ? await locQuery.eq('id', locationId).maybeSingle()
+      : await locQuery.eq('is_selected', true).maybeSingle();
+
+    if (!location) return json({ error: 'No location found' }, 404);
+
+    // Get tokens
+    const [{ data: tokenRow }, { data: conn }] = await Promise.all([
+      supabase.from('google_connection_tokens')
+        .select('access_token, refresh_token')
+        .eq('connection_id', location.connection_id)
+        .single(),
+      supabase.from('google_connections')
+        .select('token_expiry')
+        .eq('id', location.connection_id)
+        .single(),
+    ]);
+
+    if (!tokenRow) return json({ error: 'No tokens' }, 400);
+
+    let accessToken = tokenRow.access_token;
+    const expiry = conn?.token_expiry ? new Date(conn.token_expiry) : null;
+    if (!expiry || expiry < new Date(Date.now() + 60_000)) {
+      const newToken = await refreshAccessToken(tokenRow.refresh_token);
+      if (!newToken) return json({ error: 'Token refresh failed' }, 400);
+      accessToken = newToken;
+      await supabase.from('google_connection_tokens')
+        .update({ access_token: newToken, updated_at: new Date().toISOString() })
+        .eq('connection_id', location.connection_id);
+    }
+
+    // Build date range: last 90 days
+    const endDate   = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 89);
+
+    const perfLocationName = toPerformanceName(location.google_location_name);
+
+    const METRICS = [
+      'BUSINESS_IMPRESSIONS_DESKTOP_MAPS',
+      'BUSINESS_IMPRESSIONS_MOBILE_MAPS',
+      'BUSINESS_IMPRESSIONS_DESKTOP_SEARCH',
+      'BUSINESS_IMPRESSIONS_MOBILE_SEARCH',
+      'BUSINESS_DIRECTION_REQUESTS',
+      'CALL_CLICKS',
+      'WEBSITE_CLICKS',
+    ];
+
+    const params = new URLSearchParams();
+    METRICS.forEach(m => params.append('dailyMetrics', m));
+    params.set('dailyRange.startDate.year',  String(startDate.getFullYear()));
+    params.set('dailyRange.startDate.month', String(startDate.getMonth() + 1));
+    params.set('dailyRange.startDate.day',   String(startDate.getDate()));
+    params.set('dailyRange.endDate.year',    String(endDate.getFullYear()));
+    params.set('dailyRange.endDate.month',   String(endDate.getMonth() + 1));
+    params.set('dailyRange.endDate.day',     String(endDate.getDate()));
+
+    const apiRes = await fetch(
+      `https://businessprofileperformance.googleapis.com/v1/${perfLocationName}/dailyMetrics:batchGet?${params}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
     );
 
-    if (validLocs.length === 0) {
-      return json({ metrics: [], totals: {}, queries: [], locations: [], baseline: conn.baseline_snapshot });
+    if (!apiRes.ok) {
+      const errText = await apiRes.text();
+      console.error('Insights API error:', apiRes.status, errText);
+      return json({ error: `Insights API error (${apiRes.status})` }, 502);
     }
 
-    let start: Date, end: Date;
-    if (startDateStr && endDateStr) {
-      start = new Date(startDateStr + 'T00:00:00');
-      end   = new Date(endDateStr   + 'T00:00:00');
-    } else {
-      const r = dateRange(rangeDays);
-      start = r.start; end = r.end;
-    }
-    const startParam = toDateParam(start);
-    const endParam = toDateParam(end);
+    const apiData = await apiRes.json();
+    const series: Array<{ dailyMetric: string; timeSeries: { datedValues: Array<{ date: { year: number; month: number; day: number }; value?: string }> } }> =
+      apiData.multiDailyMetricTimeSeries ?? [];
 
-    const allDailyMap = new Map<string, {
-      views_search: number; views_maps: number;
-      calls: number; website_clicks: number; direction_requests: number;
-    }>();
+    // Aggregate by date
+    const byDate: Record<string, {
+      impressions_maps: number;
+      impressions_search: number;
+      direction_requests: number;
+      call_clicks: number;
+      website_clicks: number;
+    }> = {};
 
-    let totalViewsSearch = 0, totalViewsMaps = 0;
-    let totalCalls = 0, totalWebsite = 0, totalDirections = 0;
-
-    const locResults: { id: string; display_name: string | null; total_views: number }[] = [];
-
-    for (const loc of validLocs) {
-      const locId = extractLocationId(loc.google_location_name)!;
-      const params = new URLSearchParams();
-      for (const m of METRICS) params.append('dailyMetric', m);
-      params.set('dailyRange.startDate.year',  String(startParam.year));
-      params.set('dailyRange.startDate.month', String(startParam.month));
-      params.set('dailyRange.startDate.day',   String(startParam.day));
-      params.set('dailyRange.endDate.year',  String(endParam.year));
-      params.set('dailyRange.endDate.month', String(endParam.month));
-      params.set('dailyRange.endDate.day',   String(endParam.day));
-
-      const res = await fetch(
-        `${PERF_BASE}/locations/${locId}/dailyMetrics:batchGet?${params}`,
-        { headers: { Authorization: `Bearer ${access_token}` } }
-      );
-
-      if (!res.ok) {
-        console.error(`Performance API error for ${locId}:`, res.status, await res.text());
-        continue;
-      }
-
-      const data = await res.json() as {
-        multiDailyMetricTimeSeries?: {
-          dailyMetric: string;
-          timeSeries?: { datedValues?: { date: { year: number; month: number; day: number }; value?: string }[] };
-        }[];
-      };
-
-      let locViews = 0;
-
-      for (const series of data.multiDailyMetricTimeSeries ?? []) {
-        const metric = series.dailyMetric;
-        for (const dv of series.timeSeries?.datedValues ?? []) {
-          const ds = dateStr(dv.date);
-          const val = parseInt(dv.value ?? '0', 10) || 0;
-          if (!allDailyMap.has(ds)) {
-            allDailyMap.set(ds, { views_search: 0, views_maps: 0, calls: 0, website_clicks: 0, direction_requests: 0 });
-          }
-          const entry = allDailyMap.get(ds)!;
-          if (metric === 'BUSINESS_IMPRESSIONS_DESKTOP_SEARCH' || metric === 'BUSINESS_IMPRESSIONS_MOBILE_SEARCH') {
-            entry.views_search += val; totalViewsSearch += val; locViews += val;
-          } else if (metric === 'BUSINESS_IMPRESSIONS_DESKTOP_MAPS' || metric === 'BUSINESS_IMPRESSIONS_MOBILE_MAPS') {
-            entry.views_maps += val; totalViewsMaps += val; locViews += val;
-          } else if (metric === 'CALL_CLICKS') {
-            entry.calls += val; totalCalls += val;
-          } else if (metric === 'WEBSITE_CLICKS') {
-            entry.website_clicks += val; totalWebsite += val;
-          } else if (metric === 'BUSINESS_DIRECTION_REQUESTS') {
-            entry.direction_requests += val; totalDirections += val;
-          }
+    for (const s of series) {
+      const metric = s.dailyMetric;
+      for (const dv of (s.timeSeries?.datedValues ?? [])) {
+        const dateStr = dateToIso(dv.date);
+        if (!byDate[dateStr]) {
+          byDate[dateStr] = { impressions_maps: 0, impressions_search: 0, direction_requests: 0, call_clicks: 0, website_clicks: 0 };
+        }
+        const val = parseInt(dv.value ?? '0', 10) || 0;
+        const row = byDate[dateStr]!;
+        if (metric === 'BUSINESS_IMPRESSIONS_DESKTOP_MAPS' || metric === 'BUSINESS_IMPRESSIONS_MOBILE_MAPS') {
+          row.impressions_maps += val;
+        } else if (metric === 'BUSINESS_IMPRESSIONS_DESKTOP_SEARCH' || metric === 'BUSINESS_IMPRESSIONS_MOBILE_SEARCH') {
+          row.impressions_search += val;
+        } else if (metric === 'BUSINESS_DIRECTION_REQUESTS') {
+          row.direction_requests += val;
+        } else if (metric === 'CALL_CLICKS') {
+          row.call_clicks += val;
+        } else if (metric === 'WEBSITE_CLICKS') {
+          row.website_clicks += val;
         }
       }
-
-      locResults.push({ id: loc.id, display_name: loc.display_name, total_views: locViews });
     }
 
-    const metrics = [...allDailyMap.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, vals]) => ({ date, ...vals }));
+    // Upsert into location_insights
+    const rows = Object.entries(byDate).map(([date, vals]) => ({
+      user_id:     user.id,
+      location_id: location.id,
+      date,
+      synced_at:   new Date().toISOString(),
+      ...vals,
+    }));
 
-    // Save baseline snapshot on first successful fetch
-    const currentTotals = {
-      views_search: totalViewsSearch,
-      views_maps: totalViewsMaps,
-      calls: totalCalls,
-      website_clicks: totalWebsite,
-      direction_requests: totalDirections,
-      total_views: totalViewsSearch + totalViewsMaps,
-      captured_at: new Date().toISOString().slice(0, 10),
-    };
-    if (!conn.baseline_snapshot && metrics.length > 0) {
-      await supabase.from('google_connections')
-        .update({
-          baseline_snapshot: currentTotals,
-          baseline_captured_at: new Date().toISOString(),
-        })
-        .eq('id', conn.id);
+    if (rows.length > 0) {
+      await supabase.from('location_insights').upsert(rows, { onConflict: 'location_id,date' });
     }
 
-    // Fetch search queries
-    let queries: { query: string; count: number }[] = [];
-    const firstLoc = validLocs[0];
-    if (firstLoc) {
-      const locId = extractLocationId(firstLoc.google_location_name)!;
-      const qRes = await fetch(
-        `${PERF_BASE}/locations/${locId}/searchkeywords/impressions/monthly`,
-        { headers: { Authorization: `Bearer ${access_token}` } }
-      );
-      if (qRes.ok) {
-        const qData = await qRes.json() as {
-          searchKeywordsCounts?: { searchKeyword: string; insightsValue?: { value?: string } }[];
-        };
-        queries = (qData.searchKeywordsCounts ?? [])
-          .map(q => ({ query: q.searchKeyword, count: parseInt(q.insightsValue?.value ?? '0', 10) || 0 }))
-          .filter(q => q.count > 0)
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 15);
-      }
+    // Build 30-day summary
+    const thirtyAgo = new Date();
+    thirtyAgo.setDate(thirtyAgo.getDate() - 29);
+    const thirtyAgoStr = thirtyAgo.toISOString().slice(0, 10);
+
+    const last30 = Object.entries(byDate)
+      .filter(([d]) => d >= thirtyAgoStr)
+      .sort(([a], [b]) => a.localeCompare(b));
+
+    let totalImpressions = 0, totalDirections = 0, totalCalls = 0, totalWebsite = 0;
+    const trend: { date: string; impressions: number }[] = [];
+
+    for (const [date, vals] of last30) {
+      const imp = vals.impressions_maps + vals.impressions_search;
+      totalImpressions   += imp;
+      totalDirections    += vals.direction_requests;
+      totalCalls         += vals.call_clicks;
+      totalWebsite       += vals.website_clicks;
+      trend.push({ date, impressions: imp });
     }
 
     return json({
-      metrics,
-      totals: currentTotals,
-      queries,
-      locations: locResults,
-      date_range: { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) },
-      baseline: conn.baseline_snapshot ?? currentTotals,
+      ok: true,
+      rows_synced: rows.length,
+      summary: {
+        impressions:        totalImpressions,
+        direction_requests: totalDirections,
+        call_clicks:        totalCalls,
+        website_clicks:     totalWebsite,
+        trend,
+      },
     });
-
   } catch (err) {
-    console.error(err);
-    return json({ error: err instanceof Error ? err.message : 'Internal error' }, 500);
+    console.error('google-fetch-insights error:', err);
+    return json({ error: 'Internal error' }, 500);
   }
 });
