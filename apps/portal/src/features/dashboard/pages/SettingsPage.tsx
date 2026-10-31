@@ -660,7 +660,7 @@ export function SettingsPage() {
       setAutoEnabled(conn.auto_sync_enabled ?? false);
       const iv = conn.auto_sync_interval ?? '12h';
       if (iv === '12h' || iv === '24h') {
-        setAutoInterval(iv);
+        setAutoInterval(iv as '12h' | '24h');
       } else {
         setAutoInterval('custom');
         setCustomHours(iv.replace('h', ''));
