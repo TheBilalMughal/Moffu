@@ -122,7 +122,7 @@ function FilterDropdown({ label, icon, options, value, onChange }: {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-xl border transition-colors ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
         <span className="flex-shrink-0">{icon}</span>
         <span className="text-xs">{active ? selectedLabel : label}</span>
         {active
@@ -168,7 +168,7 @@ function StarDistributionDropdown({ reviews }: { reviews: Review[] }) {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-xl border transition-colors ${open ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${open ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
         <svg className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
         </svg>
@@ -1648,38 +1648,40 @@ async function handleFlag(id: string) {
       {/* Filter bar + Table */}
       <div className="flex-1 flex flex-col min-h-0">
 
-        {/* Filter bar — outside scroll, always visible */}
-        <div className="relative z-[50] flex-shrink-0 bg-white border-b border-[#E5EAE8]">
+        {/* Filter bar — single row, outside scroll */}
+        <div className="relative z-[50] flex-shrink-0 bg-white border-b border-[#E5EAE8] px-6 py-2.5">
+          <div className="flex items-center gap-2 flex-wrap">
 
-          {/* Row 1: Status tabs */}
-          <div className="flex items-center gap-1 px-6 pt-3 pb-0">
+            {/* Status tabs */}
             {(['all','pending','draft_ready','replied'] as const).map(key => {
               const labels = { all: 'All', pending: 'Pending', draft_ready: 'Draft Ready', replied: 'Replied' };
               const active = statusFilter === key;
               return (
                 <button key={key} onClick={() => { setStatusFilter(key); setPage(1); }}
-                  className={`relative flex items-center gap-1.5 px-3.5 pb-2.5 pt-1 text-sm font-medium transition-colors focus:outline-none ${
-                    active ? 'text-[#0D4C3C]' : 'text-[#6B7280] hover:text-[#374151]'
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    active
+                      ? 'bg-[#0D4C3C] text-white'
+                      : 'text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#374151]'
                   }`}>
                   {labels[key]}
-                  <span className={`text-xs px-1.5 py-0.5 rounded-lg font-medium ${
-                    active ? 'bg-[#0D4C3C] text-white' : 'bg-[#F3F4F6] text-[#9CA3AF]'
-                  }`}>{counts[key]}</span>
-                  {active && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0D4C3C] rounded-t-full"/>}
+                  <span className={`text-xs font-medium ${active ? 'text-white/70' : 'text-[#9CA3AF]'}`}>
+                    {counts[key]}
+                  </span>
                 </button>
               );
             })}
-          </div>
 
-          {/* Row 2: Search + filters */}
-          <div className="flex items-center gap-2 flex-wrap px-6 py-2.5">
+            {/* Divider */}
+            <div className="w-px h-5 bg-[#E5E7EB] mx-0.5 flex-shrink-0"/>
+
+            {/* Search */}
             <div className="relative">
-              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
               </svg>
-              <input type="text" placeholder="Search reviewer or review…" value={search}
+              <input type="text" placeholder="Search…" value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1); }}
-                className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-xl focus:outline-none focus:border-[#0D4C3C] w-56 transition-colors bg-[#FAFAFA] focus:bg-white"/>
+                className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-lg focus:outline-none focus:border-[#0D4C3C] w-44 transition-colors"/>
             </div>
 
             <FilterDropdown label="Rating" value={String(ratingFilter)}
@@ -1698,8 +1700,8 @@ async function handleFlag(id: string) {
 
             <button
               onClick={() => { setFlagFilter(f => !f); setPage(1); }}
-              title="Show flagged only"
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium border transition-colors ${flagFilter ? 'bg-amber-50 border-amber-300 text-amber-600' : 'border-[#D1D5DB] text-[#6B7280] hover:border-amber-300 hover:text-amber-500'}`}>
+              title="Flagged only"
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${flagFilter ? 'bg-amber-50 border-amber-300 text-amber-600' : 'border-[#D1D5DB] text-[#6B7280] hover:border-amber-300 hover:text-amber-500'}`}>
               <svg className="w-3.5 h-3.5" fill={flagFilter ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21V5a2 2 0 012-2h14l-3 5 3 5H5v8"/>
               </svg>
@@ -1708,8 +1710,8 @@ async function handleFlag(id: string) {
 
             <button
               onClick={() => { setWithBodyFilter(f => !f); setPage(1); }}
-              title="Show only reviews with written text"
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium border transition-colors ${withBodyFilter ? 'bg-[#E6F2EE] border-[#0D4C3C] text-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+              title="Has written text only"
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${withBodyFilter ? 'bg-[#E6F2EE] border-[#0D4C3C] text-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
               </svg>
@@ -1743,7 +1745,7 @@ async function handleFlag(id: string) {
           </div>
 
           {presets.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap px-6 pb-2">
+            <div className="flex items-center gap-1.5 flex-wrap mt-2">
               <span className="text-xs text-[#9CA3AF]">Presets:</span>
               {presets.map(p => (
                 <div key={p.id} className="flex items-center gap-0.5 bg-[#F3F4F6] rounded-lg px-2 py-0.5">
@@ -1755,8 +1757,8 @@ async function handleFlag(id: string) {
           )}
         </div>
 
-        {/* Scrollable table area */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pt-4 pb-6">
+        {/* Table area — card is the scroll container so thead sticky works */}
+        <div className="flex-1 min-h-0 px-6 pt-4 pb-6 flex flex-col">
         {loading ? (
           <div className="space-y-2">{[1,2,3,4,5].map(n => <div key={n} className="h-12 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 animate-pulse"/>)}</div>
         ) : paginated.length === 0 ? (
@@ -1770,44 +1772,62 @@ async function handleFlag(id: string) {
             {hasFilters && <button onClick={clearAll} className="text-xs text-[#0D4C3C] underline mt-1">Clear filters</button>}
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-[#E5EAE8] shadow-sm overflow-hidden">
-          <table className="w-full">
-            <thead className="sticky top-0 z-10">
-              <tr className="bg-[#F8FAF9] border-b border-[#E5EAE8]">
-                <th className="pl-4 pr-2 py-3 w-10">
-                  <div onClick={toggleSelectAll}
-                    className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${allPageSelected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] hover:border-[#0D4C3C]'}`}>
-                    {allPageSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
-                  </div>
-                </th>
-                <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-28">Date</th>
-                <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-44">Reviewer</th>
-                <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-32">Location</th>
-                <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider">Review</th>
-                <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-32">Status</th>
-                <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-44 pr-4">Action</th>
-                <th className="w-6"/>
-              </tr>
-            </thead>
-            <tbody>
-              {paginated.map((review, idx) => (
-                <ReviewRow
-                  key={`${review.id}-${review.status}-${review.reply_draft??''}`}
-                  review={review}
-                  locationName={locationName(review.location_id)}
-                  expanded={expandedId === review.id}
-                  selected={selectedIds.has(review.id)}
-                  focused={focusedIdx === idx + (page-1)*pageSize}
-                  onToggle={() => setExpandedId(expandedId === review.id ? null : review.id)}
-                  onSelect={e => { e.stopPropagation(); toggleSelect(review.id); }}
-                  onGenerateDraft={handleGenerateDraft}
-                  onPublish={handlePublish}
-                  onDiscard={handleDiscard}
-                  onFlag={handleFlag}
-                />
-              ))}
-            </tbody>
-          </table>
+          <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-[#E5EAE8] shadow-sm bg-white overflow-hidden">
+            {/* Table header — never scrolls */}
+            <div className="flex-shrink-0 border-b border-[#E5EAE8] bg-[#F8FAF9]">
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className="pl-4 pr-2 py-3 w-10">
+                      <div onClick={toggleSelectAll}
+                        className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${allPageSelected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] hover:border-[#0D4C3C]'}`}>
+                        {allPageSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
+                      </div>
+                    </th>
+                    <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-28">Date</th>
+                    <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-44">Reviewer</th>
+                    <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-32">Location</th>
+                    <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider">Review</th>
+                    <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-32">Status</th>
+                    <th className="px-3 py-3 text-left text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wider w-44 pr-4">Action</th>
+                    <th className="w-6"/>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto">
+              <table className="w-full">
+                <colgroup>
+                  <col className="w-10"/>
+                  <col className="w-28"/>
+                  <col className="w-44"/>
+                  <col className="w-32"/>
+                  <col/>
+                  <col className="w-32"/>
+                  <col className="w-44"/>
+                  <col className="w-6"/>
+                </colgroup>
+                <tbody>
+                  {paginated.map((review, idx) => (
+                    <ReviewRow
+                      key={`${review.id}-${review.status}-${review.reply_draft??''}`}
+                      review={review}
+                      locationName={locationName(review.location_id)}
+                      expanded={expandedId === review.id}
+                      selected={selectedIds.has(review.id)}
+                      focused={focusedIdx === idx + (page-1)*pageSize}
+                      onToggle={() => setExpandedId(expandedId === review.id ? null : review.id)}
+                      onSelect={e => { e.stopPropagation(); toggleSelect(review.id); }}
+                      onGenerateDraft={handleGenerateDraft}
+                      onPublish={handlePublish}
+                      onDiscard={handleDiscard}
+                      onFlag={handleFlag}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
