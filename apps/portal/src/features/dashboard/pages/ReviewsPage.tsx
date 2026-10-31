@@ -1643,7 +1643,7 @@ async function handleFlag(id: string) {
       <div className="flex-1 flex flex-col min-h-0">
 
         {/* Filter bar — outside scroll, always visible */}
-        <div className="flex-shrink-0 border-b border-[#E5EAE8]/60 bg-white/60 backdrop-blur-sm px-10 py-2.5">
+        <div className="flex-shrink-0 border-b border-[#E5EAE8]/60 bg-white/60 backdrop-blur-sm px-6 py-2.5">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Status tabs */}
             {(['all','pending','draft_ready','replied'] as const).map(key => {
@@ -1759,7 +1759,7 @@ async function handleFlag(id: string) {
         ) : (
           <div className="bg-white rounded-2xl border border-[#E5EAE8] shadow-sm">
           <table className="w-full">
-            <thead className="bg-white border-b border-[#E5EAE8] sticky top-0 z-10">
+            <thead className="bg-[#F0F5F3] border-b border-[#E5EAE8] sticky top-0 z-10">
               <tr>
                 <th className="pl-4 pr-2 py-2.5 w-10">
                   <div onClick={toggleSelectAll}
@@ -1767,12 +1767,12 @@ async function handleFlag(id: string) {
                     {allPageSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
                   </div>
                 </th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-32">Date</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-44">Reviewer</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-32">Location</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Review</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-28">Status</th>
-                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-44 pr-4">Action</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#374151] uppercase tracking-wide w-32">Date</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#374151] uppercase tracking-wide w-44">Reviewer</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#374151] uppercase tracking-wide w-32">Location</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#374151] uppercase tracking-wide">Review</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#374151] uppercase tracking-wide w-28">Status</th>
+                <th className="px-3 py-2.5 text-left text-xs font-semibold text-[#374151] uppercase tracking-wide w-44 pr-4">Action</th>
                 <th className="w-6"/>
               </tr>
             </thead>
