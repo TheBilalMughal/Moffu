@@ -765,7 +765,13 @@ export function SettingsPage() {
   const inputCls = 'w-full text-sm text-[#111827] border border-[#E5EAE8] rounded-lg px-4 py-3 focus:outline-none focus:border-[#0D4C3C] transition-colors bg-white';
 
   return (
-    <div className="px-8 py-8">
+    <div className="relative h-full flex flex-col overflow-hidden">
+      {/* Ambient blobs */}
+      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto px-8 py-8">
       <div className="mb-7">
         <h1 className="text-[1.5rem] font-bold text-[#111827]">Settings</h1>
         <p className="text-sm text-[#6B7280] mt-0.5">Manage your account and preferences.</p>
@@ -775,7 +781,8 @@ export function SettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
 
         {/* Account */}
-        <div className="bg-white rounded-xl border border-[#E5EAE8]">
+        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <div className="px-6 py-4 border-b border-[#F3F4F6] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Account</h2>
             {!accountEditOpen && (
@@ -861,7 +868,8 @@ export function SettingsPage() {
         </div>
 
         {/* Change Password */}
-        <div className="bg-white rounded-xl border border-[#E5EAE8] overflow-hidden">
+        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <div className="px-6 py-4 border-b border-[#F3F4F6]">
             <h2 className="text-sm font-semibold text-[#111827]">Change Password</h2>
           </div>
@@ -913,7 +921,8 @@ export function SettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
 
         {/* Preferences */}
-        <div className="bg-white rounded-xl border border-[#E5EAE8]">
+        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <div className="px-6 py-4 border-b border-[#F3F4F6]">
             <h2 className="text-sm font-semibold text-[#111827]">Preferences</h2>
           </div>
@@ -934,7 +943,8 @@ export function SettingsPage() {
         </div>
 
         {/* Sessions */}
-        <div className="bg-white rounded-xl border border-[#E5EAE8] overflow-hidden">
+        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <div className="px-6 py-4 border-b border-[#F3F4F6]">
             <h2 className="text-sm font-semibold text-[#111827]">Active Sessions</h2>
           </div>
@@ -975,7 +985,8 @@ export function SettingsPage() {
       </div>
 
       {/* Integrations */}
-      <div className="bg-white rounded-xl border border-[#E5EAE8] overflow-hidden mb-5">
+      <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 mb-5">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
         <div className="px-6 py-4 border-b border-[#F3F4F6]">
           <h2 className="text-sm font-semibold text-[#111827]">Integrations</h2>
         </div>
@@ -1171,7 +1182,8 @@ export function SettingsPage() {
       </div>
 
       {/* Billing shortcut */}
-      <div className="bg-white rounded-xl border border-[#E5EAE8] overflow-hidden mb-5">
+      <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 mb-5">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
         <div className="px-6 py-4 border-b border-[#F3F4F6]">
           <h2 className="text-sm font-semibold text-[#111827]">Billing</h2>
         </div>
@@ -1190,7 +1202,8 @@ export function SettingsPage() {
       </div>
 
       {/* Data & Privacy */}
-      <div className="bg-white rounded-xl border border-[#E5EAE8] overflow-hidden">
+      <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
         <div className="px-6 py-4 border-b border-[#F3F4F6]">
           <h2 className="text-sm font-semibold text-[#111827]">Data &amp; Privacy</h2>
         </div>
@@ -1263,6 +1276,8 @@ export function SettingsPage() {
       </div>
 
       {toast && <Toast message={toast.message} type={toast.type} onDone={() => {}} />}
+
+      </div>{/* end scrollable */}
     </div>
   );
 }

@@ -205,7 +205,7 @@ function StepIndicator({ current, steps, completed, stepMask, onJump }: {
   current: number; steps: typeof WIZARD_STEPS; completed: Set<number>; stepMask: number; onJump: (n: number) => void;
 }) {
   return (
-    <div className="flex items-center gap-0 px-10 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] overflow-x-auto flex-shrink-0">
+    <div className="relative z-10 flex items-center gap-0 px-10 py-4 border-b border-white/60 overflow-x-auto flex-shrink-0">
       {steps.map((step, idx) => {
         const isActive = step.id === current;
         const isDone = completed.has(step.id) && !isActive;
@@ -1369,11 +1369,15 @@ export function BrandBrainPage() {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="relative h-full flex flex-col overflow-hidden">
+      {/* Ambient blobs */}
+      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
+
       {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
 
       {/* Header */}
-      <div className="px-10 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] flex items-center justify-between flex-shrink-0">
+      <div className="relative z-10 px-10 py-4 border-b border-white/60 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-xl font-bold text-[#111827]">Brand Brain</h1>
@@ -1432,7 +1436,7 @@ export function BrandBrainPage() {
       </div>
 
       {/* Navigation footer */}
-      <div className="px-10 py-4 bg-[#F8FAF9] flex items-center justify-between flex-shrink-0">
+      <div className="relative z-10 px-10 py-4 border-t border-white/60 flex items-center justify-between flex-shrink-0">
         <button onClick={goPrev} disabled={isFirstStep}
           className="flex items-center gap-2 text-sm font-medium text-[#6B7280] hover:text-[#111827] px-4 py-2 rounded-xl hover:bg-[#F3F4F6] disabled:opacity-0 transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
