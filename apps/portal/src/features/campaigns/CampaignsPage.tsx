@@ -519,7 +519,11 @@ export function CampaignsPage() {
   const totalClicked = campaigns.filter(c => c.status === 'sent').reduce((s, c) => s + c.clicked_count, 0);
 
   return (
-    <div className="px-8 py-6">
+    <div className="relative h-full flex flex-col overflow-hidden">
+      {/* Ambient blobs */}
+      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
+
       {showCreate && orgId && (
         <CreateCampaignModal
           orgId={orgId} orgName={orgName}
@@ -529,7 +533,7 @@ export function CampaignsPage() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="relative z-10 px-8 py-4 flex-shrink-0 border-b border-white/60 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#111827]">Review Request Campaigns</h1>
           <p className="text-sm text-[#6B7280] mt-0.5">Ask customers to leave a review via email</p>
@@ -541,9 +545,13 @@ export function CampaignsPage() {
         </button>
       </div>
 
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto px-8 py-6">
+
       {/* Email quota bar */}
       {quota !== null && (
-        <div className="bg-white rounded-xl px-5 py-3.5 shadow-sm mb-4 flex items-center gap-4">
+        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 px-5 py-3.5 mb-4 flex items-center gap-4">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-medium text-[#374151]">Email quota this month</span>
@@ -583,7 +591,8 @@ export function CampaignsPage() {
           { label: 'Opened',       value: pct(totalOpened, totalSent),        color: 'text-[#0D4C3C]' },
           { label: 'Clicked',      value: pct(totalClicked, totalSent),       color: 'text-[#B45309]' },
         ].map(k => (
-          <div key={k.label} className="bg-white rounded-xl p-4 shadow-sm">
+          <div key={k.label} className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-4">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
             <p className="text-[10px] uppercase tracking-wide text-[#9CA3AF]">{k.label}</p>
             <p className={`text-2xl font-bold mt-1 ${k.color}`}>{k.value}</p>
           </div>
@@ -591,7 +600,7 @@ export function CampaignsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#E5EAE8] shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#F3F4F6]">
@@ -660,6 +669,8 @@ export function CampaignsPage() {
           </tbody>
         </table>
       </div>
+
+      </div>{/* end scrollable */}
     </div>
   );
 }

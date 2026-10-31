@@ -902,7 +902,7 @@ export function InsightsPage() {
       <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
 
       {/* Header */}
-      <div className="relative z-10 px-8 py-4 flex-shrink-0 bg-white/60 backdrop-blur-sm border-b border-white/60">
+      <div className="relative z-10 px-8 py-4 flex-shrink-0 border-b border-white/60">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-[#111827]">Review Insights</h1>
@@ -958,7 +958,7 @@ export function InsightsPage() {
 
       {/* Filter bar */}
       {tab !== 'agent' && (
-        <div className="flex-shrink-0 bg-white/60 backdrop-blur-sm border-b border-[#E5EAE8]/60 px-8 py-2.5 flex items-center gap-2.5 flex-wrap">
+        <div className="flex-shrink-0 border-b border-[#E5EAE8]/60 px-8 py-2.5 flex items-center gap-2.5 flex-wrap">
           <FilterDropdown value={dateRange} onChange={setDateRange} options={dateOptions}/>
           <FilterDropdown value={starFilter} onChange={setStarFilter} options={starOptions}/>
           {tab === 'keywords' && (

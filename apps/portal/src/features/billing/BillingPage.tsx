@@ -430,7 +430,14 @@ export function BillingPage() {
   const seatLimit = currentPlan?.entitlements['team_members']?.limit_value ?? 1;
 
   return (
-    <div className="px-8 py-8">
+    <div className="relative h-full flex flex-col overflow-hidden">
+      {/* Ambient blobs */}
+      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto px-8 py-8">
+
       {/* Modals */}
       {showCompare && (
         <PlanComparisonModal
@@ -514,7 +521,8 @@ export function BillingPage() {
       {/* Current plan + usage -- 2 equal columns */}
       <div className="grid grid-cols-2 gap-5 mb-5">
         {/* Current plan card */}
-        <div className="bg-white border border-[#E5EAE8] rounded-2xl p-6">
+        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Current Plan</p>
           <div className="flex items-start gap-4 mb-5">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${planColor.bg}`}>
@@ -554,7 +562,8 @@ export function BillingPage() {
         </div>
 
         {/* Usage card */}
-        <div className="bg-white border border-[#E5EAE8] rounded-2xl p-6">
+        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <div className="flex items-center justify-between mb-4">
             <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Usage this period</p>
             {usage && (
@@ -631,13 +640,15 @@ export function BillingPage() {
       {/* Usage history + Add-ons -- 2 columns */}
       <div className="grid grid-cols-2 gap-5 mb-6">
         {/* Usage history chart */}
-        <div className="bg-white border border-[#E5EAE8] rounded-2xl p-6">
+        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Usage history · last 14 days</p>
           <UsageHistoryChart days={history} />
         </div>
 
         {/* Add-ons card */}
-        <div className="bg-white border border-[#E5EAE8] rounded-2xl p-6">
+        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Add-ons</p>
 
           {/* Active addon line items */}
@@ -833,6 +844,8 @@ export function BillingPage() {
       <p className="text-xs text-[#9CA3AF]">
         Payments coming soon — Stripe integration is in progress. Upgrades and billing management will be available shortly.
       </p>
+
+      </div>{/* end scrollable */}
     </div>
   );
 }

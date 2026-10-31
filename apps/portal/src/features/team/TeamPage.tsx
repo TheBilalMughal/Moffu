@@ -322,7 +322,13 @@ export function TeamPage() {
 
   // â"€â"€ Render â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
   return (
-    <div className="px-8 py-8">
+    <div className="relative h-full flex flex-col overflow-hidden">
+      {/* Ambient blobs */}
+      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
+
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto px-8 py-8">
 
       {/* Page header */}
       <div className="flex items-start justify-between mb-6">
@@ -353,7 +359,8 @@ export function TeamPage() {
               ? `${seatsLeft! > 0 ? seatsLeft : 0} left`
               : seatUsed },
         ].map(({ label, value }) => (
-          <div key={label} className="bg-white border border-[#E5EAE8] rounded-xl px-5 py-4">
+          <div key={label} className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 px-5 py-4">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
             <p className="text-xs text-[#6B7280] font-medium">{label}</p>
             <p className="mt-1 text-xl font-bold text-[#111827]">{value}</p>
           </div>
@@ -591,6 +598,8 @@ export function TeamPage() {
           onSuccess={() => { setShowInvite(false); load(); }}
         />
       )}
+
+      </div>{/* end scrollable */}
     </div>
   );
 }
