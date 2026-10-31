@@ -114,6 +114,19 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
   function handleCsvUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = '';
+
+    // Enforce size limit (500 KB) and content-type before reading
+    if (file.size > 500 * 1024) {
+      setCsvErr('File too large. Maximum size is 500 KB.');
+      return;
+    }
+    const allowed = ['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel'];
+    if (!allowed.includes(file.type) && !file.name.match(/\.(csv|txt)$/i)) {
+      setCsvErr('Invalid file type. Please upload a .csv or .txt file.');
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = ev => {
       const text = ev.target?.result as string;
@@ -126,7 +139,6 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
       });
     };
     reader.readAsText(file);
-    e.target.value = '';
   }
 
   const validContacts = contacts.filter(c => c.email.includes('@'));
