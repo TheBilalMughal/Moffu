@@ -1840,7 +1840,7 @@ async function handleFlag(id: string) {
         </div>
 
       {/* Pagination */}
-      <div className="px-4 md:px-10 py-2.5 border-t border-[#E5EAE8]/60 bg-white/70 backdrop-blur-sm flex items-center justify-between flex-shrink-0">
+      <div className="px-4 md:px-10 py-2.5 border-t border-[#E5EAE8]/60 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
           <p className="text-xs text-[#9CA3AF]">
             {filtered.length === 0
