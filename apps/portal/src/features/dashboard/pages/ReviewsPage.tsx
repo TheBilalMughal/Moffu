@@ -1556,11 +1556,11 @@ async function handleFlag(id: string) {
       )}
 
       {/* Header */}
-      <div className="relative z-10 px-10 py-4 flex items-center justify-between gap-4 flex-shrink-0 backdrop-blur-sm border-b border-white/60">
+      <div className="relative z-10 px-4 md:px-10 py-4 flex items-center justify-between gap-4 flex-shrink-0 backdrop-blur-sm border-b border-white/60">
         <div>
           <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <button onClick={() => setShowChart(s => !s)} title={showChart ? 'Hide chart' : 'Show chart'}
             className={`p-2 rounded-lg transition-colors ${showChart ? 'text-[#0D4C3C] bg-[#E6F2EE]' : 'text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6]'}`}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1627,7 +1627,7 @@ async function handleFlag(id: string) {
       </div>
 
       {/* Chart — full width */}
-      <div className="px-10 pt-4 pb-5 flex-shrink-0">
+      <div className="px-4 md:px-10 pt-4 pb-5 flex-shrink-0">
         <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 px-6 py-5">
           <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl"/>
           <div className="relative">
@@ -1758,7 +1758,7 @@ async function handleFlag(id: string) {
         </div>
 
         {/* Table area — card is the scroll container so thead sticky works */}
-        <div className="flex-1 min-h-0 px-6 pt-4 pb-6 flex flex-col">
+        <div className="flex-1 min-h-0 px-3 md:px-6 pt-4 pb-6 flex flex-col">
         {loading ? (
           <div className="space-y-2">{[1,2,3,4,5].map(n => <div key={n} className="h-12 bg-white/60 backdrop-blur-sm rounded-xl border border-white/50 animate-pulse"/>)}</div>
         ) : paginated.length === 0 ? (
@@ -1774,8 +1774,8 @@ async function handleFlag(id: string) {
         ) : (
           <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-[#E5EAE8] shadow-sm bg-white overflow-hidden">
             {/* Table header — never scrolls */}
-            <div className="flex-shrink-0 border-b border-[#E5EAE8] bg-[#F8FAF9]">
-              <table className="w-full">
+            <div className="flex-shrink-0 border-b border-[#E5EAE8] bg-[#F8FAF9] overflow-x-auto">
+              <table className="w-full min-w-[700px]">
                 <thead>
                   <tr>
                     <th className="pl-4 pr-2 py-3 w-10">
@@ -1796,8 +1796,8 @@ async function handleFlag(id: string) {
               </table>
             </div>
             {/* Scrollable body */}
-            <div className="flex-1 overflow-y-auto">
-              <table className="w-full">
+            <div className="flex-1 overflow-y-auto overflow-x-auto">
+              <table className="w-full min-w-[700px]">
                 <colgroup>
                   <col className="w-10"/>
                   <col className="w-28"/>
@@ -1833,7 +1833,7 @@ async function handleFlag(id: string) {
       </div>
 
       {/* Pagination */}
-      <div className="px-10 py-2.5 border-t border-[#E5EAE8]/60 bg-white/70 backdrop-blur-sm flex items-center justify-between flex-shrink-0">
+      <div className="px-4 md:px-10 py-2.5 border-t border-[#E5EAE8]/60 bg-white/70 backdrop-blur-sm flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
           <p className="text-xs text-[#9CA3AF]">
             {filtered.length === 0

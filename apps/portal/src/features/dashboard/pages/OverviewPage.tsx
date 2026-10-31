@@ -935,7 +935,7 @@ export function OverviewPage() {
   const displayName = user?.user_metadata?.full_name ?? user?.email;
 
   return (
-    <div className="relative min-h-full px-6 py-6">
+    <div className="relative min-h-full px-4 md:px-6 py-5 md:py-6">
       {/* Ambient blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/6 blur-3xl" />
@@ -1018,7 +1018,7 @@ export function OverviewPage() {
         <EmptyState />
       ) : !loadingDash && dash ? (
         <>
-          <div className="relative grid grid-cols-3 gap-4">
+          <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Left — Recent Reviews */}
             <GlassCard className="overflow-hidden">
               <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[#E5EAE8]/50">

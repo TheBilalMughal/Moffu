@@ -695,10 +695,15 @@ function UpgradeWidget() {
 export function DashboardLayout() {
   const { setLocations } = useLocationStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [featureAccess, setFeatureAccess] = useState<Record<string, boolean>>({});
   const [featureLoading, setFeatureLoading] = useState(true);
   const [isFreePlan, setIsFreePlan] = useState(false);
   const [adminDowngradePlan, setAdminDowngradePlan] = useState<{ name: string; locationLimit: number } | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
   useEffect(() => {
     supabase.from('google_locations').select('id, display_name').eq('is_selected', true).then(({ data }) => {
@@ -813,6 +818,77 @@ export function DashboardLayout() {
     return featureAccess[featureKey] === false;
   }
 
+  const sidebarContent = (
+    <>
+      {/* Logo */}
+      <div className="px-5 py-4 border-b border-white/50 flex items-center justify-between">
+        <img src="/images/logo.png" alt="Moffu" className="h-7 w-auto" />
+        {/* Close button — mobile only */}
+        <button
+          onClick={() => setSidebarOpen(false)}
+          className="md:hidden p-1.5 rounded-lg text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors"
+          aria-label="Close menu"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-4 flex flex-col overflow-y-auto gap-0.5" aria-label="Main navigation">
+        {navItems.map(({ to, label, icon, featureKey }) => {
+          const locked = isLocked(featureKey);
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/dashboard'}
+              className={({ isActive }) =>
+                `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  locked
+                    ? 'text-[#C4CAC8] hover:bg-[#F3F4F6] hover:text-[#9CA3AF]'
+                    : isActive
+                      ? 'bg-[#0D4C3C] text-white'
+                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
+                }`
+              }
+            >
+              {icon}
+              <span className="flex-1">{label}</span>
+              {locked && (
+                <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+              )}
+            </NavLink>
+          );
+        })}
+
+        {/* Settings — pinned to bottom */}
+        <div className="mt-auto pt-2">
+          {isFreePlan && <UpgradeWidget />}
+          {navSettings.map(({ to, label, icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-[#0D4C3C] text-white'
+                    : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
+                }`
+              }
+            >
+              {icon}
+              {label}
+            </NavLink>
+          ))}
+        </div>
+      </nav>
+    </>
+  );
+
   return (
     <FeatureAccessContext.Provider value={{ access: featureAccess, loading: featureLoading }}>
     {adminDowngradePlan && (
@@ -824,82 +900,64 @@ export function DashboardLayout() {
       />
     )}
     <div className="flex h-screen bg-[#F0F5F3] overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-56 flex-shrink-0 bg-white/75 backdrop-blur-xl border-r border-white/60 shadow-[1px_0_12px_rgba(0,0,0,0.04)] flex flex-col">
-        {/* Logo */}
-        <div className="px-5 py-4 border-b border-white/50">
-          <img src="/images/logo.png" alt="Moffu" className="h-7 w-auto" />
-        </div>
 
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-4 flex flex-col overflow-y-auto gap-0.5" aria-label="Main navigation">
-          {navItems.map(({ to, label, icon, featureKey }) => {
-            const locked = isLocked(featureKey);
-            return (
-              <NavLink
-                key={to}
-                to={to}
-                end={to === '/dashboard'}
-                className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    locked
-                      ? 'text-[#C4CAC8] hover:bg-[#F3F4F6] hover:text-[#9CA3AF]'
-                      : isActive
-                        ? 'bg-[#0D4C3C] text-white'
-                        : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
-                  }`
-                }
-              >
-                {icon}
-                <span className="flex-1">{label}</span>
-                {locked && (
-                  <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                  </svg>
-                )}
-              </NavLink>
-            );
-          })}
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
 
-          {/* Settings — pinned to bottom */}
-          <div className="mt-auto pt-2">
-            {isFreePlan && <UpgradeWidget />}
-            {navSettings.map(({ to, label, icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-[#0D4C3C] text-white'
-                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
-                  }`
-                }
-              >
-                {icon}
-                {label}
-              </NavLink>
-            ))}
-          </div>
-        </nav>
-
+      {/* Sidebar — drawer on mobile, fixed column on desktop */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 flex flex-col
+        bg-white/95 backdrop-blur-xl border-r border-white/60 shadow-[1px_0_12px_rgba(0,0,0,0.06)]
+        transform transition-transform duration-200 ease-out
+        md:relative md:w-56 md:flex-shrink-0 md:translate-x-0
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        {sidebarContent}
       </aside>
 
       {/* Page content */}
-      <main className="flex-1 overflow-hidden flex flex-col">
+      <main className="flex-1 overflow-hidden flex flex-col min-w-0">
         {/* Topbar */}
-        <div className="flex-shrink-0 flex items-center justify-between px-8 py-3 gap-4">
-          <div className="flex items-center gap-2.5">
-            <TopbarLocationPicker />
-            <QuickStatsPill />
+        <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-8 py-3 gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {/* Hamburger — mobile only */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 rounded-lg text-[#6B7280] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors flex-shrink-0"
+              aria-label="Open menu"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
+            {/* Mobile logo */}
+            <img src="/images/logo.png" alt="Moffu" className="h-6 w-auto md:hidden flex-shrink-0" />
+            <div className="hidden md:flex items-center gap-2.5">
+              <TopbarLocationPicker />
+              <QuickStatsPill />
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-px h-5 bg-[#E5EAE8]/80 mx-0.5 flex-shrink-0"/>
-            <GlobalSearch />
-            <div className="w-px h-5 bg-[#E5EAE8]/80 mx-0.5 flex-shrink-0"/>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div className="hidden md:flex items-center gap-1.5">
+              <div className="w-px h-5 bg-[#E5EAE8]/80 mx-0.5 flex-shrink-0"/>
+              <GlobalSearch />
+              <div className="w-px h-5 bg-[#E5EAE8]/80 mx-0.5 flex-shrink-0"/>
+            </div>
             <NotificationsBell />
             <TopbarProfile />
           </div>
+        </div>
+
+        {/* Mobile location picker row */}
+        <div className="md:hidden px-4 pb-2 flex items-center gap-2">
+          <TopbarLocationPicker />
+          <QuickStatsPill />
         </div>
 
         {/* Scrollable page area */}
