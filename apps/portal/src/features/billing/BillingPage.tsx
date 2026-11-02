@@ -578,8 +578,8 @@ export function BillingPage() {
                   {isFree ? 'Free' : sub?.billing_interval === 'annual' ? 'Annual' : 'Monthly'}
                 </span>
                 {hasOverride && (
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#1C1917] text-stone-100">
-                    Enterprise
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#FFF7ED] text-[#C2410C]">
+                    Scale
                   </span>
                 )}
               </div>

@@ -23,6 +23,7 @@ interface EnrichedSub {
   planSlug: string;
   planName: string;
   amountCents: number;
+  hasCustomPrice: boolean;
   status: string;
   interval: string;
   createdAt: string;
@@ -314,12 +315,13 @@ export function MRRPage() {
 
   async function load() {
     setLoading(true);
-    const [subsRes, plansRes, pricesRes] = await Promise.all([
+    const [subsRes, plansRes, pricesRes, orgMembersRes] = await Promise.all([
       supabase.from('subscriptions').select(
-        'id, plan_id, status, billing_interval, created_at, current_period_end, cancel_at_period_end'
+        'id, user_id, plan_id, status, billing_interval, created_at, current_period_end, cancel_at_period_end'
       ).order('created_at', { ascending: false }),
       supabase.from('plans').select('id, slug, name').order('sort_order'),
       supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('currency', 'USD'),
+      supabase.from('org_members').select('user_id, org_id').eq('role', 'owner'),
     ]);
 
     const allPlans = (plansRes.data ?? []) as PlanRaw[];
@@ -328,15 +330,39 @@ export function MRRPage() {
     ((pricesRes.data ?? []) as PriceRaw[]).forEach((p) =>
       priceMap.set(`${p.plan_id}:${p.billing_interval}`, p.amount_cents));
 
-    const enriched: EnrichedSub[] = ((subsRes.data ?? []) as SubRaw[]).map((s) => {
+    type OrgMemberRaw = { user_id: string; org_id: string };
+    const orgByOwner = new Map<string, string>(
+      ((orgMembersRes.data ?? []) as OrgMemberRaw[]).map((m) => [m.user_id, m.org_id])
+    );
+    const orgIds = [...new Set([...orgByOwner.values()])];
+
+    // Fetch org-level price overrides so Scale/custom clients show correct MRR
+    type OverrideRaw = { org_id: string; custom_price_cents: number | null; billing_interval: string | null };
+    const overridesRes = orgIds.length > 0
+      ? await supabase.from('org_plan_overrides').select('org_id, custom_price_cents, billing_interval').in('org_id', orgIds)
+      : { data: [] as OverrideRaw[] };
+    const overrideByOrg = new Map<string, OverrideRaw>(
+      ((overridesRes.data ?? []) as OverrideRaw[]).filter((o) => o.custom_price_cents != null).map((o) => [o.org_id, o])
+    );
+
+    const allSubs = (subsRes.data ?? []) as (SubRaw & { user_id: string })[];
+    const enriched: EnrichedSub[] = allSubs.map((s) => {
       const plan = planById.get(s.plan_id);
       const interval = s.billing_interval ?? 'monthly';
-      const amountCents = priceMap.get(`${s.plan_id}:${interval}`) ?? priceMap.get(`${s.plan_id}:monthly`) ?? 0;
+      const planPrice = priceMap.get(`${s.plan_id}:${interval}`) ?? priceMap.get(`${s.plan_id}:monthly`) ?? 0;
+      const orgId = orgByOwner.get(s.user_id);
+      const ov = orgId ? overrideByOrg.get(orgId) : undefined;
+      // Normalize custom price to monthly equivalent for MRR
+      const customMonthly = ov?.custom_price_cents != null
+        ? (ov.billing_interval === 'annual' ? Math.round(ov.custom_price_cents / 12) : ov.custom_price_cents)
+        : null;
+      const amountCents = customMonthly ?? planPrice;
       return {
         id: s.id, planId: s.plan_id,
         planSlug: plan?.slug ?? 'free',
         planName: plan?.name ?? 'Free',
-        amountCents, status: s.status, interval,
+        amountCents, hasCustomPrice: customMonthly != null,
+        status: s.status, interval,
         createdAt: s.created_at,
         periodEnd: s.current_period_end,
         cancelAtPeriodEnd: s.cancel_at_period_end,

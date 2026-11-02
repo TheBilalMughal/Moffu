@@ -312,20 +312,32 @@ export function PaymentsPage() {
     const orgIds = [...new Set([...orgByOwner.values()])];
     const ownerUserIds = subs.map((s) => s.user_id);
 
-    const [orgsRes, emailsRes] = await Promise.all([
+    const [orgsRes, emailsRes, overridesRes] = await Promise.all([
       orgIds.length > 0 ? supabase.from('organizations').select('id, ref_id, name').in('id', orgIds) : Promise.resolve({ data: [] }),
       ownerUserIds.length > 0 ? supabase.rpc('get_users_email', { user_ids: ownerUserIds }) : Promise.resolve({ data: [] }),
+      orgIds.length > 0 ? supabase.from('org_plan_overrides').select('org_id, custom_price_cents, billing_interval').in('org_id', orgIds) : Promise.resolve({ data: [] }),
     ]);
 
     type OrgRaw = { id: string; ref_id: string | null; name: string };
     const orgById = new Map<string, OrgRaw>((orgsRes.data ?? []).map((o: OrgRaw) => [o.id, o]));
     const emailById = new Map<string, string>((emailsRes.data ?? []).map((e: { user_id: string; email: string }) => [e.user_id, e.email]));
 
+    type OvRaw = { org_id: string; custom_price_cents: number | null; billing_interval: string | null };
+    const overrideByOrg = new Map<string, OvRaw>(
+      ((overridesRes.data ?? []) as OvRaw[]).map((o) => [o.org_id, o])
+    );
+
     const enriched: BillingRecord[] = subs.map((s) => {
       const plan = planById.get(s.plan_id);
       const interval = s.billing_interval ?? 'monthly';
-      const amountCents = priceMap.get(`${s.plan_id}:${interval}`) ?? priceMap.get(`${s.plan_id}:monthly`) ?? 0;
+      const planPrice = priceMap.get(`${s.plan_id}:${interval}`) ?? priceMap.get(`${s.plan_id}:monthly`) ?? 0;
       const orgId = orgByOwner.get(s.user_id) ?? null;
+      const ov = orgId ? overrideByOrg.get(orgId) : undefined;
+      // Normalize to monthly-equivalent so MRR chart is consistent
+      const customMonthly = ov?.custom_price_cents != null
+        ? (ov.billing_interval === 'annual' ? Math.round(ov.custom_price_cents / 12) : ov.custom_price_cents)
+        : null;
+      const amountCents = customMonthly ?? planPrice;
       const org = orgId ? orgById.get(orgId) : null;
       const periodEnd = new Date(s.current_period_end);
       const nextChargeDate = s.status === 'active' && periodEnd.getFullYear() < 2100

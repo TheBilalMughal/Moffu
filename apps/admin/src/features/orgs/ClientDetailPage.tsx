@@ -107,8 +107,11 @@ const PLAN_LIMIT: Record<string, number> = {
 };
 
 const PLAN_COLOR: Record<string, string> = {
-  free: 'bg-[#F3F4F6] text-[#374151]',
+  free:    'bg-[#F3F4F6] text-[#374151]',
   starter: 'bg-[#EFF6FF] text-[#1D4ED8]',
+  growth:  'bg-[#F0FDF4] text-[#15803D]',
+  scale:   'bg-[#FFF7ED] text-[#C2410C]',
+  // legacy slugs
   pro: 'bg-[#F0FDF4] text-[#15803D]',
   enterprise: 'bg-[#FFF7ED] text-[#C2410C]',
 };
@@ -844,7 +847,7 @@ export function ClientDetailPage() {
                   <span className="text-sm font-semibold text-[#111827]">
                     ${(override.custom_price_cents / 100).toFixed(2).replace(/\.00$/, '')}/{override.billing_interval === 'annual' ? 'yr' : 'mo'}
                   </span>
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#FEF3C7] text-[#92400E]">Custom</span>
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#FFF7ED] text-[#C2410C]">Scale</span>
                 </dd>
               </div>
             )}
