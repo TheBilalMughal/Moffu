@@ -209,7 +209,7 @@ Deno.serve(async (req) => {
   const [settingsRes, brainRes, aiSettingsRes, locationRes] = await Promise.all([
     supabase.from('marketing_settings').select('*').eq('org_id', orgId).maybeSingle(),
     supabase.from('brand_brain').select('*').eq('user_id', user.id).maybeSingle(),
-    supabase.from('ai_settings').select('provider, model, api_key_encrypted').eq('org_id', orgId).maybeSingle(),
+    supabase.from('ai_settings').select('provider, model, api_key').eq('is_active', true).maybeSingle(),
     location_id
       ? supabase.from('google_locations').select('name, address, city, country').eq('id', location_id).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -219,7 +219,7 @@ Deno.serve(async (req) => {
   const brain = brainRes.data;
   const aiCfg = aiSettingsRes.data;
 
-  if (!aiCfg?.api_key_encrypted) return json({ error: 'AI not configured. Set up AI settings first.' }, 400);
+  if (!aiCfg?.api_key) return json({ error: 'AI not configured. Set up AI settings first.' }, 400);
 
   const category = settings?.business_category ?? 'other';
   const postStyles: string[] = settings?.post_styles ?? ['casual'];
@@ -299,7 +299,7 @@ IMAGE HINT: [specific image description]
 
   let rawOutput: string;
   try {
-    rawOutput = await callAI(aiCfg.provider, aiCfg.api_key_encrypted, aiCfg.model, systemPrompt, userPrompt);
+    rawOutput = await callAI(aiCfg.provider, aiCfg.api_key, aiCfg.model, systemPrompt, userPrompt);
   } catch (err) {
     return json({ error: `AI call failed: ${(err as Error).message}` }, 502);
   }
