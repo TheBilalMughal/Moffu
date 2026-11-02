@@ -1,6 +1,19 @@
 ﻿import { useEffect, useState } from 'react';
 import { billingService, type Plan, type Subscription, type UsageSummary, type UsageDay } from './billing.service';
 import { LocationSelectionModal } from './LocationSelectionModal';
+import { supabase } from '@/lib/supabase';
+
+interface OrgOverride {
+  ai_drafts_per_month: number | null;
+  published_replies_per_month: number | null;
+  max_locations: number | null;
+  max_team_members: number | null;
+  campaign_emails_per_month: number | null;
+  custom_price_cents: number | null;
+  billing_interval: string | null;
+  contract_start: string | null;
+  contract_end: string | null;
+}
 
 // --- Helpers ---
 
@@ -334,6 +347,7 @@ export function BillingPage() {
   const [sub, setSub] = useState<Subscription | null>(null);
   const [usage, setUsage] = useState<UsageSummary | null>(null);
   const [history, setHistory] = useState<UsageDay[]>([]);
+  const [orgOverride, setOrgOverride] = useState<OrgOverride | null>(null);
   const [loading, setLoading] = useState(true);
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'annual'>('monthly');
   const [showCompare, setShowCompare] = useState(false);
@@ -357,6 +371,23 @@ export function BillingPage() {
         setUsage(u);
         if (s.billing_interval) setBillingInterval(s.billing_interval);
         setOverageProtection(s.overage_protection);
+      }
+      // Fetch org-level override (enterprise custom quota)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: member } = await supabase
+          .from('org_members')
+          .select('org_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (member?.org_id) {
+          const { data: ov } = await supabase
+            .from('org_plan_overrides')
+            .select('ai_drafts_per_month,published_replies_per_month,max_locations,max_team_members,campaign_emails_per_month,custom_price_cents,billing_interval,contract_start,contract_end')
+            .eq('org_id', member.org_id)
+            .maybeSingle();
+          setOrgOverride(ov ?? null);
+        }
       }
       setLoading(false);
     });
@@ -420,14 +451,24 @@ export function BillingPage() {
       })()
     : 0;
 
-  // Usage alerts
-  const draftsAlertPct = usage && usage.ai_drafts_limit ? Math.round((usage.ai_drafts_used / usage.ai_drafts_limit) * 100) : 0;
-  const repliesAlertPct = usage && usage.published_replies_limit ? Math.round((usage.published_replies_used / usage.published_replies_limit) * 100) : 0;
+  // Resolve effective limits (org override takes precedence; -1 = unlimited → null)
+  function resolveLimit(overrideVal: number | null | undefined, planVal: number | null): number | null {
+    if (overrideVal === -1) return null; // unlimited
+    if (overrideVal != null) return overrideVal;
+    return planVal;
+  }
+  const effectiveDraftsLimit = resolveLimit(orgOverride?.ai_drafts_per_month, usage?.ai_drafts_limit ?? null);
+  const effectiveRepliesLimit = resolveLimit(orgOverride?.published_replies_per_month, usage?.published_replies_limit ?? null);
+  const hasOverride = orgOverride !== null;
+
+  // Usage alerts (use effective limits)
+  const draftsAlertPct = usage && effectiveDraftsLimit ? Math.round((usage.ai_drafts_used / effectiveDraftsLimit) * 100) : 0;
+  const repliesAlertPct = usage && effectiveRepliesLimit ? Math.round((usage.published_replies_used / effectiveRepliesLimit) * 100) : 0;
   const hasAlert = draftsAlertPct >= 80 || repliesAlertPct >= 80;
   const alertCritical = draftsAlertPct >= 90 || repliesAlertPct >= 90;
 
-  // Team seats (owner-only until Phase 7 team feature)
-  const seatLimit = currentPlan?.entitlements['team_members']?.limit_value ?? 1;
+  // Team seats (org override takes precedence)
+  const seatLimit = resolveLimit(orgOverride?.max_team_members, currentPlan?.entitlements['team_members']?.limit_value ?? null) ?? 1;
 
   return (
     <div className="relative h-full flex flex-col overflow-hidden">
@@ -531,18 +572,30 @@ export function BillingPage() {
               </svg>
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-base font-bold text-[#111827]">{sub?.plan_name ?? 'Free'}</span>
                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${isFree ? 'bg-[#F3F4F6] text-[#6B7280]' : 'bg-[#E6F2EE] text-[#0D4C3C]'}`}>
                   {isFree ? 'Free' : sub?.billing_interval === 'annual' ? 'Annual' : 'Monthly'}
                 </span>
+                {hasOverride && (
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#1C1917] text-stone-100">
+                    Enterprise
+                  </span>
+                )}
               </div>
               <p className="text-xs text-[#6B7280] mt-0.5">{PLAN_DESCRIPTIONS[planSlug]}</p>
               {!isFree && currentPlan && (
                 <p className="text-xs text-[#9CA3AF] mt-1">
-                  {sub?.billing_interval === 'annual'
-                    ? `${cents(currentPlan.prices.find(p => p.interval === 'annual')?.amount_cents ?? 0)}/mo · billed annually`
-                    : `${cents(currentPlan.prices.find(p => p.interval === 'monthly')?.amount_cents ?? 0)}/mo`}
+                  {orgOverride?.custom_price_cents
+                    ? `${cents(orgOverride.custom_price_cents)}/mo · custom`
+                    : sub?.billing_interval === 'annual'
+                      ? `${cents(currentPlan.prices.find(p => p.interval === 'annual')?.amount_cents ?? 0)}/mo · billed annually`
+                      : `${cents(currentPlan.prices.find(p => p.interval === 'monthly')?.amount_cents ?? 0)}/mo`}
+                </p>
+              )}
+              {orgOverride?.contract_end && (
+                <p className="text-[10px] text-[#9CA3AF] mt-0.5">
+                  Contract through {new Date(orgOverride.contract_end + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                 </p>
               )}
             </div>
@@ -587,8 +640,8 @@ export function BillingPage() {
 
           {usage ? (
             <div className="space-y-4">
-              <UsageMeter label="AI Drafts" used={usage.ai_drafts_used} limit={usage.ai_drafts_limit} />
-              <UsageMeter label="Published Replies" used={usage.published_replies_used} limit={usage.published_replies_limit} />
+              <UsageMeter label="AI Drafts" used={usage.ai_drafts_used} limit={effectiveDraftsLimit} />
+              <UsageMeter label="Published Replies" used={usage.published_replies_used} limit={effectiveRepliesLimit} />
             </div>
           ) : (
             <p className="text-xs text-[#9CA3AF]">No active subscription.</p>
