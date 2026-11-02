@@ -24,6 +24,8 @@ import { CampaignsPage } from '@/features/campaigns/CampaignsPage';
 import { CampaignDetailPage } from '@/features/campaigns/CampaignDetailPage';
 import { FeedbackInboxPage } from '@/features/feedback/FeedbackInboxPage';
 import { NewFeedbackRequestPage } from '@/features/feedback/NewFeedbackRequestPage';
+import { MarketingPage } from '@/features/marketing/MarketingPage';
+import { NewPostPage } from '@/features/marketing/NewPostPage';
 
 export function App() {
   const initialize  = useAuthStore((s) => s.initialize);
@@ -72,6 +74,8 @@ export function App() {
           <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
           <Route path="/feedback"      element={<FeedbackInboxPage />} />
           <Route path="/feedback/new"  element={<NewFeedbackRequestPage />} />
+          <Route path="/marketing"     element={<MarketingPage />} />
+          <Route path="/marketing/new" element={<NewPostPage />} />
         </Route>
 
         {/* Invite acceptance — no auth required to view */}

@@ -7,6 +7,10 @@ import {
   brandBrainService, BrandBrainData, LocationOverride, GoogleLocation,
   StarRatingRules, KeywordContext, ApprovalRules,
 } from './brandBrain.service';
+import {
+  marketingService, MarketingSettings, DEFAULT_MARKETING_SETTINGS,
+  BUSINESS_CATEGORIES, POST_STYLES, TARGET_PLATFORMS, POST_FREQUENCIES,
+} from '@/features/marketing/marketingService';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -49,6 +53,7 @@ const WIZARD_STEPS = [
   { id: 5, label: 'Guardrails',icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
   { id: 6, label: 'Locations', icon: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z' },
   { id: 7, label: 'Preview',   icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' },
+  { id: 8, label: 'Marketing', icon: 'M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z' },
 ];
 
 // ── Default state ─────────────────────────────────────────────────────────────
@@ -1155,6 +1160,145 @@ function PreviewStepActions({ generating, previewDraft, saving, onGenerate, onSa
   );
 }
 
+// ── Step 8: Marketing Settings ────────────────────────────────────────────────
+
+function Step8({ settings, onChange, saving, onSave }: {
+  settings: MarketingSettings;
+  onChange: (p: Partial<MarketingSettings>) => void;
+  saving: boolean;
+  onSave: () => void;
+}) {
+  const navigate = useNavigate();
+
+  function toggleStyle(v: string) {
+    const cur = settings.post_styles ?? [];
+    onChange({ post_styles: cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v] });
+  }
+
+  function togglePlatform(v: string) {
+    const cur = settings.target_platforms ?? [];
+    onChange({ target_platforms: cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v] });
+  }
+
+  return (
+    <div className="space-y-7">
+      <div>
+        <h2 className="text-lg font-bold text-[#111827] mb-1">Marketing Settings</h2>
+        <p className="text-sm text-[#6B7280]">Configure AI post generation for your social media channels. Go to{' '}
+          <button onClick={() => navigate('/marketing')} className="text-[#0D4C3C] underline">Marketing</button>
+          {' '}to create posts.
+        </p>
+      </div>
+
+      {/* Business category */}
+      <div>
+        <label className="block text-sm font-semibold text-[#111827] mb-2">Business Category</label>
+        <div className="relative">
+          <select
+            value={settings.business_category}
+            onChange={e => onChange({ business_category: e.target.value })}
+            className="w-full text-sm text-[#111827] border border-[#D1D5DB] rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[#0D4C3C] transition-colors bg-white appearance-none"
+          >
+            {BUSINESS_CATEGORIES.map(c => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+          <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+        </div>
+      </div>
+
+      {/* Post styles */}
+      <div>
+        <label className="block text-sm font-semibold text-[#111827] mb-2">Post Styles</label>
+        <div className="flex flex-wrap gap-2">
+          {POST_STYLES.map(s => {
+            const active = (settings.post_styles ?? []).includes(s.value);
+            return (
+              <button key={s.value} onClick={() => toggleStyle(s.value)}
+                className={`px-3.5 py-1.5 text-sm font-medium rounded-xl border-2 transition-all ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] text-[#374151] hover:border-[#0D4C3C]/40'}`}>
+                {s.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Target platforms */}
+      <div>
+        <label className="block text-sm font-semibold text-[#111827] mb-2">Target Platforms</label>
+        <div className="flex flex-wrap gap-2">
+          {TARGET_PLATFORMS.map(p => {
+            const active = (settings.target_platforms ?? []).includes(p.value);
+            return (
+              <button key={p.value} onClick={() => togglePlatform(p.value)}
+                className={`px-3.5 py-1.5 text-sm font-medium rounded-xl border-2 transition-all ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] text-[#374151] hover:border-[#0D4C3C]/40'}`}>
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Post frequency */}
+      <div>
+        <label className="block text-sm font-semibold text-[#111827] mb-2">Target Post Frequency</label>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
+          {POST_FREQUENCIES.map(f => {
+            const active = settings.post_frequency === f.value;
+            return (
+              <button key={f.value} onClick={() => onChange({ post_frequency: f.value })}
+                className={`py-2.5 px-3 rounded-xl border-2 text-sm font-medium transition-all ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] text-[#374151] hover:border-[#0D4C3C]/40'}`}>
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Custom instructions */}
+      <div>
+        <label className="block text-sm font-semibold text-[#111827] mb-1.5">
+          Extra AI Instructions <span className="text-[#9CA3AF] font-normal">(optional)</span>
+        </label>
+        <textarea
+          value={settings.custom_instructions}
+          onChange={e => onChange({ custom_instructions: e.target.value })}
+          placeholder="Any special instructions for the AI when generating posts (e.g. always mention our loyalty program, avoid competitor names)…"
+          rows={3}
+          maxLength={500}
+          className="w-full text-sm text-[#111827] border border-[#D1D5DB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#0D4C3C] transition-colors placeholder:text-[#9CA3AF] bg-white resize-none"
+        />
+      </div>
+
+      {/* Auto-approve */}
+      <div className="flex items-start gap-4 p-4 border border-[#E5EAE8] rounded-xl">
+        <button role="switch" aria-checked={settings.auto_approve} onClick={() => onChange({ auto_approve: !settings.auto_approve })}
+          className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 mt-0.5 ${settings.auto_approve ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}>
+          <span className={`absolute w-4 h-4 top-0.5 left-0.5 bg-white rounded-full shadow transition-transform ${settings.auto_approve ? 'translate-x-4' : ''}`}/>
+        </button>
+        <div>
+          <p className="text-sm font-semibold text-[#111827]">Auto-approve generated posts</p>
+          <p className="text-xs text-[#6B7280] mt-0.5">Skip the draft/approval step and mark posts as approved immediately.</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button onClick={onSave} disabled={saving}
+          className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-colors">
+          {saving
+            ? <><svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Saving…</>
+            : <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>Save Marketing Settings</>
+          }
+        </button>
+        <button onClick={() => navigate('/marketing')}
+          className="text-sm font-medium text-[#0D4C3C] border border-[#0D4C3C]/30 px-5 py-2.5 rounded-xl hover:bg-[#E6F2EE] transition-colors">
+          Go to Marketing
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Completion score ──────────────────────────────────────────────────────────
 
 function completionScore(d: BrandBrainData) {
@@ -1179,6 +1323,7 @@ export function BrandBrainPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const [data, setData] = useState<BrandBrainData>(DEFAULT_DATA);
+  const [mktSettings, setMktSettings] = useState<MarketingSettings>(DEFAULT_MARKETING_SETTINGS);
   const [locations, setLocations] = useState<GoogleLocation[]>([]);
 
   // Per-location identity overrides (managed in Step 1)
@@ -1211,8 +1356,10 @@ export function BrandBrainPage() {
       brandBrainService.load(),
       brandBrainService.loadLocations(),
       brandBrainService.loadAllOverrides(),
-    ]).then(([globalRes, locsRes, overridesRes]) => {
-      if (globalRes.data) { setData(globalRes.data); setCompleted(new Set([1,2,3,4,5,6,7])); }
+      marketingService.loadSettings(),
+    ]).then(([globalRes, locsRes, overridesRes, mktRes]) => {
+      if (globalRes.data) { setData(globalRes.data); setCompleted(new Set([1,2,3,4,5,6,7,8])); }
+      if (mktRes.data) setMktSettings(mktRes.data);
       const locs = locsRes.data ?? [];
       setLocations(locs);
 
@@ -1329,8 +1476,22 @@ export function BrandBrainPage() {
       }
     }
 
+    // Save marketing settings if on step 8
+    if (step === 8) {
+      const { error: mktErr } = await marketingService.saveSettings(mktSettings);
+      if (mktErr) { setToast({ message: mktErr, type: 'error' }); setSaving(false); return; }
+    }
+
     setToast({ message: 'Brand Brain saved.', type: 'success' });
     setCompleted(new Set(visibleSteps.map(s => s.id)));
+    setSaving(false);
+  }
+
+  async function handleSaveMkt() {
+    setSaving(true);
+    const { error } = await marketingService.saveSettings(mktSettings);
+    if (error) { setToast({ message: error, type: 'error' }); }
+    else { setToast({ message: 'Marketing settings saved.', type: 'success' }); setCompleted(prev => new Set([...prev, 8])); }
     setSaving(false);
   }
 
@@ -1406,7 +1567,7 @@ export function BrandBrainPage() {
 
       {/* Step content */}
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-7">
-        {step !== 7 && !(stepMask & (1 << (step - 1))) ? (
+        {step !== 7 && step !== 8 && !(stepMask & (1 << (step - 1))) ? (
           <div className="flex flex-col items-center justify-center h-full gap-6 py-16">
             <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] flex items-center justify-center">
               <svg className="w-7 h-7 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1431,6 +1592,7 @@ export function BrandBrainPage() {
             {step === 5 && <Step5 data={data} onChange={patch}/>}
             {step === 6 && locations.length > 0 && <Step6 locations={locations} locCache={locCache} globalData={data} onDataChange={patchLocData} onFlagToggle={toggleLocFlag}/>}
             {step === 7 && <Step7 data={data} onGeneratePreview={async (tr) => { const r = await brandBrainService.previewVoice(data, tr); if (r.error) setToast({ message: r.error, type: 'error' }); return; }} onSave={handleSave} saving={saving}/>}
+            {step === 8 && <Step8 settings={mktSettings} onChange={p => setMktSettings(prev => ({ ...prev, ...p }))} saving={saving} onSave={handleSaveMkt}/>}
           </>
         )}
       </div>
