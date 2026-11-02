@@ -574,6 +574,13 @@ export function ClientDetailPage() {
 
     if (ov) {
       setOverride(ov as OrgOverride);
+      // Update usage limit to reflect override quota
+      setUsage(prev => {
+        if (!prev) return prev;
+        if (ov.ai_drafts_per_month === -1) return { ...prev, limit: 999999 };
+        if (ov.ai_drafts_per_month != null) return { ...prev, limit: ov.ai_drafts_per_month };
+        return prev;
+      });
       setOverrideForm({
         ai_drafts: ov.ai_drafts_per_month !== null && ov.ai_drafts_per_month !== -1 ? String(ov.ai_drafts_per_month) : '',
         ai_drafts_unlimited: ov.ai_drafts_per_month === -1,

@@ -11,6 +11,7 @@ interface Client {
   created_at: string;
   plan: string | null;
   plan_limit: number;
+  plan_limit_unlimited: boolean;
   status: string | null;
   owner_email: string | null;
   member_count: number;
@@ -18,16 +19,20 @@ interface Client {
 }
 
 const PLAN_COLOR: Record<string, string> = {
-  free: 'bg-[#F3F4F6] text-[#374151]',
-  starter: 'bg-[#EFF6FF] text-[#1D4ED8]',
-  pro: 'bg-[#F0FDF4] text-[#15803D]',
+  free:       'bg-[#F3F4F6] text-[#374151]',
+  starter:    'bg-[#EFF6FF] text-[#1D4ED8]',
+  growth:     'bg-[#F0FDF4] text-[#15803D]',
+  scale:      'bg-[#FFF7ED] text-[#C2410C]',
+  pro:        'bg-[#F0FDF4] text-[#15803D]',
   enterprise: 'bg-[#FFF7ED] text-[#C2410C]',
 };
 
 const PLAN_LIMIT: Record<string, number> = {
-  free: 50,
-  starter: 200,
-  pro: 500,
+  free:       50,
+  starter:    200,
+  growth:     500,
+  scale:      2000,
+  pro:        500,
   enterprise: 2000,
 };
 
@@ -74,7 +79,7 @@ export function ClientsPage() {
     const ownerIds = [...new Set(ownerUserIdByOrg.values())];
     const allMemberIds = [...userToOrg.keys()];
 
-    const [plansRes, subsRes, emailRes, usageRes] = await Promise.all([
+    const [plansRes, subsRes, emailRes, usageRes, overridesRes] = await Promise.all([
       supabase.from('plans').select('id, slug'),
       ownerIds.length > 0
         ? supabase.from('subscriptions').select('user_id, plan_id, status').in('user_id', ownerIds)
@@ -85,10 +90,15 @@ export function ClientsPage() {
       allMemberIds.length > 0
         ? supabase.from('usage_events').select('user_id').in('user_id', allMemberIds).eq('event_type', 'ai_draft').gte('created_at', monthStart)
         : Promise.resolve({ data: [] }),
+      supabase.from('org_plan_overrides').select('org_id, ai_drafts_per_month').in('org_id', orgIds),
     ]);
 
     const planSlugById = new Map<string, string>(
       (plansRes.data ?? []).map((p: { id: string; slug: string }) => [p.id, p.slug]),
+    );
+
+    const overrideByOrg = new Map<string, { ai_drafts_per_month: number | null }>(
+      (overridesRes.data ?? []).map((o: { org_id: string; ai_drafts_per_month: number | null }) => [o.org_id, o]),
     );
 
     const subByOwner = new Map<string, { plan: string; status: string }>();
@@ -110,13 +120,22 @@ export function ClientsPage() {
       const ownerUserId = ownerUserIdByOrg.get(o.id);
       const sub = ownerUserId ? subByOwner.get(ownerUserId) : null;
       const plan = sub?.plan ?? 'free';
+      const ov = overrideByOrg.get(o.id);
+      let planLimit = PLAN_LIMIT[plan] ?? 50;
+      let planLimitUnlimited = false;
+      if (ov?.ai_drafts_per_month === -1) {
+        planLimitUnlimited = true;
+      } else if (ov?.ai_drafts_per_month != null) {
+        planLimit = ov.ai_drafts_per_month;
+      }
       return {
         id: o.id,
         ref_id: o.ref_id ?? null,
         name: o.name,
         created_at: o.created_at,
         plan,
-        plan_limit: PLAN_LIMIT[plan] ?? 50,
+        plan_limit: planLimit,
+        plan_limit_unlimited: planLimitUnlimited,
         status: o.status ?? null,
         owner_email: ownerUserId ? (emailByUser.get(ownerUserId) ?? null) : null,
         member_count: memberCountByOrg.get(o.id) ?? 0,
@@ -175,10 +194,10 @@ export function ClientsPage() {
           value={planFilter === 'all' ? '' : planFilter}
           onChange={(v) => setPlanFilter(v === '' ? 'all' : v)}
           options={[
-            { value: 'free',       label: 'Free'       },
-            { value: 'starter',    label: 'Starter'    },
-            { value: 'pro',        label: 'Pro'        },
-            { value: 'enterprise', label: 'Enterprise' },
+            { value: 'free',    label: 'Free'    },
+            { value: 'starter', label: 'Starter' },
+            { value: 'growth',  label: 'Growth'  },
+            { value: 'scale',   label: 'Scale'   },
           ]}
         />
       </div>
@@ -245,7 +264,7 @@ export function ClientsPage() {
                         <td className="px-5 py-1.5">
                           <div className="flex items-center gap-1.5">
                             <span className="font-mono text-xs text-[#374151]">{c.usage}</span>
-                            <span className="text-xs text-[#9CA3AF]">/ {c.plan_limit}</span>
+                            <span className="text-xs text-[#9CA3AF]">/ {c.plan_limit_unlimited ? '∞' : c.plan_limit}</span>
                           </div>
                         </td>
                         <td className="px-5 py-1.5 text-right">
