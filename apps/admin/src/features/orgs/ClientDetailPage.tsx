@@ -836,9 +836,27 @@ export function ClientDetailPage() {
               <dt className="w-28 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Period end</dt>
               <dd className="text-sm text-[#374151]">{sub?.period_end ? formatDate(sub.period_end) : '—'}</dd>
             </div>
+            {/* Custom price row — shown when override has a price */}
+            {override?.custom_price_cents != null && (
+              <div className="px-6 py-3.5 flex items-center gap-4">
+                <dt className="w-28 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Price</dt>
+                <dd className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-[#111827]">
+                    ${(override.custom_price_cents / 100).toFixed(2).replace(/\.00$/, '')}/{override.billing_interval === 'annual' ? 'yr' : 'mo'}
+                  </span>
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[#FEF3C7] text-[#92400E]">Custom</span>
+                </dd>
+              </div>
+            )}
             <div className="px-6 py-3.5 flex items-center gap-4">
               <dt className="w-28 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Limit</dt>
-              <dd className="text-sm text-[#374151]">{usage?.limit ?? 50} drafts / month</dd>
+              <dd className="text-sm text-[#374151]">
+                {override?.ai_drafts_per_month === -1
+                  ? 'Unlimited drafts / month'
+                  : override?.ai_drafts_per_month != null
+                    ? `${override.ai_drafts_per_month} drafts / month`
+                    : `${usage?.limit ?? 50} drafts / month`}
+              </dd>
             </div>
           </dl>
 
@@ -977,7 +995,7 @@ export function ClientDetailPage() {
                   { label: 'Campaign Emails / mo', value: override.campaign_emails_per_month === -1 ? 'Unlimited' : override.campaign_emails_per_month != null ? String(override.campaign_emails_per_month) : '—' },
                   { label: 'Max Locations',  value: override.max_locations != null ? String(override.max_locations) : '—' },
                   { label: 'Max Members',    value: override.max_team_members != null ? String(override.max_team_members) : '—' },
-                  { label: 'Custom Price',   value: override.custom_price_cents != null ? `$${(override.custom_price_cents / 100).toFixed(0)}/${override.billing_interval ?? 'mo'}` : '—' },
+                  { label: 'Custom Price',   value: override.custom_price_cents != null ? `$${(override.custom_price_cents / 100).toFixed(2).replace(/\.00$/, '')}/${override.billing_interval === 'annual' ? 'yr' : 'mo'}` : '—' },
                   { label: 'Contract Start', value: override.contract_start ?? '—' },
                   { label: 'Contract End',   value: override.contract_end ?? '—' },
                 ].map(({ label, value }) => (
