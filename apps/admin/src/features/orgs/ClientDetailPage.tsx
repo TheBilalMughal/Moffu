@@ -447,6 +447,7 @@ export function ClientDetailPage() {
   const [savingOverride, setSavingOverride] = useState(false);
   const [clearingOverride, setClearingOverride] = useState(false);
   const [overrideMsg, setOverrideMsg] = useState<string | null>(null);
+  const [overrideEditing, setOverrideEditing] = useState(false);
 
   // Actions
   const [toggling, setToggling] = useState(false);
@@ -623,7 +624,8 @@ export function ClientDetailPage() {
 
     setSavingOverride(false);
     if (error) { setOverrideMsg(`Error: ${error.message}`); return; }
-    setOverrideMsg('Override saved.');
+    setOverrideEditing(false);
+    setOverrideMsg(null);
     load();
   }
 
@@ -634,7 +636,8 @@ export function ClientDetailPage() {
     const { error } = await supabase.from('org_plan_overrides').delete().eq('org_id', org.id);
     setClearingOverride(false);
     if (error) { setOverrideMsg(`Error: ${error.message}`); return; }
-    setOverrideMsg('Override cleared — plan defaults restored.');
+    setOverrideEditing(false);
+    setOverrideMsg(null);
     load();
   }
 
@@ -947,166 +950,218 @@ export function ClientDetailPage() {
         <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-semibold text-[#111827]">Custom Override</h2>
-            {override && (
+            {override && !overrideEditing && (
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#FEF3C7] text-[#92400E]">Active</span>
             )}
           </div>
-          <p className="text-xs text-[#9CA3AF]">Override plan limits for this client. Leave blank to use plan defaults.</p>
+          {!overrideEditing && (
+            <button
+              onClick={() => { setOverrideMsg(null); setOverrideEditing(true); }}
+              className="px-3 py-1.5 text-xs font-semibold text-[#0D4C3C] border border-[#0D4C3C]/30 rounded-lg hover:bg-[#E6F2EE] transition-colors"
+            >
+              {override ? 'Edit' : 'Set Override'}
+            </button>
+          )}
         </div>
 
-        <div className="px-6 py-5">
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-
-            {/* AI Drafts */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-medium text-[#374151]">AI Drafts / month</label>
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input type="checkbox" checked={overrideForm.ai_drafts_unlimited}
-                    onChange={e => setOverrideForm(f => ({ ...f, ai_drafts_unlimited: e.target.checked }))}
-                    className="w-3.5 h-3.5 accent-[#0D4C3C]" />
-                  <span className="text-xs text-[#6B7280]">Unlimited</span>
-                </label>
+        {/* Read-only summary */}
+        {!overrideEditing && (
+          <div className="px-6 py-5">
+            {!override ? (
+              <p className="text-sm text-[#9CA3AF]">No override set — client uses plan defaults.</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-3">
+                {[
+                  { label: 'AI Drafts / mo', value: override.ai_drafts_per_month === -1 ? 'Unlimited' : override.ai_drafts_per_month != null ? String(override.ai_drafts_per_month) : '—' },
+                  { label: 'Replies / mo',   value: override.published_replies_per_month === -1 ? 'Unlimited' : override.published_replies_per_month != null ? String(override.published_replies_per_month) : '—' },
+                  { label: 'Campaign Emails / mo', value: override.campaign_emails_per_month === -1 ? 'Unlimited' : override.campaign_emails_per_month != null ? String(override.campaign_emails_per_month) : '—' },
+                  { label: 'Max Locations',  value: override.max_locations != null ? String(override.max_locations) : '—' },
+                  { label: 'Max Members',    value: override.max_team_members != null ? String(override.max_team_members) : '—' },
+                  { label: 'Custom Price',   value: override.custom_price_cents != null ? `$${(override.custom_price_cents / 100).toFixed(0)}/${override.billing_interval ?? 'mo'}` : '—' },
+                  { label: 'Contract Start', value: override.contract_start ?? '—' },
+                  { label: 'Contract End',   value: override.contract_end ?? '—' },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <p className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-0.5">{label}</p>
+                    <p className="text-sm text-[#111827]">{value}</p>
+                  </div>
+                ))}
+                {override.notes && (
+                  <div className="col-span-2 sm:col-span-3">
+                    <p className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-0.5">Notes</p>
+                    <p className="text-xs text-[#374151]">{override.notes}</p>
+                  </div>
+                )}
               </div>
-              <input type="number" min="0" disabled={overrideForm.ai_drafts_unlimited}
-                value={overrideForm.ai_drafts}
-                onChange={e => setOverrideForm(f => ({ ...f, ai_drafts: e.target.value }))}
-                placeholder="blank = use plan"
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
-            </div>
+            )}
+            {overrideMsg && (
+              <p className={`mt-3 text-xs ${overrideMsg.startsWith('Error') ? 'text-red-600' : 'text-[#0D4C3C]'}`}>{overrideMsg}</p>
+            )}
+          </div>
+        )}
 
-            {/* Replies */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-medium text-[#374151]">Published Replies / month</label>
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input type="checkbox" checked={overrideForm.replies_unlimited}
-                    onChange={e => setOverrideForm(f => ({ ...f, replies_unlimited: e.target.checked }))}
-                    className="w-3.5 h-3.5 accent-[#0D4C3C]" />
-                  <span className="text-xs text-[#6B7280]">Unlimited</span>
-                </label>
-              </div>
-              <input type="number" min="0" disabled={overrideForm.replies_unlimited}
-                value={overrideForm.replies}
-                onChange={e => setOverrideForm(f => ({ ...f, replies: e.target.value }))}
-                placeholder="blank = use plan"
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
-            </div>
+        {/* Edit form */}
+        {overrideEditing && (
+          <div className="px-6 py-5">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-4">
 
-            {/* Locations */}
-            <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">Max Locations</label>
-              <input type="number" min="1"
-                value={overrideForm.locations}
-                onChange={e => setOverrideForm(f => ({ ...f, locations: e.target.value }))}
-                placeholder="blank = use plan"
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
-            </div>
-
-            {/* Team members */}
-            <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">Max Team Members</label>
-              <input type="number" min="1"
-                value={overrideForm.team_members}
-                onChange={e => setOverrideForm(f => ({ ...f, team_members: e.target.value }))}
-                placeholder="blank = use plan"
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
-            </div>
-
-            {/* Campaign emails */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-medium text-[#374151]">Campaign Emails / month</label>
-                <label className="flex items-center gap-1.5 cursor-pointer">
-                  <input type="checkbox" checked={overrideForm.campaign_emails_unlimited}
-                    onChange={e => setOverrideForm(f => ({ ...f, campaign_emails_unlimited: e.target.checked }))}
-                    className="w-3.5 h-3.5 accent-[#0D4C3C]" />
-                  <span className="text-xs text-[#6B7280]">Unlimited</span>
-                </label>
-              </div>
-              <input type="number" min="0" disabled={overrideForm.campaign_emails_unlimited}
-                value={overrideForm.campaign_emails}
-                onChange={e => setOverrideForm(f => ({ ...f, campaign_emails: e.target.value }))}
-                placeholder="blank = use plan"
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
-            </div>
-
-            {/* Custom price */}
-            <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">Custom Price (USD)</label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#9CA3AF]">$</span>
-                  <input type="number" min="0" step="0.01"
-                    value={overrideForm.custom_price}
-                    onChange={e => setOverrideForm(f => ({ ...f, custom_price: e.target.value }))}
-                    placeholder="e.g. 299"
-                    className="w-full pl-6 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+              {/* AI Drafts */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium text-[#374151]">AI Drafts / month</label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" checked={overrideForm.ai_drafts_unlimited}
+                      onChange={e => setOverrideForm(f => ({ ...f, ai_drafts_unlimited: e.target.checked }))}
+                      className="w-3.5 h-3.5 accent-[#0D4C3C]" />
+                    <span className="text-xs text-[#6B7280]">Unlimited</span>
+                  </label>
                 </div>
-                <select value={overrideForm.billing_interval}
-                  onChange={e => setOverrideForm(f => ({ ...f, billing_interval: e.target.value }))}
-                  className="px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] bg-white">
-                  <option value="monthly">/ month</option>
-                  <option value="annual">/ year</option>
-                </select>
+                <input type="number" min="0" disabled={overrideForm.ai_drafts_unlimited}
+                  value={overrideForm.ai_drafts}
+                  onChange={e => setOverrideForm(f => ({ ...f, ai_drafts: e.target.value }))}
+                  placeholder="blank = use plan"
+                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
               </div>
-              <p className="text-[11px] text-[#9CA3AF] mt-1">Informational only — billing handled via Stripe or invoice.</p>
+
+              {/* Replies */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium text-[#374151]">Published Replies / month</label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" checked={overrideForm.replies_unlimited}
+                      onChange={e => setOverrideForm(f => ({ ...f, replies_unlimited: e.target.checked }))}
+                      className="w-3.5 h-3.5 accent-[#0D4C3C]" />
+                    <span className="text-xs text-[#6B7280]">Unlimited</span>
+                  </label>
+                </div>
+                <input type="number" min="0" disabled={overrideForm.replies_unlimited}
+                  value={overrideForm.replies}
+                  onChange={e => setOverrideForm(f => ({ ...f, replies: e.target.value }))}
+                  placeholder="blank = use plan"
+                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
+              </div>
+
+              {/* Locations */}
+              <div>
+                <label className="block text-xs font-medium text-[#374151] mb-1">Max Locations</label>
+                <input type="number" min="1"
+                  value={overrideForm.locations}
+                  onChange={e => setOverrideForm(f => ({ ...f, locations: e.target.value }))}
+                  placeholder="blank = use plan"
+                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+              </div>
+
+              {/* Team members */}
+              <div>
+                <label className="block text-xs font-medium text-[#374151] mb-1">Max Team Members</label>
+                <input type="number" min="1"
+                  value={overrideForm.team_members}
+                  onChange={e => setOverrideForm(f => ({ ...f, team_members: e.target.value }))}
+                  placeholder="blank = use plan"
+                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+              </div>
+
+              {/* Campaign emails */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-medium text-[#374151]">Campaign Emails / month</label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" checked={overrideForm.campaign_emails_unlimited}
+                      onChange={e => setOverrideForm(f => ({ ...f, campaign_emails_unlimited: e.target.checked }))}
+                      className="w-3.5 h-3.5 accent-[#0D4C3C]" />
+                    <span className="text-xs text-[#6B7280]">Unlimited</span>
+                  </label>
+                </div>
+                <input type="number" min="0" disabled={overrideForm.campaign_emails_unlimited}
+                  value={overrideForm.campaign_emails}
+                  onChange={e => setOverrideForm(f => ({ ...f, campaign_emails: e.target.value }))}
+                  placeholder="blank = use plan"
+                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
+              </div>
+
+              {/* Custom price */}
+              <div>
+                <label className="block text-xs font-medium text-[#374151] mb-1">Custom Price (USD)</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#9CA3AF]">$</span>
+                    <input type="number" min="0" step="0.01"
+                      value={overrideForm.custom_price}
+                      onChange={e => setOverrideForm(f => ({ ...f, custom_price: e.target.value }))}
+                      placeholder="e.g. 299"
+                      className="w-full pl-6 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                  </div>
+                  <select value={overrideForm.billing_interval}
+                    onChange={e => setOverrideForm(f => ({ ...f, billing_interval: e.target.value }))}
+                    className="px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] bg-white">
+                    <option value="monthly">/ month</option>
+                    <option value="annual">/ year</option>
+                  </select>
+                </div>
+                <p className="text-[11px] text-[#9CA3AF] mt-1">Informational only — billing handled via Stripe or invoice.</p>
+              </div>
+
+              {/* Contract dates */}
+              <div>
+                <label className="block text-xs font-medium text-[#374151] mb-1">Contract Start</label>
+                <input type="date"
+                  value={overrideForm.contract_start}
+                  onChange={e => setOverrideForm(f => ({ ...f, contract_start: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[#374151] mb-1">Contract End</label>
+                <input type="date"
+                  value={overrideForm.contract_end}
+                  onChange={e => setOverrideForm(f => ({ ...f, contract_end: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+              </div>
+
             </div>
 
-            {/* Contract dates */}
-            <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">Contract Start</label>
-              <input type="date"
-                value={overrideForm.contract_start}
-                onChange={e => setOverrideForm(f => ({ ...f, contract_start: e.target.value }))}
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1">Contract End</label>
-              <input type="date"
-                value={overrideForm.contract_end}
-                onChange={e => setOverrideForm(f => ({ ...f, contract_end: e.target.value }))}
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+            {/* Notes */}
+            <div className="mt-4">
+              <label className="block text-xs font-medium text-[#374151] mb-1">Internal Notes</label>
+              <textarea rows={3}
+                value={overrideForm.notes}
+                onChange={e => setOverrideForm(f => ({ ...f, notes: e.target.value }))}
+                placeholder="e.g. Negotiated by sales, includes onboarding support, renews Dec 2025"
+                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] resize-none" />
             </div>
 
-          </div>
-
-          {/* Notes */}
-          <div className="mt-4">
-            <label className="block text-xs font-medium text-[#374151] mb-1">Internal Notes</label>
-            <textarea rows={3}
-              value={overrideForm.notes}
-              onChange={e => setOverrideForm(f => ({ ...f, notes: e.target.value }))}
-              placeholder="e.g. Negotiated by sales, includes onboarding support, renews Dec 2025"
-              className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] resize-none" />
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <div>
-              {overrideMsg && (
-                <p className={`text-xs ${overrideMsg.startsWith('Error') ? 'text-red-600' : 'text-[#0D4C3C]'}`}>{overrideMsg}</p>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {override && (
+            <div className="mt-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {override && (
+                  <button
+                    onClick={handleClearOverride}
+                    disabled={clearingOverride}
+                    className="px-3 py-2 text-xs font-medium text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {clearingOverride ? 'Clearing…' : 'Clear Override'}
+                  </button>
+                )}
+                {overrideMsg && (
+                  <p className={`text-xs ${overrideMsg.startsWith('Error') ? 'text-red-600' : 'text-[#0D4C3C]'}`}>{overrideMsg}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={handleClearOverride}
-                  disabled={clearingOverride}
-                  className="px-3 py-2 text-xs font-medium text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                  onClick={() => { setOverrideEditing(false); setOverrideMsg(null); }}
+                  className="px-3 py-2 text-xs font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors"
                 >
-                  {clearingOverride ? 'Clearing…' : 'Clear Override'}
+                  Cancel
                 </button>
-              )}
-              <button
-                onClick={handleSaveOverride}
-                disabled={savingOverride}
-                className="px-4 py-2 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#0a3d30] rounded-lg transition-colors disabled:opacity-50"
-              >
-                {savingOverride ? 'Saving…' : override ? 'Update Override' : 'Set Override'}
-              </button>
+                <button
+                  onClick={handleSaveOverride}
+                  disabled={savingOverride}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#0a3d30] rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {savingOverride ? 'Saving…' : 'Save'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Members */}
