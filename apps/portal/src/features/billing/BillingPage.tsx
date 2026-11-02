@@ -257,14 +257,9 @@ function PlanComparisonModal({ plans, sub, billingInterval, currentPlan, onDowng
               const isCurrent = plan.id === sub?.plan_id;
               const currentSortOrder = currentPlan?.sort_order ?? 0;
               const isDowngrade = !isCurrent && plan.sort_order < currentSortOrder;
-              const isScale = plan.slug === 'scale';
               return (
                 <div key={plan.id}>
-                  {isScale ? (
-                    <button disabled className="w-full py-2 text-xs font-semibold text-stone-400 bg-stone-800 rounded-xl cursor-not-allowed">
-                      Coming soon
-                    </button>
-                  ) : isCurrent ? (
+                  {isCurrent ? (
                     <button disabled className="w-full py-2 text-xs font-semibold text-[#9CA3AF] border border-[#E5EAE8] rounded-xl cursor-default">
                       Current
                     </button>
@@ -588,9 +583,11 @@ export function BillingPage() {
                 <p className="text-xs text-[#9CA3AF] mt-1">
                   {orgOverride?.custom_price_cents
                     ? `${cents(orgOverride.custom_price_cents)}/mo · custom`
-                    : sub?.billing_interval === 'annual'
-                      ? `${cents(currentPlan.prices.find(p => p.interval === 'annual')?.amount_cents ?? 0)}/mo · billed annually`
-                      : `${cents(currentPlan.prices.find(p => p.interval === 'monthly')?.amount_cents ?? 0)}/mo`}
+                    : currentPlan.contact_sales
+                      ? 'Custom pricing · contact sales@moffu.com'
+                      : sub?.billing_interval === 'annual'
+                        ? `${cents(currentPlan.prices.find(p => p.interval === 'annual')?.amount_cents ?? 0)}/mo · billed annually`
+                        : `${cents(currentPlan.prices.find(p => p.interval === 'monthly')?.amount_cents ?? 0)}/mo`}
                 </p>
               )}
               {orgOverride?.contract_end && (
