@@ -12,7 +12,9 @@ interface SubRow {
   planId: string;
   planSlug: string;
   planName: string;
-  amountCents: number;
+  amountCents: number;      // MRR-normalized monthly (for stats)
+  contractCents: number;    // actual billing amount per cycle (for display)
+  contractInterval: string | null; // billing cycle of contractCents
   status: string;
   interval: string | null;
   periodStart: string;
@@ -89,10 +91,11 @@ function loadSaved(): SavedFilter[] {
 }
 
 function exportCSV(rows: SubRow[]) {
-  const headers = ['ID', 'Client', 'Email', 'Plan', 'Status', 'Interval', 'Amount (USD)', 'Period End', 'At Risk', 'Overage', 'Usage %', 'Created'];
+  const headers = ['ID', 'Client', 'Email', 'Plan', 'Status', 'Interval', 'Contract Amount (USD)', 'MRR Amount (USD)', 'Period End', 'At Risk', 'Overage', 'Usage %', 'Created'];
   const data = rows.map((r) => [
     formatId(r.orgRefId), r.orgName ?? '', r.ownerEmail ?? '',
-    r.planName, r.status, r.interval ?? '—',
+    r.planName, r.status, r.contractInterval ?? r.interval ?? '—',
+    (r.contractCents / 100).toFixed(2),
     (r.amountCents / 100).toFixed(2),
     r.periodEnd && new Date(r.periodEnd).getFullYear() > 2100 ? '—' : r.periodEnd,
     r.isAtRisk ? 'Yes' : 'No',
@@ -540,7 +543,14 @@ export function SubscriptionsPage() {
       const customMonthly = ov?.custom_price_cents != null
         ? (ov.billing_interval === 'annual' ? Math.round(ov.custom_price_cents / 12) : ov.custom_price_cents)
         : null;
-      const amountCents = customMonthly ?? planPrice;
+      const amountCents = customMonthly ?? planPrice; // MRR-normalized monthly
+      // contractCents = what client actually pays per billing cycle
+      const contractCents = ov?.custom_price_cents != null
+        ? ov.custom_price_cents
+        : interval === 'annual'
+          ? (priceMap.get(`${s.plan_id}:annual`) ?? planPrice)
+          : planPrice;
+      const contractInterval = ov?.billing_interval ?? s.billing_interval;
       const planSlug = plan?.slug ?? 'free';
       const usageLimit = ov?.ai_drafts_per_month === -1
         ? Infinity
@@ -554,7 +564,7 @@ export function SubscriptionsPage() {
         : null;
       return {
         id: s.id, userId: s.user_id, planId: s.plan_id,
-        planSlug, planName: plan?.name ?? 'Free', amountCents,
+        planSlug, planName: plan?.name ?? 'Free', amountCents, contractCents, contractInterval,
         status: s.status, interval: s.billing_interval,
         periodStart: s.current_period_start, periodEnd: s.current_period_end,
         cancelAtPeriodEnd: s.cancel_at_period_end,
@@ -885,9 +895,11 @@ export function SubscriptionsPage() {
                   </td>
                   <td className="px-4 py-1.5 text-xs text-[#374151] capitalize">{s.interval ?? '—'}</td>
                   <td className="px-4 py-1.5">
-                    <span className="text-sm font-medium text-[#111827]">{fmt(s.amountCents)}</span>
-                    {s.interval === 'annual' && s.amountCents > 0 && (
-                      <p className="text-[10px] text-[#9CA3AF]">{fmt(Math.round(s.amountCents / 12))}/mo</p>
+                    <span className="text-sm font-medium text-[#111827]">
+                      {fmt(s.contractCents)}{s.contractInterval === 'annual' ? '/yr' : '/mo'}
+                    </span>
+                    {s.contractInterval === 'annual' && s.contractCents > 0 && (
+                      <p className="text-[10px] text-[#9CA3AF]">≈ {fmt(s.amountCents)}/mo MRR</p>
                     )}
                   </td>
                   <td className="px-4 py-1.5">
