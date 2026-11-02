@@ -922,9 +922,9 @@ export function ClientDetailPage() {
             </thead>
             <tbody className="divide-y divide-[#F3F4F6]">
               {connections.map((g) => {
-                const stateColor = g.state === 'active'
+                const stateColor = g.state === 'CONNECTED'
                   ? 'bg-[#ECFDF5] text-[#065F46]'
-                  : g.state === 'disconnected'
+                  : g.state === 'DISCONNECTED'
                   ? 'bg-[#F3F4F6] text-[#374151]'
                   : 'bg-[#FEF2F2] text-[#991B1B]';
                 return (
