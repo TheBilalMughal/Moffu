@@ -146,10 +146,10 @@ function UsageTrendChart({
       {period === 'custom' && (
         <div className="px-6 py-3 bg-[#FAFAF9] border-b border-[#F3F4F6] flex items-center gap-2">
           <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-            className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] border border-[#E5EAE8] focus:outline-none focus:border-[#0D4C3C]" />
+            className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]" />
           <span className="text-xs text-[#9CA3AF]">—</span>
           <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-            className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] border border-[#E5EAE8] focus:outline-none focus:border-[#0D4C3C]" />
+            className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]" />
         </div>
       )}
       <div className="px-6 py-5">

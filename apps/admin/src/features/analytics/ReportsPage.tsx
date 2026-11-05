@@ -143,10 +143,10 @@ export function ReportsPage() {
         </div>
         <div className="flex items-center gap-2">
           <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-            className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] border border-[#E5EAE8] focus:outline-none focus:border-[#0D4C3C]" />
+            className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]" />
           <span className="text-xs text-[#9CA3AF]">—</span>
           <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-            className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] border border-[#E5EAE8] focus:outline-none focus:border-[#0D4C3C]" />
+            className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]" />
           <button onClick={() => downloadCSV(months)}
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-[#E5EAE8] rounded-xl hover:bg-[#F3F4F6] text-[#374151] transition-colors">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

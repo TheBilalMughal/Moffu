@@ -147,10 +147,10 @@ export function RefundsPage() {
         </div>
         <Dropdown value={statusFilter} onChange={setStatusFilter} options={STATUS_OPTIONS} clearable />
         <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-          className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] border border-[#E5EAE8] focus:outline-none focus:border-[#0D4C3C]" />
+          className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]" />
         <span className="text-xs text-[#9CA3AF]">—</span>
         <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-          className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] border border-[#E5EAE8] focus:outline-none focus:border-[#0D4C3C]" />
+          className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]" />
         <span className="text-xs text-[#9CA3AF] ml-auto">{filtered.length} request{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
