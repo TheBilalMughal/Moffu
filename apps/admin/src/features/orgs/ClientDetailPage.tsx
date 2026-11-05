@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { env } from '@/lib/env';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { Dropdown } from '@/components/Dropdown';
+import { DateRangePicker } from '@/components/DateRangePicker';
 import { formatDate, formatId } from '@/lib/format';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -135,23 +136,22 @@ function UsageTrendChart({
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          {(['1m', '3m', '6m', 'custom'] as ChartPeriod[]).map(p => (
-            <button key={p} onClick={() => setPeriod(p)}
-              className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${period === p ? 'bg-[#0D4C3C] text-white' : 'text-[#6B7280] hover:bg-[#F3F4F6]'}`}>
-              {p === 'custom' ? 'Custom' : p}
-            </button>
-          ))}
+          <div className="flex items-center bg-[#F3F4F6] rounded-lg p-0.5 gap-0.5">
+            {(['1m', '3m', '6m'] as Exclude<ChartPeriod,'custom'>[]).map(p => (
+              <button key={p} onClick={() => setPeriod(p)}
+                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${period === p ? 'bg-white text-[#111827] shadow-sm' : 'text-[#6B7280] hover:text-[#374151]'}`}>
+                {p}
+              </button>
+            ))}
+            <DateRangePicker
+              from={customFrom}
+              to={customTo}
+              onChange={(f, t) => { setCustomFrom(f); setCustomTo(t); if (f && t) setPeriod('custom'); }}
+              alignRight
+            />
+          </div>
         </div>
       </div>
-      {period === 'custom' && (
-        <div className="px-6 py-3 bg-[#FAFAF9] border-b border-[#F3F4F6] flex items-center gap-2">
-          <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-            className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]" />
-          <span className="text-xs text-[#9CA3AF]">—</span>
-          <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-            className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]" />
-        </div>
-      )}
       <div className="px-6 py-5">
         <svg viewBox={`0 0 ${W} ${H + 20}`} className="w-full" preserveAspectRatio="none">
           {[0.25, 0.5, 0.75, 1].map(f => (

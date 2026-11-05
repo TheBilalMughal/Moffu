@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
+import { DateRangePicker } from '@/components/DateRangePicker';
 import { formatDate, formatId } from '@/lib/format';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -517,11 +518,7 @@ export function PaymentsPage() {
               options={[{ value:'active',label:'Active' },{ value:'trialing',label:'Trialing' },{ value:'past_due',label:'Past Due' },{ value:'canceled',label:'Canceled' },{ value:'paused',label:'Paused' }]}/>
             <Dropdown clearable placeholder="All intervals" value={intervalFilter} onChange={(v) => { setIntervalFilter(v); setPage(1); }}
               options={[{ value:'monthly',label:'Monthly' },{ value:'annual',label:'Annual' }]}/>
-            <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-              className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]"/>
-            <span className="text-xs text-[#9CA3AF]">—</span>
-            <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-              className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]"/>
+            <DateRangePicker from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); setPage(1); }} alignRight />
             {hasActiveFilters && (
               <button onClick={() => { setSearch(''); setPlanFilter(''); setStatusFilter(''); setIntervalFilter(''); setDateFrom(''); setDateTo(''); setPage(1); }}
                 className="text-xs text-[#6B7280] hover:text-[#111827] flex items-center gap-1 transition-colors">
