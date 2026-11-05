@@ -89,7 +89,6 @@ function CalMonth({ year, month, from, to, hovered, onDay, onHover }: {
   while (cells.length % 7 !== 0) cells.push(null);
   return (
     <div className="w-[216px]">
-      <p className="text-xs font-semibold text-[#111827] text-center mb-3">{MONTHS_LONG[month]} {year}</p>
       <div className="grid grid-cols-7">
         {DAYS_SHORT.map((d) => <div key={d} className="h-7 flex items-center justify-center text-[10px] font-medium text-[#9CA3AF]">{d}</div>)}
         {cells.map((d, i) => {
@@ -148,7 +147,7 @@ function DateRangePicker({ from, to, onChange }: {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-xl border transition-colors ${hasValue ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#E5EAE8] text-[#374151] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+        className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${hasValue ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] text-[#374151] hover:bg-[#F3F4F6]'}`}>
         <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
@@ -160,22 +159,31 @@ function DateRangePicker({ from, to, onChange }: {
         )}
       </button>
       {open && (
-        <div className="absolute top-full mt-2 left-0 z-[200] bg-white shadow-sm rounded-xl shadow-lg p-4 min-w-max">
-          <div className="flex items-center justify-between mb-3">
-            <button onClick={() => { if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); } else setViewMonth((m) => m - 1); }}
-              className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
-            </button>
-            <span className="text-xs font-medium text-[#374151]">{MONTHS_LONG[viewMonth]} {viewYear}</span>
-            <button onClick={() => { if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); } else setViewMonth((m) => m + 1); }}
-              className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
-            </button>
-          </div>
+        <div className="absolute top-full mt-2 left-0 z-[200] bg-white border border-[#E5EAE8] rounded-xl shadow-lg p-4 min-w-max">
           <div className="flex gap-6">
-            <CalMonth year={viewYear} month={viewMonth} from={fromDate} to={toDate} hovered={hovered} onDay={handleDay} onHover={setHovered}/>
+            <div className="w-[216px]">
+              <div className="flex items-center justify-between mb-3">
+                <button onClick={() => { if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); } else setViewMonth((m) => m - 1); }}
+                  className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <p className="text-xs font-semibold text-[#111827]">{MONTHS_LONG[viewMonth]} {viewYear}</p>
+                <div className="w-6"/>
+              </div>
+              <CalMonth year={viewYear} month={viewMonth} from={fromDate} to={toDate} hovered={hovered} onDay={handleDay} onHover={setHovered}/>
+            </div>
             <div className="w-px bg-[#F3F4F6]"/>
-            <CalMonth year={nextY} month={nextM} from={fromDate} to={toDate} hovered={hovered} onDay={handleDay} onHover={setHovered}/>
+            <div className="w-[216px]">
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-6"/>
+                <p className="text-xs font-semibold text-[#111827]">{MONTHS_LONG[nextM]} {nextY}</p>
+                <button onClick={() => { if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); } else setViewMonth((m) => m + 1); }}
+                  className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+              <CalMonth year={nextY} month={nextM} from={fromDate} to={toDate} hovered={hovered} onDay={handleDay} onHover={setHovered}/>
+            </div>
           </div>
           <div className="mt-3 pt-3 border-t border-[#F3F4F6] flex items-center justify-between">
             <p className="text-xs text-[#9CA3AF]">{selecting === 'from' ? 'Select start date' : 'Select end date'}</p>
@@ -306,8 +314,8 @@ export function MRRPage() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [dateFrom, setDateFrom] = useState(monthStart(0));
-  const [dateTo, setDateTo] = useState(today());
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [planFilter, setPlanFilter] = useState('');
   const [intervalFilter, setIntervalFilter] = useState('');
 

@@ -53,18 +53,16 @@ export function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [months, setMonths] = useState<MonthMetric[]>([]);
   const [planDist, setPlanDist] = useState<PlanDist[]>([]);
-  const [dateFrom, setDateFrom] = useState(() => {
-    const d = new Date(); d.setMonth(d.getMonth() - 11); d.setDate(1);
-    return d.toISOString().slice(0, 10);
-  });
-  const [dateTo, setDateTo] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   useEffect(() => { load(); }, [dateFrom, dateTo]);
 
   async function load() {
     setLoading(true);
-    const fromISO = new Date(dateFrom).toISOString();
-    const toISO = new Date(dateTo + 'T23:59:59').toISOString();
+    const now = new Date();
+    const fromISO = dateFrom ? new Date(dateFrom).toISOString() : new Date(now.getFullYear() - 2, 0, 1).toISOString();
+    const toISO   = dateTo   ? new Date(dateTo + 'T23:59:59').toISOString() : now.toISOString();
 
     const [orgsRes, subsRes, auditRes, usageRes, planRes] = await Promise.all([
       supabase.from('organizations').select('id, created_at').gte('created_at', fromISO).lte('created_at', toISO),
