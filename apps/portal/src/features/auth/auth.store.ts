@@ -27,7 +27,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     // Rely solely on onAuthStateChange — it fires INITIAL_SESSION on startup
     // and correctly processes OAuth hash/PKCE code before resolving, so we
     // never flash 'unauthenticated' while the OAuth callback is in-flight.
-    const { data: listener } = authService.onAuthStateChange((_event, session) => {
+    const { data: listener } = authService.onAuthStateChange(async (_event, session) => {
       set({
         session,
         user: session?.user ?? null,
