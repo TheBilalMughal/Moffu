@@ -274,10 +274,10 @@ export function UsagePage() {
               className="flex-1 text-sm text-[#111827] placeholder-[#9CA3AF] bg-transparent focus:outline-none" />
           </div>
           <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-            className="px-3 py-2 text-sm bg-white shadow-sm rounded-xl text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30" />
-          <span className="text-[#9CA3AF] text-sm">—</span>
+            className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]" />
+          <span className="text-xs text-[#9CA3AF]">—</span>
           <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-            className="px-3 py-2 text-sm bg-white shadow-sm rounded-xl text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30" />
+            className="text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] focus:outline-none focus:border-[#0D4C3C]" />
           <div className="w-40">
             <Dropdown value={planFilter} onChange={setPlanFilter} options={[
               { value: 'all',     label: 'All Plans' },
