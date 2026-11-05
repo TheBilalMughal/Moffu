@@ -150,7 +150,7 @@ export function DateRangePicker({ from, to, onChange, pill = false, alignRight =
         onClick={() => setOpen(o => !o)}
         className={pill
           ? `px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 ${active || hasValue ? 'bg-white text-[#111827] shadow-sm' : 'text-[#6B7280] hover:text-[#374151]'}`
-          : `flex items-center gap-2 text-xs px-3 py-1.5 rounded-xl border transition-colors ${hasValue ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}
+          : `flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border transition-colors font-medium ${hasValue ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}
       >
         <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
