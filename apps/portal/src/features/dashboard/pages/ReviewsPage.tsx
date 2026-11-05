@@ -461,14 +461,13 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
                 {PERIOD_LABELS[p]}
               </button>
             ))}
-          </div>
-          <div className="flex items-center bg-[#F3F4F6] rounded-lg p-0.5">
             <DateRangePicker
               from={chartFrom}
               to={chartTo}
               onChange={(f, t) => { setChartFrom(f); setChartTo(t); if (f && t) setPeriod('custom'); }}
               pill
               alignRight
+              active={period === 'custom'}
             />
           </div>
         </div>
