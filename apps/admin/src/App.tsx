@@ -24,6 +24,9 @@ import { AISettingsPage } from '@/features/settings/AISettingsPage';
 import { GoogleSettingsPage } from '@/features/settings/GoogleSettingsPage';
 import { PackagesSettingsPage } from '@/features/settings/PackagesSettingsPage';
 import { SyncSettingsPage } from '@/features/settings/SyncSettingsPage';
+import { RefundsPage } from '@/features/billing/RefundsPage';
+import { ReportsPage } from '@/features/analytics/ReportsPage';
+import { IntegrationsHealthPage } from '@/features/platform/IntegrationsHealthPage';
 
 export function App() {
   const initialize = useAdminAuthStore((s) => s.initialize);
@@ -53,11 +56,14 @@ export function App() {
           <Route path="billing" element={<SubscriptionsPage />} />
           <Route path="mrr" element={<MRRPage />} />
           <Route path="coupons" element={<CouponsPage />} />
+          <Route path="refunds" element={<RefundsPage />} />
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="usage" element={<UsagePage />} />
+          <Route path="reports" element={<ReportsPage />} />
           <Route path="broadcasts" element={<BroadcastPage />} />
           <Route path="waitlist" element={<WaitlistPage />} />
           <Route path="flags" element={<FeatureFlagsPage />} />
+          <Route path="integrations" element={<IntegrationsHealthPage />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="audit" element={<AuditPage />} />
           <Route path="settings" element={<SettingsLayout />}>

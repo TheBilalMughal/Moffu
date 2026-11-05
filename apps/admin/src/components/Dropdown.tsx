@@ -17,6 +17,8 @@ interface DropdownProps {
   className?: string;
   /** Full-width trigger + popover (for form fields inside modals/panels) */
   fullWidth?: boolean;
+  /** Show search input inside popover — auto-enabled when options.length >= 5 */
+  searchable?: boolean;
 }
 
 export function Dropdown({
@@ -26,19 +28,31 @@ export function Dropdown({
   icon,
   className = '',
   fullWidth = false,
+  searchable,
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
+  const [searchQ, setSearchQ] = useState('');
   const ref = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const selected = options.find((o) => o.value === value);
+  const isSearchable = searchable ?? options.length >= 5;
+  const visibleOptions = isSearchable && searchQ
+    ? options.filter(o => o.label.toLowerCase().includes(searchQ.toLowerCase()))
+    : options;
   const isActive = value !== '' && value !== 'all';
 
   useEffect(() => {
     const fn = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) { setOpen(false); setSearchQ(''); }
     };
     document.addEventListener('mousedown', fn);
     return () => document.removeEventListener('mousedown', fn);
   }, []);
+
+  useEffect(() => {
+    if (open && isSearchable) setTimeout(() => searchRef.current?.focus(), 50);
+    if (!open) setSearchQ('');
+  }, [open, isSearchable]);
 
   const triggerBase = `flex items-center gap-1.5 text-sm border transition-colors ${fullWidth ? 'w-full justify-between px-3 py-2' : 'px-3 py-1.5'}`;
   const triggerColor = isActive && !fullWidth
@@ -73,27 +87,44 @@ export function Dropdown({
       </button>
 
       {open && (
-        <div className={`absolute top-full mt-1.5 z-50 bg-white shadow-sm rounded-xl shadow-lg py-1.5 ${fullWidth ? 'left-0 right-0' : 'left-0 min-w-[160px]'}`}>
-          {options.map((opt) => {
-            const sel = opt.value === value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => { onChange(opt.value); setOpen(false); }}
-                className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${
-                  sel ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'
-                }`}
-              >
-                <span>{opt.label}</span>
-                {sel && (
-                  <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </button>
-            );
-          })}
+        <div className={`absolute top-full mt-1.5 z-50 bg-white shadow-sm rounded-xl shadow-lg ${fullWidth ? 'left-0 right-0' : 'left-0 min-w-[160px]'}`}>
+          {isSearchable && (
+            <div className="p-2 border-b border-[#F3F4F6]">
+              <input
+                ref={searchRef}
+                type="text"
+                value={searchQ}
+                onChange={e => setSearchQ(e.target.value)}
+                placeholder="Search…"
+                className="w-full px-2.5 py-1.5 text-xs border border-[#E5EAE8] rounded-lg focus:outline-none focus:border-[#0D4C3C] text-[#374151]"
+                onClick={e => e.stopPropagation()}
+              />
+            </div>
+          )}
+          <div className="py-1.5 max-h-56 overflow-y-auto">
+            {visibleOptions.length === 0 ? (
+              <p className="px-3.5 py-2 text-xs text-[#9CA3AF]">No results</p>
+            ) : visibleOptions.map((opt) => {
+              const sel = opt.value === value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => { onChange(opt.value); setOpen(false); setSearchQ(''); }}
+                  className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${
+                    sel ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'
+                  }`}
+                >
+                  <span>{opt.label}</span>
+                  {sel && (
+                    <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
