@@ -127,29 +127,67 @@ function isoToYYYYMM(iso: string) {
 
 // ── SVG Charts ────────────────────────────────────────────────────────────────
 
-function BarChart({ data, label, color = '#0D4C3C', height = 80 }: {
+function BarChart({ data, label, color = '#0D4C3C', height = 90 }: {
   data: { label: string; value: number }[];
   label?: string;
   color?: string;
   height?: number;
 }) {
+  const W = 400;
+  const padL = 4;
+  const padR = 4;
+  const plotW = W - padL - padR;
+  const labelH = data.length <= 15 ? 18 : 0;
+  const totalH = height + labelH;
+
   const max = Math.max(...data.map(d => d.value), 1);
-  const barW = Math.max(2, Math.floor(360 / data.length) - 2);
-  const gap = Math.floor((360 - barW * data.length) / (data.length + 1));
+  // gentle grid: 3 horizontal lines at 25%, 50%, 75%
+  const gridLines = [0.25, 0.5, 0.75, 1].map(f => Math.round(f * max));
+
+  const n = data.length;
+  const barW = Math.max(3, Math.floor((plotW / n) * 0.6));
+  const slotW = plotW / n;
 
   return (
     <div>
       {label && <p className="text-xs text-[#9CA3AF] mb-2">{label}</p>}
-      <svg viewBox={`0 0 360 ${height + 20}`} className="w-full" style={{ height: height + 20 }}>
+      <svg viewBox={`0 0 ${W} ${totalH}`} className="w-full" style={{ height: totalH }}>
+        {/* Grid lines */}
+        {gridLines.map((v, i) => {
+          const y = height - Math.round((v / max) * height);
+          return (
+            <line key={i} x1={padL} x2={W - padR} y1={y} y2={y}
+              stroke="#F3F4F6" strokeWidth={1} />
+          );
+        })}
+
+        {/* Baseline */}
+        <line x1={padL} x2={W - padR} y1={height} y2={height}
+          stroke="#E5EAE8" strokeWidth={1} />
+
+        {/* Bars */}
         {data.map((d, i) => {
-          const barH = Math.max(2, Math.round((d.value / max) * height));
-          const x = gap + i * (barW + gap);
+          const slotCenter = padL + i * slotW + slotW / 2;
+          const x = slotCenter - barW / 2;
+          const barH = d.value === 0 ? 0 : Math.max(3, Math.round((d.value / max) * (height - 4)));
           const y = height - barH;
           return (
             <g key={i}>
-              <rect x={x} y={y} width={barW} height={barH} rx={2} fill={color} opacity={d.value === 0 ? 0.2 : 0.85} />
-              {data.length <= 12 && (
-                <text x={x + barW / 2} y={height + 14} textAnchor="middle" fontSize={9} fill="#9CA3AF">
+              {/* Background slot — subtle hover area feel */}
+              <rect x={padL + i * slotW} y={0} width={slotW} height={height} fill="transparent" />
+              {/* Bar */}
+              {barH > 0 && (
+                <rect x={x} y={y} width={barW} height={barH} rx={2}
+                  fill={color} opacity={0.85} />
+              )}
+              {/* Zero-day dot */}
+              {d.value === 0 && (
+                <circle cx={slotCenter} cy={height - 1} r={1.5} fill="#E5EAE8" />
+              )}
+              {/* Label */}
+              {data.length <= 15 && d.label && (
+                <text x={slotCenter} y={height + 13} textAnchor="middle"
+                  fontSize={9} fill="#9CA3AF">
                   {d.label}
                 </text>
               )}
