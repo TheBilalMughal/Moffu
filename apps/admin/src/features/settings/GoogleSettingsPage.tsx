@@ -8,7 +8,7 @@ interface GoogleCreds {
   redirect_uri: string;
 }
 
-const REDIRECT_URI_DEFAULT = 'https://appmoffu.vercel.app/auth/google/callback';
+const REDIRECT_URI_DEFAULT = 'https://app.moffu.pro/auth/google/callback';
 
 export function GoogleSettingsPage() {
   const toast = useToastStore();
