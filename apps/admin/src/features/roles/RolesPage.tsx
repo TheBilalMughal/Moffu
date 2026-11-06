@@ -136,6 +136,27 @@ interface AuditEntry {
   changed_at: string;
 }
 
+interface OverrideRow {
+  id: string;
+  org_id: string;
+  user_id: string;
+  permission: string;
+  effect: 'allow' | 'deny';
+  scope_location_id: string | null;
+  created_at: string;
+  org_name: string | null;
+  user_name: string | null;
+  user_email: string | null;
+}
+
+interface PermKey {
+  key: string;
+  description: string;
+  created_at: string;
+}
+
+type NavView = 'role' | 'overrides' | 'audit' | 'keys';
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function canManage(r: string | null) {
@@ -457,10 +478,31 @@ export function RolesPage() {
   // Save preview modal
   const [showPreview, setShowPreview] = useState(false);
 
-  // Audit log
+  // Audit log (per-role, used when navView === 'role' and tab === 'audit')
   const [auditLog, setAuditLog]       = useState<AuditEntry[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState<string | null>(null);
+
+  // Nav view — controls which page the right panel shows
+  const [navView, setNavView] = useState<NavView>('role');
+
+  // User Overrides page
+  const [overrideRows, setOverrideRows]       = useState<OverrideRow[]>([]);
+  const [overridesLoading, setOverridesLoading] = useState(false);
+  const [overridesError, setOverridesError]   = useState<string | null>(null);
+  const [overridesSearch, setOverridesSearch] = useState('');
+  const [revokingId, setRevokingId]           = useState<string | null>(null);
+
+  // Global Audit Log page
+  const [globalAudit, setGlobalAudit]               = useState<AuditEntry[]>([]);
+  const [globalAuditLoading, setGlobalAuditLoading] = useState(false);
+  const [globalAuditError, setGlobalAuditError]     = useState<string | null>(null);
+  const [globalAuditRole, setGlobalAuditRole]       = useState('all');
+
+  // Permission Keys page
+  const [permKeys, setPermKeys]           = useState<PermKey[]>([]);
+  const [permKeysLoading, setPermKeysLoading] = useState(false);
+  const [permKeysSearch, setPermKeysSearch] = useState('');
 
   // Override counts per permission key
   const [overrideCounts, setOverrideCounts] = useState<Map<string, number>>(new Map());
@@ -610,6 +652,80 @@ export function RolesPage() {
     setLocalPerms(new Set(savedPerms));
   }
 
+  // ── Load User Overrides ─────────────────────────────────────────────────────
+
+  async function loadOverrides() {
+    setOverridesLoading(true);
+    setOverridesError(null);
+    const { data, error } = await supabase
+      .from('user_permission_overrides')
+      .select('id, org_id, user_id, permission, effect, scope_location_id, created_at, organizations:org_id(name), profiles:user_id(display_name, email)')
+      .order('created_at', { ascending: false })
+      .limit(300);
+
+    if (error) { setOverridesError(error.message); setOverridesLoading(false); return; }
+
+    setOverrideRows((data ?? []).map((r: any) => ({
+      id: r.id,
+      org_id: r.org_id,
+      user_id: r.user_id,
+      permission: r.permission,
+      effect: r.effect,
+      scope_location_id: r.scope_location_id,
+      created_at: r.created_at,
+      org_name: r.organizations?.name ?? null,
+      user_name: r.profiles?.display_name ?? null,
+      user_email: r.profiles?.email ?? null,
+    })));
+    setOverridesLoading(false);
+  }
+
+  async function handleRevokeOverride(id: string) {
+    setRevokingId(id);
+    const { error } = await supabase.from('user_permission_overrides').delete().eq('id', id);
+    if (!error) setOverrideRows((prev) => prev.filter((r) => r.id !== id));
+    setRevokingId(null);
+  }
+
+  // ── Load Global Audit ───────────────────────────────────────────────────────
+
+  async function loadGlobalAudit() {
+    setGlobalAuditLoading(true);
+    setGlobalAuditError(null);
+    let q = supabase
+      .from('role_permission_audit')
+      .select('id, role, permission, action, changed_by, changed_at')
+      .order('changed_at', { ascending: false })
+      .limit(300);
+    if (globalAuditRole !== 'all') q = q.eq('role', globalAuditRole);
+    const { data, error } = await q;
+    if (error) setGlobalAuditError(error.message);
+    setGlobalAudit((data ?? []) as AuditEntry[]);
+    setGlobalAuditLoading(false);
+  }
+
+  // ── Load Permission Keys ────────────────────────────────────────────────────
+
+  async function loadPermKeys() {
+    setPermKeysLoading(true);
+    const { data } = await supabase
+      .from('customer_permissions')
+      .select('key, description, created_at')
+      .order('key');
+    setPermKeys((data ?? []) as PermKey[]);
+    setPermKeysLoading(false);
+  }
+
+  useEffect(() => {
+    if (navView === 'overrides') loadOverrides();
+    if (navView === 'audit')    loadGlobalAudit();
+    if (navView === 'keys')     loadPermKeys();
+  }, [navView]);
+
+  useEffect(() => {
+    if (navView === 'audit') loadGlobalAudit();
+  }, [globalAuditRole]);
+
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   function getModuleOverrideCount(mod: ModuleType) {
@@ -624,30 +740,74 @@ export function RolesPage() {
     <>
       <div className="flex h-full">
         {/* Left: Roles sidebar */}
-        <aside className="w-52 flex-shrink-0 border-r border-[#E5EAE8] px-3 py-6">
+        <aside className="w-52 flex-shrink-0 border-r border-[#E5EAE8] px-3 py-6 flex flex-col overflow-y-auto">
           <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest px-3 mb-3">Roles</p>
           <div className="space-y-0.5">
             {ROLES.map((r) => (
               <button
                 key={r.key}
-                onClick={() => handleSelectRole(r.key)}
+                onClick={() => { setNavView('role'); handleSelectRole(r.key); }}
                 className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors ${
-                  selectedRole === r.key
+                  navView === 'role' && selectedRole === r.key
                     ? 'bg-[#E6F2EE] text-[#0D4C3C]'
                     : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
                 }`}
               >
-                <p className={`text-sm font-semibold ${selectedRole === r.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>
+                <p className={`text-sm font-semibold ${navView === 'role' && selectedRole === r.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>
                   {r.label}
                 </p>
                 <p className="text-[11px] text-[#9CA3AF] mt-0.5 leading-tight">{r.desc}</p>
               </button>
             ))}
           </div>
+
+          {/* Additional pages */}
+          <div className="mt-5 pt-4 border-t border-[#E5EAE8] space-y-0.5">
+            <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest px-3 mb-2">More</p>
+
+            <button
+              onClick={() => setNavView('overrides')}
+              className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2.5 ${
+                navView === 'overrides' ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'text-[#374151] hover:bg-[#F3F4F6]'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="text-sm font-semibold">User Overrides</span>
+            </button>
+
+            <button
+              onClick={() => setNavView('audit')}
+              className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2.5 ${
+                navView === 'audit' ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'text-[#374151] hover:bg-[#F3F4F6]'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+              <span className="text-sm font-semibold">Audit Log</span>
+            </button>
+
+            <button
+              onClick={() => setNavView('keys')}
+              className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center gap-2.5 ${
+                navView === 'keys' ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'text-[#374151] hover:bg-[#F3F4F6]'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+              <span className="text-sm font-semibold">Permission Keys</span>
+            </button>
+          </div>
         </aside>
 
         {/* Right content */}
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
+
+          {/* ── Role permissions view ── */}
+          {navView === 'role' && (<>
           {/* Header */}
           <div className="px-8 pt-6 pb-4 flex items-start justify-between gap-4 flex-shrink-0">
             <div>
@@ -904,6 +1064,234 @@ export function RolesPage() {
               </div>
             )}
           </div>
+          </>)}
+
+          {/* ── User Overrides view ── */}
+          {navView === 'overrides' && (
+            <div className="flex-1 overflow-y-auto px-8 py-6">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-bold text-[#111827]">User Overrides</h2>
+                  <p className="text-sm text-[#6B7280] mt-0.5">Per-user permission grants and denials that override role defaults.</p>
+                </div>
+                <div className="relative max-w-xs w-full">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="search"
+                    placeholder="Filter by permission or user…"
+                    value={overridesSearch}
+                    onChange={(e) => setOverridesSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-1.5 text-sm border border-[#E5EAE8] rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+                  />
+                </div>
+              </div>
+
+              {overridesError && (
+                <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                  <span className="flex-1">Failed to load overrides: {overridesError}</span>
+                  <button onClick={loadOverrides} className="font-semibold hover:underline">Retry</button>
+                </div>
+              )}
+
+              {overridesLoading ? (
+                <div className="space-y-2">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="h-10 bg-[#E5EAE8] rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[#F3F4F6] bg-[#F8FAF9]">
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">User</th>
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Permission</th>
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Effect</th>
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Org</th>
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Scope</th>
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Created</th>
+                        <th className="px-5 py-3" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F3F4F6]">
+                      {overrideRows
+                        .filter((r) => {
+                          const q = overridesSearch.toLowerCase();
+                          return !q || r.permission.includes(q) || (r.user_email ?? '').toLowerCase().includes(q) || (r.user_name ?? '').toLowerCase().includes(q);
+                        })
+                        .map((r) => (
+                          <tr key={r.id} className="hover:bg-[#F8FAF9] transition-colors">
+                            <td className="px-5 py-3">
+                              <p className="text-sm font-medium text-[#111827]">{r.user_name ?? '—'}</p>
+                              <p className="text-xs text-[#9CA3AF]">{r.user_email ?? r.user_id.slice(0, 8) + '…'}</p>
+                            </td>
+                            <td className="px-5 py-3 font-mono text-xs text-[#374151]">{r.permission}</td>
+                            <td className="px-5 py-3">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${r.effect === 'allow' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                                {r.effect}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-xs text-[#6B7280]">{r.org_name ?? '—'}</td>
+                            <td className="px-5 py-3 text-xs text-[#9CA3AF]">{r.scope_location_id ? 'Location' : 'Global'}</td>
+                            <td className="px-5 py-3 text-xs text-[#9CA3AF]">{timeAgo(r.created_at)}</td>
+                            <td className="px-5 py-3">
+                              <button
+                                onClick={() => handleRevokeOverride(r.id)}
+                                disabled={revokingId === r.id}
+                                className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-40"
+                              >
+                                {revokingId === r.id ? 'Revoking…' : 'Revoke'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      {overrideRows.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="px-5 py-10 text-center text-sm text-[#9CA3AF]">No user overrides found.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Global Audit Log view ── */}
+          {navView === 'audit' && (
+            <div className="flex-1 overflow-y-auto px-8 py-6">
+              <div className="mb-5 flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <h2 className="text-lg font-bold text-[#111827]">Audit Log</h2>
+                  <p className="text-sm text-[#6B7280] mt-0.5">All permission grant and revoke actions across all roles.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-medium text-[#6B7280]">Filter by role:</label>
+                  <select
+                    value={globalAuditRole}
+                    onChange={(e) => setGlobalAuditRole(e.target.value)}
+                    className="text-sm border border-[#E5EAE8] rounded-xl px-3 py-1.5 bg-white text-[#111827] focus:outline-none focus:border-[#0D4C3C]"
+                  >
+                    <option value="all">All roles</option>
+                    {ROLES.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {globalAuditError && (
+                <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                  <span className="flex-1">Failed to load audit log: {globalAuditError}</span>
+                  <button onClick={loadGlobalAudit} className="font-semibold hover:underline">Retry</button>
+                </div>
+              )}
+
+              {globalAuditLoading ? (
+                <div className="space-y-2">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="h-10 bg-[#E5EAE8] rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[#F3F4F6] bg-[#F8FAF9]">
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Role</th>
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Permission</th>
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Action</th>
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Changed by</th>
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">When</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F3F4F6]">
+                      {globalAudit.map((entry) => (
+                        <tr key={entry.id} className="hover:bg-[#F8FAF9] transition-colors">
+                          <td className="px-5 py-3 text-xs font-semibold text-[#374151] capitalize">{entry.role}</td>
+                          <td className="px-5 py-3 font-mono text-xs text-[#374151]">{entry.permission}</td>
+                          <td className="px-5 py-3">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${entry.action === 'grant' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                              {entry.action}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-xs text-[#9CA3AF] font-mono">
+                            {entry.changed_by ? entry.changed_by.slice(0, 8) + '…' : 'system'}
+                          </td>
+                          <td className="px-5 py-3 text-xs text-[#9CA3AF]">{timeAgo(entry.changed_at)}</td>
+                        </tr>
+                      ))}
+                      {globalAudit.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-5 py-10 text-center text-sm text-[#9CA3AF]">No audit entries found.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Permission Keys view ── */}
+          {navView === 'keys' && (
+            <div className="flex-1 overflow-y-auto px-8 py-6">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-bold text-[#111827]">Permission Keys</h2>
+                  <p className="text-sm text-[#6B7280] mt-0.5">All registered permission keys from the customer permissions registry.</p>
+                </div>
+                <div className="relative max-w-xs w-full">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="search"
+                    placeholder="Filter keys…"
+                    value={permKeysSearch}
+                    onChange={(e) => setPermKeysSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-1.5 text-sm border border-[#E5EAE8] rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+                  />
+                </div>
+              </div>
+
+              {permKeysLoading ? (
+                <div className="space-y-2">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="h-10 bg-[#E5EAE8] rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[#F3F4F6] bg-[#F8FAF9]">
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Key</th>
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Description</th>
+                        <th className="px-5 py-3 text-left text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">Registered</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F3F4F6]">
+                      {permKeys
+                        .filter((k) => !permKeysSearch || k.key.includes(permKeysSearch.toLowerCase()) || (k.description ?? '').toLowerCase().includes(permKeysSearch.toLowerCase()))
+                        .map((k) => (
+                          <tr key={k.key} className="hover:bg-[#F8FAF9] transition-colors">
+                            <td className="px-5 py-3 font-mono text-xs text-[#111827] font-semibold">{k.key}</td>
+                            <td className="px-5 py-3 text-sm text-[#6B7280]">{k.description || <span className="text-[#9CA3AF] italic">No description</span>}</td>
+                            <td className="px-5 py-3 text-xs text-[#9CA3AF]">{timeAgo(k.created_at)}</td>
+                          </tr>
+                        ))}
+                      {permKeys.length === 0 && (
+                        <tr>
+                          <td colSpan={3} className="px-5 py-10 text-center text-sm text-[#9CA3AF]">No permission keys registered.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </main>
       </div>
 

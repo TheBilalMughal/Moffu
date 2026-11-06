@@ -24,6 +24,9 @@ import { AISettingsPage } from '@/features/settings/AISettingsPage';
 import { GoogleSettingsPage } from '@/features/settings/GoogleSettingsPage';
 import { PackagesSettingsPage } from '@/features/settings/PackagesSettingsPage';
 import { SyncSettingsPage } from '@/features/settings/SyncSettingsPage';
+import { GeneralSettingsPage } from '@/features/settings/GeneralSettingsPage';
+import { EmailSettingsPage } from '@/features/settings/EmailSettingsPage';
+import { SecuritySettingsPage } from '@/features/settings/SecuritySettingsPage';
 import { RefundsPage } from '@/features/billing/RefundsPage';
 import { ReportsPage } from '@/features/analytics/ReportsPage';
 import { IntegrationsHealthPage } from '@/features/platform/IntegrationsHealthPage';
@@ -67,11 +70,14 @@ export function App() {
           <Route path="roles" element={<RolesPage />} />
           <Route path="audit" element={<AuditPage />} />
           <Route path="settings" element={<SettingsLayout />}>
-            <Route index element={<Navigate to="packages" replace />} />
+            <Route index element={<Navigate to="general" replace />} />
+            <Route path="general" element={<GeneralSettingsPage />} />
             <Route path="packages" element={<PackagesSettingsPage />} />
             <Route path="ai" element={<AISettingsPage />} />
             <Route path="google" element={<GoogleSettingsPage />} />
             <Route path="sync" element={<SyncSettingsPage />} />
+            <Route path="email" element={<EmailSettingsPage />} />
+            <Route path="security" element={<SecuritySettingsPage />} />
           </Route>
           {/* Legacy redirects */}
           <Route path="team" element={<Navigate to="/users" replace />} />
