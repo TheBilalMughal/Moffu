@@ -109,7 +109,7 @@ interface OverrideFlags {
   use_customer_name: boolean; use_emoji: boolean; primary_language: boolean;
   reviewer_lang_behaviour: boolean; negative_rule: boolean;
   prohibited_phrases: boolean; example_reply: boolean;
-  custom_tone_instructions: boolean; reply_signature: boolean;
+  custom_tone_instructions: boolean;
   star_rating_rules: boolean; approval_rules: boolean;
 }
 
@@ -118,7 +118,7 @@ const DEFAULT_FLAGS: OverrideFlags = {
   use_customer_name: false, use_emoji: false, primary_language: false,
   reviewer_lang_behaviour: false, negative_rule: false,
   prohibited_phrases: false, example_reply: false,
-  custom_tone_instructions: false, reply_signature: false,
+  custom_tone_instructions: false,
   star_rating_rules: false, approval_rules: false,
 };
 
@@ -332,7 +332,7 @@ function StepIndicator({ current, steps, completed, stepMask, onJump }: {
 
 // ── Step 1: Business Identity ─────────────────────────────────────────────────
 
-type LocIdentityOverride = { business_name: string | null; business_type: string | null; business_desc: string | null };
+type LocIdentityOverride = { business_name: string | null; business_type: string | null; business_desc: string | null; reply_signature: string | null };
 
 function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
   data: BrandBrainData;
@@ -383,6 +383,14 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
                 className={`${inputCls} resize-none`}/>
               <p className="text-[10px] text-[#9CA3AF] mt-0.5 text-right">{data.business_desc.length}/200</p>
             </div>
+            <div>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5">
+                Default reply signature <span className="text-[#9CA3AF] font-normal">(optional)</span>
+              </label>
+              <input type="text" value={data.reply_signature} onChange={e => onChange({ reply_signature: e.target.value })}
+                placeholder="e.g. Warm regards, The Team" maxLength={120} className={inputCls}/>
+              <p className="text-[10px] text-[#9CA3AF] mt-0.5">Used as fallback if a location has no signature set.</p>
+            </div>
           </div>
         </div>
 
@@ -400,8 +408,8 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
           ) : (
             <div className="bg-[#FAFAFA] divide-y divide-[#E5EAE8]">
               {locations.map(loc => {
-                const ov = locOverrides[loc.id] ?? { business_name: null, business_type: null, business_desc: null };
-                const hasOverride = !!(ov.business_type || ov.business_desc);
+                const ov = locOverrides[loc.id] ?? { business_name: null, business_type: null, business_desc: null, reply_signature: null };
+                const hasOverride = !!(ov.business_type || ov.business_desc || ov.reply_signature);
                 const isOpen = expanded.has(loc.id);
                 return (
                   <div key={loc.id}>
@@ -419,7 +427,7 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
                       </div>
                       {hasOverride && (
                         <span className="text-[10px] font-semibold text-[#0D4C3C] bg-[#E6F2EE] px-2 py-0.5 rounded-md flex-shrink-0">
-                          {[ov.business_type && 'type', ov.business_desc && 'desc'].filter(Boolean).join(' · ')} overridden
+                          {[ov.business_type && 'type', ov.business_desc && 'desc', ov.reply_signature && 'signature'].filter(Boolean).join(' · ')} overridden
                         </span>
                       )}
                       <svg
@@ -458,6 +466,23 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
                               </button>
                             )}
                           </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Reply signature</label>
+                          <div className="flex items-center gap-2">
+                            <input type="text" value={ov.reply_signature ?? ''}
+                              onChange={e => onLocOverride(loc.id, 'reply_signature', e.target.value || null)}
+                              placeholder={data.reply_signature || 'e.g. The Team at this location'}
+                              maxLength={120} className={`${inputCls} flex-1`}/>
+                            {ov.reply_signature && (
+                              <button onClick={() => onLocOverride(loc.id, 'reply_signature', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+                              </button>
+                            )}
+                          </div>
+                          {ov.reply_signature && (
+                            <p className="text-[10px] text-[#0D4C3C] mt-1 italic">…{ov.reply_signature}</p>
+                          )}
                         </div>
                       </div>
                     )}
@@ -596,64 +621,41 @@ function Step3({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
         <p className="text-sm text-[#6B7280]">Control how AI structures and formats each reply.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        {/* Left — Length + Behaviour */}
-        <div className="space-y-5">
-          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-            <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
-              <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Reply length</p>
-            </div>
-            <div className="px-5 py-4 bg-[#FAFAFA]">
-              <div className="flex gap-2">
-                {REPLY_LENGTHS.map(opt => (
-                  <button key={opt.key} onClick={() => onChange({ reply_length: opt.key })}
-                    className={`flex-1 py-3 px-3 rounded-xl border-2 text-sm font-medium transition-all text-center ${data.reply_length === opt.key ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] bg-white text-[#6B7280] hover:border-[#0D4C3C]/40'}`}>
-                    <span className="block font-bold">{opt.label}</span>
-                    <span className="block text-xs font-normal mt-0.5 opacity-70">{opt.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+      <div className="space-y-5 max-w-2xl">
+        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+          <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+            <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Reply length</p>
           </div>
-
-          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-            <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
-              <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Reply behaviour</p>
-            </div>
-            <div className="px-5 py-4 bg-[#FAFAFA] space-y-2.5">
-              {[
-                { label: 'Address reviewer by name', sub: 'e.g. "Thank you, Sarah!" when name is available.', field: 'use_customer_name' as const },
-                { label: 'Allow emoji in replies', sub: 'Adds occasional emoji when tone allows it.', field: 'use_emoji' as const },
-              ].map(item => (
-                <div key={item.field} className="flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-[#E5EAE8]">
-                  <div>
-                    <p className="text-sm font-medium text-[#111827]">{item.label}</p>
-                    <p className="text-xs text-[#9CA3AF] mt-0.5">{item.sub}</p>
-                  </div>
-                  <Toggle checked={data[item.field] as boolean} onChange={() => onChange({ [item.field]: !data[item.field] })}/>
-                </div>
+          <div className="px-5 py-4 bg-[#FAFAFA]">
+            <div className="flex gap-2">
+              {REPLY_LENGTHS.map(opt => (
+                <button key={opt.key} onClick={() => onChange({ reply_length: opt.key })}
+                  className={`flex-1 py-3 px-3 rounded-xl border-2 text-sm font-medium transition-all text-center ${data.reply_length === opt.key ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] bg-white text-[#6B7280] hover:border-[#0D4C3C]/40'}`}>
+                  <span className="block font-bold">{opt.label}</span>
+                  <span className="block text-xs font-normal mt-0.5 opacity-70">{opt.desc}</span>
+                </button>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Right — Reply signature */}
         <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
           <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
-            <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Reply signature</p>
-            <p className="text-[11px] text-[#9CA3AF] mt-0.5">Appended to every reply. Leave blank to skip.</p>
+            <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Reply behaviour</p>
           </div>
-          <div className="px-5 py-5 bg-[#FAFAFA]">
-            <input type="text" value={data.reply_signature} onChange={e => onChange({ reply_signature: e.target.value })}
-              placeholder="e.g. Warm regards, The Blue Door Café Team" maxLength={120} className={inputCls}/>
-            <p className="text-xs text-[#9CA3AF] mt-2">Used as a consistent sign-off across all AI-generated replies.</p>
-
-            {data.reply_signature && (
-              <div className="mt-4 p-4 border border-[#E5EAE8] rounded-xl bg-white">
-                <p className="text-[10px] text-[#9CA3AF] mb-1.5 font-medium uppercase tracking-wide">Preview</p>
-                <p className="text-sm text-[#374151] italic">…and we look forward to seeing you again soon.<br/><span className="not-italic font-medium text-[#111827]">{data.reply_signature}</span></p>
+          <div className="px-5 py-4 bg-[#FAFAFA] space-y-2.5">
+            {[
+              { label: 'Address reviewer by name', sub: 'e.g. "Thank you, Sarah!" when name is available.', field: 'use_customer_name' as const },
+              { label: 'Allow emoji in replies', sub: 'Adds occasional emoji when tone allows it.', field: 'use_emoji' as const },
+            ].map(item => (
+              <div key={item.field} className="flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-[#E5EAE8]">
+                <div>
+                  <p className="text-sm font-medium text-[#111827]">{item.label}</p>
+                  <p className="text-xs text-[#9CA3AF] mt-0.5">{item.sub}</p>
+                </div>
+                <Toggle checked={data[item.field] as boolean} onChange={() => onChange({ [item.field]: !data[item.field] })}/>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </div>
@@ -973,12 +975,6 @@ function LocationOverridePanel({ location, globalData, overrideData, flags, onDa
             </button>
           ))}
         </div>
-      </OverrideRow>
-
-      <OverrideRow label="Reply signature" fieldKey="reply_signature" flags={flags} onToggle={onFlagToggle}
-        inheritedLabel={globalData.reply_signature || 'None'}>
-        <input type="text" value={overrideData.reply_signature} onChange={e => onDataChange({ reply_signature: e.target.value })}
-          placeholder="e.g. The Team at Location Name" maxLength={120} className={inputCls}/>
       </OverrideRow>
 
       <OverrideRow label="Address reviewer by name" fieldKey="use_customer_name" flags={flags} onToggle={onFlagToggle}
@@ -1451,6 +1447,7 @@ export function BrandBrainPage() {
           business_name: ov.business_name ?? null,
           business_type: (ov as unknown as Record<string, string | null>).business_type ?? null,
           business_desc: (ov as unknown as Record<string, string | null>).business_desc ?? null,
+          reply_signature: (ov as unknown as Record<string, string | null>).reply_signature ?? null,
         };
 
         const flags = { ...DEFAULT_FLAGS };
@@ -1470,7 +1467,7 @@ export function BrandBrainPage() {
       // Init cache for locations without overrides
       for (const loc of locs) {
         if (!cache[loc.id]) cache[loc.id] = { data: { ...(globalRes.data ?? DEFAULT_DATA) }, flags: { ...DEFAULT_FLAGS }, loaded: true };
-        if (!names[loc.id]) names[loc.id] = { business_name: null, business_type: null, business_desc: null };
+        if (!names[loc.id]) names[loc.id] = { business_name: null, business_type: null, business_desc: null, reply_signature: null };
       }
 
       setLocNameOverrides(names);
@@ -1483,7 +1480,7 @@ export function BrandBrainPage() {
 
   function setLocName(locId: string, field: keyof LocIdentityOverride, value: string | null) {
     setLocNameOverrides(prev => {
-      const cur = prev[locId] ?? { business_name: null, business_type: null, business_desc: null };
+      const cur = prev[locId] ?? { business_name: null, business_type: null, business_desc: null, reply_signature: null };
       return { ...prev, [locId]: { ...cur, [field]: value } };
     });
   }
@@ -1527,7 +1524,7 @@ export function BrandBrainPage() {
       const cache = locCache[locId];
       const flags = cache?.flags ?? DEFAULT_FLAGS;
       const hasAny = Object.values(flags).some(Boolean)
-        || !!identOv?.business_name || !!identOv?.business_type || !!identOv?.business_desc;
+        || !!identOv?.business_name || !!identOv?.business_type || !!identOv?.business_desc || !!identOv?.reply_signature;
 
       if (!hasAny) {
         await brandBrainService.deleteOverride(locId);
@@ -1547,7 +1544,7 @@ export function BrandBrainPage() {
           prohibited_phrases: flags.prohibited_phrases ? cacheData.prohibited_phrases : null,
           example_reply: flags.example_reply ? cacheData.example_reply : null,
           custom_tone_instructions: flags.custom_tone_instructions ? cacheData.custom_tone_instructions : null,
-          reply_signature: flags.reply_signature ? cacheData.reply_signature : null,
+          reply_signature: identOv?.reply_signature ?? null,
           approval_rules: flags.approval_rules ? cacheData.approval_rules : null,
         };
         await brandBrainService.saveOverride(locId, payload);
