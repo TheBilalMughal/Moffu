@@ -702,7 +702,7 @@ function UpgradeWidget() {
 }
 
 export function DashboardLayout() {
-  const { setLocations } = useLocationStore();
+  const { setLocations, setSelectedId } = useLocationStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [featureAccess, setFeatureAccess] = useState<Record<string, boolean>>({});
@@ -710,15 +710,34 @@ export function DashboardLayout() {
   const [isFreePlan, setIsFreePlan] = useState(false);
   const [adminDowngradePlan, setAdminDowngradePlan] = useState<{ name: string; locationLimit: number } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [authUserId, setAuthUserId] = useState<string | null>(null);
 
   // Close sidebar on route change (mobile)
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
+  // Track auth user — clear store immediately on user change
   useEffect(() => {
-    supabase.from('google_locations').select('id, display_name').eq('is_selected', true).then(({ data }) => {
-      setLocations(data ?? []);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setAuthUserId(user?.id ?? null);
     });
-  }, [setLocations]);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const uid = session?.user?.id ?? null;
+      setAuthUserId(uid);
+      if (!uid) { setLocations([]); setSelectedId(null); }
+    });
+    return () => subscription.unsubscribe();
+  }, [setLocations, setSelectedId]);
+
+  // Load this user's locations — keyed on authUserId so it reloads on user switch
+  useEffect(() => {
+    if (!authUserId) { setLocations([]); return; }
+    supabase
+      .from('google_locations')
+      .select('id, display_name')
+      .eq('user_id', authUserId)
+      .eq('is_selected', true)
+      .then(({ data }) => { setLocations(data ?? []); });
+  }, [authUserId, setLocations]);
 
   useEffect(() => {
     async function loadFeatureAccess() {

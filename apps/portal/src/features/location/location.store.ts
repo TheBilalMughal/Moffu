@@ -12,13 +12,15 @@ interface LocationState {
   setLocations: (locs: LocationOption[]) => void;
   setSelectedId: (id: string | null) => void;
   setLocationRatings: (ratings: Record<string, number>) => void;
+  clearAll: () => void;
 }
 
 export const useLocationStore = create<LocationState>((set) => ({
   locations: [],
   selectedId: null,
   locationRatings: {},
-  setLocations: (locations) => set({ locations }),
+  setLocations: (locations) => set({ locations, selectedId: null }),
   setSelectedId: (selectedId) => set({ selectedId }),
   setLocationRatings: (locationRatings) => set({ locationRatings }),
+  clearAll: () => set({ locations: [], selectedId: null, locationRatings: {} }),
 }));
