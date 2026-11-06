@@ -1088,6 +1088,33 @@ function AutoScheduleModal({ mode, onConfirm, onCancel }: {
   );
 }
 
+// ── ConfirmOffModal ───────────────────────────────────────────────────────────
+
+function ConfirmOffModal({ mode, onConfirm, onCancel }: {
+  mode: 'sync' | 'draft' | 'publish';
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const cfg = {
+    sync:    { title: 'Disable Auto Sync',    desc: 'Reviews will no longer sync automatically. You can still sync manually.' },
+    draft:   { title: 'Disable Auto Draft',   desc: 'AI will no longer generate reply drafts automatically after each sync.' },
+    publish: { title: 'Disable Auto Publish', desc: 'Draft Ready replies will no longer be published to Google automatically.' },
+  }[mode];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={e => { if (e.target === e.currentTarget) onCancel(); }}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+        <h2 className="text-base font-semibold text-[#111827] mb-1">{cfg.title}</h2>
+        <p className="text-sm text-[#6B7280] mb-6">{cfg.desc}</p>
+        <div className="flex justify-end gap-2">
+          <button onClick={onCancel} className="px-4 py-2 text-sm text-[#6B7280] hover:text-[#111827] transition-colors rounded-lg hover:bg-[#F3F4F6]">Cancel</button>
+          <button onClick={onConfirm} className="px-4 py-2 text-sm font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">Disable</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── AutoSyncModal ─────────────────────────────────────────────────────────────
 
 function AutoSyncModal({ onConfirm, onCancel }: {
@@ -1140,6 +1167,7 @@ export function ReviewsPage() {
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
   const [autoSyncInterval, setAutoSyncInterval] = useState<import('@/features/google/google.service').AutoSyncInterval>('4h');
   const [autoModal, setAutoModal] = useState<'sync' | 'draft' | 'publish' | null>(null);
+  const [confirmOffModal, setConfirmOffModal] = useState<'sync' | 'draft' | 'publish' | null>(null);
   const [autoRunning, setAutoRunning] = useState<'draft' | 'publish' | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -1556,6 +1584,18 @@ async function handleFlag(id: string) {
           onCancel={() => setAutoModal(null)}
         />
       )}
+      {confirmOffModal && (
+        <ConfirmOffModal
+          mode={confirmOffModal}
+          onConfirm={() => {
+            const m = confirmOffModal;
+            setConfirmOffModal(null);
+            if (m === 'sync') handleAutoSyncToggleOff();
+            else handleAutoToggleOff(m);
+          }}
+          onCancel={() => setConfirmOffModal(null)}
+        />
+      )}
       {selectedIds.size > 0 && (
         <BulkActionBar
           count={selectedIds.size}
@@ -1598,7 +1638,7 @@ async function handleFlag(id: string) {
 
           {/* Auto Sync toggle */}
           <button
-            onClick={() => autoSyncEnabled ? handleAutoSyncToggleOff() : setAutoModal('sync')}
+            onClick={() => autoSyncEnabled ? setConfirmOffModal('sync') : setAutoModal('sync')}
             disabled={!isConnected}
             title={!isConnected ? 'Connect Google Business Profile first' : autoSyncEnabled ? `Auto Sync ON every ${autoSyncInterval} — click to disable` : 'Enable Auto Sync'}
             className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoSyncEnabled ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
@@ -1608,7 +1648,7 @@ async function handleFlag(id: string) {
 
           {/* Auto Draft toggle */}
           <button
-            onClick={() => autoDraftEnabled ? handleAutoToggleOff('draft') : setAutoModal('draft')}
+            onClick={() => autoDraftEnabled ? setConfirmOffModal('draft') : setAutoModal('draft')}
             disabled={!isConnected}
             title={!isConnected ? 'Connect Google Business Profile first' : autoDraftEnabled ? `Auto Draft ON${autoDraftSchedule.type === 'scheduled' ? ` (${autoDraftSchedule.from}–${autoDraftSchedule.to})` : ''} — click to disable` : 'Enable Auto Draft'}
             className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoDraftEnabled ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
@@ -1620,7 +1660,7 @@ async function handleFlag(id: string) {
 
           {/* Auto Publish toggle */}
           <button
-            onClick={() => autoPublishEnabled ? handleAutoToggleOff('publish') : setAutoModal('publish')}
+            onClick={() => autoPublishEnabled ? setConfirmOffModal('publish') : setAutoModal('publish')}
             disabled={!isConnected}
             title={!isConnected ? 'Connect Google Business Profile first' : autoPublishEnabled ? `Auto Publish ON${autoPublishSchedule.type === 'scheduled' ? ` (${autoPublishSchedule.from}–${autoPublishSchedule.to})` : ''} — click to disable` : 'Enable Auto Publish'}
             className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoPublishEnabled ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
