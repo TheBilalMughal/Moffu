@@ -34,7 +34,7 @@ export function GoogleConnectPage() {
       setError(locResult.error);
     } else {
       // Deduplicate by google_location_name, keep latest (last in array)
-      const seen = new Map<string, typeof locResult.data[0]>();
+      const seen = new Map<string, GoogleLocation>();
       for (const l of (locResult.data ?? [])) seen.set(l.google_location_name, l);
       const locs = Array.from(seen.values());
       setLocations(locs);
