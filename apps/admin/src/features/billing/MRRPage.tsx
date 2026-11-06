@@ -182,8 +182,8 @@ export function MRRPage() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [dateFrom, setDateFrom] = useState(() => monthStart());
-  const [dateTo, setDateTo] = useState(() => today());
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [planFilter, setPlanFilter] = useState('');
   const [intervalFilter, setIntervalFilter] = useState('');
 

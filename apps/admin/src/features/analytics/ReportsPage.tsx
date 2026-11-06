@@ -59,8 +59,8 @@ export function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [months, setMonths] = useState<MonthMetric[]>([]);
   const [planDist, setPlanDist] = useState<PlanDist[]>([]);
-  const [dateFrom, setDateFrom] = useState(() => monthStart());
-  const [dateTo, setDateTo] = useState(() => today());
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   useEffect(() => { load(dateFrom, dateTo); }, [dateFrom, dateTo]);
 
