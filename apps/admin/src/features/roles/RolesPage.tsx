@@ -247,6 +247,7 @@ function SavePreviewModal({
   toAdd,
   toRemove,
   saving,
+  error,
   onConfirm,
   onCancel,
 }: {
@@ -254,6 +255,7 @@ function SavePreviewModal({
   toAdd: string[];
   toRemove: string[];
   saving: boolean;
+  error: string | null;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -282,6 +284,14 @@ function SavePreviewModal({
             </div>
           ))}
         </div>
+        {error && (
+          <div className="px-6 py-2 bg-red-50 border-t border-red-100 text-xs text-red-700 flex items-center gap-2">
+            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {error}
+          </div>
+        )}
         <div className="px-6 py-4 border-t border-[#E5EAE8] flex justify-end gap-2">
           <button onClick={onCancel} disabled={saving} className="px-4 py-1.5 text-sm text-[#374151] bg-white border border-[#D1D5DB] hover:bg-[#F3F4F6] transition-colors disabled:opacity-50">
             Cancel
@@ -429,7 +439,10 @@ export function RolesPage() {
   const [rolePerms, setRolePerms] = useState<Record<string, Set<string>>>(INIT_PERMS);
   const [localPerms, setLocalPerms] = useState<Set<string>>(new Set());
   const [loading, setLoading]  = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving]    = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [savedMsg, setSavedMsg] = useState(false);
 
   // Tab
   const [tab, setTab] = useState<'permissions' | 'audit'>('permissions');
@@ -447,6 +460,7 @@ export function RolesPage() {
   // Audit log
   const [auditLog, setAuditLog]       = useState<AuditEntry[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
 
   // Override counts per permission key
   const [overrideCounts, setOverrideCounts] = useState<Map<string, number>>(new Map());
@@ -470,11 +484,18 @@ export function RolesPage() {
 
   async function loadAll() {
     setLoading(true);
+    setLoadError(null);
 
     const [permsRes, overridesRes] = await Promise.all([
       supabase.from('role_permissions').select('role, permission'),
       supabase.from('user_permission_overrides').select('permission'),
     ]);
+
+    if (permsRes.error) {
+      setLoadError(permsRes.error.message);
+      setLoading(false);
+      return;
+    }
 
     const rp: Record<string, Set<string>> = Object.fromEntries(
       ROLES.map((r) => [r.key, new Set<string>()])
@@ -501,13 +522,15 @@ export function RolesPage() {
 
   async function loadAudit(role: string) {
     setAuditLoading(true);
-    const { data } = await supabase
+    setAuditError(null);
+    const { data, error } = await supabase
       .from('role_permission_audit')
       .select('id, role, permission, action, changed_by, changed_at')
       .eq('role', role)
       .order('changed_at', { ascending: false })
       .limit(100);
 
+    if (error) setAuditError(error.message);
     setAuditLog((data ?? []) as AuditEntry[]);
     setAuditLoading(false);
   }
@@ -541,16 +564,28 @@ export function RolesPage() {
 
   async function executeSave() {
     setSaving(true);
+    setSaveError(null);
 
     if (toAdd.length) {
-      await supabase.from('role_permissions').upsert(
+      const { error } = await supabase.from('role_permissions').upsert(
         toAdd.map((k) => ({ role: selectedRole, permission: k })),
         { onConflict: 'role,permission' }
       );
+      if (error) {
+        setSaveError(error.message);
+        setSaving(false);
+        return;
+      }
     }
+
     for (const key of toRemove) {
-      await supabase.from('role_permissions').delete()
+      const { error } = await supabase.from('role_permissions').delete()
         .eq('role', selectedRole).eq('permission', key);
+      if (error) {
+        setSaveError(error.message);
+        setSaving(false);
+        return;
+      }
     }
 
     // Audit log — fire and forget; don't block save on failure
@@ -567,6 +602,8 @@ export function RolesPage() {
     setRolePerms((prev) => ({ ...prev, [selectedRole]: new Set(localPerms) }));
     setShowPreview(false);
     setSaving(false);
+    setSavedMsg(true);
+    setTimeout(() => setSavedMsg(false), 3000);
   }
 
   function handleDiscard() {
@@ -655,6 +692,38 @@ export function RolesPage() {
             {/* ── Permissions tab ── */}
             {tab === 'permissions' && (
               <>
+                {/* Load error */}
+                {loadError && (
+                  <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="flex-1">Failed to load permissions: {loadError}</span>
+                    <button onClick={loadAll} className="font-semibold hover:underline flex-shrink-0">Retry</button>
+                  </div>
+                )}
+
+                {/* Save error */}
+                {saveError && (
+                  <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="flex-1">Save failed: {saveError}</span>
+                    <button onClick={() => setSaveError(null)} className="font-semibold hover:underline flex-shrink-0">Dismiss</button>
+                  </div>
+                )}
+
+                {/* Success banner */}
+                {savedMsg && (
+                  <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Permissions saved successfully.
+                  </div>
+                )}
+
                 {/* Search + unsaved bar */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className="relative flex-1 max-w-xs">
@@ -666,7 +735,7 @@ export function RolesPage() {
                       placeholder="Filter modules…"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="w-full pl-9 pr-3 py-1.5 text-sm shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+                      className="w-full pl-9 pr-3 py-1.5 text-sm border border-[#E5EAE8] shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
                     />
                   </div>
 
@@ -683,7 +752,7 @@ export function RolesPage() {
                         Discard
                       </button>
                       <button
-                        onClick={() => setShowPreview(true)}
+                        onClick={() => { setSaveError(null); setShowPreview(true); }}
                         disabled={saving}
                         className="px-3 py-1.5 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#0a3d30] transition-colors disabled:opacity-50"
                       >
@@ -772,6 +841,15 @@ export function RolesPage() {
             {/* ── Audit log tab ── */}
             {tab === 'audit' && (
               <div className="bg-white shadow-sm rounded-xl overflow-hidden">
+                {auditError && (
+                  <div className="flex items-center gap-3 px-5 py-3 bg-red-50 border-b border-red-100 text-sm text-red-700">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="flex-1">Failed to load audit log: {auditError}</span>
+                    <button onClick={() => loadAudit(selectedRole)} className="font-semibold hover:underline flex-shrink-0">Retry</button>
+                  </div>
+                )}
                 {auditLoading ? (
                   <div className="animate-pulse divide-y divide-[#F3F4F6]">
                     {Array.from({ length: 6 }).map((_, i) => (
@@ -836,8 +914,9 @@ export function RolesPage() {
           toAdd={toAdd}
           toRemove={toRemove}
           saving={saving}
+          error={saveError}
           onConfirm={executeSave}
-          onCancel={() => setShowPreview(false)}
+          onCancel={() => { setShowPreview(false); setSaveError(null); }}
         />
       )}
 
