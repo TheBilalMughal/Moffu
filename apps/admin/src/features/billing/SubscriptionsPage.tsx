@@ -474,7 +474,7 @@ export function SubscriptionsPage() {
     type PriceRaw = { plan_id: string; billing_interval: string; amount_cents: number };
     type OrgMemberRaw = { user_id: string; org_id: string; role: string };
 
-    const subs = (subsRes.data ?? []) as SubRaw[];
+    const allSubsRaw = (subsRes.data ?? []) as SubRaw[];
     const allPlans = (plansRes.data ?? []) as PlanRaw[];
     setPlans(allPlans);
     const planById = new Map<string, PlanRaw>(allPlans.map((p) => [p.id, p]));
@@ -482,6 +482,9 @@ export function SubscriptionsPage() {
     (pricesRes.data ?? []).forEach((p: PriceRaw) => priceMap.set(`${p.plan_id}:${p.billing_interval}`, p.amount_cents));
     setPriceMap(priceMap);
     const orgByOwner = new Map<string, string>((orgMembersOwnerRes.data ?? []).map((m: OrgMemberRaw) => [m.user_id, m.org_id]));
+
+    // Exclude internal/platform users — only keep subs whose user is an org owner
+    const subs = allSubsRaw.filter((s) => orgByOwner.has(s.user_id));
 
     const ownerUserIds = subs.map((s) => s.user_id);
     const orgIds = [...new Set([...orgByOwner.values()])];

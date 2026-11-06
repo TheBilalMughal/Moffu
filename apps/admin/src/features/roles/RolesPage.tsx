@@ -73,7 +73,7 @@ interface AuditEntry {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function canManage(r: string | null) {
-  return r === 'owner' || r === 'super_admin' || r === 'admin';
+  return r === 'owner' || r === 'super_admin';
 }
 
 function isFullAccessRole(role: string) {
@@ -822,7 +822,7 @@ export function RolesPage() {
                 )}
 
                 {!canEdit && (
-                  <p className="mt-4 text-xs text-[#9CA3AF]">You need super_admin or admin role to edit permissions.</p>
+                  <p className="mt-4 text-xs text-[#9CA3AF]">You need Owner or Super Admin role to edit permissions.</p>
                 )}
               </>
             )}
