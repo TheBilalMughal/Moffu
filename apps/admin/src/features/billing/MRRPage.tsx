@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
+import { DateRangePicker } from '@/components/DateRangePicker';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -181,8 +182,8 @@ export function MRRPage() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [dateFrom] = useState(monthStart);
-  const [dateTo] = useState(today);
+  const [dateFrom, setDateFrom] = useState(() => monthStart());
+  const [dateTo, setDateTo] = useState(() => today());
   const [planFilter, setPlanFilter] = useState('');
   const [intervalFilter, setIntervalFilter] = useState('');
 
@@ -376,8 +377,9 @@ export function MRRPage() {
       <div className="flex items-center gap-2 mb-6 flex-wrap">
         <Dropdown options={planOpts} value={planFilter} onChange={setPlanFilter} placeholder="All Plans" clearable/>
         <Dropdown options={intervalOpts} value={intervalFilter} onChange={setIntervalFilter} placeholder="All Intervals" clearable/>
-        {(planFilter || intervalFilter) && (
-          <button onClick={() => { setPlanFilter(''); setIntervalFilter(''); }}
+        <DateRangePicker from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }} alignRight />
+        {(planFilter || intervalFilter || dateFrom || dateTo) && (
+          <button onClick={() => { setPlanFilter(''); setIntervalFilter(''); setDateFrom(''); setDateTo(''); }}
             className="text-xs text-[#9CA3AF] hover:text-red-500 transition-colors px-2 py-1.5">
             Clear filters
           </button>

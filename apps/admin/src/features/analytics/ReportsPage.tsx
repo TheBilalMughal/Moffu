@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { DateRangePicker } from '@/components/DateRangePicker';
 
 function today() { return new Date().toISOString().split('T')[0] ?? ''; }
 function monthStart() {
@@ -58,15 +59,15 @@ export function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [months, setMonths] = useState<MonthMetric[]>([]);
   const [planDist, setPlanDist] = useState<PlanDist[]>([]);
+  const [dateFrom, setDateFrom] = useState(() => monthStart());
+  const [dateTo, setDateTo] = useState(() => today());
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(dateFrom, dateTo); }, [dateFrom, dateTo]);
 
-  async function load() {
+  async function load(from: string, to: string) {
     setLoading(true);
-    const now = new Date();
-    const fromISO = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-    const toISO   = now.toISOString();
-
+    const fromISO = from ? from + 'T00:00:00.000Z' : new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+    const toISO   = to   ? to + 'T23:59:59.999Z'   : new Date().toISOString();
     const [orgsRes, subsRes, auditRes, usageRes, planRes] = await Promise.all([
       supabase.from('organizations').select('id, created_at').gte('created_at', fromISO).lte('created_at', toISO),
       supabase.from('subscriptions').select('id, plan_id, status, created_at').gte('created_at', fromISO).lte('created_at', toISO),
@@ -88,11 +89,12 @@ export function ReportsPage() {
     });
     setPlanDist(Object.entries(distCounts).sort((a, b) => b[1] - a[1]).map(([plan, count]) => ({ plan, count })));
 
-    // Build month buckets
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = now;
+    // Build month buckets spanning the selected range
+    const start = from ? new Date(from + 'T00:00:00') : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const end   = to   ? new Date(to + 'T23:59:59')   : new Date();
+    const startMonth = new Date(start.getFullYear(), start.getMonth(), 1);
     const buckets: MonthMetric[] = [];
-    const cur = new Date(start);
+    const cur = new Date(startMonth);
     while (cur <= end) {
       const key = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`;
       buckets.push({ key, label: cur.toLocaleString('en', { month: 'short', year: '2-digit' }), newOrgs: 0, newSubs: 0, churned: 0, aiDrafts: 0, replies: 0, mrrCents: 0 });
@@ -141,15 +143,18 @@ export function ReportsPage() {
       <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#111827]">Reports & Analytics</h1>
-          <p className="text-sm text-[#6B7280] mt-1">Platform-wide growth, revenue and engagement metrics — current month.</p>
+          <p className="text-sm text-[#6B7280] mt-1">Platform-wide growth, revenue and engagement metrics.</p>
         </div>
-        <button onClick={() => downloadCSV(months)}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-[#E5EAE8] rounded-xl hover:bg-[#F3F4F6] text-[#374151] transition-colors">
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Export CSV
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <DateRangePicker from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }} alignRight />
+          <button onClick={() => downloadCSV(months)}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-[#E5EAE8] rounded-xl hover:bg-[#F3F4F6] text-[#374151] transition-colors">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Summary KPI cards */}
