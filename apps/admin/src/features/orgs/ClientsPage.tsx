@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
-import { formatDate, formatId } from '@/lib/format';
+import { formatDate, formatId, refToSlug } from '@/lib/format';
 
 interface Client {
   id: string;
@@ -246,7 +246,7 @@ export function ClientsPage() {
                         </td>
                         <td className="px-5 py-1.5">
                           {c.ref_id != null ? (
-                            <Link to={`/clients/${c.ref_id}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
+                            <Link to={`/clients/${refToSlug(c.ref_id)}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
                               {c.name}
                             </Link>
                           ) : (
@@ -270,7 +270,7 @@ export function ClientsPage() {
                         <td className="px-5 py-1.5 text-right">
                           <div className="flex items-center justify-end gap-3">
                             {c.ref_id != null ? (
-                              <Link to={`/clients/${c.ref_id}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>
+                              <Link to={`/clients/${refToSlug(c.ref_id)}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>
                             ) : (
                               <span className="text-xs text-[#9CA3AF]">View</span>
                             )}

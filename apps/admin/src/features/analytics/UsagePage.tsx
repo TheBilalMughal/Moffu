@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
 import { DateRangePicker } from '@/components/DateRangePicker';
-import { formatDate } from '@/lib/format';
+import { formatDate, refToSlug } from '@/lib/format';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -325,7 +325,7 @@ export function UsagePage() {
                     className={`hover:bg-[#FAFFFE] transition-colors cursor-pointer ${expanded === row.orgId ? 'bg-[#FAFFFE]' : ''}`}
                     onClick={() => setExpanded(e => e === row.orgId ? null : row.orgId)}>
                     <td className="px-5 py-3.5">
-                      <Link to={`/clients/${row.orgId}`} onClick={e => e.stopPropagation()}
+                      <Link to={`/clients/${refToSlug(row.orgRef)}`} onClick={e => e.stopPropagation()}
                         className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
                         {row.orgName}
                       </Link>

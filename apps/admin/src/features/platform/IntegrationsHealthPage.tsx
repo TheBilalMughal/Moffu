@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { env } from '@/lib/env';
 import { Dropdown } from '@/components/Dropdown';
-import { formatDate, formatId } from '@/lib/format';
+import { formatDate, formatId, refToSlug } from '@/lib/format';
 
 interface ConnectionRow {
   id: string;
@@ -186,7 +186,7 @@ export function IntegrationsHealthPage() {
                 <tr key={c.id} className="hover:bg-[#F8FAF9]">
                   <td className="px-5 py-3.5">
                     {c.org_ref_id ? (
-                      <Link to={`/clients/${c.org_ref_id}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] transition-colors">{c.org_name}</Link>
+                      <Link to={`/clients/${refToSlug(c.org_ref_id)}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] transition-colors">{c.org_name}</Link>
                     ) : (
                       <span className="font-medium text-[#111827]">{c.org_name}</span>
                     )}

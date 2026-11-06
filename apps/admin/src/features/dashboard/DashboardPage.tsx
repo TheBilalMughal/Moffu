@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { refToSlug } from '@/lib/format';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -851,7 +852,7 @@ export function DashboardPage() {
                 {topOrgs.map(org => (
                   <tr key={org.id} className="hover:bg-[#F8FAF9] transition-colors">
                     <td className="px-5 py-3">
-                      <Link to={`/clients/${org.id}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
+                      <Link to={`/clients/${refToSlug(org.ref_id)}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
                         {org.name}
                       </Link>
                     </td>

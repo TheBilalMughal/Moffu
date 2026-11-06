@@ -258,9 +258,10 @@ export function ClientDetailPage() {
     setLoading(true);
     if (!id) { setNotFound(true); setLoading(false); return; }
 
+    // id param is the slug form (e.g. "00002"); reconstruct full ref_id for lookup
     const { data: orgRow } = await supabase
       .from('organizations').select('id, ref_id, name, created_at, status')
-      .eq('ref_id', id).maybeSingle();
+      .eq('ref_id', `ORG-${id}`).maybeSingle();
     if (!orgRow) { setNotFound(true); setLoading(false); return; }
     setOrg(orgRow as OrgDetail);
 

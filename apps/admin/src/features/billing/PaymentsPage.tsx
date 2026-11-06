@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
 import { DateRangePicker } from '@/components/DateRangePicker';
-import { formatDate, formatId } from '@/lib/format';
+import { formatDate, formatId, refToSlug } from '@/lib/format';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -572,7 +572,7 @@ export function PaymentsPage() {
                       <td className="px-4 py-1.5">
                         <div className="min-w-0">
                           {r.orgRefId ? (
-                            <Link to={`/clients/${r.orgRefId}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline text-sm">{r.orgName ?? '—'}</Link>
+                            <Link to={`/clients/${refToSlug(r.orgRefId)}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline text-sm">{r.orgName ?? '—'}</Link>
                           ) : (
                             <span className="font-medium text-[#111827] text-sm">{r.orgName ?? <span className="text-[#9CA3AF]">No org</span>}</span>
                           )}

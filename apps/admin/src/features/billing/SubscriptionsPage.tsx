@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
-import { formatDate, formatId } from '@/lib/format';
+import { formatDate, formatId, refToSlug } from '@/lib/format';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -709,7 +709,7 @@ export function SubscriptionsPage() {
                 <div key={r.id} className="px-5 py-3 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
                     {r.orgRefId ? (
-                      <Link to={`/clients/${r.orgRefId}`} className="text-sm font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">{r.orgName}</Link>
+                      <Link to={`/clients/${refToSlug(r.orgRefId)}`} className="text-sm font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">{r.orgName}</Link>
                     ) : (
                       <span className="text-sm font-medium text-[#111827]">{r.orgName ?? '—'}</span>
                     )}
@@ -754,7 +754,7 @@ export function SubscriptionsPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     {r.orgRefId ? (
-                      <Link to={`/clients/${r.orgRefId}`} className="text-sm font-medium text-[#111827] hover:underline">{r.orgName}</Link>
+                      <Link to={`/clients/${refToSlug(r.orgRefId)}`} className="text-sm font-medium text-[#111827] hover:underline">{r.orgName}</Link>
                     ) : (
                       <span className="text-sm font-medium text-[#111827]">{r.orgName ?? '—'}</span>
                     )}
@@ -875,7 +875,7 @@ export function SubscriptionsPage() {
                     <div className="flex items-start gap-2">
                       <div className="min-w-0">
                         {s.orgRefId ? (
-                          <Link to={`/clients/${s.orgRefId}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline text-sm">{s.orgName ?? '—'}</Link>
+                          <Link to={`/clients/${refToSlug(s.orgRefId)}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline text-sm">{s.orgName ?? '—'}</Link>
                         ) : (
                           <span className="font-medium text-[#111827] text-sm">{s.orgName ?? <span className="text-[#9CA3AF]">No org</span>}</span>
                         )}
@@ -917,7 +917,7 @@ export function SubscriptionsPage() {
                   </td>
                   <td className="px-4 py-1.5 text-right">
                     <div className="flex items-center justify-end gap-3">
-                      {s.orgRefId && <Link to={`/clients/${s.orgRefId}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>}
+                      {s.orgRefId && <Link to={`/clients/${refToSlug(s.orgRefId)}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>}
                       <button onClick={() => setOverrideTarget(s)}
                         className="text-xs font-medium text-[#374151] hover:text-[#0D4C3C] transition-colors">Override</button>
                       {s.orgId && (

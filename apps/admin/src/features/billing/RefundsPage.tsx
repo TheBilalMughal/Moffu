@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
 import { DateRangePicker } from '@/components/DateRangePicker';
-import { formatDate, formatId } from '@/lib/format';
+import { formatDate, formatId, refToSlug } from '@/lib/format';
 
 interface RefundRow {
   id: string;
@@ -179,7 +179,7 @@ export function RefundsPage() {
                   <>
                     <tr key={r.id} className="hover:bg-[#F8FAF9] cursor-pointer" onClick={() => setExpandedId(isExpanded ? null : r.id)}>
                       <td className="px-5 py-3.5">
-                        <Link to={`/clients/${r.org_ref_id}`} onClick={e => e.stopPropagation()} className="font-medium text-[#111827] hover:text-[#0D4C3C] transition-colors">{r.org_name}</Link>
+                        <Link to={`/clients/${refToSlug(r.org_ref_id)}`} onClick={e => e.stopPropagation()} className="font-medium text-[#111827] hover:text-[#0D4C3C] transition-colors">{r.org_name}</Link>
                         <p className="text-[10px] text-[#9CA3AF] font-mono">{formatId(r.org_ref_id)}</p>
                       </td>
                       <td className="px-5 py-3.5">

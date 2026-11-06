@@ -14,3 +14,10 @@ export function formatId(refId: string | null | undefined): string {
   const num = parseInt(refId.split('-')[1] ?? '0', 10);
   return String(num).padStart(4, '0');
 }
+
+/** ORG-00002 → 00002  (numeric suffix only, used in URL slugs) */
+export function refToSlug(refId: string | null | undefined): string {
+  if (!refId) return '';
+  const idx = refId.indexOf('-');
+  return idx !== -1 ? refId.slice(idx + 1) : refId;
+}
