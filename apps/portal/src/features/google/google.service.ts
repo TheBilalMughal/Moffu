@@ -49,9 +49,12 @@ export interface BusinessSearchResult {
 
 export const googleService = {
   async getConnection(): Promise<{ data?: GoogleConnection | null; error?: string }> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { data: null };
     const { data, error } = await supabase
       .from('google_connections')
       .select('id, state, google_email, connected_at, last_synced_at, error_message, auto_sync_enabled, auto_sync_interval, auto_draft_enabled, auto_draft_schedule, auto_publish_enabled, auto_publish_schedule')
+      .eq('user_id', user.id)
       .maybeSingle();
     if (error) return { error: error.message };
     return { data };
@@ -79,9 +82,12 @@ export const googleService = {
   },
 
   async getLocations(): Promise<{ data?: GoogleLocation[]; error?: string }> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { data: [] };
     const { data, error } = await supabase
       .from('google_locations')
       .select('id, google_location_name, display_name, address, is_selected')
+      .eq('user_id', user.id)
       .order('display_name');
     if (error) return { error: error.message };
     return { data: data ?? [] };
