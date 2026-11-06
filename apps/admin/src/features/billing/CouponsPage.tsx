@@ -49,7 +49,7 @@ function generateCode() {
 }
 
 function canManage(role: string | null) {
-  return role === 'super_admin' || role === 'admin' || role === 'finance';
+  return role === 'owner' || role === 'super_admin' || role === 'admin' || role === 'finance';
 }
 
 // ── Create Modal ───────────────────────────────────────────────────────────────

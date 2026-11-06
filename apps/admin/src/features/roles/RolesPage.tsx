@@ -13,6 +13,7 @@ const ROLES = [
   { key: 'operations', label: 'Ops',        desc: 'Review ops, locations, reports' },
   { key: 'finance',    label: 'Finance',    desc: 'Billing and reports only' },
   { key: 'accounts',   label: 'Accounts',   desc: 'Billing view and reports view' },
+  { key: 'support',    label: 'Support',    desc: 'Client support and review responses' },
 ] as const;
 
 type RoleKey = typeof ROLES[number]['key'];
