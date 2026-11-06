@@ -666,16 +666,18 @@ export function SettingsPage() {
         setCustomHours(iv.replace('h', ''));
       }
     }
-    // Deduplicate by google_location_name, prefer is_selected=true row
+    // Deduplicate: first by display_name (catches different path formats for same place),
+    // then by google_location_name. Prefer is_selected=true row.
     const raw = locs ?? [];
-    const seen = new Map<string, GoogleLocation>();
+    const byDisplay = new Map<string, GoogleLocation>();
     for (const l of raw) {
-      const existing = seen.get(l.google_location_name);
+      const key = (l.display_name ?? l.google_location_name).toLowerCase().trim();
+      const existing = byDisplay.get(key);
       if (!existing || (!existing.is_selected && l.is_selected)) {
-        seen.set(l.google_location_name, l);
+        byDisplay.set(key, l);
       }
     }
-    setLocations(Array.from(seen.values()));
+    setLocations(Array.from(byDisplay.values()));
     setConnLoading(false);
   }
 

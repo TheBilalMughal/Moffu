@@ -156,10 +156,14 @@ Deno.serve(async (req) => {
 
       for (const loc of locations) {
         const address = loc.storefrontAddress?.addressLines?.join(', ') ?? null;
+        // Use full path "accounts/{id}/locations/{id}" to match oauth-callback format
+        const fullLocationName = loc.name.startsWith('accounts/')
+          ? loc.name
+          : `${account.name}/${loc.name}`;
         await supabase.from('google_locations').upsert({
           connection_id: conn.id,
           user_id: user.id,
-          google_location_name: loc.name,
+          google_location_name: fullLocationName,
           display_name: loc.title ?? null,
           address,
         }, { onConflict: 'connection_id,google_location_name' });

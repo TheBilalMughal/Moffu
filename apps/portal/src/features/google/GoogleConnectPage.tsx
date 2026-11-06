@@ -33,9 +33,13 @@ export function GoogleConnectPage() {
     if (locResult.error) {
       setError(locResult.error);
     } else {
-      // Deduplicate by google_location_name, keep latest (last in array)
+      // Deduplicate by display_name (catches different path formats for same place)
       const seen = new Map<string, GoogleLocation>();
-      for (const l of (locResult.data ?? [])) seen.set(l.google_location_name, l);
+      for (const l of (locResult.data ?? [])) {
+        const key = (l.display_name ?? l.google_location_name).toLowerCase().trim();
+        const existing = seen.get(key);
+        if (!existing || (!existing.is_selected && l.is_selected)) seen.set(key, l);
+      }
       const locs = Array.from(seen.values());
       setLocations(locs);
       // Pre-select already-selected ones up to limit
