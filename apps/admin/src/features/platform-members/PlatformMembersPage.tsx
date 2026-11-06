@@ -5,10 +5,11 @@ import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { Dropdown } from '@/components/Dropdown';
 import { formatDate, formatId } from '@/lib/format';
 
-const ROLES = ['super_admin', 'admin', 'finance', 'support', 'operations', 'viewer'] as const;
+const ROLES = ['owner', 'super_admin', 'admin', 'finance', 'support', 'operations', 'viewer'] as const;
 type PlatformRole = typeof ROLES[number];
 
 const ROLE_LABEL: Record<PlatformRole, string> = {
+  owner: 'Owner',
   super_admin: 'Super Admin',
   admin: 'Admin',
   finance: 'Finance',
@@ -18,6 +19,7 @@ const ROLE_LABEL: Record<PlatformRole, string> = {
 };
 
 const ROLE_COLOR: Record<PlatformRole, string> = {
+  owner: 'bg-[#E6F2EE] text-[#0D4C3C]',
   super_admin: 'bg-[#FEF3C7] text-[#92400E]',
   admin: 'bg-[#EDE9FE] text-[#5B21B6]',
   finance: 'bg-[#ECFDF5] text-[#065F46]',
@@ -40,11 +42,11 @@ interface Member {
 }
 
 function canManage(platformRole: string | null) {
-  return platformRole === 'super_admin' || platformRole === 'admin';
+  return platformRole === 'owner' || platformRole === 'super_admin' || platformRole === 'admin';
 }
 
 function isSuperAdmin(platformRole: string | null) {
-  return platformRole === 'super_admin';
+  return platformRole === 'owner' || platformRole === 'super_admin';
 }
 
 export function PlatformMembersPage() {
@@ -421,12 +423,16 @@ export function PlatformMembersPage() {
                       className={`hover:bg-[#F8FAF9] transition-colors ${selected.has(m.id) ? 'bg-[#F0F9F5]' : ''}`}
                     >
                       <td className="px-4 py-1.5">
-                        <input
-                          type="checkbox"
-                          checked={selected.has(m.id)}
-                          onChange={() => toggleRow(m.id)}
-                          className="w-4 h-4 accent-[#0D4C3C] cursor-pointer"
-                        />
+                        {m.role !== 'owner' ? (
+                          <input
+                            type="checkbox"
+                            checked={selected.has(m.id)}
+                            onChange={() => toggleRow(m.id)}
+                            className="w-4 h-4 accent-[#0D4C3C] cursor-pointer"
+                          />
+                        ) : (
+                          <span title="Owner accounts cannot be selected" className="inline-block w-4 h-4 text-[#D1D5DB] text-center leading-4 cursor-not-allowed">—</span>
+                        )}
                       </td>
                       <td className="px-5 py-1.5">
                         <span className="font-mono text-xs text-[#6B7280]">{formatId(m.ref_id)}</span>

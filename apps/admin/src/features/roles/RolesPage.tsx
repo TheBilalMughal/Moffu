@@ -6,12 +6,11 @@ import { Dropdown } from '@/components/Dropdown';
 // ── Role config ───────────────────────────────────────────────────────────────
 
 const ROLES = [
-  { key: 'owner',      label: 'Owner',      desc: 'Full access, billing included' },
-  { key: 'super_admin',label: 'Super Admin', desc: 'All permissions, no billing delete' },
+  { key: 'owner',      label: 'Owner',      desc: 'Full access — undeletable platform owner' },
+  { key: 'super_admin',label: 'Super Admin', desc: 'Full access, all permissions' },
   { key: 'admin',      label: 'Admin',      desc: 'All except billing management' },
-  { key: 'manager',    label: 'Manager',    desc: 'Reviews, reports, team view' },
+  { key: 'lead',       label: 'Lead',       desc: 'Reviews, reports, team view' },
   { key: 'operations', label: 'Ops',        desc: 'Review ops, locations, reports' },
-  { key: 'live',       label: 'Live',       desc: 'Live response, limited access' },
   { key: 'finance',    label: 'Finance',    desc: 'Billing and reports only' },
   { key: 'accounts',   label: 'Accounts',   desc: 'Billing view and reports view' },
 ] as const;
@@ -68,8 +67,21 @@ interface AuditEntry {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function canManage(r: string | null) {
-  return r === 'super_admin' || r === 'admin';
+  return r === 'owner' || r === 'super_admin' || r === 'admin';
 }
+
+function isFullAccessRole(role: string) {
+  return role === 'owner' || role === 'super_admin';
+}
+
+const ALL_PERMISSION_KEYS: Set<string> = new Set(
+  MODULES.flatMap((m) => [
+    ...(m.crud.view   ?? []),
+    ...(m.crud.add    ?? []),
+    ...(m.crud.edit   ?? []),
+    ...(m.crud.delete ?? []),
+  ])
+);
 
 function setsEqual(a: Set<string>, b: Set<string>) {
   if (a.size !== b.size) return false;
@@ -261,8 +273,8 @@ function RoleDiffModal({
 }) {
   const baseLabel = ROLES.find((r) => r.key === baseRole)?.label ?? baseRole;
   const cmpLabel  = ROLES.find((r) => r.key === compareRole)?.label ?? compareRole;
-  const base = rolePerms[baseRole] ?? new Set<string>();
-  const cmp  = rolePerms[compareRole] ?? new Set<string>();
+  const base = isFullAccessRole(baseRole)    ? ALL_PERMISSION_KEYS : (rolePerms[baseRole]    ?? new Set<string>());
+  const cmp  = isFullAccessRole(compareRole) ? ALL_PERMISSION_KEYS : (rolePerms[compareRole] ?? new Set<string>());
 
   const actions: CrudAction[] = ['view', 'add', 'edit', 'delete'];
 
@@ -400,8 +412,10 @@ export function RolesPage() {
   const [overrideCounts, setOverrideCounts] = useState<Map<string, number>>(new Map());
 
   const canEdit = canManage(platformRole);
-  const savedPerms = rolePerms[selectedRole] ?? new Set<string>();
-  const isDirty    = !setsEqual(localPerms, savedPerms);
+  const isFullAccess = isFullAccessRole(selectedRole);
+  const savedPerms = isFullAccess ? ALL_PERMISSION_KEYS : (rolePerms[selectedRole] ?? new Set<string>());
+  const effectiveLocal = isFullAccess ? ALL_PERMISSION_KEYS : localPerms;
+  const isDirty    = !isFullAccess && !setsEqual(localPerms, savedPerms);
   const toAdd      = useMemo(() => [...localPerms].filter((k) => !savedPerms.has(k)), [localPerms, savedPerms]);
   const toRemove   = useMemo(() => [...savedPerms].filter((k) => !localPerms.has(k)), [localPerms, savedPerms]);
   const pendingCount = toAdd.length + toRemove.length;
@@ -571,9 +585,14 @@ export function RolesPage() {
                     : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
                 }`}
               >
-                <p className={`text-sm font-semibold ${selectedRole === r.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>
-                  {r.label}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <p className={`text-sm font-semibold ${selectedRole === r.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>
+                    {r.label}
+                  </p>
+                  {isFullAccessRole(r.key) && (
+                    <span className="text-[9px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-px rounded">All</span>
+                  )}
+                </div>
                 <p className="text-[11px] text-[#9CA3AF] mt-0.5 leading-tight">{r.desc}</p>
               </button>
             ))}
@@ -627,6 +646,16 @@ export function RolesPage() {
             {/* ── Permissions tab ── */}
             {tab === 'permissions' && (
               <>
+                {/* Full-access banner */}
+                {isFullAccess && (
+                  <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span><strong>{selectedRoleConfig.label}</strong> has full access to all pages — permissions cannot be restricted for this role.</span>
+                  </div>
+                )}
+
                 {/* Load error */}
                 {loadError && (
                   <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
@@ -753,11 +782,11 @@ export function RolesPage() {
                                   return (
                                     <CrudCell
                                       key={a}
-                                      localGranted={cellGranted(localPerms, keys)}
+                                      localGranted={cellGranted(effectiveLocal, keys)}
                                       savedGranted={cellGranted(savedPerms, keys)}
                                       saving={saving && keys != null}
-                                      canEdit={canEdit}
-                                      onToggle={() => keys && handleToggle(keys)}
+                                      canEdit={canEdit && !isFullAccess}
+                                      onToggle={() => keys && !isFullAccess && handleToggle(keys)}
                                     />
                                   );
                                 })}

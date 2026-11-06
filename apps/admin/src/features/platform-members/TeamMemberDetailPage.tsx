@@ -5,10 +5,11 @@ import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { Dropdown } from '@/components/Dropdown';
 import { formatDate, formatId } from '@/lib/format';
 
-const ROLES = ['super_admin', 'admin', 'finance', 'support', 'operations', 'viewer'] as const;
+const ROLES = ['owner', 'super_admin', 'admin', 'finance', 'support', 'operations', 'viewer'] as const;
 type PlatformRole = typeof ROLES[number];
 
 const ROLE_LABEL: Record<PlatformRole, string> = {
+  owner: 'Owner',
   super_admin: 'Super Admin',
   admin: 'Admin',
   finance: 'Finance',
@@ -18,6 +19,7 @@ const ROLE_LABEL: Record<PlatformRole, string> = {
 };
 
 const ROLE_COLOR: Record<PlatformRole, string> = {
+  owner: 'bg-[#E6F2EE] text-[#0D4C3C]',
   super_admin: 'bg-[#FEF3C7] text-[#92400E]',
   admin: 'bg-[#EDE9FE] text-[#5B21B6]',
   finance: 'bg-[#ECFDF5] text-[#065F46]',
@@ -40,7 +42,7 @@ interface MemberDetail {
 }
 
 function canManage(platformRole: string | null) {
-  return platformRole === 'super_admin' || platformRole === 'admin';
+  return platformRole === 'owner' || platformRole === 'super_admin' || platformRole === 'admin';
 }
 
 function generatePassword() {
@@ -262,7 +264,7 @@ export function TeamMemberDetailPage() {
           </div>
           <p className="text-sm text-[#9CA3AF] font-mono">{formatId(member.refId)}</p>
         </div>
-        {canManage(platformRole) && (
+        {canManage(platformRole) && member.role !== 'owner' && (
           <button
             onClick={handleToggleActive}
             disabled={toggling}
@@ -274,6 +276,11 @@ export function TeamMemberDetailPage() {
           >
             {toggling ? '…' : member.isActive ? 'Deactivate' : 'Reactivate'}
           </button>
+        )}
+        {member.role === 'owner' && (
+          <span className="px-3 py-1.5 text-xs font-semibold text-[#9CA3AF] bg-[#F3F4F6] rounded-lg" title="Owner accounts are protected">
+            Protected
+          </span>
         )}
       </div>
 
@@ -338,12 +345,18 @@ export function TeamMemberDetailPage() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">Platform role</label>
-              <Dropdown
-                fullWidth
-                value={editRole}
-                onChange={(v) => setEditRole(v as PlatformRole)}
-                options={ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
-              />
+              {member.role === 'owner' ? (
+                <div className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-[#F9FAFB] text-[#9CA3AF] select-none">
+                  Owner — cannot be changed
+                </div>
+              ) : (
+                <Dropdown
+                  fullWidth
+                  value={editRole}
+                  onChange={(v) => setEditRole(v as PlatformRole)}
+                  options={ROLES.filter((r) => r !== 'owner').map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
+                />
+              )}
             </div>
 
             {saveMsg && (
