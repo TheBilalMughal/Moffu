@@ -187,6 +187,9 @@ Deno.serve(async (req) => {
 
       for (const review of reviews) {
         const hasReply = !!review.reviewReply?.comment;
+
+        // Upsert content fields WITHOUT status — preserves DRAFT_READY / DRAFTING / NEEDS_ATTENTION
+        // on existing rows so a sync never wipes out a user's saved draft.
         const { error: upsertErr } = await supabase.from('reviews').upsert(
           {
             location_id: location.id,
@@ -199,8 +202,9 @@ Deno.serve(async (req) => {
             published_at: review.createTime ?? null,
             reply_text: review.reviewReply?.comment ?? null,
             reply_published_at: review.reviewReply?.updateTime ?? null,
-            status: hasReply ? 'PUBLISHED' : 'NEW',
             last_synced_at: new Date().toISOString(),
+            // status intentionally omitted — INSERT default is 'NEW'; UPDATE keeps existing value.
+            // We only force PUBLISHED below when Google confirms the reply exists.
           },
           { onConflict: 'location_id,google_review_id', ignoreDuplicates: false },
         );
@@ -208,6 +212,16 @@ Deno.serve(async (req) => {
           errors.push(upsertErr.message);
           continue;
         }
+
+        // If Google has a published reply, always mark PUBLISHED regardless of local draft state.
+        if (hasReply) {
+          await supabase
+            .from('reviews')
+            .update({ status: 'PUBLISHED' })
+            .eq('location_id', location.id)
+            .eq('google_review_id', review.reviewId);
+        }
+
         totalSynced++;
       }
     }
