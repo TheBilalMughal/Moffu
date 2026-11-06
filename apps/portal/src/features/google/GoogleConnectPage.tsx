@@ -33,7 +33,10 @@ export function GoogleConnectPage() {
     if (locResult.error) {
       setError(locResult.error);
     } else {
-      const locs = locResult.data ?? [];
+      // Deduplicate by google_location_name, keep latest (last in array)
+      const seen = new Map<string, typeof locResult.data[0]>();
+      for (const l of (locResult.data ?? [])) seen.set(l.google_location_name, l);
+      const locs = Array.from(seen.values());
       setLocations(locs);
       // Pre-select already-selected ones up to limit
       const alreadySelected = locs.filter(l => l.is_selected).map(l => l.id);
