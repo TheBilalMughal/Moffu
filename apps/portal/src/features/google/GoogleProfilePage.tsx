@@ -489,9 +489,14 @@ export function GoogleProfilePage() {
 
   // Check Google connection
   useEffect(() => {
-    supabase.from('google_connections').select('state').maybeSingle().then(({ data: conn }) => {
-      setIsConnected(conn?.state === 'CONNECTED');
-    });
+    supabase
+      .from('google_connections')
+      .select('state')
+      .eq('state', 'CONNECTED')
+      .limit(1)
+      .then(({ data }) => {
+        setIsConnected((data?.length ?? 0) > 0);
+      });
   }, []);
 
   // Fetch insights
