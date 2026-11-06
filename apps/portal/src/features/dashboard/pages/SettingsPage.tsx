@@ -666,7 +666,16 @@ export function SettingsPage() {
         setCustomHours(iv.replace('h', ''));
       }
     }
-    setLocations(locs ?? []);
+    // Deduplicate by google_location_name, prefer is_selected=true row
+    const raw = locs ?? [];
+    const seen = new Map<string, GoogleLocation>();
+    for (const l of raw) {
+      const existing = seen.get(l.google_location_name);
+      if (!existing || (!existing.is_selected && l.is_selected)) {
+        seen.set(l.google_location_name, l);
+      }
+    }
+    setLocations(Array.from(seen.values()));
     setConnLoading(false);
   }
 
