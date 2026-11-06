@@ -27,7 +27,7 @@ interface OrgOverride {
 interface OrgRow { id: string; name: string; ref_id: string }
 
 function canManage(role: string | null) {
-  return ['super_admin', 'admin'].includes(role ?? '');
+  return ['owner', 'super_admin', 'admin'].includes(role ?? '');
 }
 
 // ── Rollout slider ─────────────────────────────────────────────────────────────

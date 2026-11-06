@@ -35,7 +35,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function canManage(role: string | null) {
-  return ['super_admin', 'admin', 'support', 'operations'].includes(role ?? '');
+  return ['owner', 'super_admin', 'admin', 'support', 'operations'].includes(role ?? '');
 }
 
 // ── Compose Modal ──────────────────────────────────────────────────────────────

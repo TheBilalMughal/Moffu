@@ -505,7 +505,7 @@ export function ClientDetailPage() {
     setNewNote(''); loadSupport();
   }
 
-  function canImpersonate() { return ['super_admin', 'admin', 'support'].includes(platformRole ?? ''); }
+  function canImpersonate() { return ['owner', 'super_admin', 'admin', 'support'].includes(platformRole ?? ''); }
 
   if (loading) return (
     <div className="px-8 py-8">

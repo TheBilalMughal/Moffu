@@ -178,6 +178,7 @@ const NAV_SETTINGS = [
 ];
 
 const ROLE_LABEL: Record<string, string> = {
+  owner: 'Owner',
   super_admin: 'Super Admin',
   admin: 'Admin',
   finance: 'Finance',
