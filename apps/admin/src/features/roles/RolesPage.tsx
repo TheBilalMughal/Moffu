@@ -47,7 +47,13 @@ const MODULES = [
   { section: 'Administration', label: 'Audit Logs',   crud: { view: ['admin.audit.view'],          add: null,                       edit: null,                         delete: null } },
 
   // ── Settings ──
-  { section: 'Settings',  label: 'Settings',          crud: { view: ['admin.settings.view'],       add: null,                       edit: ['admin.settings.edit'],      delete: null } },
+  { section: 'Settings',  label: 'General',            crud: { view: ['admin.settings.general.view'],  add: null, edit: ['admin.settings.general.edit'],  delete: null } },
+  { section: 'Settings',  label: 'Packages',           crud: { view: ['admin.settings.packages.view'], add: null, edit: ['admin.settings.packages.edit'], delete: null } },
+  { section: 'Settings',  label: 'AI Keys',            crud: { view: ['admin.settings.ai.view'],       add: null, edit: ['admin.settings.ai.edit'],       delete: null } },
+  { section: 'Settings',  label: 'Google API',         crud: { view: ['admin.settings.google.view'],   add: null, edit: ['admin.settings.google.edit'],   delete: null } },
+  { section: 'Settings',  label: 'Review Sync',        crud: { view: ['admin.settings.sync.view'],     add: null, edit: ['admin.settings.sync.edit'],     delete: null } },
+  { section: 'Settings',  label: 'Email',              crud: { view: ['admin.settings.email.view'],    add: null, edit: ['admin.settings.email.edit'],    delete: null } },
+  { section: 'Settings',  label: 'Security',           crud: { view: ['admin.settings.security.view'], add: null, edit: ['admin.settings.security.edit'], delete: null } },
 ] as const;
 
 type CrudAction = 'view' | 'add' | 'edit' | 'delete';
@@ -118,7 +124,13 @@ function permLabel(key: string) {
     'admin.users.view': 'View users',           'admin.users.add': 'Add users',          'admin.users.edit': 'Edit users',              'admin.users.delete': 'Delete users',
     'admin.roles.view': 'View roles',           'admin.roles.edit': 'Edit roles',
     'admin.audit.view': 'View audit logs',
-    'admin.settings.view': 'View settings',     'admin.settings.edit': 'Edit settings',
+    'admin.settings.general.view':  'View general settings',   'admin.settings.general.edit':  'Edit general settings',
+    'admin.settings.packages.view': 'View packages settings',  'admin.settings.packages.edit': 'Edit packages settings',
+    'admin.settings.ai.view':       'View AI keys settings',   'admin.settings.ai.edit':       'Edit AI keys settings',
+    'admin.settings.google.view':   'View Google API settings','admin.settings.google.edit':   'Edit Google API settings',
+    'admin.settings.sync.view':     'View review sync settings','admin.settings.sync.edit':    'Edit review sync settings',
+    'admin.settings.email.view':    'View email settings',     'admin.settings.email.edit':    'Edit email settings',
+    'admin.settings.security.view': 'View security settings',  'admin.settings.security.edit': 'Edit security settings',
   };
   return map[key] ?? key;
 }
