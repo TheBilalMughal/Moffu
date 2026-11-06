@@ -568,7 +568,7 @@ export function PlatformMembersPage() {
                       fullWidth
                       value={formRole}
                       onChange={(v) => setFormRole(v as PlatformRole)}
-                      options={ROLES.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
+                      options={ROLES.filter((r) => r !== 'owner').map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
                     />
                   </div>
 
