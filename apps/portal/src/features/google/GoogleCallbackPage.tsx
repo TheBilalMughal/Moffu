@@ -31,10 +31,19 @@ export function GoogleCallbackPage() {
         setStatus('error');
         return;
       }
-      // Auto-fetch GBP locations right after connecting
+      // Check if this user already has selected locations (returning client)
+      const { data: existingLocs } = await googleService.getLocations();
+      const alreadySetUp = existingLocs?.some(l => l.is_selected) ?? false;
+
+      if (alreadySetUp) {
+        // Returning client — locations already configured, skip picker
+        navigate('/settings?google=connected', { replace: true });
+        return;
+      }
+
+      // New client — fetch locations then show picker
       const { error: fetchErr } = await googleService.fetchLocations();
       if (fetchErr) {
-        // Locations fetch failed — still let user proceed, they can retry in settings
         navigate('/google/connect?fetch_error=1', { replace: true });
       } else {
         navigate('/google/connect', { replace: true });
