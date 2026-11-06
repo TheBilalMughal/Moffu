@@ -1668,7 +1668,7 @@ async function handleFlag(id: string) {
           <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-[#E5EAE8] shadow-sm">
 
         {/* Filter bar — top of card; no overflow-hidden here so dropdowns escape */}
-        <div className="relative z-[50] flex-shrink-0 bg-white border-b border-[#E5EAE8] px-3 md:px-4 py-2.5 rounded-t-2xl">
+        <div className="relative z-20 flex-shrink-0 bg-white border-b border-[#E5EAE8] px-3 md:px-4 py-2.5 rounded-t-2xl">
           <div className="flex items-center gap-2 flex-wrap">
 
             {/* Status tabs */}
