@@ -1132,6 +1132,7 @@ export function ReviewsPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [connId, setConnId] = useState<string | null>(null);
+  const [connectedAt, setConnectedAt] = useState<string | null>(null);
   const [autoDraftEnabled, setAutoDraftEnabled] = useState(false);
   const [autoDraftSchedule, setAutoDraftSchedule] = useState<AutoSchedule>(DEFAULT_SCHEDULE);
   const [autoPublishEnabled, setAutoPublishEnabled] = useState(false);
@@ -1185,12 +1186,12 @@ export function ReviewsPage() {
 
   useEffect(() => {
     (async () => {
-      const { data: conn } = await supabase
-        .from('google_connections')
-        .select('id, state, auto_sync_enabled, auto_sync_interval, last_synced_at, auto_draft_enabled, auto_draft_schedule, auto_publish_enabled, auto_publish_schedule')
-        .maybeSingle();
-      setIsConnected(conn?.state === 'CONNECTED');
+      // Use googleService.getConnection() — has explicit user_id filter, avoids maybeSingle() failure on duplicate rows
+      const { data: conn } = await googleService.getConnection();
+      const isConn = conn?.state === 'CONNECTED';
+      setIsConnected(isConn);
       if (conn?.id) setConnId(conn.id);
+      if (conn?.connected_at) setConnectedAt(conn.connected_at);
       if (conn?.auto_sync_enabled) setAutoSyncEnabled(true);
       if (conn?.auto_sync_interval) setAutoSyncInterval(conn.auto_sync_interval as import('@/features/google/google.service').AutoSyncInterval);
       if (conn?.auto_draft_enabled) setAutoDraftEnabled(true);
@@ -1198,16 +1199,27 @@ export function ReviewsPage() {
       if (conn?.auto_publish_enabled) setAutoPublishEnabled(true);
       if (conn?.auto_publish_schedule) setAutoPublishSchedule(conn.auto_publish_schedule as AutoSchedule);
 
-      // Auto-sync check: if enabled and interval has elapsed since last sync
-      if (conn?.state === 'CONNECTED' && conn.auto_sync_enabled) {
-        const intervalHours: Record<string, number> = { '1h': 1, '4h': 4, '12h': 12, '24h': 24 };
-        const hours = intervalHours[conn.auto_sync_interval ?? '4h'] ?? 4;
-        const lastSync = conn.last_synced_at ? new Date(conn.last_synced_at).getTime() : 0;
-        const elapsed = (Date.now() - lastSync) / 3600000;
-        if (elapsed >= hours) {
+      if (isConn && conn) {
+        // First-time connect: never synced → auto-sync reviews once, skip auto-draft (historical reviews)
+        if (!conn.last_synced_at) {
           setSyncing(true);
           try { await googleService.syncReviews(); } catch {}
           setSyncing(false);
+          await loadReviews();
+          return; // skip runAutoOperations on first sync
+        }
+
+        // Subsequent page loads: auto-sync if interval elapsed
+        if (conn.auto_sync_enabled) {
+          const intervalHours: Record<string, number> = { '1h': 1, '4h': 4, '12h': 12, '24h': 24 };
+          const hours = intervalHours[conn.auto_sync_interval ?? '4h'] ?? 4;
+          const elapsed = (Date.now() - new Date(conn.last_synced_at).getTime()) / 3600000;
+          if (elapsed >= hours) {
+            setSyncing(true);
+            try { await googleService.syncReviews(); } catch {}
+            setSyncing(false);
+            await loadReviews();
+          }
         }
       }
     })();
@@ -1343,10 +1355,12 @@ export function ReviewsPage() {
   }
 
   async function runAutoOperations() {
-    // Auto Draft: generate drafts for all NEW reviews if enabled + schedule active
+    // Auto Draft: generate drafts for NEW reviews published AFTER connected_at (skip historical)
     if (autoDraftEnabled && isScheduleActive(autoDraftSchedule)) {
-      const { data: newReviews } = await supabase
-        .from('reviews').select('id, status').eq('status', 'NEW');
+      let draftQuery = supabase.from('reviews').select('id, status').eq('status', 'NEW');
+      // Only draft reviews that arrived after the user connected — avoids drafting historical backlog
+      if (connectedAt) draftQuery = draftQuery.gte('published_at', connectedAt);
+      const { data: newReviews } = await draftQuery;
       const toGenerate = newReviews ?? [];
       if (toGenerate.length > 0) {
         setAutoRunning('draft');
