@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
 
     for (const account of accounts) {
       const locRes = await fetch(
-        `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?readMask=name,title,storefrontAddress`,
+        `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?readMask=name,title,storefrontAddress,profile`,
         { headers: { Authorization: `Bearer ${accessToken}` } },
       );
       if (!locRes.ok) {
@@ -152,10 +152,11 @@ Deno.serve(async (req) => {
       }
 
       const locData = await locRes.json();
-      const locations: Array<{ name: string; title?: string; storefrontAddress?: { addressLines?: string[] } }> = locData.locations ?? [];
+      const locations: Array<{ name: string; title?: string; storefrontAddress?: { addressLines?: string[] }; profile?: { description?: string } }> = locData.locations ?? [];
 
       for (const loc of locations) {
         const address = loc.storefrontAddress?.addressLines?.join(', ') ?? null;
+        const description = loc.profile?.description ?? null;
         // Use full path "accounts/{id}/locations/{id}" to match oauth-callback format
         const fullLocationName = loc.name.startsWith('accounts/')
           ? loc.name
@@ -166,6 +167,7 @@ Deno.serve(async (req) => {
           google_location_name: fullLocationName,
           display_name: loc.title ?? null,
           address,
+          description,
         }, { onConflict: 'connection_id,google_location_name' });
         total++;
       }

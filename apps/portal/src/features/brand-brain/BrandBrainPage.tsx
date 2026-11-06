@@ -455,10 +455,20 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
                           </div>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Short description</label>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block text-[10px] font-semibold text-[#6B7280]">Short description</label>
+                            {!ov.business_desc && loc.description && (
+                              <button
+                                onClick={() => onLocOverride(loc.id, 'business_desc', loc.description)}
+                                className="text-[10px] font-medium text-[#0D4C3C] hover:underline flex-shrink-0"
+                              >
+                                Use Google description
+                              </button>
+                            )}
+                          </div>
                           <div className="flex items-start gap-2">
                             <textarea value={ov.business_desc ?? ''} onChange={e => onLocOverride(loc.id, 'business_desc', e.target.value || null)}
-                              placeholder={data.business_desc || 'Same as default'} rows={2} maxLength={200}
+                              placeholder={loc.description || data.business_desc || 'Same as default'} rows={2} maxLength={200}
                               className={`${inputCls} resize-none flex-1`}/>
                             {ov.business_desc && (
                               <button onClick={() => onLocOverride(loc.id, 'business_desc', null)} className="text-[#9CA3AF] hover:text-red-500 flex-shrink-0 mt-2">
@@ -466,6 +476,9 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
                               </button>
                             )}
                           </div>
+                          {!ov.business_desc && loc.description && (
+                            <p className="text-[10px] text-[#9CA3AF] mt-0.5 italic truncate">Google: {loc.description}</p>
+                          )}
                         </div>
                         <div>
                           <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Reply signature</label>

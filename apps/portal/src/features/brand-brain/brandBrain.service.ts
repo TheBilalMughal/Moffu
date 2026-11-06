@@ -53,6 +53,7 @@ export interface GoogleLocation {
   id: string;
   display_name: string | null;
   address: string | null;
+  description: string | null;
 }
 
 export type ServiceError = { message: string };
@@ -115,7 +116,7 @@ export const brandBrainService = {
     if (!user) return { error: { message: 'Not authenticated.' } };
 
     const { data, error } = await supabase
-      .from('google_locations').select('id, display_name, address')
+      .from('google_locations').select('id, display_name, address, description')
       .eq('user_id', user.id).order('display_name');
 
     if (error) return { error: { message: error.message } };
