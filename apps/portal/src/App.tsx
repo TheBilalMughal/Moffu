@@ -17,6 +17,7 @@ import { InsightsPage } from '@/features/insights/InsightsPage';
 import { GoogleProfilePage } from '@/features/google/GoogleProfilePage';
 import { BillingPage } from '@/features/billing/BillingPage';
 import { GoogleCallbackPage } from '@/features/google/GoogleCallbackPage';
+import { GoogleConnectPage } from '@/features/google/GoogleConnectPage';
 import { TeamPage } from '@/features/team/TeamPage';
 import { AcceptInvitePage } from '@/features/team/AcceptInvitePage';
 import { FeatureGatePage } from '@/components/FeatureGate';
@@ -59,6 +60,9 @@ export function App() {
 
         {/* Google OAuth callback */}
         <Route path="/auth/google/callback" element={<AuthGuard><GoogleCallbackPage /></AuthGuard>} />
+
+        {/* Google connect — location picker after OAuth */}
+        <Route path="/google/connect" element={<AuthGuard><GoogleConnectPage /></AuthGuard>} />
 
         {/* Protected dashboard routes */}
         <Route element={<AuthGuard><DashboardLayout /></AuthGuard>}>

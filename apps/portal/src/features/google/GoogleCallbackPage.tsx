@@ -20,17 +20,24 @@ export function GoogleCallbackPage() {
     }
 
     if (!code || !state) {
-      setErrorMsg('Invalid callback â€” missing code or state.');
+      setErrorMsg('Invalid callback — missing code or state.');
       setStatus('error');
       return;
     }
 
-    googleService.handleCallback(code, state).then(({ error: err }) => {
+    googleService.handleCallback(code, state).then(async ({ error: err }) => {
       if (err) {
         setErrorMsg(err);
         setStatus('error');
+        return;
+      }
+      // Auto-fetch GBP locations right after connecting
+      const { error: fetchErr } = await googleService.fetchLocations();
+      if (fetchErr) {
+        // Locations fetch failed — still let user proceed, they can retry in settings
+        navigate('/google/connect?fetch_error=1', { replace: true });
       } else {
-        navigate('/settings?google=connected', { replace: true });
+        navigate('/google/connect', { replace: true });
       }
     });
   }, []);
@@ -40,7 +47,7 @@ export function GoogleCallbackPage() {
       <div className="flex h-screen items-center justify-center bg-[#F8FAF9]">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-[#0D4C3C] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-sm text-[#6B7280]">Connecting Google Business Profileâ€¦</p>
+          <p className="text-sm text-[#6B7280]">Connecting Google Business Profile and fetching locations…</p>
         </div>
       </div>
     );
