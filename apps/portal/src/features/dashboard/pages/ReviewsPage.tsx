@@ -815,7 +815,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
       )}
 
       <tr onClick={onToggle}
-        className={`group cursor-pointer border-b border-[#F3F4F6] last:border-0 transition-colors ${focused ? 'ring-1 ring-inset ring-[#0D4C3C]/30' : ''} ${expanded ? 'bg-[#F0F7F5]' : selected ? 'bg-[#E6F2EE] hover:bg-[#DCF0E8]' : 'hover:bg-[#F8FAF9]'}`}>
+        className={`group cursor-pointer border-b border-[#F3F4F6] last:border-0 transition-colors ${focused ? 'ring-1 ring-inset ring-[#0D4C3C]/30' : ''} ${expanded ? 'bg-[#F0F7F5]' : selected ? 'bg-[#E6F2EE] hover:bg-[#DCF0E8]' : uiStatus === 'replied' ? 'bg-green-50 hover:bg-green-100' : uiStatus === 'draft_ready' ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-[#F8FAF9]'}`}>
 
         {/* Checkbox — hidden for PUBLISHED reviews */}
         <td className="pl-4 pr-2 py-3 w-10" onClick={e => { e.stopPropagation(); if (uiStatus !== 'replied') onSelect(e); }}>

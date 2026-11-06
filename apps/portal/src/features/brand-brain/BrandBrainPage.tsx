@@ -22,9 +22,44 @@ const TONE_PRESETS = [
 ] as const;
 
 const BUSINESS_TYPES = [
-  'Restaurant / Cafe','Retail Store','Hotel / Hospitality','Healthcare / Medical',
-  'Legal / Finance','Beauty / Wellness','Education','Automotive',
-  'Real Estate','Technology / SaaS','Other',
+  // Food & Drink
+  'Restaurant / Cafe','Bakery / Pastry Shop','Bar / Pub / Lounge','Food Truck','Catering Service',
+  'Juice Bar / Smoothie Shop','Ice Cream / Dessert Shop',
+  // Retail
+  'Retail Store','Grocery / Supermarket','Clothing / Apparel','Electronics Store',
+  'Jewellery & Accessories','Bookstore','Toy Store','Pet Store','Gift Shop',
+  // Hospitality & Travel
+  'Hotel / Hospitality','Bed & Breakfast','Resort / Spa Resort','Travel Agency','Car Rental',
+  // Health & Wellness
+  'Healthcare / Medical','Dental Clinic','Pharmacy','Gym / Fitness Center',
+  'Yoga / Pilates Studio','Mental Health / Therapy','Optician / Eye Care',
+  'Physiotherapy / Rehabilitation',
+  // Beauty
+  'Beauty / Wellness','Hair Salon','Barbershop','Nail Salon',
+  'Skincare / Aesthetic Clinic','Tattoo / Piercing Studio',
+  // Professional Services
+  'Legal / Finance','Accounting / Tax Services','Insurance Agency','Mortgage / Loan Services',
+  'Consulting / Advisory','HR / Recruitment','Marketing / Advertising Agency',
+  // Home & Trade
+  'Real Estate','Property Management','Home Renovation / Contracting',
+  'Plumbing / Electrical','Cleaning Services','Landscaping / Gardening',
+  'Interior Design','Architecture',
+  // Auto
+  'Automotive','Car Dealership','Auto Repair / Workshop','Car Wash / Detailing',
+  // Education & Childcare
+  'Education','School / College','Tutoring / Coaching','Daycare / Nursery',
+  'Driving School','Language School',
+  // Tech & Digital
+  'Technology / SaaS','IT Services / Support','Web / App Development',
+  'Digital Marketing Agency','E-commerce',
+  // Events & Entertainment
+  'Event Planning / Management','Photography / Videography',
+  'Music / Entertainment','Sports Club / Facility','Cinema / Theatre',
+  // Logistics & B2B
+  'Logistics / Courier','Manufacturing / Wholesale','Construction / Engineering',
+  'Security Services','Printing / Signage',
+  // Other
+  'Non-profit / NGO','Religious / Community Organisation','Other',
 ];
 
 const REPLY_LENGTHS = [
@@ -115,15 +150,18 @@ function SelectField({ value, onChange, options, placeholder, disabled }: {
   options: string[]; placeholder?: string; disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const [dropStyle, setDropStyle] = useState<React.CSSProperties>({});
   const btnRef = useRef<HTMLButtonElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fn = (e: MouseEvent) => {
       if (btnRef.current?.contains(e.target as Node)) return;
       if (dropRef.current?.contains(e.target as Node)) return;
       setOpen(false);
+      setSearch('');
     };
     document.addEventListener('mousedown', fn);
     return () => document.removeEventListener('mousedown', fn);
@@ -133,26 +171,66 @@ function SelectField({ value, onChange, options, placeholder, disabled }: {
     if (disabled) return;
     if (!open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
-      setDropStyle({ position: 'fixed', top: rect.bottom + 4, left: rect.left, width: rect.width, zIndex: 9999 });
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const dropH = Math.min(300, spaceBelow - 8);
+      setDropStyle({ position: 'fixed', top: rect.bottom + 4, left: rect.left, width: Math.max(rect.width, 240), zIndex: 9999, maxHeight: dropH });
     }
-    setOpen(o => !o);
+    setOpen(o => {
+      if (o) setSearch('');
+      return !o;
+    });
   }
 
+  useEffect(() => {
+    if (open) setTimeout(() => searchRef.current?.focus(), 50);
+  }, [open]);
+
+  const filtered = search.trim()
+    ? options.filter(o => o.toLowerCase().includes(search.toLowerCase()))
+    : options;
+
   const dropdown = open ? (
-    <div ref={dropRef} style={dropStyle} className="bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 max-h-56 overflow-y-auto">
-      {placeholder && (
-        <button onClick={() => { onChange(''); setOpen(false); }}
-          className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${!value ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#9CA3AF] hover:bg-[#F8F9FA]'}`}>
-          {placeholder}
-        </button>
-      )}
-      {options.map(opt => (
-        <button key={opt} onClick={() => { onChange(opt); setOpen(false); }}
-          className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${value === opt ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}>
-          <span>{opt}</span>
-          {value === opt && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
-        </button>
-      ))}
+    <div ref={dropRef} style={dropStyle} className="bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden flex flex-col">
+      {/* Search input */}
+      <div className="px-2.5 pt-2 pb-1.5 border-b border-[#F3F4F6]">
+        <div className="flex items-center gap-2 bg-[#F8FAF9] border border-[#E5EAE8] rounded-lg px-2.5 py-1.5">
+          <svg className="w-3.5 h-3.5 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+          </svg>
+          <input
+            ref={searchRef}
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search…"
+            className="flex-1 text-sm bg-transparent outline-none text-[#111827] placeholder:text-[#9CA3AF]"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="text-[#9CA3AF] hover:text-[#374151]">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          )}
+        </div>
+      </div>
+      {/* Options list */}
+      <div className="overflow-y-auto py-1" style={{ maxHeight: 220 }}>
+        {placeholder && !search && (
+          <button onClick={() => { onChange(''); setOpen(false); setSearch(''); }}
+            className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${!value ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#9CA3AF] hover:bg-[#F8F9FA]'}`}>
+            {placeholder}
+          </button>
+        )}
+        {filtered.length === 0 && (
+          <p className="px-3.5 py-3 text-sm text-[#9CA3AF] text-center">No matches</p>
+        )}
+        {filtered.map(opt => (
+          <button key={opt} onClick={() => { onChange(opt); setOpen(false); setSearch(''); }}
+            className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${value === opt ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}>
+            <span>{opt}</span>
+            {value === opt && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
+          </button>
+        ))}
+      </div>
     </div>
   ) : null;
 
