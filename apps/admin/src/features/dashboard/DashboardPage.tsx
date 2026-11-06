@@ -27,6 +27,7 @@ interface PlanCount { slug: string; name: string; count: number; color: string; 
 interface TopOrg {
   id: string;
   name: string;
+  ref_id: string;
   createdAt: string;
   planName: string;
   planSlug: string;
@@ -556,6 +557,7 @@ export function DashboardPage() {
         return {
           id: o.id,
           name: o.name,
+          ref_id: o.ref_id,
           createdAt: o.created_at,
           planName: plan?.name ?? 'Free',
           planSlug: plan?.slug ?? 'free',
