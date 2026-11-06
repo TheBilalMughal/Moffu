@@ -1228,13 +1228,14 @@ export function ReviewsPage() {
       if (conn?.auto_publish_schedule) setAutoPublishSchedule(conn.auto_publish_schedule as AutoSchedule);
 
       if (isConn && conn) {
-        // First-time connect: never synced → auto-sync reviews once, skip auto-draft (historical reviews)
+        // First-time connect: sync all reviews, then auto-draft + publish ALL (force, ignore settings/date filter)
         if (!conn.last_synced_at) {
           setSyncing(true);
           try { await googleService.syncReviews(); } catch {}
           setSyncing(false);
           await loadReviews();
-          return; // skip runAutoOperations on first sync
+          await runAutoOperations({ forceAll: true });
+          return;
         }
 
         // Subsequent page loads: auto-sync if interval elapsed
@@ -1382,39 +1383,76 @@ export function ReviewsPage() {
     }
   }
 
-  async function runAutoOperations() {
-    // Auto Draft: generate drafts for NEW reviews published AFTER connected_at (skip historical)
-    if (autoDraftEnabled && isScheduleActive(autoDraftSchedule)) {
+  async function runAutoOperations({ forceAll = false } = {}) {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    async function notifyLimitHit(title: string, body: string) {
+      if (!user) return;
+      await supabase.from('user_notifications').insert({
+        user_id: user.id,
+        title,
+        body,
+        type: 'usage_limit',
+        is_read: false,
+      });
+    }
+
+    // Auto Draft: on first sync (forceAll) draft ALL NEW reviews; otherwise respect settings + date filter
+    if (forceAll || (autoDraftEnabled && isScheduleActive(autoDraftSchedule))) {
       let draftQuery = supabase.from('reviews').select('id, status').eq('status', 'NEW');
-      // Only draft reviews that arrived after the user connected — avoids drafting historical backlog
-      if (connectedAt) draftQuery = draftQuery.gte('published_at', connectedAt);
+      if (!forceAll && connectedAt) draftQuery = draftQuery.gte('published_at', connectedAt);
       const { data: newReviews } = await draftQuery;
       const toGenerate = newReviews ?? [];
       if (toGenerate.length > 0) {
         setAutoRunning('draft');
         let draftedCount = 0;
+        let draftLimitHit = false;
         for (const r of toGenerate) {
           const res = await googleService.generateDraft(r.id);
-          if (!res.error) draftedCount++;
+          if (res.error) {
+            if (res.error.toLowerCase().includes('limit')) { draftLimitHit = true; break; }
+          } else {
+            draftedCount++;
+          }
         }
         await loadReviews();
         if (draftedCount > 0) setToast({ message: `Auto-drafted ${draftedCount} review${draftedCount !== 1 ? 's' : ''}.`, type: 'success' });
+        if (draftLimitHit) {
+          await notifyLimitHit(
+            'AI Draft Limit Reached',
+            `${draftedCount} review${draftedCount !== 1 ? 's' : ''} drafted. Package limit reached — upgrade your plan to draft more reviews automatically.`,
+          );
+        }
+        setAutoRunning(null);
       }
     }
-    // Auto Publish: publish all DRAFT_READY reviews with a draft if enabled + schedule active
-    if (autoPublishEnabled && isScheduleActive(autoPublishSchedule)) {
+
+    // Auto Publish: on first sync (forceAll) publish ALL DRAFT_READY reviews; otherwise respect settings
+    if (forceAll || (autoPublishEnabled && isScheduleActive(autoPublishSchedule))) {
       const { data: readyReviews } = await supabase
         .from('reviews').select('id, status, reply_draft').eq('status', 'DRAFT_READY');
       const toPublish = (readyReviews ?? []).filter((r: { reply_draft: string | null }) => r.reply_draft);
       if (toPublish.length > 0) {
         setAutoRunning('publish');
         let publishedCount = 0;
+        let publishLimitHit = false;
         for (const r of toPublish) {
           const res = await googleService.publishReply(r.id, r.reply_draft as string);
-          if (!res.error) publishedCount++;
+          if (res.error) {
+            if (res.error.toLowerCase().includes('limit')) { publishLimitHit = true; break; }
+          } else {
+            publishedCount++;
+          }
         }
         await loadReviews();
         if (publishedCount > 0) setToast({ message: `Auto-published ${publishedCount} repl${publishedCount !== 1 ? 'ies' : 'y'} to Google.`, type: 'success' });
+        if (publishLimitHit) {
+          await notifyLimitHit(
+            'Reply Limit Reached',
+            `${publishedCount} repl${publishedCount !== 1 ? 'ies' : 'y'} published. Package limit reached — upgrade your plan to publish more replies automatically.`,
+          );
+        }
+        setAutoRunning(null);
       }
     }
   }
