@@ -17,6 +17,7 @@ interface RawEvent { event_type: string; created_at: string; }
 type ChartPeriod = '1m' | '3m' | '6m' | 'custom';
 interface MemberRow { user_id: string; role: string; display_name: string | null; email: string | null; created_at: string; }
 interface GoogleConn { id: string; google_email: string | null; state: string; connected_at: string; }
+interface GoogleLocation { id: string; connection_id: string; display_name: string | null; address: string | null; is_selected: boolean; }
 interface PlanOption { id: string; slug: string; name: string; }
 interface SubHistory { id: string; action: string; metadata: Record<string, unknown> | null; created_at: string; }
 interface OrgOverride {
@@ -200,6 +201,7 @@ export function ClientDetailPage() {
   const [usage, setUsage] = useState<UsageDetail | null>(null);
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [connections, setConnections] = useState<GoogleConn[]>([]);
+  const [googleLocations, setGoogleLocations] = useState<GoogleLocation[]>([]);
   const [rawUsageEvents, setRawUsageEvents] = useState<RawEvent[]>([]);
   const [subHistory, setSubHistory] = useState<SubHistory[]>([]);
   const [plans, setPlans] = useState<PlanOption[]>([]);
@@ -317,7 +319,19 @@ export function ClientDetailPage() {
     setRawUsageEvents((usageHistRes.data ?? []) as HistRow[]);
 
     type ConnRow = { id: string; google_email: string | null; state: string; connected_at: string };
-    setConnections((connRes.data ?? []) as ConnRow[]);
+    const connData = (connRes.data ?? []) as ConnRow[];
+    setConnections(connData);
+
+    const connIds = connData.map(c => c.id);
+    if (connIds.length > 0) {
+      const { data: locData } = await supabase
+        .from('google_locations')
+        .select('id, connection_id, display_name, address, is_selected')
+        .in('connection_id', connIds);
+      setGoogleLocations((locData ?? []) as GoogleLocation[]);
+    } else {
+      setGoogleLocations([]);
+    }
 
     type AuditRow = { id: string; action: string; metadata: Record<string, unknown> | null; created_at: string };
     setSubHistory((auditRes.data ?? []) as AuditRow[]);
@@ -849,28 +863,73 @@ export function ClientDetailPage() {
 
       {/* ── Google Tab ── */}
       {activeTab === 'google' && (
-        <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]"><h2 className="text-sm font-semibold text-[#111827]">Google Connections</h2></div>
-          {connections.length === 0 ? <p className="px-6 py-8 text-sm text-[#9CA3AF] text-center">No Google accounts connected.</p> : (
-            <table className="w-full text-sm">
-              <thead><tr className="border-b border-[#F3F4F6]">
-                <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Google Account</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">State</th>
-                <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Connected</th>
-              </tr></thead>
-              <tbody className="divide-y divide-[#F3F4F6]">
-                {connections.map(g => {
-                  const stateColor = g.state === 'CONNECTED' ? 'bg-[#ECFDF5] text-[#065F46]' : g.state === 'DISCONNECTED' ? 'bg-[#F3F4F6] text-[#374151]' : 'bg-[#FEF2F2] text-[#991B1B]';
-                  return (
-                    <tr key={g.id} className="hover:bg-[#F8FAF9]">
-                      <td className="px-5 py-3.5 text-[#374151]">{g.google_email ?? '—'}</td>
-                      <td className="px-5 py-3.5"><span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${stateColor}`}>{g.state}</span></td>
-                      <td className="px-5 py-3.5 text-[#9CA3AF] text-xs">{formatDate(g.connected_at)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        <div className="space-y-4">
+          {/* Summary stat cards */}
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { label: 'Google Accounts', value: connections.length },
+              { label: 'Total Locations', value: googleLocations.length },
+              { label: 'Enabled Locations', value: googleLocations.filter(l => l.is_selected).length },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-white shadow-sm rounded-xl px-5 py-4">
+                <p className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-1">{label}</p>
+                <p className="text-2xl font-bold text-[#0D4C3C]">{value}</p>
+              </div>
+            ))}
+          </div>
+
+          {connections.length === 0 ? (
+            <div className="bg-white shadow-sm rounded-xl px-6 py-8 text-sm text-[#9CA3AF] text-center">No Google accounts connected.</div>
+          ) : (
+            <div className="space-y-4">
+              {connections.map(g => {
+                const locs = googleLocations.filter(l => l.connection_id === g.id);
+                const enabledCount = locs.filter(l => l.is_selected).length;
+                const stateColor = g.state === 'CONNECTED' ? 'bg-[#ECFDF5] text-[#065F46]' : g.state === 'DISCONNECTED' ? 'bg-[#F3F4F6] text-[#374151]' : 'bg-[#FEF2F2] text-[#991B1B]';
+                return (
+                  <div key={g.id} className="bg-white shadow-sm rounded-xl overflow-hidden">
+                    {/* Connection header */}
+                    <div className="px-5 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-[#111827] truncate">{g.google_email ?? '—'}</p>
+                        <p className="text-xs text-[#9CA3AF] mt-0.5">Connected {formatDate(g.connected_at)}</p>
+                      </div>
+                      <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${stateColor}`}>{g.state}</span>
+                      <span className="text-xs text-[#6B7280] font-medium">{locs.length} location{locs.length !== 1 ? 's' : ''} · {enabledCount} enabled</span>
+                    </div>
+
+                    {/* Locations list */}
+                    {locs.length === 0 ? (
+                      <p className="px-5 py-4 text-sm text-[#9CA3AF]">No locations fetched for this account.</p>
+                    ) : (
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-[#F3F4F6]">
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Location</th>
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Address</th>
+                            <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#F3F4F6]">
+                          {locs.map(loc => (
+                            <tr key={loc.id} className="hover:bg-[#F8FAF9]">
+                              <td className="px-5 py-3.5 text-[#374151] font-medium">{loc.display_name ?? '—'}</td>
+                              <td className="px-5 py-3.5 text-[#6B7280] text-xs">{loc.address ?? '—'}</td>
+                              <td className="px-5 py-3.5">
+                                {loc.is_selected
+                                  ? <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-[#ECFDF5] text-[#065F46]">Enabled</span>
+                                  : <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded bg-[#F3F4F6] text-[#6B7280]">Disabled</span>
+                                }
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       )}
