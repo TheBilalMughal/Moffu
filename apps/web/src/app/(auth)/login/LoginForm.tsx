@@ -34,7 +34,7 @@ export function LoginForm() {
       if (error) {
         setError(error.message);
       } else {
-        window.location.href = process.env.NEXT_PUBLIC_PORTAL_URL || '/';
+        window.location.href = process.env.NEXT_PUBLIC_PORTAL_URL || 'https://app.moffu.pro';
       }
     } catch {
       setError('Something went wrong. Please try again.');

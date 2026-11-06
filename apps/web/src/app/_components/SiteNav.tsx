@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 
-const portalUrl = process.env.PORTAL_URL ?? '';
+const portalUrl = process.env.PORTAL_URL ?? 'https://app.moffu.pro';
 
 export function SiteNav() {
   return (

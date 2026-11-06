@@ -161,7 +161,7 @@ const faqSchema = {
 
 export default async function FeaturePage() {
   const supabase = await createServerClient();
-  const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? '';
+  const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? 'https://app.moffu.pro';
   const { data: wSetting } = await supabase
     .from('platform_settings')
     .select('value')

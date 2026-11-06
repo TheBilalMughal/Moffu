@@ -724,7 +724,7 @@ function CTASection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean; 
 
 export default async function HomePage() {
   const supabase = await createServerClient();
-  const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? '';
+  const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? 'https://app.moffu.pro';
 
   const { data: wSetting } = await supabase
     .from('platform_settings')
