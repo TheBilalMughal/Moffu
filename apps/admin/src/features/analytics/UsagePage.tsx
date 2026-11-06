@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
-import { DateRangePicker } from '@/components/DateRangePicker';
 import { formatDate, refToSlug } from '@/lib/format';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -80,8 +79,8 @@ export function UsagePage() {
   const [events, setEvents]     = useState<UsageRow[]>([]);
   const [loading, setLoading]   = useState(true);
 
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo,   setDateTo]   = useState('');
+  const [dateFrom, setDateFrom] = useState(monthStart);
+  const [dateTo,   setDateTo]   = useState(today);
   const [planFilter, setPlanFilter] = useState('all');
   const [search, setSearch]     = useState('');
   const [sortKey, setSortKey]   = useState<SortKey>('total');
@@ -274,7 +273,6 @@ export function UsagePage() {
               placeholder="Search org…"
               className="flex-1 text-sm text-[#111827] placeholder-[#9CA3AF] bg-transparent focus:outline-none" />
           </div>
-          <DateRangePicker from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }} />
           <div className="w-40">
             <Dropdown value={planFilter} onChange={setPlanFilter} options={[
               { value: 'all',     label: 'All Plans' },

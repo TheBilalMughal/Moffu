@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { DateRangePicker } from '@/components/DateRangePicker';
+
+function today() { return new Date().toISOString().split('T')[0] ?? ''; }
+function monthStart() {
+  const n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), 1).toISOString().split('T')[0] ?? '';
+}
 
 interface MonthMetric {
   key: string;        // YYYY-MM
@@ -53,16 +58,14 @@ export function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [months, setMonths] = useState<MonthMetric[]>([]);
   const [planDist, setPlanDist] = useState<PlanDist[]>([]);
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
 
-  useEffect(() => { load(); }, [dateFrom, dateTo]);
+  useEffect(() => { load(); }, []);
 
   async function load() {
     setLoading(true);
     const now = new Date();
-    const fromISO = dateFrom ? new Date(dateFrom).toISOString() : new Date(now.getFullYear() - 2, 0, 1).toISOString();
-    const toISO   = dateTo   ? new Date(dateTo + 'T23:59:59').toISOString() : now.toISOString();
+    const fromISO = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const toISO   = now.toISOString();
 
     const [orgsRes, subsRes, auditRes, usageRes, planRes] = await Promise.all([
       supabase.from('organizations').select('id, created_at').gte('created_at', fromISO).lte('created_at', toISO),
@@ -86,8 +89,8 @@ export function ReportsPage() {
     setPlanDist(Object.entries(distCounts).sort((a, b) => b[1] - a[1]).map(([plan, count]) => ({ plan, count })));
 
     // Build month buckets
-    const start = new Date(dateFrom); start.setDate(1);
-    const end = new Date(dateTo);
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = now;
     const buckets: MonthMetric[] = [];
     const cur = new Date(start);
     while (cur <= end) {
@@ -138,18 +141,15 @@ export function ReportsPage() {
       <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#111827]">Reports & Analytics</h1>
-          <p className="text-sm text-[#6B7280] mt-1">Platform-wide growth, revenue and engagement metrics.</p>
+          <p className="text-sm text-[#6B7280] mt-1">Platform-wide growth, revenue and engagement metrics — current month.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <DateRangePicker from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }} alignRight />
-          <button onClick={() => downloadCSV(months)}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-[#E5EAE8] rounded-xl hover:bg-[#F3F4F6] text-[#374151] transition-colors">
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export CSV
-          </button>
-        </div>
+        <button onClick={() => downloadCSV(months)}
+          className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-[#E5EAE8] rounded-xl hover:bg-[#F3F4F6] text-[#374151] transition-colors">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export CSV
+        </button>
       </div>
 
       {/* Summary KPI cards */}

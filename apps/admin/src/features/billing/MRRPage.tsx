@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
 
@@ -42,9 +42,7 @@ const PLAN_COLOR: Record<string, string> = {
 const PLAN_BAR: Record<string, string> = {
   free: '#D1D5DB', starter: '#3B82F6', growth: '#10B981', scale: '#F97316',
 };
-const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const DAYS_SHORT   = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -67,137 +65,6 @@ function fmtMoney(cents: number, short = false): string {
 function today(): string { return new Date().toISOString().split('T')[0] ?? ''; }
 function monthStart(monthsAgo = 0): string {
   const n = new Date(); return dateToIso(new Date(n.getFullYear(), n.getMonth() - monthsAgo, 1));
-}
-
-// ── Date Range Picker (exact same style as portal ReviewsPage) ─────────────────
-
-function CalMonth({ year, month, from, to, hovered, onDay, onHover }: {
-  year: number; month: number; from: Date | null; to: Date | null; hovered: Date | null;
-  onDay: (d: Date) => void; onHover: (d: Date | null) => void;
-}) {
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const todayDate = new Date();
-  const rangeEnd = to ?? hovered;
-  function inRange(d: Date) {
-    if (!from || !rangeEnd) return false;
-    const [lo, hi] = from <= rangeEnd ? [from, rangeEnd] : [rangeEnd, from];
-    return d > lo && d < hi;
-  }
-  const cells: (Date | null)[] = Array(firstDay).fill(null);
-  for (let i = 1; i <= daysInMonth; i++) cells.push(new Date(year, month, i));
-  while (cells.length % 7 !== 0) cells.push(null);
-  return (
-    <div className="w-[216px]">
-      <div className="grid grid-cols-7">
-        {DAYS_SHORT.map((d) => <div key={d} className="h-7 flex items-center justify-center text-[10px] font-medium text-[#9CA3AF]">{d}</div>)}
-        {cells.map((d, i) => {
-          if (!d) return <div key={`e${i}`} className="h-7"/>;
-          const isStart = !!from && sameDay(d, from);
-          const isEnd   = !!rangeEnd && sameDay(d, rangeEnd);
-          const range   = inRange(d);
-          const isToday = sameDay(d, todayDate);
-          return (
-            <div key={d.getTime()} onMouseEnter={() => onHover(d)} onMouseLeave={() => onHover(null)} onClick={() => onDay(d)}
-              className={['h-7 flex items-center justify-center text-xs cursor-pointer select-none transition-colors',
-                isStart || isEnd ? 'bg-[#0D4C3C] text-white font-semibold rounded-md' : '',
-                range ? 'bg-[#E6F2EE] text-[#0D4C3C]' : '',
-                !isStart && !isEnd && !range ? 'text-[#374151] hover:bg-[#F3F4F6] rounded-md' : '',
-                isToday && !isStart && !isEnd ? 'font-bold underline decoration-dotted' : '',
-              ].join(' ')}>
-              {d.getDate()}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function DateRangePicker({ from, to, onChange }: {
-  from: string; to: string; onChange: (f: string, t: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [selecting, setSelecting] = useState<'from'|'to'>('from');
-  const [hovered, setHovered] = useState<Date | null>(null);
-  const todayDate = new Date();
-  const [viewYear, setViewYear] = useState(todayDate.getFullYear());
-  const [viewMonth, setViewMonth] = useState(todayDate.getMonth());
-  const ref = useRef<HTMLDivElement>(null);
-  const fromDate = isoToDate(from); const toDate = isoToDate(to);
-  const hasValue = !!(from || to);
-  const label = from && to ? `${fmtLabel(from)} – ${fmtLabel(to)}` : from ? `From ${fmtLabel(from)}` : 'Date range';
-
-  useEffect(() => {
-    const fn = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener('mousedown', fn); return () => document.removeEventListener('mousedown', fn);
-  }, []);
-
-  function handleDay(d: Date) {
-    if (selecting === 'from' || !fromDate) { onChange(dateToIso(d), ''); setSelecting('to'); }
-    else {
-      const [lo, hi] = d >= fromDate ? [fromDate, d] : [d, fromDate];
-      onChange(dateToIso(lo), dateToIso(hi)); setSelecting('from'); setOpen(false);
-    }
-  }
-  function preset(f: Date, t: Date) { onChange(dateToIso(f), dateToIso(t)); setSelecting('from'); setOpen(false); }
-  const nextM = viewMonth === 11 ? 0 : viewMonth + 1;
-  const nextY = viewMonth === 11 ? viewYear + 1 : viewYear;
-
-  return (
-    <div className="relative" ref={ref}>
-      <button onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${hasValue ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] text-[#374151] hover:bg-[#F3F4F6]'}`}>
-        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-        </svg>
-        <span>{label}</span>
-        {hasValue && (
-          <span onClick={(e) => { e.stopPropagation(); onChange('', ''); setSelecting('from'); }} className="ml-0.5 hover:text-red-500">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-          </span>
-        )}
-      </button>
-      {open && (
-        <div className="absolute top-full mt-2 left-0 z-[200] bg-white border border-[#E5EAE8] rounded-xl shadow-lg p-4 min-w-max">
-          <div className="flex gap-6">
-            <div className="w-[216px]">
-              <div className="flex items-center justify-between mb-3">
-                <button onClick={() => { if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1); } else setViewMonth((m) => m - 1); }}
-                  className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
-                </button>
-                <p className="text-xs font-semibold text-[#111827]">{MONTHS_LONG[viewMonth]} {viewYear}</p>
-                <div className="w-6"/>
-              </div>
-              <CalMonth year={viewYear} month={viewMonth} from={fromDate} to={toDate} hovered={hovered} onDay={handleDay} onHover={setHovered}/>
-            </div>
-            <div className="w-px bg-[#F3F4F6]"/>
-            <div className="w-[216px]">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-6"/>
-                <p className="text-xs font-semibold text-[#111827]">{MONTHS_LONG[nextM]} {nextY}</p>
-                <button onClick={() => { if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1); } else setViewMonth((m) => m + 1); }}
-                  className="p-1 rounded hover:bg-[#F3F4F6] text-[#6B7280]">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
-                </button>
-              </div>
-              <CalMonth year={nextY} month={nextM} from={fromDate} to={toDate} hovered={hovered} onDay={handleDay} onHover={setHovered}/>
-            </div>
-          </div>
-          <div className="mt-3 pt-3 border-t border-[#F3F4F6] flex items-center justify-between">
-            <p className="text-xs text-[#9CA3AF]">{selecting === 'from' ? 'Select start date' : 'Select end date'}</p>
-            <div className="flex items-center gap-3">
-              <button onClick={() => { const t = new Date(); preset(new Date(t.getFullYear(), t.getMonth(), 1), t); }} className="text-xs text-[#0D4C3C] font-medium hover:underline">This month</button>
-              <button onClick={() => { const t = new Date(); const a = new Date(t); a.setDate(t.getDate() - 29); preset(a, t); }} className="text-xs text-[#0D4C3C] font-medium hover:underline">Last 30 days</button>
-              <button onClick={() => { const t = new Date(); const a = new Date(t); a.setDate(t.getDate() - 89); preset(a, t); }} className="text-xs text-[#0D4C3C] font-medium hover:underline">Last 90 days</button>
-              {hasValue && <button onClick={() => { onChange('', ''); setSelecting('from'); }} className="text-xs text-[#9CA3AF] hover:text-red-500">Clear</button>}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
 // ── SVG Sparkline (MRR trend) ──────────────────────────────────────────────────
@@ -314,8 +181,8 @@ export function MRRPage() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [dateFrom] = useState(monthStart);
+  const [dateTo] = useState(today);
   const [planFilter, setPlanFilter] = useState('');
   const [intervalFilter, setIntervalFilter] = useState('');
 
@@ -507,7 +374,6 @@ export function MRRPage() {
 
       {/* Filter bar */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
-        <DateRangePicker from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }}/>
         <Dropdown options={planOpts} value={planFilter} onChange={setPlanFilter} placeholder="All Plans" clearable/>
         <Dropdown options={intervalOpts} value={intervalFilter} onChange={setIntervalFilter} placeholder="All Intervals" clearable/>
         {(planFilter || intervalFilter) && (
