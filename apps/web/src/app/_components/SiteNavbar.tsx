@@ -81,7 +81,7 @@ export function SiteNavbar({ portalUrl }: { portalUrl: string }) {
             <img
               src="/images/logo-transparent.png"
               alt="Moffu"
-              style={scrolled ? { height: '26px', width: 'auto' } : { height: '56px', width: 'auto' }}
+              style={scrolled ? { height: '22px', width: 'auto' } : { height: '44px', width: 'auto' }}
             />
           </Link>
 
