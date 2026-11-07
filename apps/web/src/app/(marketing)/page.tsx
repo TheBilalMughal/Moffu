@@ -305,7 +305,7 @@ function CaseStudySection() {
   return (
     <section className="bg-white px-6 lg:px-16 py-24 min-h-screen flex items-center">
       <div className="max-w-[1380px] mx-auto w-full">
-        <p className="text-xs font-semibold text-[#2ECC8A] uppercase tracking-widest mb-4">Real results</p>
+        <p className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-4">Real results</p>
         <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black text-[#111827] leading-[1.1] mb-4">
           From 3.9★ to 4.6★ in 6 weeks.
         </h2>
