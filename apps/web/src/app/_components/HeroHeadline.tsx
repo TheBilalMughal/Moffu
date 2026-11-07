@@ -52,7 +52,7 @@ export function HeroHeadline() {
       `}</style>
 
       {/* Eyebrow */}
-      <p className={`text-lg font-semibold text-[#111827] mb-6 tracking-wide ${mounted ? 'eyebrow-anim opacity-0' : ''}`}>
+      <p className={`text-base font-semibold text-[#111827] mb-5 tracking-wide ${mounted ? 'eyebrow-anim opacity-0' : ''}`}>
         bro your reviews are going unanswered,
       </p>
 
@@ -60,7 +60,7 @@ export function HeroHeadline() {
 
         {/* left on read — smaller, ghostly drift */}
         <span
-          className="block text-[clamp(2.25rem,7vw,5.5rem)] line-through decoration-[#111827]/10 decoration-[6px]"
+          className="block text-[clamp(2rem,6vw,4.5rem)] line-through decoration-[#111827]/10 decoration-[6px]"
           aria-label="left on read"
           style={{ filter: 'blur(0.4px)', textShadow: '0 0 40px rgba(17,24,39,0.12)' }}
         >
@@ -84,7 +84,7 @@ export function HeroHeadline() {
 
         {/* REPLIED. — bigger, bounce in then celebrate */}
         <span
-          className={`block text-[clamp(5rem,14vw,12rem)] ${endedDone ? 'ended-celebrate' : ''}`}
+          className={`block text-[clamp(4rem,12vw,10rem)] ${endedDone ? 'ended-celebrate' : ''}`}
           aria-label="REPLIED."
         >
           {ENDED_LETTERS.map((letter, i) => {
