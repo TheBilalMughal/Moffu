@@ -303,14 +303,8 @@ function FeaturesSection() {
 
 function CaseStudySection() {
   return (
-    <section className="relative bg-white px-6 lg:px-16 py-24 min-h-screen flex items-center overflow-hidden">
-      {/* Glassy background blobs */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-[#2ECC8A]/10 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-5%] w-[400px] h-[400px] rounded-full bg-[#2ECC8A]/8 blur-[100px]" />
-      </div>
-
-      <div className="relative max-w-[1380px] mx-auto w-full">
+    <section className="bg-white px-6 lg:px-16 py-24 min-h-screen flex items-center">
+      <div className="max-w-[1380px] mx-auto w-full">
         <p className="text-xs font-semibold text-[#2ECC8A] uppercase tracking-widest mb-4">Real results</p>
         <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black text-[#111827] leading-[1.1] mb-4">
           From 3.9★ to 4.6★ in 6 weeks.
