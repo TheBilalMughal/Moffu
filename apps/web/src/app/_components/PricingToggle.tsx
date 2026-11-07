@@ -56,22 +56,22 @@ export function PricingToggle({
       <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6 mb-12">
         {/* Left: heading */}
         <div className="flex-1">
-          <p className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-2">pricing</p>
-          <h2 className="text-[clamp(1.75rem,4vw,2.75rem)] font-black text-[#111827] leading-[1.1]">
-            Plans for every stage of growth.
+          <p className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-3">pricing</p>
+          <h2 className="text-[clamp(2.25rem,5vw,3.75rem)] font-black text-[#111827] leading-[1.05]">
+            Plans for every<br />stage of growth.
           </h2>
         </div>
 
         {/* Right: toggle */}
         <div className="flex-shrink-0 pb-1">
-          <div className="relative flex items-stretch bg-white border border-[#E5E7EB] rounded-xl p-1">
+          <div className="relative flex items-stretch bg-white border border-[#E5E7EB] rounded-xl p-1.5">
             {/* Sliding bouncy pill — covers exactly one half */}
             <div
               aria-hidden="true"
-              className="absolute top-1 bottom-1 rounded-lg bg-[#2ECC8A] pointer-events-none"
+              className="absolute top-1.5 bottom-1.5 rounded-lg bg-[#2ECC8A] pointer-events-none"
               style={{
-                left:       annual ? '50%'  : '4px',
-                right:      annual ? '4px'  : '50%',
+                left:       annual ? '50%'  : '6px',
+                right:      annual ? '6px'  : '50%',
                 transition: `left 0.42s ${SPRING}, right 0.42s ${SPRING}`,
               }}
             />
@@ -79,7 +79,7 @@ export function PricingToggle({
             <button
               type="button"
               onClick={() => setAnnual(false)}
-              className={`relative z-10 flex-1 px-5 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 ${
+              className={`relative z-10 flex-1 px-7 py-3 text-base font-semibold rounded-lg transition-colors duration-200 ${
                 !annual ? 'text-white' : 'text-[#111827]/55 hover:text-[#111827]'
               }`}
             >
@@ -89,14 +89,14 @@ export function PricingToggle({
             <button
               type="button"
               onClick={() => setAnnual(true)}
-              className={`relative z-10 flex-1 px-5 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-1.5 ${
+              className={`relative z-10 flex-1 px-7 py-3 text-base font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 ${
                 annual ? 'text-white' : 'text-[#111827]/55 hover:text-[#111827]'
               }`}
             >
               Annual
               {toggleDiscount > 0 && (
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold transition-all duration-200 ${
+                  className={`text-[11px] px-2 py-0.5 rounded-md font-bold transition-all duration-200 ${
                     annual ? 'bg-white/25 text-white' : 'bg-[#D1FAE5] text-[#065F46]'
                   }`}
                 >
@@ -126,7 +126,7 @@ export function PricingToggle({
           return (
             <div
               key={plan.id}
-              className={`relative flex flex-col rounded-xl p-7 border border-[#E5E7EB] ${
+              className={`relative flex flex-col rounded-xl p-8 lg:p-10 border border-[#E5E7EB] ${
                 featured ? 'bg-[#111827]' : 'bg-white'
               }`}
             >
@@ -157,14 +157,14 @@ export function PricingToggle({
                   </div>
                 ) : isFree ? (
                   <div className="flex items-baseline gap-1">
-                    <span className={`text-[2.75rem] font-bold leading-none ${featured ? 'text-white' : 'text-[#111827]'}`}>
+                    <span className={`text-[3.25rem] font-black leading-none ${featured ? 'text-white' : 'text-[#111827]'}`}>
                       Free
                     </span>
                   </div>
                 ) : (
                   <>
                     <div className="flex items-baseline gap-1">
-                      <span className={`text-[2.75rem] font-bold leading-none ${featured ? 'text-white' : 'text-[#111827]'}`}>
+                      <span className={`text-[3.25rem] font-black leading-none ${featured ? 'text-white' : 'text-[#111827]'}`}>
                         ${price}
                       </span>
                       <span className={`text-sm ${featured ? 'text-white/50' : 'text-[#111827]/50'}`}>/month</span>
@@ -196,7 +196,7 @@ export function PricingToggle({
                   href="mailto:sales@moffu.com"
                   className={`block w-full text-center py-3 rounded-lg text-sm font-semibold transition-all duration-150 ${
                     featured
-                      ? 'border-2 border-white text-white hover:bg-white hover:text-[#111827] active:scale-95'
+                      ? 'border-2 border-white text-white hover:bg-white hover:text-[#0D4C3C] active:scale-95'
                       : 'border-2 border-[#111827] text-[#111827] hover:bg-[#111827] hover:text-[#2ECC8A]'
                   }`}
                 >
@@ -208,7 +208,7 @@ export function PricingToggle({
                   label={waitlistEnabled ? 'Join Waitlist' : 'Get Started'}
                   source="pricing"
                   portalUrl={portalUrl}
-                  className="block w-full text-center py-3 rounded-lg text-sm font-semibold border-2 border-white text-white hover:bg-white hover:text-[#111827] active:scale-95 transition-all duration-150"
+                  className="block w-full text-center py-3 rounded-lg text-sm font-semibold border-2 border-white text-white hover:bg-white hover:text-[#0D4C3C] active:scale-95 transition-all duration-150"
                 />
               ) : (
                 <WaitlistButton

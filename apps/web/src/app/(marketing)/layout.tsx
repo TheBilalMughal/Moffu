@@ -11,7 +11,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       <SiteNavbar portalUrl={portalUrl} />
       <ScrollAnimations />
       <PageTransition>{children}</PageTransition>
-      <SiteFooter />
+      <SiteFooter portalUrl={portalUrl} />
     </>
   );
 }

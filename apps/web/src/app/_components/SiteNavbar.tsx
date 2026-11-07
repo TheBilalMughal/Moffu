@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
 const NAV_LINKS = [
-  { label: 'how it works', href: '/#how-it-works', sectionId: 'how-it-works' },
-  { label: 'features',     href: '/feature',       sectionId: '' },
-  { label: 'pricing',      href: '/#pricing',      sectionId: 'pricing' },
-  { label: 'faqs',         href: '/#faq',           sectionId: 'faq' },
+  { label: 'How It Works', href: '/#how-it-works', sectionId: 'how-it-works' },
+  { label: 'Features',     href: '/feature',       sectionId: '' },
+  { label: 'Pricing',      href: '/#pricing',      sectionId: 'pricing' },
+  { label: 'FAQs',         href: '/#faq',           sectionId: 'faq' },
 ];
 
 export function SiteNavbar({ portalUrl }: { portalUrl: string }) {

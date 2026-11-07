@@ -48,10 +48,33 @@ function LogoMark() {
   );
 }
 
-export function SiteFooter() {
+export function SiteFooter({ portalUrl = 'https://app.moffu.pro' }: { portalUrl?: string }) {
   return (
-    <footer className="bg-[#111827] text-white">
-      <div className="px-8 lg:px-16 pt-16 pb-10">
+    <footer className="bg-[#111827] text-white min-h-screen flex flex-col">
+
+      {/* ── CTA ── */}
+      <div className="flex-1 flex items-center px-8 lg:px-16 py-20">
+        <div className="max-w-[96rem] mx-auto w-full">
+          <h2 className="text-[clamp(3rem,9vw,7rem)] font-black leading-[1.0] text-[#2ECC8A] mb-8">
+            Start answering.<br />Stop ignoring.
+          </h2>
+          <div className="flex flex-wrap items-center gap-4">
+            <a
+              href={`${portalUrl}/auth/signup`}
+              className="inline-flex items-center gap-2 bg-[#2ECC8A] text-[#111827] font-bold text-sm px-7 py-3.5 rounded-lg hover:scale-105 active:scale-95 transition-transform duration-150"
+            >
+              Start Free →
+            </a>
+            <a href="#pricing" className="text-sm font-medium text-white/50 hover:text-white transition-colors">
+              View pricing →
+            </a>
+          </div>
+          <p className="text-xs text-white/25 mt-5">No credit card required · Free plan available · Cancel anytime</p>
+        </div>
+      </div>
+
+      {/* ── Footer nav + bottom bar ── */}
+      <div className="px-8 lg:px-16 pt-12 pb-10 border-t border-white/10">
         <div className="grid grid-cols-2 lg:grid-cols-6 gap-10 mb-14">
           {/* Brand col */}
           <div className="col-span-2">

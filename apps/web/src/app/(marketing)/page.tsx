@@ -414,7 +414,7 @@ async function fetchPricingPlans(): Promise<PricingPlan[]> {
 async function PricingSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean; portalUrl: string }) {
   const plans = await fetchPricingPlans();
   return (
-    <section id="pricing" className="bg-[#EDF5F1] px-6 lg:px-16 min-h-screen flex items-center py-20">
+    <section id="pricing" className="bg-[#EDF5F1] px-6 lg:px-16 min-h-[100svh] flex items-center py-20">
       <div className="max-w-[96rem] mx-auto w-full">
         <PricingToggle plans={plans} waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       </div>
@@ -429,19 +429,35 @@ async function PricingSection({ waitlistEnabled, portalUrl }: { waitlistEnabled:
 const FAQ_ITEMS = [
   {
     q: 'Does Moffu work with Google Business Profile?',
-    a: 'Yes. Moffu connects directly to your Google Business Profile to pull in reviews and let you publish AI-generated replies — all without leaving the dashboard.',
+    a: 'Yes. Moffu connects directly to your Google Business Profile to pull in reviews and publish AI-generated replies — all without leaving the dashboard.',
   },
   {
     q: 'How does the AI generate replies?',
-    a: 'You set up your Brand Brain — your business identity, tone of voice, and reply rules. The AI uses that profile to craft replies that sound exactly like you, not a generic bot.',
+    a: 'You set up your Brand Brain — your business identity, tone of voice, and reply rules per star rating. The AI uses that profile to craft replies that sound exactly like you, not a generic bot.',
   },
   {
     q: 'Can I manage multiple locations?',
     a: 'Absolutely. Every plan supports at least one location, and you can add more as add-ons. Higher-tier plans include multiple locations out of the box.',
   },
   {
+    q: 'What is the Brand Brain?',
+    a: 'Brand Brain is your AI identity profile. You tell Moffu your business name, tone of voice, language, and how to respond to different star ratings. Every reply follows those rules automatically.',
+  },
+  {
     q: 'What are Review Request Campaigns?',
-    a: 'Campaigns let you email your past customers and ask them to leave a Google review. You upload a contact list, customise the message with your branding, and track opens and clicks.',
+    a: 'Campaigns let you email past customers and ask them to leave a Google review. Upload a contact list, customise the message with your branding, and track opens and clicks.',
+  },
+  {
+    q: 'How fast are replies published?',
+    a: 'Moffu can sync and auto-reply to new reviews within hours. You can also trigger a manual sync anytime from the Reviews page or let the auto-sync run on a schedule you choose.',
+  },
+  {
+    q: 'Can I edit a reply before it goes live?',
+    a: 'Yes. Every AI-generated reply is a draft first. You can edit it, approve it as-is, or regenerate a new version before it is published to Google.',
+  },
+  {
+    q: 'What languages does Moffu support?',
+    a: 'Moffu can generate replies in any language your Brand Brain is configured for. You can set a default language and override it per location.',
   },
   {
     q: 'Is there a free plan?',
@@ -455,13 +471,13 @@ const FAQ_ITEMS = [
 
 function FAQSection() {
   return (
-    <section id="faq" className="bg-white px-6 lg:px-16 py-20">
-      <div className="max-w-5xl mx-auto">
+    <section id="faq" className="bg-white px-6 lg:px-16 min-h-screen flex items-center py-20">
+      <div className="max-w-[96rem] mx-auto w-full">
         <p className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-3">faq</p>
-        <h2 className="text-[clamp(2rem,5vw,3rem)] font-black text-[#111827] leading-[1.1] mb-12">
+        <h2 className="text-[clamp(2rem,5vw,3rem)] font-black text-[#111827] leading-[1.1] mb-10">
           Common questions.
         </h2>
-        <div className="space-y-3">
+        <div className="grid md:grid-cols-2 gap-3">
           {FAQ_ITEMS.map((item) => (
             <details key={item.q} className="group border border-[#E5E7EB] rounded-xl overflow-hidden">
               <summary className="flex items-center justify-between px-5 py-4 cursor-pointer list-none select-none hover:bg-[#EDF5F1] transition-colors">
@@ -481,38 +497,6 @@ function FAQSection() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Final CTA
-// ---------------------------------------------------------------------------
-
-function CTASection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean; portalUrl: string }) {
-  return (
-    <section className="bg-[#111827] px-6 lg:px-16 py-20">
-      <div className="max-w-[96rem] mx-auto">
-        <h2 className="text-[clamp(2.5rem,7vw,5rem)] font-black leading-[1.0] text-[#2ECC8A] mb-8">
-          Start answering.<br />Stop ignoring.
-        </h2>
-        <div className="flex flex-wrap items-center gap-3">
-          <WaitlistButton
-            enabled={waitlistEnabled}
-            label={waitlistEnabled ? 'Join Waitlist' : 'Start Free'}
-            source="cta_section"
-            portalUrl={portalUrl}
-            arrow
-            className="inline-flex items-center gap-2 bg-[#2ECC8A] text-white font-semibold text-sm px-6 py-3 rounded-lg border border-[#2ECC8A] hover:scale-105 active:scale-95 transition-transform duration-150"
-          />
-          <a
-            href="#pricing"
-            className="text-sm font-medium text-white/50 hover:text-white transition-colors"
-          >
-            View pricing →
-          </a>
-        </div>
-        <p className="text-xs text-white/25 mt-5">No credit card required · Free plan available · Cancel anytime</p>
-      </div>
-    </section>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Page
@@ -539,7 +523,6 @@ export default async function HomePage() {
       <CaseStudySection />
       <PricingSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       <FAQSection />
-      <CTASection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
     </main>
   );
 }

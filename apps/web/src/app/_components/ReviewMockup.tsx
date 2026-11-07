@@ -88,30 +88,9 @@ export function ReviewMockup() {
       {/* ── Sketch-style phone frame ── */}
       <div className="relative w-[260px]">
 
-        {/* Animated theme-color glow — all 4 sides */}
-        <style>{`
-          @keyframes phoneGlow {
-            0%,100% {
-              box-shadow:
-                0  0  28px  8px rgba(13,76,60,0.35),
-                0  0  70px 20px rgba(13,76,60,0.18),
-                0  0 120px 40px rgba(46,204,138,0.08),
-                inset 0 1px 0 rgba(255,255,255,0.9);
-            }
-            50% {
-              box-shadow:
-                0  0  50px 16px rgba(13,76,60,0.55),
-                0  0 110px 36px rgba(13,76,60,0.28),
-                0  0 180px 60px rgba(46,204,138,0.14),
-                inset 0 1px 0 rgba(255,255,255,0.9);
-            }
-          }
-        `}</style>
-
         {/* Outer phone border — sketch / wireframe look */}
         <div
           className="relative rounded-[2.6rem] border-2 border-[#0D4C3C]/20 bg-[#FAFAFA] p-[10px]"
-          style={{ animation: 'phoneGlow 3.5s ease-in-out infinite' }}
         >
           {/* Sketch side buttons */}
           <div className="absolute -left-[2px] top-[88px]  w-[2px] h-7 bg-[#111827]/12 rounded-full" />
