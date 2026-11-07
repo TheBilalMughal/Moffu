@@ -166,12 +166,6 @@ function ValuePropSection() {
 // Industries
 // ---------------------------------------------------------------------------
 
-const INDUSTRIES = [
-  'Restaurants', 'Cafés', 'Salons & spas', 'Dentists', 'Clinics',
-  'Hotels', 'Auto repair', 'Gyms', 'Retail shops', 'Plumbers & trades',
-  'Real estate', 'Vets', 'And many more',
-];
-
 function IndustriesSection() {
   return (
     <section className="bg-white px-6 lg:px-16 py-20">
@@ -180,24 +174,9 @@ function IndustriesSection() {
         <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-black leading-[1.1] text-[#111827] mb-4">
           On Google?<br />Moffu's for you.
         </h2>
-        <p className="text-[#111827]/65 text-base mb-10 max-w-xl">
+        <p className="text-[#111827]/65 text-base max-w-xl">
           Any business with a Google Business Profile can use Moffu, whatever you sell, wherever you are. Moffu replies in 37 languages.
         </p>
-
-        <div className="flex flex-wrap gap-2">
-          {INDUSTRIES.map((name, i) => (
-            <span
-              key={name}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg border transition-colors ${
-                i === 0
-                  ? 'bg-[#111827] text-white border-[#111827]'
-                  : 'bg-white text-[#111827] border-[#E5E7EB] hover:border-[#111827]'
-              }`}
-            >
-              {name}
-            </span>
-          ))}
-        </div>
       </div>
     </section>
   );
