@@ -86,11 +86,11 @@ export function SiteNavbar({ portalUrl }: { portalUrl: string }) {
               }
             >
               <img
-                src="/images/moffu-logo.png"
+                src="/images/moffu-logo-transparent.png"
                 alt="Moffu"
                 style={scrolled
-                  ? { height: '66px', width: 'auto', marginTop: '-19px', marginLeft: '-8px', mixBlendMode: 'multiply' }
-                  : { height: '142px', width: 'auto', marginTop: '-41px', marginLeft: '-17px', mixBlendMode: 'multiply' }
+                  ? { height: '66px', width: 'auto', marginTop: '-19px', marginLeft: '-8px' }
+                  : { height: '142px', width: 'auto', marginTop: '-41px', marginLeft: '-17px' }
                 }
               />
             </div>
