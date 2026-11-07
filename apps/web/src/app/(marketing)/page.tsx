@@ -345,7 +345,7 @@ function BrandsSection({ brands }: { brands: BrandClient[] }) {
           {doubled.map((b, i) => (
             <div
               key={i}
-              className="flex-shrink-0 mx-4 flex items-center bg-[#F3F4F6] rounded-xl px-5 py-4 select-none"
+              className="flex-shrink-0 mx-8 flex items-center select-none"
             >
               {b.logo_url ? (
                 <img src={b.logo_url} alt={b.name} className="h-9 w-auto max-w-[120px] object-contain flex-shrink-0" />
