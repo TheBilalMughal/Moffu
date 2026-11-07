@@ -414,8 +414,8 @@ async function fetchPricingPlans(): Promise<PricingPlan[]> {
 async function PricingSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean; portalUrl: string }) {
   const plans = await fetchPricingPlans();
   return (
-    <section id="pricing" className="bg-[#EDF5F1] px-6 lg:px-16 py-20">
-      <div className="max-w-[96rem] mx-auto">
+    <section id="pricing" className="bg-[#EDF5F1] px-6 lg:px-16 min-h-screen flex items-center py-20">
+      <div className="max-w-[96rem] mx-auto w-full">
         <PricingToggle plans={plans} waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       </div>
     </section>

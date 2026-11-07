@@ -64,14 +64,14 @@ export function PricingToggle({
 
         {/* Right: toggle */}
         <div className="flex-shrink-0 pb-1">
-          <div className="relative flex items-center bg-white border border-[#E5E7EB] rounded-lg p-1 gap-0.5">
-            {/* Sliding bouncy pill */}
+          <div className="relative flex items-stretch bg-white border border-[#E5E7EB] rounded-xl p-1">
+            {/* Sliding bouncy pill — covers exactly one half */}
             <div
               aria-hidden="true"
-              className="absolute top-1 bottom-1 rounded-md bg-[#2ECC8A]"
+              className="absolute top-1 bottom-1 rounded-lg bg-[#2ECC8A] pointer-events-none"
               style={{
-                left:       annual ? 'calc(50% + 2px)' : '4px',
-                right:      annual ? '4px'              : 'calc(50% + 2px)',
+                left:       annual ? '50%'  : '4px',
+                right:      annual ? '4px'  : '50%',
                 transition: `left 0.42s ${SPRING}, right 0.42s ${SPRING}`,
               }}
             />
@@ -79,7 +79,7 @@ export function PricingToggle({
             <button
               type="button"
               onClick={() => setAnnual(false)}
-              className={`relative z-10 px-5 py-2 text-sm font-semibold rounded-md transition-colors duration-200 ${
+              className={`relative z-10 flex-1 px-5 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 ${
                 !annual ? 'text-white' : 'text-[#111827]/55 hover:text-[#111827]'
               }`}
             >
@@ -89,18 +89,18 @@ export function PricingToggle({
             <button
               type="button"
               onClick={() => setAnnual(true)}
-              className={`relative z-10 px-5 py-2 text-sm font-semibold rounded-md transition-colors duration-200 flex items-center gap-2 ${
+              className={`relative z-10 flex-1 px-5 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-1.5 ${
                 annual ? 'text-white' : 'text-[#111827]/55 hover:text-[#111827]'
               }`}
             >
               Annual
               {toggleDiscount > 0 && (
                 <span
-                  className={`text-[11px] px-1.5 py-0.5 rounded font-semibold transition-colors duration-200 ${
-                    annual ? 'bg-white/20 text-white' : 'bg-[#D1FAE5] text-[#065F46]'
+                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold transition-all duration-200 ${
+                    annual ? 'bg-white/25 text-white' : 'bg-[#D1FAE5] text-[#065F46]'
                   }`}
                 >
-                  Save {toggleDiscount}%
+                  -{toggleDiscount}%
                 </span>
               )}
             </button>
@@ -126,10 +126,8 @@ export function PricingToggle({
           return (
             <div
               key={plan.id}
-              className={`relative flex flex-col rounded-xl p-7 ${
-                featured
-                  ? 'bg-[#111827] border-[5px] border-[#0D4C3C]'
-                  : 'bg-white border border-[#E5E7EB]'
+              className={`relative flex flex-col rounded-xl p-7 border border-[#E5E7EB] ${
+                featured ? 'bg-[#111827]' : 'bg-white'
               }`}
             >
               {/* Badge */}
@@ -198,7 +196,7 @@ export function PricingToggle({
                   href="mailto:sales@moffu.com"
                   className={`block w-full text-center py-3 rounded-lg text-sm font-semibold transition-all duration-150 ${
                     featured
-                      ? 'border-[5px] border-[#0D4C3C] bg-[#2ECC8A] text-[#111827] hover:brightness-110 active:scale-95'
+                      ? 'border-2 border-white text-white hover:bg-white hover:text-[#111827] active:scale-95'
                       : 'border-2 border-[#111827] text-[#111827] hover:bg-[#111827] hover:text-[#2ECC8A]'
                   }`}
                 >
@@ -210,7 +208,7 @@ export function PricingToggle({
                   label={waitlistEnabled ? 'Join Waitlist' : 'Get Started'}
                   source="pricing"
                   portalUrl={portalUrl}
-                  className="block w-full text-center py-3 rounded-lg text-sm font-semibold border-[5px] border-[#0D4C3C] bg-[#2ECC8A] text-[#111827] hover:brightness-110 active:scale-95 transition-all duration-150"
+                  className="block w-full text-center py-3 rounded-lg text-sm font-semibold border-2 border-white text-white hover:bg-white hover:text-[#111827] active:scale-95 transition-all duration-150"
                 />
               ) : (
                 <WaitlistButton
