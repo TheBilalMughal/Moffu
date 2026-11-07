@@ -143,7 +143,7 @@ function HeroSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean;
 function ValuePropSection() {
   return (
     <section id="how-it-works" className="bg-white px-6 lg:px-16 py-32 overflow-visible">
-      <div className="max-w-[96rem] mx-auto grid md:grid-cols-2 gap-16 items-center">
+      <div className="max-w-[1380px] mx-auto grid md:grid-cols-2 gap-16 items-center">
         {/* Left: copy */}
         <div>
           <h2 className="text-[clamp(2rem,5vw,3.25rem)] font-black leading-[1.1] text-[#111827] mb-6">
@@ -174,7 +174,7 @@ function StatsSection() {
   ];
   return (
     <section className="bg-[#EDF5F1] px-6 lg:px-16 py-16">
-      <div className="max-w-[96rem] mx-auto">
+      <div className="max-w-[1380px] mx-auto">
         <div className="flex items-center justify-between mb-8">
           <p className="text-sm font-semibold text-[#111827]">Google review reply rate</p>
           <p className="text-xs text-[#111827]/50">the numbers tell the story</p>
@@ -213,7 +213,7 @@ const INDUSTRIES = [
 function IndustriesSection() {
   return (
     <section className="bg-white px-6 lg:px-16 py-20">
-      <div className="max-w-[96rem] mx-auto">
+      <div className="max-w-[1380px] mx-auto">
         <p className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-3">who it's for</p>
         <h2 className="text-[clamp(2rem,5vw,3rem)] font-black leading-[1.1] text-[#111827] mb-4">
           On Google?<br />Moffu's for you.
@@ -271,7 +271,7 @@ function FeaturesSection() {
           key={title}
           className={`px-6 lg:px-16 py-20 ${tinted ? 'bg-[#EDF5F1]' : 'bg-white'}`}
         >
-          <div className="max-w-[96rem] mx-auto grid md:grid-cols-2 gap-8 items-center">
+          <div className="max-w-[1380px] mx-auto grid md:grid-cols-2 gap-8 items-center">
             <div>
               <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-black leading-[1.1] mb-4 text-[#111827]">
                 {title}
@@ -301,7 +301,7 @@ function FeaturesSection() {
 function CaseStudySection() {
   return (
     <section className="bg-[#2ECC8A] px-6 lg:px-16 py-20">
-      <div className="max-w-[96rem] mx-auto">
+      <div className="max-w-[1380px] mx-auto">
         <p className="text-xs font-semibold text-[#111827]/60 uppercase tracking-widest mb-3">Real results</p>
         <h2 className="text-[clamp(2rem,5vw,3rem)] font-black text-[#111827] leading-[1.1] mb-4">
           From 3.9★ to 4.6★ in 6 weeks.
@@ -415,7 +415,7 @@ async function PricingSection({ waitlistEnabled, portalUrl }: { waitlistEnabled:
   const plans = await fetchPricingPlans();
   return (
     <section id="pricing" className="bg-[#EDF5F1] px-6 lg:px-16 min-h-[100svh] flex items-center py-20">
-      <div className="max-w-[96rem] mx-auto w-full">
+      <div className="max-w-[1380px] mx-auto w-full">
         <PricingToggle plans={plans} waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       </div>
     </section>
@@ -472,7 +472,7 @@ const FAQ_ITEMS = [
 function FAQSection() {
   return (
     <section id="faq" className="bg-white px-6 lg:px-16 min-h-screen flex items-center py-20">
-      <div className="max-w-[96rem] mx-auto w-full">
+      <div className="max-w-[1380px] mx-auto w-full">
         <p className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-3">faq</p>
         <h2 className="text-[clamp(2rem,5vw,3rem)] font-black text-[#111827] leading-[1.1] mb-10">
           Common questions.
