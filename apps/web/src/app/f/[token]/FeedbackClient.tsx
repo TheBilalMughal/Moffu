@@ -73,7 +73,7 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
               <div className="flex gap-3">
                 <button
                   onClick={() => submit('happy')}
-                  className="flex-1 flex flex-col items-center gap-2.5 px-4 py-5 rounded-xl border-2 border-[#E5EAE8] hover:border-[#0D4C3C] hover:bg-[#F0F7F5] transition-all group"
+                  className="flex-1 flex flex-col items-center gap-2.5 px-4 py-5 rounded-xl border-2 border-[#E5EAE8] hover:border-[#111827] hover:bg-[#F3F4F6] transition-all group"
                 >
                   <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
                     <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,7 +118,7 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
                 onChange={e => setFeedbackText(e.target.value)}
                 placeholder="Tell us what happened..."
                 rows={4}
-                className="w-full px-4 py-3 text-sm text-[#111827] placeholder-[#D1D5DB] border border-[#E5EAE8] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] resize-none transition"
+                className="w-full px-4 py-3 text-sm text-[#111827] placeholder-[#D1D5DB] border border-[#E5EAE8] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#111827]/15 focus:border-[#111827] resize-none transition"
               />
               <button
                 onClick={() => submit('unhappy', feedbackText)}
@@ -133,7 +133,7 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
           {/* submitting */}
           {step === 'submitting' && (
             <div className="px-8 py-16 text-center">
-              <div className="w-10 h-10 border-2 border-[#0D4C3C]/20 border-t-[#0D4C3C] rounded-full animate-spin mx-auto mb-4" />
+              <div className="w-10 h-10 border-2 border-[#111827]/15 border-t-[#111827] rounded-full animate-spin mx-auto mb-4" />
               <p className="text-sm text-[#6B7280]">Saving your response...</p>
             </div>
           )}

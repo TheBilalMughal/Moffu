@@ -107,7 +107,7 @@ export function SignupForm() {
             id="name" type="text" required autoComplete="name"
             value={name} onChange={(e) => setName(e.target.value)}
             placeholder="Enter your full name"
-            className="w-full px-4 py-3 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] transition-colors"
+            className="w-full px-4 py-3 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#111827]/15 focus:border-[#111827] transition-colors"
           />
         </div>
 
@@ -117,7 +117,7 @@ export function SignupForm() {
             id="email" type="email" required autoComplete="email"
             value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="you@company.com"
-            className="w-full px-4 py-3 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] transition-colors"
+            className="w-full px-4 py-3 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#111827]/15 focus:border-[#111827] transition-colors"
           />
         </div>
 
@@ -128,7 +128,7 @@ export function SignupForm() {
               id="password" type={showPassword ? 'text' : 'password'} required minLength={8} autoComplete="new-password"
               value={password} onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-3 pr-11 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] transition-colors"
+              className="w-full px-4 py-3 pr-11 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#111827]/15 focus:border-[#111827] transition-colors"
             />
             <button type="button" onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151] transition-colors"
@@ -145,7 +145,7 @@ export function SignupForm() {
               id="confirm" type={showConfirm ? 'text' : 'password'} required autoComplete="new-password"
               value={confirm} onChange={(e) => setConfirm(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-3 pr-11 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] transition-colors"
+              className="w-full px-4 py-3 pr-11 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#111827]/15 focus:border-[#111827] transition-colors"
             />
             <button type="button" onClick={() => setShowConfirm(!showConfirm)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151] transition-colors"

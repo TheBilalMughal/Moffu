@@ -34,7 +34,7 @@ export function SiteNav() {
           </a>
           <a
             href={`${portalUrl}/auth/signup`}
-            className="text-sm font-semibold bg-white text-[#2ECC8A] px-5 py-2.5 rounded-lg border border-[#2ECC8A] hover:bg-[#2ECC8A] hover:text-white transition-colors"
+            className="text-sm font-semibold bg-[#111827] text-white px-5 py-2.5 rounded-lg hover:opacity-85 transition-colors"
           >
             Start Free →
           </a>

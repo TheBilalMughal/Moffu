@@ -335,7 +335,7 @@ function CaseStudySection() {
           </div>
 
           {/* After */}
-          <div className="rounded-2xl p-7 border border-[#2ECC8A]/40 bg-[#2ECC8A]/8">
+          <div className="rounded-2xl p-7 border border-[#E5E7EB] bg-[#F3F4F6]">
             <p className="text-xs font-semibold text-[#2ECC8A] uppercase tracking-widest mb-6">After Moffu</p>
             <ul className="space-y-4">
               {[

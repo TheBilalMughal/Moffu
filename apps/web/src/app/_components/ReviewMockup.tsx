@@ -90,7 +90,7 @@ export function ReviewMockup() {
 
         {/* Outer phone border — sketch / wireframe look */}
         <div
-          className="relative rounded-[2.6rem] border-2 border-[#0D4C3C]/20 bg-[#FAFAFA] p-[10px]"
+          className="relative rounded-[2.6rem] border-2 border-[#E5E7EB] bg-[#FAFAFA] p-[10px]"
         >
           {/* Sketch side buttons */}
           <div className="absolute -left-[2px] top-[88px]  w-[2px] h-7 bg-[#111827]/12 rounded-full" />
@@ -190,7 +190,7 @@ export function ReviewMockup() {
                     transform: showReply ? 'translateY(0)' : 'translateY(12px)',
                   }}
                 >
-                  <div className="bg-[#2ECC8A]/10 rounded-xl p-3 border border-[#2ECC8A]/25 relative">
+                  <div className="bg-[#F3F4F6] rounded-xl p-3 border border-[#E5E7EB] relative">
                     <div className="absolute -left-3 top-3 w-2.5 h-2.5 rounded-full bg-[#2ECC8A] flex items-center justify-center">
                       <svg className="w-1.5 h-1.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/>
