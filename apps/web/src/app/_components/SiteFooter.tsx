@@ -46,7 +46,7 @@ export function SiteFooter({ portalUrl = 'https://app.moffu.pro' }: { portalUrl?
       {/* ── CTA ── */}
       <div className="flex-1 flex items-center px-8 lg:px-16 py-20">
         <div className="max-w-[1380px] mx-auto w-full">
-          <h2 className="text-[clamp(2.5rem,7vw,5rem)] font-black leading-[1.0] text-[#2ECC8A] mb-8">
+          <h2 className="text-[clamp(3rem,9vw,7rem)] font-black leading-[1.0] text-[#2ECC8A] mb-8">
             Start answering.<br />Stop ignoring.
           </h2>
           <div className="flex flex-wrap items-center gap-4">
