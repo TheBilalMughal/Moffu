@@ -330,8 +330,8 @@ function BrandsSection({ brands }: { brands: BrandClient[] }) {
   if (brands.length === 0) return null;
   const doubled = [...brands, ...brands, ...brands, ...brands];
   return (
-    <section className="bg-white py-16 overflow-hidden border-b border-[#E5E7EB]">
-      <div className="max-w-[1380px] mx-auto px-6 lg:px-16 mb-10">
+    <section className="bg-white py-16 border-b border-[#E5E7EB] px-6 lg:px-16">
+      <div className="max-w-[1380px] mx-auto mb-10">
         <p className="text-xs font-semibold text-[#111827]/40 uppercase tracking-widest">who&apos;s already on it</p>
         <h2 className="text-[clamp(1.5rem,3vw,2rem)] font-black text-[#111827] mt-2">
           Businesses that stopped ghosting their reviews.
@@ -339,8 +339,7 @@ function BrandsSection({ brands }: { brands: BrandClient[] }) {
       </div>
 
       {/* Marquee */}
-      <div className="max-w-[1380px] mx-auto px-6 lg:px-16">
-      <div className="marquee-wrap overflow-hidden cursor-default">
+      <div className="max-w-[1380px] mx-auto overflow-hidden">
         <div className="marquee-track">
           {doubled.map((b, i) => (
             <div
@@ -357,7 +356,6 @@ function BrandsSection({ brands }: { brands: BrandClient[] }) {
             </div>
           ))}
         </div>
-      </div>
       </div>
     </section>
   );
