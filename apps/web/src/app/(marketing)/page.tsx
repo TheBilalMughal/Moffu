@@ -340,7 +340,7 @@ const BRANDS = [
 function BrandsSection() {
   const doubled = [...BRANDS, ...BRANDS];
   return (
-    <section className="bg-white py-16 overflow-hidden border-y border-[#E5E7EB]">
+    <section className="bg-white py-16 overflow-hidden border-b border-[#E5E7EB]">
       <div className="max-w-[1380px] mx-auto px-6 lg:px-16 mb-10">
         <p className="text-xs font-semibold text-[#111827]/40 uppercase tracking-widest">who&apos;s already on it</p>
         <h2 className="text-[clamp(1.5rem,3vw,2rem)] font-black text-[#111827] mt-2">
