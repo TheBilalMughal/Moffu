@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToastStore } from '@/lib/toast';
 
@@ -294,7 +294,7 @@ export function AISettingsPage() {
                       <button
                         key={provider}
                         onClick={() => openAdd(provider)}
-                        className="flex items-center gap-3 px-4 py-4 rounded-xl border border-dashed border-[#E5E7EB] hover:border-[#0D4C3C]/30 hover:bg-[#F8FAF9] transition-all text-left group"
+                        className="flex items-center gap-3 px-4 py-4 rounded-xl border border-dashed border-[#E5E7EB] hover:border-[#6C55E8]/30 hover:bg-[#FAFAF7] transition-all text-left group"
                       >
                         <ProviderInitial provider={provider} />
                         <div className="min-w-0 flex-1">
@@ -350,14 +350,14 @@ export function AISettingsPage() {
                   value={form.apiKey}
                   onChange={e => setForm(f => f && ({ ...f, apiKey: e.target.value }))}
                   placeholder="Paste your API key here"
-                  className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-2.5 text-sm text-[#111827] placeholder-[#D1D5DB] focus:outline-none focus:border-[#0D4C3C] focus:ring-1 focus:ring-[#0D4C3C]/20 transition-colors"
+                  className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-2.5 text-sm text-[#111827] placeholder-[#D1D5DB] focus:outline-none focus:border-[#6C55E8] focus:ring-1 focus:ring-[#6C55E8]/20 transition-colors"
                   autoFocus
                 />
                 <a
                   href={PROVIDER_META[form.provider].docsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-[#0D4C3C] hover:underline mt-1.5 inline-flex items-center gap-1"
+                  className="text-xs text-[#6C55E8] hover:underline mt-1.5 inline-flex items-center gap-1"
                 >
                   Get API key from {PROVIDER_META[form.provider].name}
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -372,7 +372,7 @@ export function AISettingsPage() {
                 <select
                   value={form.model}
                   onChange={e => setForm(f => f && ({ ...f, model: e.target.value }))}
-                  className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-2.5 text-sm text-[#111827] focus:outline-none focus:border-[#0D4C3C] focus:ring-1 focus:ring-[#0D4C3C]/20 bg-white transition-colors"
+                  className="w-full border border-[#E5E7EB] rounded-lg px-3.5 py-2.5 text-sm text-[#111827] focus:outline-none focus:border-[#6C55E8] focus:ring-1 focus:ring-[#6C55E8]/20 bg-white transition-colors"
                 >
                   {PROVIDER_META[form.provider].modelOptions.map(m => (
                     <option key={m.id} value={m.id}>{m.label}</option>
@@ -386,7 +386,7 @@ export function AISettingsPage() {
               <button
                 onClick={handleSave}
                 disabled={!form.apiKey.trim() || saving === form.provider}
-                className="flex-1 bg-[#0D4C3C] hover:bg-[#0a3d30] disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
+                className="flex-1 bg-[#111111] hover:bg-[#0a3d30] disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
               >
                 {saving === form.provider ? 'Saving…' : 'Save Provider'}
               </button>
@@ -403,3 +403,4 @@ export function AISettingsPage() {
     </div>
   );
 }
+

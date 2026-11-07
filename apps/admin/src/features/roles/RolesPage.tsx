@@ -165,11 +165,11 @@ function CrudCell({
   const boxClass = localGranted
     ? isPending
       ? 'bg-amber-500 border-amber-500'
-      : 'bg-[#0D4C3C] border-[#0D4C3C]'
+      : 'bg-[#111111] border-[#6C55E8]'
     : isPending
     ? 'bg-white border-amber-400 ring-1 ring-amber-300'
     : canEdit
-    ? 'bg-white border-[#D1D5DB] hover:border-[#0D4C3C]'
+    ? 'bg-white border-[#D1D5DB] hover:border-[#6C55E8]'
     : 'bg-white border-[#D1D5DB]';
 
   return (
@@ -187,7 +187,7 @@ function CrudCell({
           ) : null}
         </button>
       ) : (
-        <span className={`inline-flex w-[18px] h-[18px] border-2 items-center justify-center mx-auto ${localGranted ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'bg-white border-[#D1D5DB]'}`}>
+        <span className={`inline-flex w-[18px] h-[18px] border-2 items-center justify-center mx-auto ${localGranted ? 'bg-[#111111] border-[#6C55E8]' : 'bg-white border-[#D1D5DB]'}`}>
           {localGranted && (
             <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
@@ -223,7 +223,7 @@ function SavePreviewModal({
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onCancel()}>
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-        <div className="px-6 py-4 border-b border-[#E5EAE8]">
+        <div className="px-6 py-4 border-b border-[#E5E7EB]">
           <h2 className="text-base font-bold text-[#111827]">Review changes — {roleLabel}</h2>
           <p className="text-xs text-[#6B7280] mt-0.5">These will be applied immediately and logged.</p>
         </div>
@@ -251,14 +251,14 @@ function SavePreviewModal({
             {error}
           </div>
         )}
-        <div className="px-6 py-4 border-t border-[#E5EAE8] flex justify-end gap-2">
+        <div className="px-6 py-4 border-t border-[#E5E7EB] flex justify-end gap-2">
           <button onClick={onCancel} disabled={saving} className="px-4 py-1.5 text-sm text-[#374151] bg-white border border-[#D1D5DB] hover:bg-[#F3F4F6] transition-colors disabled:opacity-50">
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={saving}
-            className="px-4 py-1.5 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#0a3d30] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+            className="px-4 py-1.5 text-sm font-semibold text-white bg-[#111111] hover:bg-[#0a3d30] transition-colors disabled:opacity-50 flex items-center gap-1.5"
           >
             {saving && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />}
             {saving ? 'Saving…' : `Apply ${toAdd.length + toRemove.length} change${toAdd.length + toRemove.length !== 1 ? 's' : ''}`}
@@ -302,7 +302,7 @@ function RoleDiffModal({
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl">
-        <div className="px-6 py-4 border-b border-[#E5EAE8] flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-[#111827]">Role Comparison</h2>
             {!hasDiff && <p className="text-xs text-emerald-600 mt-0.5">No differences between these roles.</p>}
@@ -317,7 +317,7 @@ function RoleDiffModal({
 
         {/* Compare role picker */}
         <div className="px-6 pt-4 pb-2 flex items-center gap-3 text-sm">
-          <span className="font-semibold text-[#0D4C3C] w-28">{baseLabel}</span>
+          <span className="font-semibold text-[#6C55E8] w-28">{baseLabel}</span>
           <span className="text-[#9CA3AF]">vs</span>
           <Dropdown
             value={compareRole}
@@ -328,7 +328,7 @@ function RoleDiffModal({
 
         <div className="overflow-y-auto max-h-[calc(80vh-140px)]">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-[#F8FAF9] border-b border-[#E5EAE8]">
+            <thead className="sticky top-0 bg-[#FAFAF7] border-b border-[#E5E7EB]">
               <tr>
                 <th className="px-5 py-2 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Page</th>
                 <th className="px-3 py-2 text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-16">View</th>
@@ -585,7 +585,7 @@ export function RolesPage() {
     <>
       <div className="flex h-full">
         {/* Left: Roles sidebar */}
-        <aside className="w-52 flex-shrink-0 border-r border-[#E5EAE8] px-3 py-6 overflow-y-auto">
+        <aside className="w-52 flex-shrink-0 border-r border-[#E5E7EB] px-3 py-6 overflow-y-auto">
           <p className="text-[10px] font-bold text-[#9CA3AF] uppercase tracking-widest px-3 mb-3">Roles</p>
           <div className="space-y-0.5">
             {ROLES.map((r) => (
@@ -594,12 +594,12 @@ export function RolesPage() {
                 onClick={() => handleSelectRole(r.key)}
                 className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors ${
                   selectedRole === r.key
-                    ? 'bg-[#E6F2EE] text-[#0D4C3C]'
+                    ? 'bg-[#D8CCFF] text-[#6C55E8]'
                     : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
                 }`}
               >
                 <div className="flex items-center gap-1.5">
-                  <p className={`text-sm font-semibold ${selectedRole === r.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>
+                  <p className={`text-sm font-semibold ${selectedRole === r.key ? 'text-[#6C55E8]' : 'text-[#111827]'}`}>
                     {r.label}
                   </p>
                   {isFullAccessRole(r.key) && (
@@ -643,7 +643,7 @@ export function RolesPage() {
                   onClick={() => setTab(t)}
                   className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors capitalize ${
                     tab === t
-                      ? 'border-[#0D4C3C] text-[#0D4C3C]'
+                      ? 'border-[#6C55E8] text-[#6C55E8]'
                       : 'border-transparent text-[#6B7280] hover:text-[#374151]'
                   }`}
                 >
@@ -712,7 +712,7 @@ export function RolesPage() {
                       placeholder="Filter pages…"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="w-full pl-9 pr-3 py-1.5 text-sm border border-[#E5EAE8] shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+                      className="w-full pl-9 pr-3 py-1.5 text-sm border border-[#E5E7EB] shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"
                     />
                   </div>
 
@@ -731,7 +731,7 @@ export function RolesPage() {
                       <button
                         onClick={() => { setSaveError(null); setShowPreview(true); }}
                         disabled={saving}
-                        className="px-3 py-1.5 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#0a3d30] transition-colors disabled:opacity-50"
+                        className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#0a3d30] transition-colors disabled:opacity-50"
                       >
                         Save Changes
                       </button>
@@ -744,9 +744,9 @@ export function RolesPage() {
                   <div className="bg-white shadow-sm rounded-xl overflow-hidden animate-pulse">
                     {Array.from({ length: 8 }).map((_, i) => (
                       <div key={i} className="flex items-center gap-4 px-5 py-2.5 border-b border-[#F3F4F6]">
-                        <div className="h-3 bg-[#E5EAE8] rounded w-24" />
+                        <div className="h-3 bg-[#E5E7EB] rounded w-24" />
                         {Array.from({ length: 4 }).map((_, j) => (
-                          <div key={j} className="w-[18px] h-[18px] bg-[#E5EAE8] rounded mx-auto" />
+                          <div key={j} className="w-[18px] h-[18px] bg-[#E5E7EB] rounded mx-auto" />
                         ))}
                       </div>
                     ))}
@@ -754,7 +754,7 @@ export function RolesPage() {
                 ) : (
                   <div className="bg-white shadow-sm rounded-xl overflow-hidden">
                     <table className="w-full text-sm">
-                      <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+                      <thead className="bg-[#FAFAF7] border-b border-[#E5E7EB] sticky top-0 z-10">
                         <tr>
                           <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Page</th>
                           {(['view', 'add', 'edit', 'delete'] as CrudAction[]).map((a) => (
@@ -779,7 +779,7 @@ export function RolesPage() {
                             if (mod.section !== lastSection) {
                               lastSection = mod.section;
                               rows.push(
-                                <tr key={`section-${mod.section}`} className="bg-[#F8FAF9]">
+                                <tr key={`section-${mod.section}`} className="bg-[#FAFAF7]">
                                   <td colSpan={6} className="px-5 py-1.5 text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">
                                     {mod.section}
                                   </td>
@@ -788,7 +788,7 @@ export function RolesPage() {
                             }
                             const overrideCount = getModuleOverrideCount(mod);
                             rows.push(
-                              <tr key={mod.label} className="hover:bg-[#F8FAF9] transition-colors">
+                              <tr key={mod.label} className="hover:bg-[#FAFAF7] transition-colors">
                                 <td className="px-5 py-1.5 font-medium text-[#111827]">{mod.label}</td>
                                 {(['view', 'add', 'edit', 'delete'] as CrudAction[]).map((a) => {
                                   const keys = mod.crud[a] as readonly string[] | null;
@@ -844,9 +844,9 @@ export function RolesPage() {
                   <div className="animate-pulse divide-y divide-[#F3F4F6]">
                     {Array.from({ length: 6 }).map((_, i) => (
                       <div key={i} className="px-5 py-3 flex items-center gap-4">
-                        <div className="w-12 h-3 bg-[#E5EAE8] rounded" />
-                        <div className="flex-1 h-3 bg-[#E5EAE8] rounded" />
-                        <div className="w-20 h-3 bg-[#E5EAE8] rounded" />
+                        <div className="w-12 h-3 bg-[#E5E7EB] rounded" />
+                        <div className="flex-1 h-3 bg-[#E5E7EB] rounded" />
+                        <div className="w-20 h-3 bg-[#E5E7EB] rounded" />
                       </div>
                     ))}
                   </div>
@@ -856,7 +856,7 @@ export function RolesPage() {
                   </div>
                 ) : (
                   <table className="w-full text-sm">
-                    <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+                    <thead className="bg-[#FAFAF7] border-b border-[#E5E7EB] sticky top-0 z-10">
                       <tr>
                         <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Action</th>
                         <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Permission</th>
@@ -866,7 +866,7 @@ export function RolesPage() {
                     </thead>
                     <tbody className="divide-y divide-[#F3F4F6]">
                       {auditLog.map((entry) => (
-                        <tr key={entry.id} className="hover:bg-[#F8FAF9] transition-colors">
+                        <tr key={entry.id} className="hover:bg-[#FAFAF7] transition-colors">
                           <td className="px-5 py-1.5">
                             <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded ${
                               entry.action === 'grant'
@@ -922,3 +922,4 @@ export function RolesPage() {
     </>
   );
 }
+

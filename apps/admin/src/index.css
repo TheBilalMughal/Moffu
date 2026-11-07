@@ -1,10 +1,10 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --color-brand: #0D4C3C;
+    --color-brand: #6C55E8;
   }
 
   * {
@@ -27,3 +27,4 @@
     }
   }
 }
+

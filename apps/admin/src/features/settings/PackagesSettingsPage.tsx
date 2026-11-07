@@ -351,7 +351,7 @@ export function PackagesSettingsPage() {
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-[#0D4C3C] text-white text-sm font-medium rounded-lg hover:bg-[#0a3d30] transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[#111111] text-white text-sm font-medium rounded-lg hover:bg-[#0a3d30] transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -370,7 +370,7 @@ export function PackagesSettingsPage() {
         ) : (
           <div className="shadow-sm rounded-xl overflow-hidden">
             {/* Table header */}
-            <div className="grid grid-cols-[1fr_160px_80px_auto] items-center px-5 py-2.5 bg-[#F8FAF9] border-b border-[#E5EAE8]">
+            <div className="grid grid-cols-[1fr_160px_80px_auto] items-center px-5 py-2.5 bg-[#FAFAF7] border-b border-[#E5E7EB]">
               <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Plan</span>
               <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Pricing</span>
               <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Status</span>
@@ -424,7 +424,7 @@ export function PackagesSettingsPage() {
                         {disc > 0 && (
                           <p className="text-[11px] text-[#9CA3AF]">
                             {formatPrice(Math.round(annualPerMo), annual!.currency)}/mo annual
-                            <span className="ml-1 text-[#0D4C3C] font-medium">· -{disc}%</span>
+                            <span className="ml-1 text-[#6C55E8] font-medium">· -{disc}%</span>
                           </p>
                         )}
                       </>
@@ -433,7 +433,7 @@ export function PackagesSettingsPage() {
 
                   {/* Status badge */}
                   <div>
-                    <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-md ${plan.is_active ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+                    <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-md ${plan.is_active ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
                       {plan.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </div>
@@ -480,7 +480,7 @@ export function PackagesSettingsPage() {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh]">
-            <div className="px-6 pt-4 border-b border-[#E5EAE8] flex-shrink-0">
+            <div className="px-6 pt-4 border-b border-[#E5E7EB] flex-shrink-0">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-base font-semibold text-[#111827]">
                   {editingId ? 'Edit Package' : 'New Package'}
@@ -498,7 +498,7 @@ export function PackagesSettingsPage() {
                     onClick={() => setActiveTab(tab)}
                     className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px capitalize ${
                       activeTab === tab
-                        ? 'border-[#0D4C3C] text-[#0D4C3C]'
+                        ? 'border-[#6C55E8] text-[#6C55E8]'
                         : 'border-transparent text-[#6B7280] hover:text-[#111827]'
                     }`}
                   >
@@ -515,34 +515,34 @@ export function PackagesSettingsPage() {
                 {/* Feature Access */}
                 <div>
                   <p className="text-xs font-semibold text-[#374151] mb-2">Feature Access</p>
-                  <div className="border border-[#E5EAE8] rounded-lg divide-y divide-[#F3F4F6]">
-                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#F8FAF9] transition-colors">
+                  <div className="border border-[#E5E7EB] rounded-lg divide-y divide-[#F3F4F6]">
+                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#FAFAF7] transition-colors">
                       <input
                         type="checkbox"
                         checked={form.limits.feature_google_profile}
                         onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_google_profile: e.target.checked } }))}
-                        className="w-4 h-4 accent-[#0D4C3C] rounded flex-shrink-0"
+                        className="w-4 h-4 accent-[#6C55E8] rounded flex-shrink-0"
                       />
                       <div className="min-w-0">
                         <p className="text-xs font-medium text-[#111827]">Google Profile</p>
                         <p className="text-[11px] text-[#9CA3AF] mt-0.5">Profile views, search queries, calls, direction requests</p>
                       </div>
-                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_google_profile ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_google_profile ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
                         {form.limits.feature_google_profile ? 'On' : 'Off'}
                       </span>
                     </label>
-                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#F8FAF9] transition-colors">
+                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#FAFAF7] transition-colors">
                       <input
                         type="checkbox"
                         checked={form.limits.feature_insights}
                         onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_insights: e.target.checked } }))}
-                        className="w-4 h-4 accent-[#0D4C3C] rounded flex-shrink-0"
+                        className="w-4 h-4 accent-[#6C55E8] rounded flex-shrink-0"
                       />
                       <div className="min-w-0">
                         <p className="text-xs font-medium text-[#111827]">Insights & Analytics</p>
                         <p className="text-[11px] text-[#9CA3AF] mt-0.5">Charts, rating trends, reply-rate metrics</p>
                       </div>
-                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_insights ? 'bg-[#E6F2EE] text-[#0D4C3C]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_insights ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
                         {form.limits.feature_insights ? 'On' : 'Off'}
                       </span>
                     </label>
@@ -564,7 +564,7 @@ export function PackagesSettingsPage() {
                     ] as { label: string; unlimitedKey: keyof LimitsForm; limitKey: keyof LimitsForm; active: boolean }[]).map(ch => {
                       const isUnlimited = form.limits[ch.unlimitedKey] as boolean;
                       return (
-                        <div key={ch.label} className={`border border-[#E5EAE8] rounded-lg px-3.5 py-3 ${!ch.active ? 'opacity-50' : ''}`}>
+                        <div key={ch.label} className={`border border-[#E5E7EB] rounded-lg px-3.5 py-3 ${!ch.active ? 'opacity-50' : ''}`}>
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-medium text-[#374151]">{ch.label}</span>
@@ -574,7 +574,7 @@ export function PackagesSettingsPage() {
                               <input type="checkbox" disabled={!ch.active}
                                 checked={isUnlimited}
                                 onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, [ch.unlimitedKey]: e.target.checked } }))}
-                                className="w-3.5 h-3.5 accent-[#0D4C3C]" />
+                                className="w-3.5 h-3.5 accent-[#6C55E8]" />
                               <span className="text-xs text-[#6B7280]">Unlimited</span>
                             </label>
                           </div>
@@ -584,11 +584,11 @@ export function PackagesSettingsPage() {
                                 value={form.limits[ch.limitKey] as string}
                                 onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, [ch.limitKey]: e.target.value } }))}
                                 placeholder="0 = no access"
-                                className="flex-1 px-3 py-1.5 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
+                                className="flex-1 px-3 py-1.5 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
                               <span className="text-xs text-[#9CA3AF]">{ch.label === 'Email' ? 'emails' : 'messages'}/mo</span>
                             </div>
                           )}
-                          {isUnlimited && <p className="text-[11px] text-[#0D4C3C] font-medium">Unlimited {ch.label === 'Email' ? 'emails' : 'messages'} per month</p>}
+                          {isUnlimited && <p className="text-[11px] text-[#6C55E8] font-medium">Unlimited {ch.label === 'Email' ? 'emails' : 'messages'} per month</p>}
                         </div>
                       );
                     })}
@@ -601,7 +601,7 @@ export function PackagesSettingsPage() {
                   <label className="block text-xs font-medium text-[#374151] mb-1">Locations included</label>
                   <input type="number" min="1" value={form.limits.locations}
                     onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, locations: e.target.value } }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]" />
                 </div>
 
                 {/* Replies */}
@@ -611,7 +611,7 @@ export function PackagesSettingsPage() {
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input type="checkbox" checked={form.limits.replies_unlimited}
                         onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, replies_unlimited: e.target.checked } }))}
-                        className="w-3.5 h-3.5 accent-[#0D4C3C]" />
+                        className="w-3.5 h-3.5 accent-[#6C55E8]" />
                       <span className="text-xs text-[#6B7280]">Unlimited</span>
                     </label>
                   </div>
@@ -620,10 +620,10 @@ export function PackagesSettingsPage() {
                       <input type="number" min="0" value={form.limits.replies_limit}
                         onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, replies_limit: e.target.value } }))}
                         placeholder="e.g. 100"
-                        className="px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                        className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]" />
                       <select value={form.limits.replies_reset}
                         onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, replies_reset: e.target.value as 'monthly' | 'weekly' } }))}
-                        className="px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] bg-white">
+                        className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white">
                         <option value="monthly">per month</option>
                         <option value="weekly">per week</option>
                       </select>
@@ -638,7 +638,7 @@ export function PackagesSettingsPage() {
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input type="checkbox" checked={form.limits.ai_drafts_unlimited}
                         onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, ai_drafts_unlimited: e.target.checked } }))}
-                        className="w-3.5 h-3.5 accent-[#0D4C3C]" />
+                        className="w-3.5 h-3.5 accent-[#6C55E8]" />
                       <span className="text-xs text-[#6B7280]">Unlimited</span>
                     </label>
                   </div>
@@ -647,10 +647,10 @@ export function PackagesSettingsPage() {
                       <input type="number" min="0" value={form.limits.ai_drafts_limit}
                         onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, ai_drafts_limit: e.target.value } }))}
                         placeholder="e.g. 50"
-                        className="px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                        className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]" />
                       <select value={form.limits.ai_drafts_reset}
                         onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, ai_drafts_reset: e.target.value as 'monthly' | 'weekly' } }))}
-                        className="px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] bg-white">
+                        className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white">
                         <option value="monthly">per month</option>
                         <option value="weekly">per week</option>
                       </select>
@@ -663,7 +663,7 @@ export function PackagesSettingsPage() {
                   <label className="block text-xs font-medium text-[#374151] mb-1">Team Members</label>
                   <input type="number" min="0" value={form.limits.team_members}
                     onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, team_members: e.target.value } }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]" />
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]" />
                   <p className="text-[11px] text-[#9CA3AF] mt-1">Set to <span className="font-medium">0</span> to lock Team page. <span className="font-medium">1</span> = owner only (no invites). <span className="font-medium">2+</span> = can invite members.</p>
                 </div>
 
@@ -677,13 +677,13 @@ export function PackagesSettingsPage() {
                         const mask = parseInt(form.limits.brand_brain_steps) || 0;
                         const checked = !!(mask & (1 << (bit - 1)));
                         return (
-                          <label key={bit} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[#E5EAE8] cursor-pointer hover:bg-[#F8FAF9] transition-colors select-none">
+                          <label key={bit} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] cursor-pointer hover:bg-[#FAFAF7] transition-colors select-none">
                             <input type="checkbox" checked={checked}
                               onChange={() => {
                                 const newMask = checked ? mask & ~(1 << (bit - 1)) : mask | (1 << (bit - 1));
                                 setForm(f => ({ ...f, limits: { ...f.limits, brand_brain_steps: String(newMask) } }));
                               }}
-                              className="w-3.5 h-3.5 accent-[#0D4C3C] cursor-pointer" />
+                              className="w-3.5 h-3.5 accent-[#6C55E8] cursor-pointer" />
                             <span className="text-xs text-[#374151]">{lbl}</span>
                           </label>
                         );
@@ -698,7 +698,7 @@ export function PackagesSettingsPage() {
                   <label className="block text-xs font-medium text-[#374151] mb-1">Support Tier</label>
                   <select value={form.limits.support_tier}
                     onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, support_tier: e.target.value } }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] bg-white">
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white">
                     <option value="help_guides">Help center guides</option>
                     <option value="standard_email">Standard email</option>
                     <option value="priority_email">Priority email</option>
@@ -714,7 +714,7 @@ export function PackagesSettingsPage() {
                     value={form.name}
                     onChange={e => setForm(f => ({ ...f, name: e.target.value, slug: f.slug || slugify(e.target.value) }))}
                     placeholder="e.g. Growth"
-                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]"
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
                   />
                 </div>
                 <div>
@@ -723,7 +723,7 @@ export function PackagesSettingsPage() {
                     value={form.slug}
                     onChange={e => setForm(f => ({ ...f, slug: slugify(e.target.value) }))}
                     placeholder="auto from name"
-                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] font-mono"
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] font-mono"
                   />
                 </div>
               </div>
@@ -735,7 +735,7 @@ export function PackagesSettingsPage() {
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   placeholder="Short tagline shown under plan name"
-                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]"
+                  className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
                 />
               </div>
 
@@ -746,7 +746,7 @@ export function PackagesSettingsPage() {
                   <select
                     value={form.currency}
                     onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] bg-white"
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white"
                   >
                     <option value="USD">USD</option>
                     <option value="PKR">PKR</option>
@@ -762,7 +762,7 @@ export function PackagesSettingsPage() {
                     step="1"
                     value={form.monthly_price}
                     onChange={e => setForm(f => ({ ...f, monthly_price: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]"
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
                   />
                 </div>
                 <div>
@@ -775,7 +775,7 @@ export function PackagesSettingsPage() {
                       step="1"
                       value={form.annual_discount}
                       onChange={e => setForm(f => ({ ...f, annual_discount: e.target.value }))}
-                      className="w-full px-3 py-2 pr-7 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]"
+                      className="w-full px-3 py-2 pr-7 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
                     />
                     <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#9CA3AF]">%</span>
                   </div>
@@ -805,12 +805,12 @@ export function PackagesSettingsPage() {
                     onChange={e => setFeatureInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addFeature(); } }}
                     placeholder="Type a feature and press Enter"
-                    className="flex-1 px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]"
+                    className="flex-1 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
                   />
                   <button
                     onClick={addFeature}
                     type="button"
-                    className="px-3 py-2 bg-[#F3F4F6] text-[#374151] rounded-lg hover:bg-[#E5EAE8] transition-colors text-sm"
+                    className="px-3 py-2 bg-[#F3F4F6] text-[#374151] rounded-lg hover:bg-[#E5E7EB] transition-colors text-sm"
                   >
                     Add
                   </button>
@@ -827,10 +827,10 @@ export function PackagesSettingsPage() {
                         onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
                         className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg transition-colors cursor-default ${
                           dragOverIdx === i && dragIdx !== i
-                            ? 'bg-[#E6F2EE] border-[#0D4C3C]'
+                            ? 'bg-[#D8CCFF] border-[#6C55E8]'
                             : dragIdx === i
                             ? 'bg-[#F3F4F6] border-[#D1D5DB] opacity-50'
-                            : 'bg-[#F8FAF9] border-[#E5EAE8]'
+                            : 'bg-[#FAFAF7] border-[#E5E7EB]'
                         }`}
                       >
                         {/* Grip handle */}
@@ -840,7 +840,7 @@ export function PackagesSettingsPage() {
                             <circle cx="11" cy="4" r="1.2"/><circle cx="11" cy="8" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
                           </svg>
                         </span>
-                        <svg className="w-3 h-3 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                         </svg>
                         <span className="flex-1 text-xs text-[#374151]">{f}</span>
@@ -863,7 +863,7 @@ export function PackagesSettingsPage() {
                     value={form.badge_text}
                     onChange={e => setForm(f => ({ ...f, badge_text: e.target.value }))}
                     placeholder="e.g. Most Popular"
-                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]"
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
                   />
                 </div>
                 <div>
@@ -873,7 +873,7 @@ export function PackagesSettingsPage() {
                     min="0"
                     value={form.sort_order}
                     onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C]"
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
                   />
                 </div>
               </div>
@@ -886,7 +886,7 @@ export function PackagesSettingsPage() {
                       type="checkbox"
                       checked={form.is_featured}
                       onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))}
-                      className="w-4 h-4 accent-[#0D4C3C] rounded"
+                      className="w-4 h-4 accent-[#6C55E8] rounded"
                     />
                     <span className="text-sm text-[#374151]">Featured (highlight on pricing page)</span>
                   </label>
@@ -895,7 +895,7 @@ export function PackagesSettingsPage() {
                       type="checkbox"
                       checked={form.is_active}
                       onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
-                      className="w-4 h-4 accent-[#0D4C3C] rounded"
+                      className="w-4 h-4 accent-[#6C55E8] rounded"
                     />
                     <span className="text-sm text-[#374151]">Active (visible on website)</span>
                   </label>
@@ -905,7 +905,7 @@ export function PackagesSettingsPage() {
                     type="checkbox"
                     checked={form.contact_sales}
                     onChange={e => setForm(f => ({ ...f, contact_sales: e.target.checked }))}
-                    className="w-4 h-4 accent-[#0D4C3C] rounded"
+                    className="w-4 h-4 accent-[#6C55E8] rounded"
                   />
                   <div>
                     <span className="text-sm text-[#374151]">Contact Sales</span>
@@ -916,7 +916,7 @@ export function PackagesSettingsPage() {
             </>)}
             </div>
 
-            <div className="px-6 py-4 border-t border-[#E5EAE8] flex justify-end gap-3 flex-shrink-0">
+            <div className="px-6 py-4 border-t border-[#E5E7EB] flex justify-end gap-3 flex-shrink-0">
               <button
                 onClick={() => setModalOpen(false)}
                 className="px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors"
@@ -926,7 +926,7 @@ export function PackagesSettingsPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 text-sm font-medium bg-[#0D4C3C] text-white rounded-lg hover:bg-[#0a3d30] disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium bg-[#111111] text-white rounded-lg hover:bg-[#0a3d30] disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Create Package'}
               </button>
@@ -961,3 +961,4 @@ export function PackagesSettingsPage() {
     </div>
   );
 }
+

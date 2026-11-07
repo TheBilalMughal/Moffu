@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
@@ -244,7 +244,7 @@ export function UsagePage() {
             <p className="text-sm text-[#6B7280] mt-0.5">{filtered.length} orgs · {activeOrgs} active in period</p>
           </div>
           <button onClick={() => exportCSV(filtered, dateFrom, dateTo)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-[#E5EAE8] rounded-lg text-[#374151] hover:bg-white transition-colors">
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-[#E5E7EB] rounded-lg text-[#374151] hover:bg-white transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             Export CSV
           </button>
@@ -254,7 +254,7 @@ export function UsagePage() {
         <div className="grid grid-cols-4 gap-3 mb-4">
           {[
             { label: 'AI Drafts',        value: totalAI,    color: 'text-[#1D4ED8]', bg: 'bg-[#EFF6FF]' },
-            { label: 'Published Replies', value: totalPub,   color: 'text-[#0D4C3C]', bg: 'bg-[#E6F2EE]' },
+            { label: 'Published Replies', value: totalPub,   color: 'text-[#6C55E8]', bg: 'bg-[#D8CCFF]' },
             { label: 'Total Events',     value: totalAI + totalPub, color: 'text-[#111827]', bg: 'bg-[#F3F4F6]' },
             { label: 'Active Orgs',      value: activeOrgs, color: 'text-[#C2410C]',  bg: 'bg-[#FFF7ED]' },
           ].map(c => (
@@ -283,7 +283,7 @@ export function UsagePage() {
             ]} />
           </div>
           <button onClick={load}
-            className="p-2 rounded-lg border border-[#E5EAE8] bg-white text-[#6B7280] hover:text-[#0D4C3C] hover:border-[#0D4C3C] transition-colors" title="Refresh">
+            className="p-2 rounded-lg border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#6C55E8] hover:border-[#6C55E8] transition-colors" title="Refresh">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           </button>
         </div>
@@ -324,7 +324,7 @@ export function UsagePage() {
                     onClick={() => setExpanded(e => e === row.orgId ? null : row.orgId)}>
                     <td className="px-5 py-3.5">
                       <Link to={`/clients/${refToSlug(row.orgRef)}`} onClick={e => e.stopPropagation()}
-                        className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
+                        className="font-medium text-[#111827] hover:text-[#6C55E8] hover:underline">
                         {row.orgName}
                       </Link>
                       <p className="text-[10px] text-[#9CA3AF] mt-0.5">{row.orgRef}</p>
@@ -339,7 +339,7 @@ export function UsagePage() {
                       <span className={`font-semibold ${row.aiDrafts > 0 ? 'text-[#1D4ED8]' : 'text-[#D1D5DB]'}`}>{row.aiDrafts}</span>
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className={`font-semibold ${row.published > 0 ? 'text-[#0D4C3C]' : 'text-[#D1D5DB]'}`}>{row.published}</span>
+                      <span className={`font-semibold ${row.published > 0 ? 'text-[#6C55E8]' : 'text-[#D1D5DB]'}`}>{row.published}</span>
                     </td>
                     <td className="px-5 py-3.5">
                       <span className={`font-bold ${row.total > 0 ? 'text-[#111827]' : 'text-[#D1D5DB]'}`}>{row.total}</span>
@@ -347,7 +347,7 @@ export function UsagePage() {
                     <td className="px-5 py-3.5 w-40">
                       <div className="space-y-1">
                         <UsageBar value={row.aiDrafts} max={maxAI}  color="#3B82F6" />
-                        <UsageBar value={row.published} max={maxPub} color="#0D4C3C" />
+                        <UsageBar value={row.published} max={maxPub} color="#6C55E8" />
                       </div>
                     </td>
                     <td className="px-5 py-3.5">
@@ -359,7 +359,7 @@ export function UsagePage() {
                   </tr>
                   {expanded === row.orgId && (
                     <tr key={`${row.orgId}-expanded`}>
-                      <td colSpan={8} className="bg-[#F8FAF9] px-5 py-4 border-b border-[#E5EAE8]">
+                      <td colSpan={8} className="bg-[#FAFAF7] px-5 py-4 border-b border-[#E5E7EB]">
                         <p className="text-xs font-semibold text-[#374151] uppercase tracking-wide mb-3">Per-Member Breakdown</p>
                         {expandedMembers.length === 0 ? (
                           <p className="text-xs text-[#9CA3AF]">No members found.</p>
@@ -367,7 +367,7 @@ export function UsagePage() {
                           <div className="space-y-2">
                             {expandedMembers.map(m => (
                               <div key={m.userId} className="flex items-center gap-4 bg-white rounded-lg px-4 py-2.5 shadow-sm">
-                                <div className="w-6 h-6 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                                <div className="w-6 h-6 rounded-full bg-[#D8CCFF] text-[#6C55E8] flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                                   {m.role === 'owner' ? 'O' : 'M'}
                                 </div>
                                 <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize ${m.role === 'owner' ? 'bg-[#FEF3C7] text-[#92400E]' : 'bg-[#F3F4F6] text-[#374151]'}`}>
@@ -376,7 +376,7 @@ export function UsagePage() {
                                 <span className="text-xs text-[#9CA3AF] font-mono">{m.userId.slice(0, 8)}…</span>
                                 <div className="flex items-center gap-4 ml-auto">
                                   <span className="text-xs"><span className="text-[#1D4ED8] font-semibold">{m.aiDrafts}</span> <span className="text-[#9CA3AF]">AI</span></span>
-                                  <span className="text-xs"><span className="text-[#0D4C3C] font-semibold">{m.published}</span> <span className="text-[#9CA3AF]">replies</span></span>
+                                  <span className="text-xs"><span className="text-[#6C55E8] font-semibold">{m.published}</span> <span className="text-[#9CA3AF]">replies</span></span>
                                 </div>
                               </div>
                             ))}
@@ -395,3 +395,4 @@ export function UsagePage() {
     </div>
   );
 }
+

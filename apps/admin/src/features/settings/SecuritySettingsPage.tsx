@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToastStore } from '@/lib/toast';
 
@@ -67,8 +67,8 @@ export function SecuritySettingsPage() {
       <div className="px-8 py-6 max-w-2xl space-y-5">
         {[...BOOL_KEYS, ...TEXT_KEYS].map((k) => (
           <div key={k.key} className="animate-pulse">
-            <div className="h-3 bg-[#E5EAE8] rounded w-40 mb-2" />
-            <div className="h-9 bg-[#E5EAE8] rounded-lg" />
+            <div className="h-3 bg-[#E5E7EB] rounded w-40 mb-2" />
+            <div className="h-9 bg-[#E5E7EB] rounded-lg" />
           </div>
         ))}
       </div>
@@ -81,7 +81,7 @@ export function SecuritySettingsPage() {
       <p className="text-sm text-[#9CA3AF] mb-6">Authentication and access control settings for the portal.</p>
 
       {/* Boolean toggles */}
-      <div className="bg-white border border-[#E5EAE8] rounded-xl divide-y divide-[#F3F4F6] mb-6">
+      <div className="bg-white border border-[#E5E7EB] rounded-xl divide-y divide-[#F3F4F6] mb-6">
         {BOOL_KEYS.map((item) => (
           <div key={item.key} className="flex items-center justify-between gap-4 px-5 py-4">
             <div>
@@ -91,7 +91,7 @@ export function SecuritySettingsPage() {
             <button
               onClick={() => setBoolVals((prev) => ({ ...prev, [item.key]: !prev[item.key] }))}
               className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${
-                boolVals[item.key] ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'
+                boolVals[item.key] ? 'bg-[#111111]' : 'bg-[#D1D5DB]'
               }`}
             >
               <span
@@ -115,7 +115,7 @@ export function SecuritySettingsPage() {
               value={textVals[f.key] ?? ''}
               onChange={(e) => setTextVals((prev) => ({ ...prev, [f.key]: e.target.value }))}
               placeholder={f.placeholder}
-              className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] transition-colors"
+              className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8] transition-colors"
             />
           </div>
         ))}
@@ -124,7 +124,7 @@ export function SecuritySettingsPage() {
       <button
         onClick={handleSave}
         disabled={saving}
-        className="px-4 py-2 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#0a3d30] rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+        className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#0a3d30] rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
       >
         {saving && (
           <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
@@ -134,3 +134,4 @@ export function SecuritySettingsPage() {
     </div>
   );
 }
+

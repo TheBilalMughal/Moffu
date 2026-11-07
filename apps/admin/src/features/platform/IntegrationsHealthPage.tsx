@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { env } from '@/lib/env';
@@ -137,14 +137,14 @@ export function IntegrationsHealthPage() {
             <span className="text-xs text-[#6B7280]">{connected}/{total} connected</span>
           </div>
           <div className="w-full h-2.5 bg-[#F3F4F6] rounded-full overflow-hidden flex">
-            <div className="h-full bg-[#0D4C3C] transition-all" style={{ width: `${(connected / total) * 100}%` }} />
+            <div className="h-full bg-[#111111] transition-all" style={{ width: `${(connected / total) * 100}%` }} />
             <div className="h-full bg-[#FCA5A5] transition-all" style={{ width: `${(errors / total) * 100}%` }} />
-            <div className="h-full bg-[#E5EAE8] transition-all" style={{ width: `${(disconnected / total) * 100}%` }} />
+            <div className="h-full bg-[#E5E7EB] transition-all" style={{ width: `${(disconnected / total) * 100}%` }} />
           </div>
           <div className="flex items-center gap-6 mt-2">
-            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#0D4C3C]" /><span className="text-[10px] text-[#9CA3AF]">Connected</span></div>
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#111111]" /><span className="text-[10px] text-[#9CA3AF]">Connected</span></div>
             <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#FCA5A5]" /><span className="text-[10px] text-[#9CA3AF]">Error</span></div>
-            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#E5EAE8]" /><span className="text-[10px] text-[#9CA3AF]">Disconnected</span></div>
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#E5E7EB]" /><span className="text-[10px] text-[#9CA3AF]">Disconnected</span></div>
           </div>
         </div>
       )}
@@ -156,7 +156,7 @@ export function IntegrationsHealthPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search org, Google account…"
-            className="w-full pl-9 pr-4 py-2 text-sm border border-[#E5EAE8] rounded-xl bg-white text-[#374151] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]" />
+            className="w-full pl-9 pr-4 py-2 text-sm border border-[#E5E7EB] rounded-xl bg-white text-[#374151] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]" />
         </div>
         <Dropdown value={stateFilter} onChange={setStateFilter} options={STATE_OPTIONS} clearable />
         <span className="text-xs text-[#9CA3AF] ml-auto">{filtered.length} connection{filtered.length !== 1 ? 's' : ''}</span>
@@ -183,10 +183,10 @@ export function IntegrationsHealthPage() {
             </thead>
             <tbody className="divide-y divide-[#F3F4F6]">
               {filtered.map(c => (
-                <tr key={c.id} className="hover:bg-[#F8FAF9]">
+                <tr key={c.id} className="hover:bg-[#FAFAF7]">
                   <td className="px-5 py-3.5">
                     {c.org_ref_id ? (
-                      <Link to={`/clients/${refToSlug(c.org_ref_id)}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] transition-colors">{c.org_name}</Link>
+                      <Link to={`/clients/${refToSlug(c.org_ref_id)}`} className="font-medium text-[#111827] hover:text-[#6C55E8] transition-colors">{c.org_name}</Link>
                     ) : (
                       <span className="font-medium text-[#111827]">{c.org_name}</span>
                     )}
@@ -203,7 +203,7 @@ export function IntegrationsHealthPage() {
                   <td className="px-5 py-3.5 text-right">
                     {(c.state === 'ERROR' || c.state === 'DISCONNECTED') && (
                       <button onClick={() => handleRetry(c)} disabled={retrying === c.id}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-[#E5EAE8] rounded-lg hover:bg-[#F8FAF9] hover:border-[#0D4C3C] hover:text-[#0D4C3C] transition-colors disabled:opacity-50">
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-[#E5E7EB] rounded-lg hover:bg-[#FAFAF7] hover:border-[#6C55E8] hover:text-[#6C55E8] transition-colors disabled:opacity-50">
                         {retrying === c.id
                           ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                           : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -221,3 +221,4 @@ export function IntegrationsHealthPage() {
     </div>
   );
 }
+

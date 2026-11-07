@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
 import { env } from '@/lib/env';
@@ -122,14 +122,14 @@ function ComposeModal({ onClose, onSent }: ComposeModalProps) {
             <label className="block text-xs font-medium text-[#374151] mb-1.5">Title</label>
             <input value={title} onChange={e => setTitle(e.target.value)} maxLength={120}
               placeholder="Notification title"
-              className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827]" />
+              className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827]" />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-[#374151] mb-1.5">Body</label>
             <textarea value={body} onChange={e => setBody(e.target.value)} rows={4} maxLength={1000}
               placeholder="Message body…"
-              className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827] resize-none" />
+              className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827] resize-none" />
             <p className="text-[10px] text-[#9CA3AF] text-right mt-1">{body.length}/1000</p>
           </div>
 
@@ -159,12 +159,12 @@ function ComposeModal({ onClose, onSent }: ComposeModalProps) {
               <label className="block text-xs font-medium text-[#374151] mb-1.5">{targetType === 'plan' ? 'Plan Slug' : targetType === 'org' ? 'Org ID' : 'User ID'}</label>
               <input value={targetValue} onChange={e => setTargetValue(e.target.value)}
                 placeholder={valuePlaceholder}
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827]" />
+                className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827]" />
             </div>
           )}
 
           {/* Preview pill */}
-          <div className="flex items-center gap-2 p-3 bg-[#F8FAF9] rounded-lg">
+          <div className="flex items-center gap-2 p-3 bg-[#FAFAF7] rounded-lg">
             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded capitalize ${TYPE_COLORS[type] ?? ''}`}>{type}</span>
             <div className="min-w-0">
               <p className="text-xs font-semibold text-[#111827] truncate">{title || 'Notification title'}</p>
@@ -174,19 +174,19 @@ function ComposeModal({ onClose, onSent }: ComposeModalProps) {
         </div>
 
         <div className="px-6 py-4 border-t border-[#F3F4F6] flex items-center justify-between gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors">
+          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors">
             Cancel
           </button>
           <div className="flex items-center gap-2">
             {canManage(platformRole) && (
               <button onClick={saveDraft} disabled={saving || sending}
-                className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors disabled:opacity-50">
+                className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors disabled:opacity-50">
                 {saving ? 'Saving…' : 'Save Draft'}
               </button>
             )}
             {canManage(platformRole) && (
               <button onClick={sendNow} disabled={saving || sending}
-                className="px-4 py-2 text-sm font-medium text-white bg-[#0D4C3C] rounded-lg hover:bg-[#0a3d30] transition-colors disabled:opacity-50 flex items-center gap-2">
+                className="px-4 py-2 text-sm font-medium text-white bg-[#111111] rounded-lg hover:bg-[#0a3d30] transition-colors disabled:opacity-50 flex items-center gap-2">
                 {sending && <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
                 {sending ? 'Sending…' : 'Send Now'}
               </button>
@@ -250,7 +250,7 @@ export function BroadcastPage() {
           </div>
           {canManage(platformRole) && (
             <button onClick={() => setShowCompose(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#0D4C3C] rounded-lg hover:bg-[#0a3d30] transition-colors">
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#111111] rounded-lg hover:bg-[#0a3d30] transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
               New Broadcast
             </button>
@@ -358,7 +358,7 @@ function BroadcastRow({ bc, onResend, resending, canManage }: {
       <td className="px-5 py-3.5">
         {canManage && (bc.status === 'draft' || bc.status === 'failed') && (
           <button onClick={() => onResend(bc)} disabled={resending === bc.id}
-            className="text-xs font-medium text-[#0D4C3C] hover:underline disabled:opacity-50 flex items-center gap-1">
+            className="text-xs font-medium text-[#6C55E8] hover:underline disabled:opacity-50 flex items-center gap-1">
             {resending === bc.id && <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
             {bc.status === 'draft' ? 'Send' : 'Retry'}
           </button>
@@ -367,3 +367,4 @@ function BroadcastRow({ bc, onResend, resending, canManage }: {
     </tr>
   );
 }
+

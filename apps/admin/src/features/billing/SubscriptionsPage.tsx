@@ -167,7 +167,7 @@ function TimelineModal({ orgId, orgName, onClose }: { orgId: string; orgName: st
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
       <div className="bg-white w-full max-w-lg rounded-xl shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-4 border-b border-[#E5EAE8] flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold text-[#111827]">Subscription Timeline</h2>
             <p className="text-xs text-[#9CA3AF] mt-0.5">{orgName}</p>
@@ -190,7 +190,7 @@ function TimelineModal({ orgId, orgName, onClose }: { orgId: string; orgName: st
                 const to = meta.to_plan as string | undefined;
                 return (
                   <div key={e.id} className="px-6 py-3.5 flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#0D4C3C] flex-shrink-0 mt-1.5" />
+                    <div className="w-2 h-2 rounded-full bg-[#111111] flex-shrink-0 mt-1.5" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-[#374151] capitalize font-medium">{label}</p>
                       {from && to && (
@@ -246,9 +246,9 @@ function SavedFiltersPopover({
         <p className="text-xs font-semibold text-[#374151] mb-2">Save current filters</p>
         <div className="flex gap-2">
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Filter name…"
-            className="flex-1 text-xs border border-[#E5EAE8] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#0D4C3C]"/>
+            className="flex-1 text-xs border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#6C55E8]"/>
           <button onClick={saveNow} disabled={!name.trim()}
-            className="px-3 py-1.5 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-40 rounded-lg transition-colors">Save</button>
+            className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] disabled:opacity-40 rounded-lg transition-colors">Save</button>
         </div>
       </div>
       <div className="max-h-48 overflow-y-auto">
@@ -258,7 +258,7 @@ function SavedFiltersPopover({
           <div className="divide-y divide-[#F9FAFB]">
             {saved.map((s, i) => (
               <div key={i} className="flex items-center gap-2 px-4 py-2.5">
-                <button onClick={() => { onLoad(s); onClose(); }} className="flex-1 text-xs text-left font-medium text-[#374151] hover:text-[#0D4C3C] transition-colors truncate">{s.name}</button>
+                <button onClick={() => { onLoad(s); onClose(); }} className="flex-1 text-xs text-left font-medium text-[#374151] hover:text-[#6C55E8] transition-colors truncate">{s.name}</button>
                 <button onClick={() => remove(i)} className="text-[#9CA3AF] hover:text-red-500 transition-colors">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -335,7 +335,7 @@ function PlanOverrideModal({ sub, plans, priceMap, onClose, onSuccess }: PlanOve
         </div>
 
         {/* Current */}
-        <div className="bg-[#F8FAF9] rounded-lg px-4 py-3 mb-4">
+        <div className="bg-[#FAFAF7] rounded-lg px-4 py-3 mb-4">
           <p className="text-xs text-[#9CA3AF] mb-1">Current</p>
           <div className="flex items-center justify-between">
             <span className={`text-xs font-semibold px-2 py-0.5 rounded ${PLAN_COLOR[sub.planSlug] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>{sub.planName}</span>
@@ -355,8 +355,8 @@ function PlanOverrideModal({ sub, plans, priceMap, onClose, onSuccess }: PlanOve
                 onClick={() => setSelectedPlanId(p.id)}
                 className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-colors text-left ${
                   selectedPlanId === p.id
-                    ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]'
-                    : 'border-[#E5EAE8] hover:border-[#0D4C3C] text-[#374151]'
+                    ? 'border-[#6C55E8] bg-[#D8CCFF] text-[#6C55E8]'
+                    : 'border-[#E5E7EB] hover:border-[#6C55E8] text-[#374151]'
                 }`}>
                 {p.name}
               </button>
@@ -376,8 +376,8 @@ function PlanOverrideModal({ sub, plans, priceMap, onClose, onSuccess }: PlanOve
                   disabled={price === undefined}
                   className={`px-3 py-2 text-xs font-semibold rounded-lg border transition-colors capitalize disabled:opacity-30 ${
                     selectedInterval === iv
-                      ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]'
-                      : 'border-[#E5EAE8] hover:border-[#0D4C3C] text-[#374151]'
+                      ? 'border-[#6C55E8] bg-[#D8CCFF] text-[#6C55E8]'
+                      : 'border-[#E5E7EB] hover:border-[#6C55E8] text-[#374151]'
                   }`}>
                   {iv}
                   {price !== undefined && (
@@ -391,8 +391,8 @@ function PlanOverrideModal({ sub, plans, priceMap, onClose, onSuccess }: PlanOve
 
         {/* Preview */}
         {!noChange && newPrice > 0 && (
-          <div className="bg-[#E6F2EE] rounded-lg px-4 py-3 mb-4">
-            <p className="text-xs text-[#0D4C3C] font-medium">
+          <div className="bg-[#D8CCFF] rounded-lg px-4 py-3 mb-4">
+            <p className="text-xs text-[#6C55E8] font-medium">
               {selectedPlan?.name} · {selectedInterval} → {fmt(newPrice)}/mo
             </p>
           </div>
@@ -402,11 +402,11 @@ function PlanOverrideModal({ sub, plans, priceMap, onClose, onSuccess }: PlanOve
 
         <div className="flex gap-3">
           <button onClick={onClose}
-            className="flex-1 px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors">
+            className="flex-1 px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors">
             Cancel
           </button>
           <button onClick={apply} disabled={noChange || saving}
-            className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-40 rounded-lg transition-colors">
+            className="flex-1 px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] disabled:opacity-40 rounded-lg transition-colors">
             {saving ? 'Applying…' : 'Apply Override'}
           </button>
         </div>
@@ -659,7 +659,7 @@ export function SubscriptionsPage() {
         <div className="flex items-center gap-2 relative">
           <div className="relative">
             <button onClick={() => setShowSaved((v) => !v)}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors">
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
               Saved Filters
             </button>
@@ -672,7 +672,7 @@ export function SubscriptionsPage() {
             )}
           </div>
           <button onClick={() => exportCSV(filtered)}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-[#0D4C3C] hover:bg-[#083F32] rounded-lg transition-colors">
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg transition-colors">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             Export CSV
           </button>
@@ -712,7 +712,7 @@ export function SubscriptionsPage() {
                 <div key={r.id} className="px-5 py-3 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
                     {r.orgRefId ? (
-                      <Link to={`/clients/${refToSlug(r.orgRefId)}`} className="text-sm font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">{r.orgName}</Link>
+                      <Link to={`/clients/${refToSlug(r.orgRefId)}`} className="text-sm font-medium text-[#111827] hover:text-[#6C55E8] hover:underline">{r.orgName}</Link>
                     ) : (
                       <span className="text-sm font-medium text-[#111827]">{r.orgName ?? '—'}</span>
                     )}
@@ -723,7 +723,7 @@ export function SubscriptionsPage() {
                       <div className="flex justify-between text-[10px] text-[#9CA3AF] mb-1">
                         <span>{r.usageCount}</span><span>{r.usageLimit}</span>
                       </div>
-                      <div className="w-full bg-[#E5EAE8] rounded-full h-1.5">
+                      <div className="w-full bg-[#E5E7EB] rounded-full h-1.5">
                         <div className="h-1.5 rounded-full bg-red-500" style={{ width: `${r.usagePct}%` }}/>
                       </div>
                     </div>
@@ -741,9 +741,9 @@ export function SubscriptionsPage() {
       {!loading && renewalRows.length > 0 && (
         <div className="bg-white shadow-sm rounded-xl mb-4 overflow-hidden">
           <button onClick={() => setShowRenewal((v) => !v)}
-            className="w-full flex items-center justify-between px-5 py-3 bg-[#F8FAF9] hover:bg-[#F3F4F6] transition-colors">
+            className="w-full flex items-center justify-between px-5 py-3 bg-[#FAFAF7] hover:bg-[#F3F4F6] transition-colors">
             <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <svg className="w-4 h-4 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
               <span className="text-sm font-semibold text-[#111827]">Renewal Calendar — {renewalRows.length} renewal{renewalRows.length !== 1 ? 's' : ''} in next 30 days</span>
             </div>
             <svg className={`w-4 h-4 text-[#9CA3AF] transition-transform ${showRenewal ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
@@ -752,7 +752,7 @@ export function SubscriptionsPage() {
             <div className="divide-y divide-[#F3F4F6]">
               {renewalRows.map((r) => (
                 <div key={r.id} className="px-5 py-3 flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center flex-shrink-0 ${(r.daysUntilRenewal ?? 99) <= 7 ? 'bg-red-50 text-red-600' : 'bg-[#E6F2EE] text-[#0D4C3C]'}`}>
+                  <div className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center flex-shrink-0 ${(r.daysUntilRenewal ?? 99) <= 7 ? 'bg-red-50 text-red-600' : 'bg-[#D8CCFF] text-[#6C55E8]'}`}>
                     <span className="text-[10px] font-semibold leading-none">{r.daysUntilRenewal}d</span>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -794,7 +794,7 @@ export function SubscriptionsPage() {
         <div className="relative flex-1 min-w-[200px] max-w-xs">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           <input type="search" placeholder="Search client or email…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full pl-9 pr-3 py-2 text-sm shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"/>
+            className="w-full pl-9 pr-3 py-2 text-sm shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"/>
         </div>
         <Dropdown clearable placeholder="All plans" value={planFilter} onChange={(v) => { setPlanFilter(v); setPage(1); }}
           options={[{ value:'free',label:'Free' },{ value:'starter',label:'Starter' },{ value:'growth',label:'Growth' },{ value:'scale',label:'Scale' }]}/>
@@ -813,13 +813,13 @@ export function SubscriptionsPage() {
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className="flex items-center gap-3 mb-3 px-4 py-2.5 bg-[#E6F2EE] border border-[#A7D7C5] rounded-xl">
-          <span className="text-xs font-semibold text-[#0D4C3C]">{selected.size} selected</span>
+        <div className="flex items-center gap-3 mb-3 px-4 py-2.5 bg-[#D8CCFF] border border-[#A7D7C5] rounded-xl">
+          <span className="text-xs font-semibold text-[#6C55E8]">{selected.size} selected</span>
           <div className="flex-1"/>
           <Dropdown placeholder="Change plan…" value={bulkPlanId} onChange={setBulkPlanId}
             options={plans.map((p) => ({ value: p.id, label: p.name }))}/>
           <button onClick={() => setShowBulkModal(true)} disabled={!bulkPlanId}
-            className="px-3 py-1.5 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-40 rounded-lg transition-colors">
+            className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] disabled:opacity-40 rounded-lg transition-colors">
             Apply to {selected.size}
           </button>
           <button onClick={() => setSelected(new Set())} className="text-xs text-[#374151] hover:text-red-600 transition-colors">Cancel</button>
@@ -829,11 +829,11 @@ export function SubscriptionsPage() {
       {/* Table */}
       <div className="bg-white shadow-sm rounded-xl">
         <table className="w-full text-sm">
-          <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+          <thead className="bg-[#FAFAF7] border-b border-[#E5E7EB] sticky top-0 z-10">
             <tr>
               <th className="px-4 py-2.5 w-8">
                 <input type="checkbox" checked={allOnPage} onChange={toggleAll}
-                  className="rounded border-[#D1D5DB] text-[#0D4C3C] focus:ring-[#0D4C3C]"/>
+                  className="rounded border-[#D1D5DB] text-[#6C55E8] focus:ring-[#6C55E8]"/>
               </th>
               <th className="px-4 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
               <th className="px-4 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Client</th>
@@ -857,7 +857,7 @@ export function SubscriptionsPage() {
           <tbody className="divide-y divide-[#F3F4F6]">
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i}>{Array.from({ length: 10 }).map((_, j) => (<td key={j} className="px-4 py-1.5"><div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-16"/></td>))}</tr>
+                <tr key={i}>{Array.from({ length: 10 }).map((_, j) => (<td key={j} className="px-4 py-1.5"><div className="h-3.5 bg-[#E5E7EB] rounded animate-pulse w-16"/></td>))}</tr>
               ))
             ) : pageRows.length === 0 ? (
               <tr><td colSpan={10} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
@@ -865,11 +865,11 @@ export function SubscriptionsPage() {
               </td></tr>
             ) : (
               pageRows.map((s) => (
-                <tr key={s.id} className={`hover:bg-[#F8FAF9] transition-colors ${selected.has(s.id) ? 'bg-[#F0F9F6]' : ''}`}>
+                <tr key={s.id} className={`hover:bg-[#FAFAF7] transition-colors ${selected.has(s.id) ? 'bg-[#F0F9F6]' : ''}`}>
                   <td className="px-4 py-1.5">
                     <input type="checkbox" checked={selected.has(s.id)}
                       onChange={() => setSelected((prev) => { const n = new Set(prev); n.has(s.id) ? n.delete(s.id) : n.add(s.id); return n; })}
-                      className="rounded border-[#D1D5DB] text-[#0D4C3C] focus:ring-[#0D4C3C]"/>
+                      className="rounded border-[#D1D5DB] text-[#6C55E8] focus:ring-[#6C55E8]"/>
                   </td>
                   <td className="px-4 py-1.5">
                     <span className="font-mono text-xs text-[#9CA3AF]">{formatId(s.orgRefId)}</span>
@@ -878,7 +878,7 @@ export function SubscriptionsPage() {
                     <div className="flex items-start gap-2">
                       <div className="min-w-0">
                         {s.orgRefId ? (
-                          <Link to={`/clients/${refToSlug(s.orgRefId)}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline text-sm">{s.orgName ?? '—'}</Link>
+                          <Link to={`/clients/${refToSlug(s.orgRefId)}`} className="font-medium text-[#111827] hover:text-[#6C55E8] hover:underline text-sm">{s.orgName ?? '—'}</Link>
                         ) : (
                           <span className="font-medium text-[#111827] text-sm">{s.orgName ?? <span className="text-[#9CA3AF]">No org</span>}</span>
                         )}
@@ -907,8 +907,8 @@ export function SubscriptionsPage() {
                   </td>
                   <td className="px-4 py-1.5">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-14 bg-[#E5EAE8] rounded-full h-1">
-                        <div className={`h-1 rounded-full ${s.usagePct >= 90 ? 'bg-red-500' : s.usagePct >= 70 ? 'bg-amber-500' : 'bg-[#0D4C3C]'}`} style={{ width: `${s.usagePct}%` }}/>
+                      <div className="w-14 bg-[#E5E7EB] rounded-full h-1">
+                        <div className={`h-1 rounded-full ${s.usagePct >= 90 ? 'bg-red-500' : s.usagePct >= 70 ? 'bg-amber-500' : 'bg-[#111111]'}`} style={{ width: `${s.usagePct}%` }}/>
                       </div>
                       <span className="text-[10px] text-[#9CA3AF]">{s.usagePct}%</span>
                     </div>
@@ -920,9 +920,9 @@ export function SubscriptionsPage() {
                   </td>
                   <td className="px-4 py-1.5 text-right">
                     <div className="flex items-center justify-end gap-3">
-                      {s.orgRefId && <Link to={`/clients/${refToSlug(s.orgRefId)}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>}
+                      {s.orgRefId && <Link to={`/clients/${refToSlug(s.orgRefId)}`} className="text-xs font-medium text-[#6C55E8] hover:underline">View</Link>}
                       <button onClick={() => setOverrideTarget(s)}
-                        className="text-xs font-medium text-[#374151] hover:text-[#0D4C3C] transition-colors">Override</button>
+                        className="text-xs font-medium text-[#374151] hover:text-[#6C55E8] transition-colors">Override</button>
                       {s.orgId && (
                         <button onClick={() => setTimelineOrg({ id: s.orgId!, name: s.orgName ?? '—' })}
                           className="text-xs font-medium text-[#6B7280] hover:text-[#374151] transition-colors">Timeline</button>
@@ -937,7 +937,7 @@ export function SubscriptionsPage() {
 
         {/* Pagination */}
         {!loading && totalPages > 1 && (
-          <div className="px-5 py-3 border-t border-[#F3F4F6] bg-[#F8FAF9] flex items-center justify-between">
+          <div className="px-5 py-3 border-t border-[#F3F4F6] bg-[#FAFAF7] flex items-center justify-between">
             <p className="text-xs text-[#9CA3AF]">
               {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
             </p>
@@ -955,7 +955,7 @@ export function SubscriptionsPage() {
                 const p = start + i;
                 return (
                   <button key={p} onClick={() => setPage(p)}
-                    className={`w-7 h-7 text-xs rounded transition-colors ${p === page ? 'bg-[#0D4C3C] text-white' : 'text-[#6B7280] hover:bg-[#F3F4F6]'}`}>
+                    className={`w-7 h-7 text-xs rounded transition-colors ${p === page ? 'bg-[#111111] text-white' : 'text-[#6B7280] hover:bg-[#F3F4F6]'}`}>
                     {p}
                   </button>
                 );
@@ -973,7 +973,7 @@ export function SubscriptionsPage() {
         )}
 
         {!loading && totalPages <= 1 && filtered.length > 0 && (
-          <div className="px-5 py-3 border-t border-[#F3F4F6] bg-[#F8FAF9]">
+          <div className="px-5 py-3 border-t border-[#F3F4F6] bg-[#FAFAF7]">
             <p className="text-xs text-[#9CA3AF]">Showing {filtered.length} of {rows.length}</p>
           </div>
         )}
@@ -996,12 +996,12 @@ export function SubscriptionsPage() {
           <div className="bg-white w-full max-w-sm rounded-xl shadow-xl p-6">
             <h2 className="text-sm font-bold text-[#111827] mb-2">Confirm Bulk Plan Change</h2>
             <p className="text-sm text-[#6B7280] mb-5">Change <span className="font-semibold text-[#111827]">{selected.size}</span> subscription{selected.size !== 1 ? 's' : ''} to <span className="font-semibold text-[#111827]">{plans.find((p) => p.id === bulkPlanId)?.name}</span>?</p>
-            {bulkMsg && <p className={`text-xs mb-4 ${bulkMsg.startsWith('Error') ? 'text-red-600' : 'text-[#0D4C3C]'}`}>{bulkMsg}</p>}
+            {bulkMsg && <p className={`text-xs mb-4 ${bulkMsg.startsWith('Error') ? 'text-red-600' : 'text-[#6C55E8]'}`}>{bulkMsg}</p>}
             <div className="flex gap-3 justify-end">
               <button onClick={() => { setShowBulkModal(false); setBulkMsg(null); }}
-                className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5EAE8] rounded hover:bg-[#F3F4F6] transition-colors">Cancel</button>
+                className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5E7EB] rounded hover:bg-[#F3F4F6] transition-colors">Cancel</button>
               <button onClick={applyBulkPlan} disabled={bulkChanging}
-                className="px-4 py-2 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-50 rounded transition-colors">
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] disabled:opacity-50 rounded transition-colors">
                 {bulkChanging ? 'Applying…' : 'Confirm'}
               </button>
             </div>
@@ -1014,3 +1014,4 @@ export function SubscriptionsPage() {
     </div>
   );
 }
+

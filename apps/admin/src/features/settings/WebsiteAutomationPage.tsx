@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 
 interface AutoRule {
   id: string;
@@ -64,7 +64,7 @@ function RuleRow({ rule, onToggle }: { rule: AutoRule; onToggle: (id: string) =>
         aria-label={rule.enabled ? 'Disable' : 'Enable'}
         className={`flex-shrink-0 relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none mt-0.5 ${
           isComingSoon ? 'opacity-40 cursor-not-allowed' :
-          rule.enabled ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'
+          rule.enabled ? 'bg-[#111111]' : 'bg-[#D1D5DB]'
         }`}
       >
         <span
@@ -93,7 +93,7 @@ export function WebsiteAutomationPage() {
           <h2 className="text-base font-semibold text-[#111827]">Automation</h2>
           <p className="text-sm text-[#6B7280] mt-0.5">Configure automatic platform behaviours triggered by client events.</p>
         </div>
-        <span className="text-xs font-semibold text-[#0D4C3C] bg-[#F0F7F4] border border-[#D1FAE5] px-2.5 py-1 rounded-lg">
+        <span className="text-xs font-semibold text-[#6C55E8] bg-[#F0F7F4] border border-[#D1FAE5] px-2.5 py-1 rounded-lg">
           {enabledCount} active
         </span>
       </div>
@@ -106,7 +106,7 @@ export function WebsiteAutomationPage() {
       </div>
 
       {/* Info callout */}
-      <div className="flex gap-3 bg-[#F8FAF9] border border-[#E5E7EB] rounded-xl px-5 py-4">
+      <div className="flex gap-3 bg-[#FAFAF7] border border-[#E5E7EB] rounded-xl px-5 py-4">
         <svg className="w-4 h-4 text-[#9CA3AF] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
@@ -118,3 +118,4 @@ export function WebsiteAutomationPage() {
     </div>
   );
 }
+

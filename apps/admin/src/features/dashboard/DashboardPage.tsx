@@ -2,6 +2,17 @@
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { refToSlug } from '@/lib/format';
+import { useAdminAuthStore } from '@/features/auth/auth.store';
+
+function getGreeting(name: string): string {
+  const h = new Date().getHours();
+  let g: string;
+  if (h >= 5  && h < 12) g = `gm, ${name}.`;
+  else if (h >= 12 && h < 17) g = `hey ${name}.`;
+  else if (h >= 17 && h < 21) g = `sup ${name}.`;
+  else g = `still up, ${name}?`;
+  return g.charAt(0).toUpperCase() + g.slice(1);
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -56,12 +67,12 @@ interface ActionItem {
 const PLAN_COLOR: Record<string, string> = {
   free:    'bg-[#F3F4F6] text-[#374151]',
   starter: 'bg-[#EFF6FF] text-[#1D4ED8]',
-  growth:  'bg-[#F0FDF4] text-[#15803D]',
+  growth:  'bg-[#F0F9FF] text-[#0369A1]',
   scale:   'bg-[#FFF7ED] text-[#C2410C]',
 };
 
 const PLAN_BAR: Record<string, string> = {
-  free: '#D1D5DB', starter: '#3B82F6', growth: '#10B981', scale: '#F97316',
+  free: '#D1D5DB', starter: '#3B82F6', growth: '#0EA5E9', scale: '#F97316',
 };
 
 const REVIEW_STATUS_COLOR: Record<string, { fill: string; label: string }> = {
@@ -69,7 +80,7 @@ const REVIEW_STATUS_COLOR: Record<string, { fill: string; label: string }> = {
   pending:   { fill: '#F59E0B', label: 'Pending' },
   draft:     { fill: '#3B82F6', label: 'Draft Ready' },
   replied:   { fill: '#8B5CF6', label: 'Replied' },
-  published: { fill: '#10B981', label: 'Published' },
+  published: { fill: '#0EA5E9', label: 'Published' },
   ignored:   { fill: '#D1D5DB', label: 'Ignored' },
 };
 
@@ -282,24 +293,24 @@ function KpiCard({
 }) {
   if (loading) {
     return (
-      <div className="bg-white shadow-sm rounded-xl px-5 py-4 animate-pulse">
-        <div className="h-3 bg-[#E5EAE8] rounded w-20 mb-3" />
-        <div className="h-7 bg-[#E5EAE8] rounded w-16" />
+      <div className="bg-white border border-[#E5E7EB] shadow-sm rounded-xl px-5 py-4 animate-pulse">
+        <div className="h-3 bg-[#F3F4F6] rounded w-20 mb-3" />
+        <div className="h-7 bg-[#F3F4F6] rounded w-16" />
       </div>
     );
   }
   return (
-    <div className="bg-white shadow-sm rounded-xl px-5 py-4">
+    <div className="bg-white border border-[#E5E7EB] shadow-sm rounded-xl px-5 py-4 hover:border-[#D8CCFF] transition-colors">
       <div className="flex items-start justify-between mb-2">
         <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide leading-tight">{label}</p>
-        <div className="w-7 h-7 bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center rounded-lg flex-shrink-0">{icon}</div>
+        <div className="w-7 h-7 bg-[#D8CCFF] text-[#111111] flex items-center justify-center rounded-lg flex-shrink-0">{icon}</div>
       </div>
       <div className="flex items-end justify-between gap-2">
         <div>
           <p className="text-2xl font-bold text-[#111827] leading-none">{value}</p>
           {sub && <p className="text-xs text-[#9CA3AF] mt-1">{sub}</p>}
           {trend && (
-            <div className={`flex items-center gap-1 mt-1.5 text-xs font-semibold ${trend.up ? 'text-[#15803D]' : 'text-red-600'}`}>
+            <div className={`flex items-center gap-1 mt-1.5 text-xs font-semibold ${trend.up ? 'text-[#0369A1]' : 'text-red-600'}`}>
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
                   d={trend.up ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'} />
@@ -309,7 +320,7 @@ function KpiCard({
           )}
         </div>
         {sparkData && sparkData.length > 1 && (
-          <SparkLine data={sparkData} color={trend?.up === false ? '#DC2626' : '#0D4C3C'} />
+          <SparkLine data={sparkData} color={trend?.up === false ? '#DC2626' : '#6C55E8'} />
         )}
       </div>
     </div>
@@ -347,6 +358,22 @@ function HealthBar({ label, count, total, color }: { label: string; count: numbe
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export function DashboardPage() {
+  const { user } = useAdminAuthStore();
+  const [profileName, setProfileName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase.from('profiles').select('display_name').eq('id', user.id).maybeSingle()
+      .then(({ data }) => { if (data?.display_name) setProfileName(data.display_name); });
+  }, [user?.id]);
+
+  const displayName = profileName
+    ?? user?.user_metadata?.display_name
+    ?? user?.user_metadata?.full_name
+    ?? user?.email?.split('@')[0]
+    ?? 'admin';
+  const greeting = getGreeting(displayName);
+
   const [kpi, setKpi] = useState<KpiData | null>(null);
   const [kpiLoading, setKpiLoading] = useState(true);
 
@@ -646,7 +673,7 @@ export function DashboardPage() {
   // ── Google / Sub state display helpers ────────────────────────────────────
 
   const GOOGLE_STATE_DISPLAY: Record<string, { label: string; color: string }> = {
-    CONNECTED:      { label: 'Connected',      color: '#10B981' },
+    CONNECTED:      { label: 'Connected',      color: '#0EA5E9' },
     PENDING:        { label: 'Pending',         color: '#F59E0B' },
     REFRESH_FAILED: { label: 'Refresh Failed',  color: '#EF4444' },
     REVOKED:        { label: 'Revoked',         color: '#8B5CF6' },
@@ -655,7 +682,7 @@ export function DashboardPage() {
   };
 
   const SUB_STATE_DISPLAY: Record<string, { label: string; color: string }> = {
-    active:   { label: 'Active',    color: '#10B981' },
+    active:   { label: 'Active',    color: '#0EA5E9' },
     trialing: { label: 'Trialing',  color: '#3B82F6' },
     past_due: { label: 'Past Due',  color: '#EF4444' },
     canceled: { label: 'Cancelled', color: '#9CA3AF' },
@@ -671,24 +698,25 @@ export function DashboardPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-full overflow-y-auto px-8 py-7">
-      {/* Page Header */}
+    <div className="h-full overflow-y-auto px-7 py-6">
+
+      {/* ── Header ── */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-bold text-[#111827]">Dashboard</h1>
-          <p className="text-xs text-[#9CA3AF] mt-0.5">
-            Platform overview — {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-          </p>
-        </div>
-        <button
-          onClick={() => { setKpiLoading(true); setChartsLoading(true); }}
-          className="flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#111827] px-3 py-1.5 rounded-lg border border-[#E5EAE8] hover:bg-[#F8FAF9] transition-colors"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-          </svg>
-          Refresh
-        </button>
+          <div>
+            <h1 className="text-2xl font-black text-[#111111] leading-none">{greeting}</h1>
+            <p className="text-xs text-[#6B7280] mt-1">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            </p>
+          </div>
+          <button
+            onClick={() => { setKpiLoading(true); setChartsLoading(true); }}
+            className="flex items-center gap-1.5 text-xs text-[#6B7280] hover:text-[#111827] px-3 py-2 rounded-lg bg-white hover:bg-[#F5F3FF] border border-[#EDE9FE] transition-colors font-medium shadow-sm"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Refresh
+          </button>
       </div>
 
       {/* ── KPI Row 1 ── */}
@@ -728,12 +756,12 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
 
         {/* New Orgs — 30 days bar */}
-        <div className="lg:col-span-2 bg-white shadow-sm rounded-xl p-5">
+        <div className="lg:col-span-2 bg-white border border-[#E5E7EB] shadow-sm rounded-xl p-5">
           <SectionHeader title="New Organizations" sub="Daily sign-ups, last 30 days" />
           {chartsLoading ? (
             <div className="h-24 bg-[#F3F4F6] animate-pulse rounded-lg" />
           ) : (
-            <BarChart data={dailyBarData} color="#0D4C3C" height={80} />
+            <BarChart data={dailyBarData} color="#6C55E8" height={80} />
           )}
           <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[#F3F4F6]">
             <div>
@@ -754,7 +782,7 @@ export function DashboardPage() {
         </div>
 
         {/* Reviews by Status — donut */}
-        <div className="bg-white shadow-sm rounded-xl p-5">
+        <div className="bg-white border border-[#E5E7EB] shadow-sm rounded-xl p-5">
           <SectionHeader title="Reviews by Status" />
           {chartsLoading ? (
             <div className="flex items-center justify-center h-32 bg-[#F3F4F6] animate-pulse rounded-lg" />
@@ -784,17 +812,17 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
 
         {/* Monthly org growth — 12 months */}
-        <div className="lg:col-span-2 bg-white shadow-sm rounded-xl p-5">
+        <div className="lg:col-span-2 bg-white border border-[#E5E7EB] shadow-sm rounded-xl p-5">
           <SectionHeader title="Growth Trend" sub="New organizations per month, last 12 months" />
           {chartsLoading ? (
             <div className="h-24 bg-[#F3F4F6] animate-pulse rounded-lg" />
           ) : (
-            <BarChart data={monthlyBarData} color="#0D4C3C" height={80} />
+            <BarChart data={monthlyBarData} color="#6C55E8" height={80} />
           )}
         </div>
 
         {/* Plan distribution */}
-        <div className="bg-white shadow-sm rounded-xl p-5">
+        <div className="bg-white border border-[#E5E7EB] shadow-sm rounded-xl p-5">
           <SectionHeader title="Plan Distribution" sub="Active subscriptions" />
           {chartsLoading ? (
             <div className="space-y-3">
@@ -828,13 +856,13 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
 
         {/* Top Recent Orgs */}
-        <div className="lg:col-span-2 bg-white shadow-sm rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E5EAE8] flex items-center justify-between">
+        <div className="lg:col-span-2 bg-white border border-[#E5E7EB] shadow-sm rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
             <div>
               <h2 className="text-sm font-semibold text-[#111827]">Recent Clients</h2>
               <p className="text-xs text-[#9CA3AF] mt-0.5">Latest 8 organizations</p>
             </div>
-            <Link to="/clients" className="text-xs text-[#0D4C3C] font-medium hover:underline">View all →</Link>
+            <Link to="/clients" className="text-xs text-[#6C55E8] font-medium hover:underline">View all →</Link>
           </div>
           {chartsLoading ? (
             <div className="p-5 space-y-3">
@@ -852,9 +880,9 @@ export function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-[#F9FAFB]">
                 {topOrgs.map(org => (
-                  <tr key={org.id} className="hover:bg-[#F8FAF9] transition-colors">
+                  <tr key={org.id} className="hover:bg-[#FAFAF7] transition-colors">
                     <td className="px-5 py-3">
-                      <Link to={`/clients/${refToSlug(org.ref_id)}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
+                      <Link to={`/clients/${refToSlug(org.ref_id)}`} className="font-medium text-[#111827] hover:text-[#6C55E8] hover:underline">
                         {org.name}
                       </Link>
                     </td>
@@ -878,7 +906,7 @@ export function DashboardPage() {
         </div>
 
         {/* Platform Health */}
-        <div className="bg-white shadow-sm rounded-xl p-5">
+        <div className="bg-white border border-[#E5E7EB] shadow-sm rounded-xl p-5">
           <SectionHeader title="Platform Health" />
           {chartsLoading ? (
             <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-6 bg-[#F3F4F6] animate-pulse rounded"/>)}</div>
@@ -910,10 +938,10 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* Recent Audit Events */}
-        <div className="lg:col-span-2 bg-white shadow-sm rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E5EAE8] flex items-center justify-between">
+        <div className="lg:col-span-2 bg-white border border-[#E5E7EB] shadow-sm rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Recent Activity</h2>
-            <Link to="/audit" className="text-xs text-[#0D4C3C] font-medium hover:underline">View audit log →</Link>
+            <Link to="/audit" className="text-xs text-[#6C55E8] font-medium hover:underline">View audit log →</Link>
           </div>
           {chartsLoading ? (
             <div className="p-5 space-y-3">
@@ -924,7 +952,7 @@ export function DashboardPage() {
           ) : (
             <ul className="divide-y divide-[#F9FAFB]">
               {recentAudit.map(ev => (
-                <li key={ev.id} className="flex items-start gap-3 px-5 py-3 hover:bg-[#F8FAF9] transition-colors">
+                <li key={ev.id} className="flex items-start gap-3 px-5 py-3 hover:bg-[#FAFAF7] transition-colors">
                   <div className="w-6 h-6 rounded-full bg-[#F3F4F6] text-[#6B7280] flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -948,8 +976,8 @@ export function DashboardPage() {
         {/* Action Required + Quick Actions */}
         <div className="space-y-4">
           {/* Action Required */}
-          <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#E5EAE8] flex items-center justify-between">
+          <div className="bg-white border border-[#E5E7EB] shadow-sm rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
               <h2 className="text-sm font-semibold text-[#111827]">Action Required</h2>
               {actions.length > 0 && (
                 <span className="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-lg">{actions.length}</span>
@@ -961,7 +989,7 @@ export function DashboardPage() {
               </div>
             ) : actions.length === 0 ? (
               <div className="px-5 py-6 text-center">
-                <div className="w-8 h-8 rounded-full bg-[#DCFCE7] text-[#15803D] flex items-center justify-center mx-auto mb-2">
+                <div className="w-8 h-8 rounded-full bg-[#E0F2FE] text-[#0369A1] flex items-center justify-center mx-auto mb-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
                   </svg>
@@ -973,7 +1001,7 @@ export function DashboardPage() {
                 {actions.map(item => {
                   const style = ACTION_ICON[item.kind] ?? { bg: 'bg-[#F3F4F6]', text: 'text-[#374151]', char: '!' };
                   return (
-                    <li key={item.id} className="flex items-center justify-between px-5 py-3 hover:bg-[#F8FAF9] transition-colors">
+                    <li key={item.id} className="flex items-center justify-between px-5 py-3 hover:bg-[#FAFAF7] transition-colors">
                       <div className="flex items-center gap-2.5">
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${style.bg} ${style.text}`}>
                           {style.char}
@@ -983,7 +1011,7 @@ export function DashboardPage() {
                           <p className="text-[10px] text-[#9CA3AF]">{item.detail}</p>
                         </div>
                       </div>
-                      <Link to={item.href} className="text-[10px] font-medium text-[#0D4C3C] hover:underline flex-shrink-0 ml-2">View →</Link>
+                      <Link to={item.href} className="text-[10px] font-medium text-[#6C55E8] hover:underline flex-shrink-0 ml-2">View →</Link>
                     </li>
                   );
                 })}
@@ -992,8 +1020,8 @@ export function DashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#E5EAE8]">
+          <div className="bg-white border border-[#E5E7EB] shadow-sm rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#E5E7EB]">
               <h2 className="text-sm font-semibold text-[#111827]">Quick Actions</h2>
             </div>
             <div className="p-3 grid grid-cols-2 gap-2">
@@ -1006,8 +1034,8 @@ export function DashboardPage() {
                 { to: '/audit',     label: 'Audit Logs',      desc: 'Activity history' },
               ].map(link => (
                 <Link key={link.to} to={link.to}
-                  className="border border-[#E5EAE8] rounded-lg p-3 hover:bg-[#F8FAF9] hover:border-[#0D4C3C] transition-colors group">
-                  <p className="text-xs font-semibold text-[#111827] group-hover:text-[#0D4C3C]">{link.label}</p>
+                  className="border border-[#E5E7EB] rounded-lg p-3 hover:bg-[#FAFAF7] hover:border-[#6C55E8] transition-colors group">
+                  <p className="text-xs font-semibold text-[#111827] group-hover:text-[#6C55E8]">{link.label}</p>
                   <p className="text-[10px] text-[#9CA3AF] mt-0.5">{link.desc}</p>
                 </Link>
               ))}
@@ -1018,3 +1046,4 @@ export function DashboardPage() {
     </div>
   );
 }
+

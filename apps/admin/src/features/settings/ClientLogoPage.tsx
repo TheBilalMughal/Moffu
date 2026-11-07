@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToastStore } from '@/lib/toast';
 
@@ -342,7 +342,7 @@ export function ClientLogoPage() {
       {/* Table */}
       <div className="bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8]">
+          <thead className="bg-[#FAFAF7] border-b border-[#E5E7EB]">
             <tr>
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Client</th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Type</th>
@@ -356,7 +356,7 @@ export function ClientLogoPage() {
                 <tr key={i}>
                   {Array.from({ length: 4 }).map((_, j) => (
                     <td key={j} className="px-5 py-3">
-                      <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-24" />
+                      <div className="h-3.5 bg-[#E5E7EB] rounded animate-pulse w-24" />
                     </td>
                   ))}
                 </tr>
@@ -367,7 +367,7 @@ export function ClientLogoPage() {
                   <p className="text-sm text-[#9CA3AF] mb-3">No clients added yet.</p>
                   <button
                     onClick={() => setPanel({ client: null })}
-                    className="text-sm font-semibold text-[#0D4C3C] hover:underline"
+                    className="text-sm font-semibold text-[#6C55E8] hover:underline"
                   >
                     Add your first client →
                   </button>
@@ -375,7 +375,7 @@ export function ClientLogoPage() {
               </tr>
             ) : (
               clients.map(c => (
-                <tr key={c.id} className="hover:bg-[#F8FAF9] transition-colors">
+                <tr key={c.id} className="hover:bg-[#FAFAF7] transition-colors">
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2.5">
                       <ClientAvatar name={c.name} logoUrl={c.logo_url} size={28} />
@@ -398,14 +398,14 @@ export function ClientLogoPage() {
                       >
                         View
                       </button>
-                      <span className="text-[#E5EAE8]">|</span>
+                      <span className="text-[#E5E7EB]">|</span>
                       <button
                         onClick={() => setPanel({ client: c })}
                         className="text-xs font-medium text-[#111827] hover:underline"
                       >
                         Edit
                       </button>
-                      <span className="text-[#E5EAE8]">|</span>
+                      <span className="text-[#E5E7EB]">|</span>
                       <button
                         onClick={() => { setPanel({ client: c }); }}
                         className="text-xs font-medium text-red-500 hover:underline"
@@ -469,3 +469,4 @@ export function ClientLogoPage() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { formatDate } from '@/lib/format';
@@ -37,7 +37,7 @@ function RolloutSlider({ value, onChange, disabled }: { value: number; onChange:
     <div className="flex items-center gap-2">
       <input type="range" min={0} max={100} value={value} disabled={disabled}
         onChange={e => onChange(Number(e.target.value))}
-        className="flex-1 accent-[#0D4C3C] h-1.5 disabled:opacity-50" />
+        className="flex-1 accent-[#6C55E8] h-1.5 disabled:opacity-50" />
       <span className="text-xs font-semibold text-[#374151] w-8 text-right tabular-nums">{value}%</span>
     </div>
   );
@@ -81,23 +81,23 @@ function CreateFlagModal({ onClose, onCreated }: { onClose: () => void; onCreate
           <div>
             <label className="block text-xs font-medium text-[#374151] mb-1.5">Flag Name <span className="text-[#9CA3AF]">(slug)</span></label>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. new_feature_xyz"
-              className="w-full px-3 py-2 text-sm font-mono border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827]" />
+              className="w-full px-3 py-2 text-sm font-mono border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827]" />
             {name && <p className="text-[10px] text-[#9CA3AF] mt-1">Slug: {name.toLowerCase().replace(/[^a-z0-9_]/g, '_')}</p>}
           </div>
           <div>
             <label className="block text-xs font-medium text-[#374151] mb-1.5">Description</label>
             <input value={description} onChange={e => setDescription(e.target.value)} placeholder="What does this flag control?"
-              className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827]" />
+              className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827]" />
           </div>
           <div>
             <label className="block text-xs font-medium text-[#374151] mb-1.5">Tags <span className="text-[#9CA3AF]">(comma separated)</span></label>
             <input value={tags} onChange={e => setTags(e.target.value)} placeholder="ui, beta, ai"
-              className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827]" />
+              className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827]" />
           </div>
         </div>
         <div className="px-6 py-4 border-t border-[#F3F4F6] flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors">Cancel</button>
-          <button onClick={save} disabled={saving} className="px-4 py-2 text-sm font-medium text-white bg-[#0D4C3C] rounded-lg hover:bg-[#0a3d30] transition-colors disabled:opacity-50">
+          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors">Cancel</button>
+          <button onClick={save} disabled={saving} className="px-4 py-2 text-sm font-medium text-white bg-[#111111] rounded-lg hover:bg-[#0a3d30] transition-colors disabled:opacity-50">
             {saving ? 'Creating…' : 'Create Flag'}
           </button>
         </div>
@@ -114,7 +114,7 @@ function OrgOverrideRow({ override, orgs, onRemove, canEdit }: {
   const org = orgs.find(o => o.id === override.org_id);
   return (
     <div className="flex items-center gap-3 bg-white rounded-lg px-4 py-2.5 shadow-sm">
-      <div className="w-6 h-6 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+      <div className="w-6 h-6 rounded-full bg-[#D8CCFF] text-[#6C55E8] flex items-center justify-center text-[10px] font-bold flex-shrink-0">
         {(org?.name ?? '?')[0]?.toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
@@ -198,7 +198,7 @@ function FlagRow({ flag, orgs, overrides, canEdit, onUpdate, onDelete }: {
         </td>
         <td className="px-5 py-4">
           <button onClick={() => canEdit && handleToggle()}
-            className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full transition-colors focus:outline-none ${flag.enabled_globally ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'} ${canEdit ? 'cursor-pointer' : 'cursor-default opacity-60'}`}>
+            className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full transition-colors focus:outline-none ${flag.enabled_globally ? 'bg-[#111111]' : 'bg-[#D1D5DB]'} ${canEdit ? 'cursor-pointer' : 'cursor-default opacity-60'}`}>
             <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform mt-0.5 ${flag.enabled_globally ? 'translate-x-4' : 'translate-x-0.5'}`} />
           </button>
         </td>
@@ -223,12 +223,12 @@ function FlagRow({ flag, orgs, overrides, canEdit, onUpdate, onDelete }: {
 
       {expanded && (
         <tr>
-          <td colSpan={7} className="bg-[#F8FAF9] px-5 py-4 border-b border-[#E5EAE8]">
+          <td colSpan={7} className="bg-[#FAFAF7] px-5 py-4 border-b border-[#E5E7EB]">
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-semibold text-[#374151] uppercase tracking-wide">Org Overrides</p>
               {canEdit && (
                 <button onClick={() => setAddingOrg(a => !a)}
-                  className="text-xs font-medium text-[#0D4C3C] hover:underline flex items-center gap-1">
+                  className="text-xs font-medium text-[#6C55E8] hover:underline flex items-center gap-1">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4"/></svg>
                   Add Override
                 </button>
@@ -238,15 +238,15 @@ function FlagRow({ flag, orgs, overrides, canEdit, onUpdate, onDelete }: {
             {addingOrg && (
               <div className="flex items-center gap-2 mb-3 bg-white rounded-lg px-4 py-3 shadow-sm">
                 <input value={newOrgId} onChange={e => setNewOrgId(e.target.value)} placeholder="Org UUID"
-                  className="flex-1 text-xs font-mono border border-[#E5EAE8] rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30" />
+                  className="flex-1 text-xs font-mono border border-[#E5E7EB] rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30" />
                 <button
                   onClick={() => setNewEnabled(e => !e)}
-                  className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full transition-colors ${newEnabled ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}>
+                  className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full transition-colors ${newEnabled ? 'bg-[#111111]' : 'bg-[#D1D5DB]'}`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform mt-0.5 ${newEnabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
                 </button>
                 <span className="text-xs text-[#374151] w-14">{newEnabled ? 'Enable' : 'Disable'}</span>
                 <button onClick={addOrgOverride}
-                  className="px-3 py-1.5 text-xs font-medium text-white bg-[#0D4C3C] rounded-lg hover:bg-[#0a3d30] transition-colors">
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-[#111111] rounded-lg hover:bg-[#0a3d30] transition-colors">
                   Save
                 </button>
                 <button onClick={() => { setAddingOrg(false); setNewOrgId(''); }}
@@ -341,7 +341,7 @@ export function FeatureFlagsPage() {
           </div>
           {canManage(platformRole) && (
             <button onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#0D4C3C] rounded-lg hover:bg-[#0a3d30] transition-colors">
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#111111] rounded-lg hover:bg-[#0a3d30] transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
               New Flag
             </button>
@@ -357,12 +357,12 @@ export function FeatureFlagsPage() {
           </div>
           <div className="flex flex-wrap gap-1.5">
             <button onClick={() => setTagFilter('all')}
-              className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${tagFilter === 'all' ? 'bg-[#0D4C3C] text-white' : 'bg-white shadow-sm text-[#374151] hover:bg-[#F3F4F6]'}`}>
+              className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${tagFilter === 'all' ? 'bg-[#111111] text-white' : 'bg-white shadow-sm text-[#374151] hover:bg-[#F3F4F6]'}`}>
               All
             </button>
             {allTags.map(t => (
               <button key={t} onClick={() => setTagFilter(t === tagFilter ? 'all' : t)}
-                className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${tagFilter === t ? 'bg-[#0D4C3C] text-white' : 'bg-white shadow-sm text-[#374151] hover:bg-[#F3F4F6]'}`}>
+                className={`text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${tagFilter === t ? 'bg-[#111111] text-white' : 'bg-white shadow-sm text-[#374151] hover:bg-[#F3F4F6]'}`}>
                 {t}
               </button>
             ))}
@@ -397,3 +397,4 @@ export function FeatureFlagsPage() {
     </div>
   );
 }
+

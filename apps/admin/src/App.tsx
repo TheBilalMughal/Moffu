@@ -31,6 +31,7 @@ import { ClientLogoPage } from '@/features/settings/ClientLogoPage';
 import { RefundsPage } from '@/features/billing/RefundsPage';
 import { ReportsPage } from '@/features/analytics/ReportsPage';
 import { IntegrationsHealthPage } from '@/features/platform/IntegrationsHealthPage';
+import { ProfilePage } from '@/features/profile/ProfilePage';
 
 export function App() {
   const initialize = useAdminAuthStore((s) => s.initialize);
@@ -70,6 +71,7 @@ export function App() {
           <Route path="integrations" element={<IntegrationsHealthPage />} />
           <Route path="roles" element={<RolesPage />} />
           <Route path="audit" element={<AuditPage />} />
+          <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<SettingsLayout />}>
             <Route index element={<Navigate to="website/client-logo" replace />} />
             {/* Website tab */}

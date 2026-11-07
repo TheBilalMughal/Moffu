@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToastStore } from '@/lib/toast';
 
@@ -61,8 +61,8 @@ export function GeneralSettingsPage() {
         <div className="space-y-4">
           {FIELDS.map((f) => (
             <div key={f.key} className="animate-pulse">
-              <div className="h-3 bg-[#E5EAE8] rounded w-32 mb-2" />
-              <div className="h-9 bg-[#E5EAE8] rounded-lg" />
+              <div className="h-3 bg-[#E5E7EB] rounded w-32 mb-2" />
+              <div className="h-9 bg-[#E5E7EB] rounded-lg" />
             </div>
           ))}
         </div>
@@ -79,12 +79,12 @@ export function GeneralSettingsPage() {
                   onChange={(e) => setValues((prev) => ({ ...prev, [f.key]: e.target.value }))}
                   onKeyDown={(e) => e.key === 'Enter' && handleSave(f.key)}
                   placeholder={f.type === 'url' ? 'https://' : ''}
-                  className="flex-1 px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] transition-colors"
+                  className="flex-1 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8] transition-colors"
                 />
                 <button
                   onClick={() => handleSave(f.key)}
                   disabled={saving === f.key}
-                  className="px-3 py-2 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#0a3d30] rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5 flex-shrink-0"
+                  className="px-3 py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-[#0a3d30] rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5 flex-shrink-0"
                 >
                   {saving === f.key && (
                     <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
@@ -99,3 +99,4 @@ export function GeneralSettingsPage() {
     </div>
   );
 }
+

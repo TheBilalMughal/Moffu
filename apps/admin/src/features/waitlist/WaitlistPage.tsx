@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface WaitlistEntry {
@@ -118,14 +118,14 @@ export function WaitlistPage() {
             </p>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
-            <span className={`text-xs font-semibold ${waitlistOn ? 'text-[#0D4C3C]' : 'text-[#9CA3AF]'}`}>
+            <span className={`text-xs font-semibold ${waitlistOn ? 'text-[#6C55E8]' : 'text-[#9CA3AF]'}`}>
               {settingLoaded ? (waitlistOn ? 'ON' : 'OFF') : '…'}
             </span>
             <button
               onClick={handleToggle}
               disabled={toggling || !settingLoaded}
               className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-50 ${
-                waitlistOn ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'
+                waitlistOn ? 'bg-[#111111]' : 'bg-[#D1D5DB]'
               }`}
               aria-label="Toggle waitlist"
             >
@@ -196,7 +196,7 @@ export function WaitlistPage() {
                       <td className="px-5 py-3.5 font-medium text-[#111827]">{entry.name}</td>
                       <td className="px-5 py-3.5 text-[#374151]">{entry.email}</td>
                       <td className="px-5 py-3.5">
-                        <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-lg bg-[#E6F2EE] text-[#0D4C3C]">
+                        <span className="inline-block text-[11px] font-medium px-2 py-0.5 rounded-lg bg-[#D8CCFF] text-[#6C55E8]">
                           {SOURCE_LABEL[entry.source] ?? entry.source}
                         </span>
                       </td>
@@ -217,3 +217,4 @@ export function WaitlistPage() {
     </div>
   );
 }
+

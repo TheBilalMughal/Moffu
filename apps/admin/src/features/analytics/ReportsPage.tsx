@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { DateRangePicker } from '@/components/DateRangePicker';
 
@@ -37,7 +37,7 @@ function downloadCSV(rows: MonthMetric[]) {
   a.click(); URL.revokeObjectURL(url);
 }
 
-function BarChart({ data, color = '#0D4C3C', height = 80 }: { data: number[]; color?: string; height?: number }) {
+function BarChart({ data, color = '#6C55E8', height = 80 }: { data: number[]; color?: string; height?: number }) {
   const W = 400; const padL = 4; const padR = 4; const plotW = W - padL - padR;
   const max = Math.max(...data, 1);
   const n = data.length; const slotW = plotW / n; const barW = Math.max(3, Math.floor(slotW * 0.6));
@@ -148,7 +148,7 @@ export function ReportsPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <DateRangePicker from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }} alignRight />
           <button onClick={() => downloadCSV(months)}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-[#E5EAE8] rounded-xl hover:bg-[#F3F4F6] text-[#374151] transition-colors">
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium border border-[#E5E7EB] rounded-xl hover:bg-[#F3F4F6] text-[#374151] transition-colors">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
@@ -160,7 +160,7 @@ export function ReportsPage() {
       {/* Summary KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
         {[
-          { label: 'New Orgs', value: totals.newOrgs.toLocaleString(), color: 'text-[#0D4C3C]' },
+          { label: 'New Orgs', value: totals.newOrgs.toLocaleString(), color: 'text-[#6C55E8]' },
           { label: 'New Subscriptions', value: totals.newSubs.toLocaleString(), color: 'text-[#1D4ED8]' },
           { label: 'Churned', value: totals.churned.toLocaleString(), color: 'text-red-600' },
           { label: 'Churn Rate', value: `${churnRate}%`, color: totals.churned > 0 ? 'text-red-600' : 'text-[#059669]' },
@@ -177,11 +177,11 @@ export function ReportsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         {/* New Orgs chart */}
         <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
+          <div className="px-5 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]">
             <p className="text-sm font-semibold text-[#111827]">New Organisations</p>
           </div>
           <div className="px-5 py-4">
-            <BarChart data={months.map(m => m.newOrgs)} color="#0D4C3C" />
+            <BarChart data={months.map(m => m.newOrgs)} color="#6C55E8" />
             <div className="flex items-center justify-between mt-2">
               {months.filter((_, i) => i % Math.ceil(months.length / 6) === 0).map(m => (
                 <span key={m.key} className="text-[9px] text-[#9CA3AF]">{m.label}</span>
@@ -191,7 +191,7 @@ export function ReportsPage() {
         </div>
         {/* AI Usage chart */}
         <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
+          <div className="px-5 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]">
             <p className="text-sm font-semibold text-[#111827]">AI Drafts Generated</p>
           </div>
           <div className="px-5 py-4">
@@ -208,7 +208,7 @@ export function ReportsPage() {
       {/* Plan distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <div className="bg-white shadow-sm rounded-xl overflow-hidden lg:col-span-1">
-          <div className="px-5 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
+          <div className="px-5 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]">
             <p className="text-sm font-semibold text-[#111827]">Active Plan Distribution</p>
           </div>
           <div className="px-5 py-4">
@@ -216,7 +216,7 @@ export function ReportsPage() {
               <p className="text-sm text-[#9CA3AF]">No data.</p>
             ) : (() => {
               const total = planDist.reduce((s, p) => s + p.count, 0);
-              const COLORS = ['#0D4C3C', '#6EE7B7', '#1D4ED8', '#7C3AED', '#C2410C', '#374151'];
+              const COLORS = ['#6C55E8', '#6EE7B7', '#1D4ED8', '#7C3AED', '#C2410C', '#374151'];
               return planDist.map((p, i) => (
                 <div key={p.plan} className="mb-3">
                   <div className="flex items-center justify-between mb-1">
@@ -234,7 +234,7 @@ export function ReportsPage() {
 
         {/* Monthly table */}
         <div className="bg-white shadow-sm rounded-xl overflow-hidden lg:col-span-2">
-          <div className="px-5 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
+          <div className="px-5 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]">
             <p className="text-sm font-semibold text-[#111827]">Monthly Breakdown</p>
           </div>
           <div className="overflow-x-auto">
@@ -249,9 +249,9 @@ export function ReportsPage() {
                   {[...months].reverse().map(m => {
                     const net = m.newSubs - m.churned;
                     return (
-                      <tr key={m.key} className="hover:bg-[#F8FAF9]">
+                      <tr key={m.key} className="hover:bg-[#FAFAF7]">
                         <td className="px-4 py-3 text-sm text-[#374151]">{m.label}</td>
-                        <td className="px-4 py-3 text-right text-sm font-medium text-[#0D4C3C]">{m.newOrgs}</td>
+                        <td className="px-4 py-3 text-right text-sm font-medium text-[#6C55E8]">{m.newOrgs}</td>
                         <td className="px-4 py-3 text-right text-sm">{m.newSubs}</td>
                         <td className="px-4 py-3 text-right text-sm text-red-500">{m.churned || '—'}</td>
                         <td className={`px-4 py-3 text-right text-sm font-semibold ${net >= 0 ? 'text-[#059669]' : 'text-red-500'}`}>{net > 0 ? `+${net}` : net}</td>
@@ -260,9 +260,9 @@ export function ReportsPage() {
                       </tr>
                     );
                   })}
-                  <tr className="border-t-2 border-[#E5EAE8] bg-[#F8FAF9] font-semibold">
+                  <tr className="border-t-2 border-[#E5E7EB] bg-[#FAFAF7] font-semibold">
                     <td className="px-4 py-3 text-xs text-[#6B7280] uppercase tracking-wide">Total</td>
-                    <td className="px-4 py-3 text-right text-sm text-[#0D4C3C]">{totals.newOrgs}</td>
+                    <td className="px-4 py-3 text-right text-sm text-[#6C55E8]">{totals.newOrgs}</td>
                     <td className="px-4 py-3 text-right text-sm">{totals.newSubs}</td>
                     <td className="px-4 py-3 text-right text-sm text-red-500">{totals.churned || '—'}</td>
                     <td className={`px-4 py-3 text-right text-sm ${totals.newSubs - totals.churned >= 0 ? 'text-[#059669]' : 'text-red-500'}`}>{totals.newSubs - totals.churned > 0 ? `+${totals.newSubs - totals.churned}` : totals.newSubs - totals.churned}</td>
@@ -278,3 +278,4 @@ export function ReportsPage() {
     </div>
   );
 }
+

@@ -118,7 +118,7 @@ function MRRTrendChart({ data }: { data: { label: string; mrr: number; churn: nu
               <rect
                 x={x - barW / 2} y={pad.t + innerH - mrrH}
                 width={barW} height={mrrH}
-                fill={isLast ? '#0D4C3C' : '#B8D4CD'} rx="3"
+                fill={isLast ? '#6C55E8' : '#B8D4CD'} rx="3"
               />
               {/* Churn bar (below baseline) */}
               {d.churn > 0 && (
@@ -135,7 +135,7 @@ function MRRTrendChart({ data }: { data: { label: string; mrr: number; churn: nu
                 </text>
               )}
               {/* Month label */}
-              <text x={x} y={H - 8} textAnchor="middle" fontSize="9" fill={isLast ? '#0D4C3C' : '#9CA3AF'} fontWeight={isLast ? '600' : '400'}>
+              <text x={x} y={H - 8} textAnchor="middle" fontSize="9" fill={isLast ? '#6C55E8' : '#9CA3AF'} fontWeight={isLast ? '600' : '400'}>
                 {d.label}
               </text>
             </g>
@@ -339,7 +339,7 @@ export function MRRPage() {
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="w-5 h-5 border-2 border-[#0D4C3C] border-t-transparent rounded-full animate-spin"/>
+        <div className="w-5 h-5 border-2 border-[#6C55E8] border-t-transparent rounded-full animate-spin"/>
       </div>
     );
   }
@@ -367,7 +367,7 @@ export function MRRPage() {
           <p className="text-sm text-[#6B7280] mt-0.5">Monthly recurring revenue and growth metrics.</p>
         </div>
         <button onClick={() => exportCSV(filtered, dateFrom, dateTo)}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-[#0D4C3C] hover:bg-[#083F32] rounded-lg transition-colors">
+          className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg transition-colors">
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           Export CSV
         </button>
@@ -412,9 +412,9 @@ export function MRRPage() {
       <div className="grid grid-cols-6 gap-3 mb-5">
         {[
           { label: 'Total MRR',     value: fmtMoney(kpis.totalMRR), sub: `${fmtMoney(kpis.arr)} ARR`,             color: '' },
-          { label: 'New MRR',       value: fmtMoney(kpis.newMRR),   sub: `${kpis.newCount} new in period`,        color: kpis.newMRR > 0 ? 'text-[#0D4C3C]' : '' },
+          { label: 'New MRR',       value: fmtMoney(kpis.newMRR),   sub: `${kpis.newCount} new in period`,        color: kpis.newMRR > 0 ? 'text-[#6C55E8]' : '' },
           { label: 'Churned MRR',   value: fmtMoney(kpis.churnMRR), sub: `${kpis.churnCount} churn in period`,    color: kpis.churnMRR > 0 ? 'text-red-600' : '' },
-          { label: 'Net MRR',       value: (kpis.netMRR >= 0 ? '+' : '') + fmtMoney(kpis.netMRR), sub: 'New − Churned', color: kpis.netMRR > 0 ? 'text-[#0D4C3C]' : kpis.netMRR < 0 ? 'text-red-600' : '' },
+          { label: 'Net MRR',       value: (kpis.netMRR >= 0 ? '+' : '') + fmtMoney(kpis.netMRR), sub: 'New − Churned', color: kpis.netMRR > 0 ? 'text-[#6C55E8]' : kpis.netMRR < 0 ? 'text-red-600' : '' },
           { label: 'ARPU',          value: fmtMoney(kpis.arpu),     sub: 'avg revenue / user',                    color: '' },
           { label: 'LTV Estimate',  value: kpis.ltv > 0 ? fmtMoney(kpis.ltv) : 'N/A', sub: kpis.churnRate > 0 ? `${(kpis.churnRate * 100).toFixed(1)}% mo. churn` : 'need churn data', color: '' },
         ].map((c) => (
@@ -432,7 +432,7 @@ export function MRRPage() {
         <p className="text-xs text-[#9CA3AF] mb-5">{dateFrom && dateTo ? `${fmtLabel(dateFrom)} — ${fmtLabel(dateTo)}` : 'All time'}</p>
         <div className="flex items-stretch gap-2">
           {/* Opening */}
-          <div className="flex-1 bg-[#F8FAF9] rounded-lg p-3 text-center">
+          <div className="flex-1 bg-[#FAFAF7] rounded-lg p-3 text-center">
             <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide mb-1">Opening MRR</p>
             <p className="text-lg font-bold text-[#111827]">{fmtMoney(kpis.openingMRR, true)}</p>
           </div>
@@ -464,9 +464,9 @@ export function MRRPage() {
           </div>
 
           {/* Net Change */}
-          <div className={`flex-1 rounded-lg p-3 text-center border ${kpis.netMRR >= 0 ? 'bg-[#E6F2EE] border-[#0D4C3C]/20' : 'bg-[#FEF2F2] border-red-200'}`}>
-            <p className={`text-[10px] uppercase tracking-wide mb-1 ${kpis.netMRR >= 0 ? 'text-[#0D4C3C]' : 'text-[#991B1B]'}`}>Net Change</p>
-            <p className={`text-lg font-bold ${kpis.netMRR >= 0 ? 'text-[#0D4C3C]' : 'text-[#991B1B]'}`}>
+          <div className={`flex-1 rounded-lg p-3 text-center border ${kpis.netMRR >= 0 ? 'bg-[#D8CCFF] border-[#6C55E8]/20' : 'bg-[#FEF2F2] border-red-200'}`}>
+            <p className={`text-[10px] uppercase tracking-wide mb-1 ${kpis.netMRR >= 0 ? 'text-[#6C55E8]' : 'text-[#991B1B]'}`}>Net Change</p>
+            <p className={`text-lg font-bold ${kpis.netMRR >= 0 ? 'text-[#6C55E8]' : 'text-[#991B1B]'}`}>
               {kpis.netMRR >= 0 ? '+' : ''}{fmtMoney(kpis.netMRR, true)}
             </p>
           </div>
@@ -476,7 +476,7 @@ export function MRRPage() {
           </div>
 
           {/* Closing */}
-          <div className="flex-1 bg-[#0D4C3C] rounded-lg p-3 text-center">
+          <div className="flex-1 bg-[#111111] rounded-lg p-3 text-center">
             <p className="text-[10px] text-[#A7C9C0] uppercase tracking-wide mb-1">Closing MRR</p>
             <p className="text-lg font-bold text-white">{fmtMoney(kpis.totalMRR, true)}</p>
           </div>
@@ -491,7 +491,7 @@ export function MRRPage() {
             <h2 className="text-sm font-semibold text-[#111827]">New MRR — 12 Month Trend</h2>
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1.5 text-[10px] text-[#9CA3AF]">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#0D4C3C] inline-block"/>Current month
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#111111] inline-block"/>Current month
               </span>
               <span className="flex items-center gap-1.5 text-[10px] text-[#9CA3AF]">
                 <span className="w-2.5 h-2.5 rounded-sm bg-[#FCA5A5] inline-block"/>Churn
@@ -529,3 +529,4 @@ export function MRRPage() {
     </div>
   );
 }
+

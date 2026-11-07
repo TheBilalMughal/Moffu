@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { Dropdown } from '@/components/Dropdown';
@@ -109,10 +109,10 @@ function CreateCouponModal({ onClose, onCreated }: CreateModalProps) {
             <label className="block text-xs font-medium text-[#374151] mb-1.5">Coupon Code</label>
             <div className="flex gap-2">
               <input value={code} onChange={e => setCode(e.target.value.toUpperCase())}
-                className="flex-1 px-3 py-2 border border-[#E5EAE8] rounded-lg text-sm font-mono uppercase text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30"
+                className="flex-1 px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm font-mono uppercase text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30"
                 placeholder="e.g. SUMMER25" />
               <button onClick={() => setCode(generateCode())}
-                className="px-3 py-2 text-xs border border-[#E5EAE8] rounded-lg text-[#6B7280] hover:bg-[#F8FAF9] transition-colors whitespace-nowrap">
+                className="px-3 py-2 text-xs border border-[#E5E7EB] rounded-lg text-[#6B7280] hover:bg-[#FAFAF7] transition-colors whitespace-nowrap">
                 Generate
               </button>
             </div>
@@ -122,7 +122,7 @@ function CreateCouponModal({ onClose, onCreated }: CreateModalProps) {
           <div>
             <label className="block text-xs font-medium text-[#374151] mb-1.5">Description <span className="text-[#9CA3AF]">(optional)</span></label>
             <input value={description} onChange={e => setDescription(e.target.value)}
-              className="w-full px-3 py-2 border border-[#E5EAE8] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30"
+              className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30"
               placeholder="e.g. Summer launch promo" />
           </div>
 
@@ -146,12 +146,12 @@ function CreateCouponModal({ onClose, onCreated }: CreateModalProps) {
                 </span>
                 <input type="number" min="1" max={discountType === 'percent' ? '100' : undefined}
                   value={discountValue} onChange={e => setDiscountValue(e.target.value)}
-                  className="w-full pl-7 pr-3 py-2 border border-[#E5EAE8] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30"
+                  className="w-full pl-7 pr-3 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30"
                   placeholder={discountType === 'percent' ? '20' : '10.00'} />
               </div>
             </div>
             {discountValue && !isNaN(parseFloat(discountValue)) && (
-              <p className="mt-1.5 text-xs text-[#0D4C3C]">
+              <p className="mt-1.5 text-xs text-[#6C55E8]">
                 Preview: {discountType === 'percent'
                   ? `${discountValue}% off`
                   : `$${parseFloat(discountValue).toFixed(2)} off`}
@@ -163,7 +163,7 @@ function CreateCouponModal({ onClose, onCreated }: CreateModalProps) {
           <div>
             <label className="block text-xs font-medium text-[#374151] mb-1.5">Max Uses <span className="text-[#9CA3AF]">(leave blank for unlimited)</span></label>
             <input type="number" min="1" value={maxUses} onChange={e => setMaxUses(e.target.value)}
-              className="w-full px-3 py-2 border border-[#E5EAE8] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30"
+              className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30"
               placeholder="100" />
           </div>
 
@@ -171,7 +171,7 @@ function CreateCouponModal({ onClose, onCreated }: CreateModalProps) {
           <div>
             <label className="block text-xs font-medium text-[#374151] mb-1.5">Expires At <span className="text-[#9CA3AF]">(optional)</span></label>
             <input type="datetime-local" value={expiresAt} onChange={e => setExpiresAt(e.target.value)}
-              className="w-full px-3 py-2 border border-[#E5EAE8] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30" />
+              className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30" />
           </div>
 
           {error && (
@@ -181,11 +181,11 @@ function CreateCouponModal({ onClose, onCreated }: CreateModalProps) {
 
         <div className="flex gap-3 mt-6">
           <button onClick={onClose}
-            className="flex-1 px-4 py-2.5 text-sm font-medium border border-[#E5EAE8] rounded-lg text-[#374151] hover:bg-[#F8FAF9] transition-colors">
+            className="flex-1 px-4 py-2.5 text-sm font-medium border border-[#E5E7EB] rounded-lg text-[#374151] hover:bg-[#FAFAF7] transition-colors">
             Cancel
           </button>
           <button onClick={handleSave} disabled={saving}
-            className="flex-1 px-4 py-2.5 text-sm font-medium bg-[#0D4C3C] text-white rounded-lg hover:bg-[#0a3d30] transition-colors disabled:opacity-50">
+            className="flex-1 px-4 py-2.5 text-sm font-medium bg-[#111111] text-white rounded-lg hover:bg-[#0a3d30] transition-colors disabled:opacity-50">
             {saving ? 'Creating…' : 'Create Coupon'}
           </button>
         </div>
@@ -206,7 +206,7 @@ function DeleteConfirmModal({ code, onConfirm, onClose }: { code: string; onConf
         </p>
         <div className="flex gap-3">
           <button onClick={onClose}
-            className="flex-1 px-4 py-2.5 text-sm font-medium border border-[#E5EAE8] rounded-lg text-[#374151] hover:bg-[#F8FAF9]">
+            className="flex-1 px-4 py-2.5 text-sm font-medium border border-[#E5E7EB] rounded-lg text-[#374151] hover:bg-[#FAFAF7]">
             Cancel
           </button>
           <button onClick={onConfirm}
@@ -282,7 +282,7 @@ export function CouponsPage() {
           </div>
           {manage && (
             <button onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[#0D4C3C] text-white rounded-lg hover:bg-[#0a3d30] transition-colors">
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-[#111111] text-white rounded-lg hover:bg-[#0a3d30] transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
               </svg>
@@ -349,7 +349,7 @@ export function CouponsPage() {
                       <button onClick={() => copyCode(c.code)}
                         className="flex items-center gap-1.5 group" title="Click to copy">
                         <span className="font-mono font-semibold text-[#111827] text-sm tracking-wide">{c.code}</span>
-                        <span className={`transition-colors ${copied === c.code ? 'text-[#0D4C3C]' : 'text-[#D1D5DB] group-hover:text-[#9CA3AF]'}`}>
+                        <span className={`transition-colors ${copied === c.code ? 'text-[#6C55E8]' : 'text-[#D1D5DB] group-hover:text-[#9CA3AF]'}`}>
                           {copied === c.code
                             ? <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
                             : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
@@ -405,7 +405,7 @@ export function CouponsPage() {
                           {status !== 'expired' && status !== 'maxed' && (
                             <button onClick={() => toggleActive(c)} title={c.is_active ? 'Deactivate' : 'Activate'}
                               className={`p-1.5 rounded-lg transition-colors ${c.is_active
-                                ? 'text-[#0D4C3C] hover:bg-[#E6F2EE]'
+                                ? 'text-[#6C55E8] hover:bg-[#D8CCFF]'
                                 : 'text-[#9CA3AF] hover:bg-[#F3F4F6]'}`}>
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 {c.is_active
@@ -446,3 +446,4 @@ export function CouponsPage() {
     </div>
   );
 }
+

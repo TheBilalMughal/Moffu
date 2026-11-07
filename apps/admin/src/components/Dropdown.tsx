@@ -56,8 +56,8 @@ export function Dropdown({
 
   const triggerBase = `flex items-center gap-1.5 text-sm border transition-colors ${fullWidth ? 'w-full justify-between px-3 py-2' : 'px-3 py-1.5'}`;
   const triggerColor = isActive && !fullWidth
-    ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium rounded-lg'
-    : 'border-[#E5EAE8] text-[#374151] hover:border-[#0D4C3C] hover:text-[#0D4C3C] rounded-lg bg-white';
+    ? 'border-[#6C55E8] bg-[#D8CCFF] text-[#6C55E8] font-medium rounded-lg'
+    : 'border-[#E5E7EB] text-[#374151] hover:border-[#6C55E8] hover:text-[#6C55E8] rounded-lg bg-white';
 
   return (
     <div className={`relative ${fullWidth ? 'w-full' : ''}`} ref={ref}>
@@ -96,7 +96,7 @@ export function Dropdown({
                 value={searchQ}
                 onChange={e => setSearchQ(e.target.value)}
                 placeholder="Search…"
-                className="w-full px-2.5 py-1.5 text-xs border border-[#E5EAE8] rounded-lg focus:outline-none focus:border-[#0D4C3C] text-[#374151]"
+                className="w-full px-2.5 py-1.5 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:border-[#6C55E8] text-[#374151]"
                 onClick={e => e.stopPropagation()}
               />
             </div>
@@ -112,12 +112,12 @@ export function Dropdown({
                   type="button"
                   onClick={() => { onChange(opt.value); setOpen(false); setSearchQ(''); }}
                   className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${
-                    sel ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'
+                    sel ? 'text-[#6C55E8] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'
                   }`}
                 >
                   <span>{opt.label}</span>
                   {sel && (
-                    <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                   )}
@@ -130,3 +130,4 @@ export function Dropdown({
     </div>
   );
 }
+

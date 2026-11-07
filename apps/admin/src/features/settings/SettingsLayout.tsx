@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation, Navigate } from 'react-router-dom';
+﻿import { Outlet, useLocation } from 'react-router-dom';
 
 // ── Icons ──────────────────────────────────────────────────────────────────
 
@@ -133,81 +133,11 @@ const TABS: Tab[] = [
 // ── Layout ─────────────────────────────────────────────────────────────────
 
 export function SettingsLayout() {
-  const { pathname } = useLocation();
-
-  const activeTab = TABS.find(t =>
-    t.root === '/settings/general' || t.root === '/settings/security'
-      ? pathname === t.root || pathname.startsWith(t.root + '/')
-      : pathname.startsWith(t.root)
-  ) ?? TABS[0];
-
-  const hasSidebar = !!(activeTab?.sidebar?.length);
-
+  useLocation(); // keep for potential future use
   return (
-    <div className="flex flex-col h-full bg-[#F8FAF9]">
-
-      {/* ── Top tab bar ── */}
-      <div className="flex-shrink-0 border-b border-[#E5E7EB] bg-white">
-        <div className="px-8 pt-6 pb-0">
-          <h1 className="text-lg font-semibold text-[#111827]">Settings</h1>
-          <p className="text-sm text-[#9CA3AF] mt-0.5 mb-4">Platform configuration</p>
-          <nav className="flex gap-1 overflow-x-auto" aria-label="Settings tabs">
-            {TABS.map((tab) => {
-              const isActive = tab === activeTab;
-              return (
-                <NavLink
-                  key={tab.id}
-                  to={tab.defaultPath}
-                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap ${
-                    isActive
-                      ? 'border-[#0D4C3C] text-[#0D4C3C]'
-                      : 'border-transparent text-[#6B7280] hover:text-[#111827] hover:border-[#D1D5DB]'
-                  }`}
-                >
-                  {tab.icon}
-                  {tab.label}
-                </NavLink>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
-
-      {/* ── Body: optional left sidebar + content ── */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-
-        {/* Left sidebar */}
-        {hasSidebar && (
-          <div className="flex-shrink-0 w-52 bg-white border-r border-[#E5E7EB] overflow-y-auto py-4 px-3">
-            {activeTab.sidebar!.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium mb-0.5 transition-colors ${
-                    isActive
-                      ? 'bg-[#F0F7F4] text-[#0D4C3C]'
-                      : 'text-[#374151] hover:bg-[#F8FAF9] hover:text-[#111827]'
-                  }`
-                }
-              >
-                {item.icon}
-                {item.label}
-                {item.badge && (
-                  <span className="ml-auto text-[10px] font-black bg-[#0D4C3C] text-white px-1.5 py-0.5 rounded">
-                    {item.badge}
-                  </span>
-                )}
-              </NavLink>
-            ))}
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto min-h-0">
-          <Outlet />
-        </div>
-      </div>
+    <div className="h-full overflow-y-auto min-h-0">
+      <Outlet />
     </div>
   );
 }
+

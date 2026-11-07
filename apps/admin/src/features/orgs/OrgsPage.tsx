@@ -119,7 +119,7 @@ export function OrgsPage() {
             placeholder="Search orgs or owner…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"
           />
         </div>
         <Dropdown
@@ -140,7 +140,7 @@ export function OrgsPage() {
       <div className="bg-white shadow-sm rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-[#E5EAE8] bg-[#F8FAF9]">
+            <tr className="border-b border-[#E5E7EB] bg-[#FAFAF7]">
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Organization</th>
               <th className="px-5 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Owner</th>
@@ -155,7 +155,7 @@ export function OrgsPage() {
                 <tr key={i}>
                   {Array.from({ length: 6 }).map((_, j) => (
                     <td key={j} className="px-5 py-4">
-                      <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-24" />
+                      <div className="h-3.5 bg-[#E5E7EB] rounded animate-pulse w-24" />
                     </td>
                   ))}
                 </tr>
@@ -168,7 +168,7 @@ export function OrgsPage() {
               </tr>
             ) : (
               filtered.map((org) => (
-                <tr key={org.id} className="hover:bg-[#F8FAF9] transition-colors">
+                <tr key={org.id} className="hover:bg-[#FAFAF7] transition-colors">
                   <td className="px-5 py-4">
                     <span className="font-mono text-xs text-[#6B7280]">
                       {org.display_id != null ? `#${org.display_id}` : '—'}
@@ -178,7 +178,7 @@ export function OrgsPage() {
                     {org.display_id != null ? (
                       <Link
                         to={`/organizations/${org.display_id}`}
-                        className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline"
+                        className="font-medium text-[#111827] hover:text-[#6C55E8] hover:underline"
                       >
                         {org.name}
                       </Link>
@@ -209,3 +209,4 @@ export function OrgsPage() {
     </div>
   );
 }
+

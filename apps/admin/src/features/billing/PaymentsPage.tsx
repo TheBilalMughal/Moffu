@@ -149,8 +149,8 @@ function MrrTrendChart({ records }: { records: BillingRecord[] }) {
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
         <defs>
           <linearGradient id="mrrGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#0D4C3C" stopOpacity="0.12"/>
-            <stop offset="100%" stopColor="#0D4C3C" stopOpacity="0"/>
+            <stop offset="0%" stopColor="#6C55E8" stopOpacity="0.12"/>
+            <stop offset="100%" stopColor="#6C55E8" stopOpacity="0"/>
           </linearGradient>
         </defs>
         {gridLines.map((g) => (
@@ -163,10 +163,10 @@ function MrrTrendChart({ records }: { records: BillingRecord[] }) {
           <text key={i} x={p.x} y={H - 4} textAnchor="middle" fontSize="9" fill="#9CA3AF">{p.label}</text>
         ))}
         <path d={areaPath} fill="url(#mrrGrad)"/>
-        <path d={linePath} fill="none" stroke="#0D4C3C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d={linePath} fill="none" stroke="#6C55E8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         {pts.map((p, i) => (
           <g key={i}>
-            <circle cx={p.x} cy={p.y} r="3" fill="#0D4C3C"/>
+            <circle cx={p.x} cy={p.y} r="3" fill="#6C55E8"/>
             <title>{p.label}: {fmt(p.mrr)}</title>
           </g>
         ))}
@@ -237,9 +237,9 @@ function SavedFiltersPopover({ current, onLoad, onClose }: {
         <p className="text-xs font-semibold text-[#374151] mb-2">Save current filters</p>
         <div className="flex gap-2">
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Filter name…"
-            className="flex-1 text-xs border border-[#E5EAE8] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#0D4C3C]"/>
+            className="flex-1 text-xs border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#6C55E8]"/>
           <button onClick={saveNow} disabled={!name.trim()}
-            className="px-3 py-1.5 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-40 rounded-lg transition-colors">Save</button>
+            className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] disabled:opacity-40 rounded-lg transition-colors">Save</button>
         </div>
       </div>
       <div className="max-h-48 overflow-y-auto">
@@ -249,7 +249,7 @@ function SavedFiltersPopover({ current, onLoad, onClose }: {
           <div className="divide-y divide-[#F9FAFB]">
             {saved.map((s, i) => (
               <div key={i} className="flex items-center gap-2 px-4 py-2.5">
-                <button onClick={() => { onLoad(s); onClose(); }} className="flex-1 text-xs text-left font-medium text-[#374151] hover:text-[#0D4C3C] truncate">{s.name}</button>
+                <button onClick={() => { onLoad(s); onClose(); }} className="flex-1 text-xs text-left font-medium text-[#374151] hover:text-[#6C55E8] truncate">{s.name}</button>
                 <button onClick={() => remove(i)} className="text-[#9CA3AF] hover:text-red-500 transition-colors">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -428,7 +428,7 @@ export function PaymentsPage() {
             <>
               <div className="relative">
                 <button onClick={() => setShowSaved((v) => !v)}
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
                   Saved Filters
                 </button>
@@ -441,7 +441,7 @@ export function PaymentsPage() {
                 )}
               </div>
               <button onClick={() => exportCSV(filtered)}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-[#0D4C3C] hover:bg-[#083F32] rounded-lg transition-colors">
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg transition-colors">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 Export CSV
               </button>
@@ -487,11 +487,11 @@ export function PaymentsPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-[#E5EAE8] mb-5">
+      <div className="flex border-b border-[#E5E7EB] mb-5">
         {(['billing', 'refunds'] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`px-4 py-2.5 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${
-              activeTab === tab ? 'border-[#0D4C3C] text-[#0D4C3C]' : 'border-transparent text-[#6B7280] hover:text-[#374151]'
+              activeTab === tab ? 'border-[#6C55E8] text-[#6C55E8]' : 'border-transparent text-[#6B7280] hover:text-[#374151]'
             }`}>
             {tab === 'billing' ? 'Billing Records' : 'Refunds'}
           </button>
@@ -500,7 +500,7 @@ export function PaymentsPage() {
 
       {activeTab === 'refunds' && (
         <div className="bg-white shadow-sm rounded-xl px-8 py-12 text-center">
-          <svg className="w-10 h-10 text-[#E5EAE8] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          <svg className="w-10 h-10 text-[#E5E7EB] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
           <p className="text-sm font-semibold text-[#374151] mb-1">Stripe not yet configured</p>
           <p className="text-xs text-[#9CA3AF] max-w-xs mx-auto">Refund management will be available after Stripe integration is configured in Phase 6. All refunds will be tracked, audited, and reconciled here.</p>
         </div>
@@ -513,7 +513,7 @@ export function PaymentsPage() {
             <div className="relative flex-1 min-w-[200px] max-w-xs">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
               <input type="search" placeholder="Search client or email…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="w-full pl-9 pr-3 py-2 text-sm shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"/>
+                className="w-full pl-9 pr-3 py-2 text-sm shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"/>
             </div>
             <Dropdown clearable placeholder="All plans" value={planFilter} onChange={(v) => { setPlanFilter(v); setPage(1); }}
               options={[{ value:'free',label:'Free' },{ value:'starter',label:'Starter' },{ value:'growth',label:'Growth' },{ value:'scale',label:'Scale' }]}/>
@@ -534,7 +534,7 @@ export function PaymentsPage() {
           {/* Table */}
           <div className="bg-white shadow-sm rounded-xl">
             <table className="w-full text-sm">
-              <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+              <thead className="bg-[#FAFAF7] border-b border-[#E5E7EB] sticky top-0 z-10">
                 <tr>
                   <th className="px-4 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
                   <th className="px-4 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Client</th>
@@ -560,7 +560,7 @@ export function PaymentsPage() {
               <tbody className="divide-y divide-[#F3F4F6]">
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => (
-                    <tr key={i}>{Array.from({ length: 9 }).map((_, j) => (<td key={j} className="px-4 py-1.5"><div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-16"/></td>))}</tr>
+                    <tr key={i}>{Array.from({ length: 9 }).map((_, j) => (<td key={j} className="px-4 py-1.5"><div className="h-3.5 bg-[#E5E7EB] rounded animate-pulse w-16"/></td>))}</tr>
                   ))
                 ) : pageRows.length === 0 ? (
                   <tr><td colSpan={9} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
@@ -568,14 +568,14 @@ export function PaymentsPage() {
                   </td></tr>
                 ) : (
                   pageRows.map((r) => (
-                    <tr key={r.subId} className="hover:bg-[#F8FAF9] transition-colors">
+                    <tr key={r.subId} className="hover:bg-[#FAFAF7] transition-colors">
                       <td className="px-4 py-1.5">
                         <span className="font-mono text-xs text-[#9CA3AF]">{formatId(r.orgRefId)}</span>
                       </td>
                       <td className="px-4 py-1.5">
                         <div className="min-w-0">
                           {r.orgRefId ? (
-                            <Link to={`/clients/${refToSlug(r.orgRefId)}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline text-sm">{r.orgName ?? '—'}</Link>
+                            <Link to={`/clients/${refToSlug(r.orgRefId)}`} className="font-medium text-[#111827] hover:text-[#6C55E8] hover:underline text-sm">{r.orgName ?? '—'}</Link>
                           ) : (
                             <span className="font-medium text-[#111827] text-sm">{r.orgName ?? <span className="text-[#9CA3AF]">No org</span>}</span>
                           )}
@@ -621,7 +621,7 @@ export function PaymentsPage() {
 
             {/* Footer with total + pagination */}
             {!loading && filtered.length > 0 && (
-              <div className="px-5 py-3 border-t border-[#F3F4F6] bg-[#F8FAF9] flex items-center justify-between">
+              <div className="px-5 py-3 border-t border-[#F3F4F6] bg-[#FAFAF7] flex items-center justify-between">
                 {totalPages > 1 ? (
                   <p className="text-xs text-[#9CA3AF]">
                     {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
@@ -632,7 +632,7 @@ export function PaymentsPage() {
                 <div className="flex items-center gap-6">
                   {filteredTotal > 0 && (
                     <p className="text-xs font-semibold text-[#374151]">
-                      Filtered total: <span className="text-[#0D4C3C]">{fmt(filteredTotal)}</span>
+                      Filtered total: <span className="text-[#6C55E8]">{fmt(filteredTotal)}</span>
                     </p>
                   )}
                   {totalPages > 1 && (
@@ -650,7 +650,7 @@ export function PaymentsPage() {
                         const p = start + i;
                         return (
                           <button key={p} onClick={() => setPage(p)}
-                            className={`w-7 h-7 text-xs rounded transition-colors ${p === page ? 'bg-[#0D4C3C] text-white' : 'text-[#6B7280] hover:bg-[#F3F4F6]'}`}>
+                            className={`w-7 h-7 text-xs rounded transition-colors ${p === page ? 'bg-[#111111] text-white' : 'text-[#6B7280] hover:bg-[#F3F4F6]'}`}>
                             {p}
                           </button>
                         );
@@ -674,3 +674,4 @@ export function PaymentsPage() {
     </div>
   );
 }
+

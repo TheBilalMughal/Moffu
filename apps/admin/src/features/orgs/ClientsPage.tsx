@@ -185,7 +185,7 @@ export function ClientsPage() {
             placeholder="Search clients or email…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+            className="w-full pl-9 pr-3 py-2 text-sm shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"
           />
         </div>
         <Dropdown
@@ -207,7 +207,7 @@ export function ClientsPage() {
         <div className="h-full flex flex-col bg-white shadow-sm rounded-xl overflow-hidden">
           <div className="flex-1 overflow-auto">
             <table className="w-full text-sm">
-              <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+              <thead className="bg-[#FAFAF7] border-b border-[#E5E7EB] sticky top-0 z-10">
                 <tr>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">ID</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Client Name</th>
@@ -225,7 +225,7 @@ export function ClientsPage() {
                     <tr key={i}>
                       {Array.from({ length: 8 }).map((_, j) => (
                         <td key={j} className="px-5 py-1.5">
-                          <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-20" />
+                          <div className="h-3.5 bg-[#E5E7EB] rounded animate-pulse w-20" />
                         </td>
                       ))}
                     </tr>
@@ -240,13 +240,13 @@ export function ClientsPage() {
                   filtered.map((c) => {
                     const isSuspended = c.status === 'suspended';
                     return (
-                      <tr key={c.id} className="hover:bg-[#F8FAF9] transition-colors">
+                      <tr key={c.id} className="hover:bg-[#FAFAF7] transition-colors">
                         <td className="px-5 py-1.5">
                           <span className="font-mono text-xs text-[#6B7280]">{formatId(c.ref_id)}</span>
                         </td>
                         <td className="px-5 py-1.5">
                           {c.ref_id != null ? (
-                            <Link to={`/clients/${refToSlug(c.ref_id)}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
+                            <Link to={`/clients/${refToSlug(c.ref_id)}`} className="font-medium text-[#111827] hover:text-[#6C55E8] hover:underline">
                               {c.name}
                             </Link>
                           ) : (
@@ -270,15 +270,15 @@ export function ClientsPage() {
                         <td className="px-5 py-1.5 text-right">
                           <div className="flex items-center justify-end gap-3">
                             {c.ref_id != null ? (
-                              <Link to={`/clients/${refToSlug(c.ref_id)}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>
+                              <Link to={`/clients/${refToSlug(c.ref_id)}`} className="text-xs font-medium text-[#6C55E8] hover:underline">View</Link>
                             ) : (
                               <span className="text-xs text-[#9CA3AF]">View</span>
                             )}
-                            <span className="text-[#E5EAE8]">|</span>
+                            <span className="text-[#E5E7EB]">|</span>
                             <button
                               onClick={() => handleDeactivate(c)}
                               disabled={deactivating === c.id}
-                              className={`text-xs font-medium hover:underline disabled:opacity-50 ${isSuspended ? 'text-[#0D4C3C]' : 'text-red-600'}`}
+                              className={`text-xs font-medium hover:underline disabled:opacity-50 ${isSuspended ? 'text-[#6C55E8]' : 'text-red-600'}`}
                             >
                               {deactivating === c.id ? '…' : isSuspended ? 'Reactivate' : 'Deactivate'}
                             </button>
@@ -296,3 +296,4 @@ export function ClientsPage() {
     </div>
   );
 }
+

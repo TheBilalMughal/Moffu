@@ -79,7 +79,7 @@ export function AuditPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex-shrink-0 border-b border-[#E5EAE8] px-8 pb-3">
+      <div className="flex-shrink-0 border-b border-[#E5E7EB] px-8 pb-3">
         <div className="relative max-w-xs">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -89,7 +89,7 @@ export function AuditPage() {
             placeholder="Filter events…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"
           />
         </div>
       </div>
@@ -99,7 +99,7 @@ export function AuditPage() {
         <div className="h-full flex flex-col bg-white shadow-sm rounded-xl overflow-hidden">
           <div className="flex-1 overflow-auto">
             <table className="w-full text-sm">
-              <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+              <thead className="bg-[#FAFAF7] border-b border-[#E5E7EB] sticky top-0 z-10">
                 <tr>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Time</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Actor</th>
@@ -114,7 +114,7 @@ export function AuditPage() {
                     <tr key={i}>
                       {Array.from({ length: 5 }).map((_, j) => (
                         <td key={j} className="px-5 py-1.5">
-                          <div className="h-3 bg-[#E5EAE8] rounded animate-pulse w-24" />
+                          <div className="h-3 bg-[#E5E7EB] rounded animate-pulse w-24" />
                         </td>
                       ))}
                     </tr>
@@ -127,7 +127,7 @@ export function AuditPage() {
                   </tr>
                 ) : (
                   filtered.map((e) => (
-                    <tr key={e.id} className="hover:bg-[#F8FAF9] transition-colors">
+                    <tr key={e.id} className="hover:bg-[#FAFAF7] transition-colors">
                       <td className="px-5 py-1.5 text-xs text-[#9CA3AF] whitespace-nowrap">
                         {new Date(e.created_at).toLocaleString()}
                       </td>
@@ -160,3 +160,4 @@ export function AuditPage() {
     </div>
   );
 }
+

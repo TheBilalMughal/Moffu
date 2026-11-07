@@ -107,7 +107,7 @@ function UsageTrendChart({
 
   return (
     <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] flex items-center justify-between flex-wrap gap-3">
+      <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7] flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-6">
           <div>
             <p className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">AI Drafts (mo)</p>
@@ -128,8 +128,8 @@ function UsageTrendChart({
           <div>
             <p className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Quota</p>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <div className="w-20 h-1.5 bg-[#E5EAE8] rounded-full overflow-hidden">
-                <div className="h-full bg-[#0D4C3C] rounded-full" style={{ width: `${usagePct}%` }} />
+              <div className="w-20 h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
+                <div className="h-full bg-[#111111] rounded-full" style={{ width: `${usagePct}%` }} />
               </div>
               <span className="text-xs font-semibold text-[#374151]">{usagePct}%</span>
               <span className="text-[10px] text-[#9CA3AF]">/{usageLimit === 999999 ? '∞' : usageLimit}</span>
@@ -165,7 +165,7 @@ function UsageTrendChart({
             const pH = Math.max(0, (b.published / maxVal) * H);
             return (
               <g key={b.isoKey}>
-                {b.drafts > 0 && <rect x={cx - barW - 1} y={H - dH} width={barW} height={dH} fill="#0D4C3C" rx="1" />}
+                {b.drafts > 0 && <rect x={cx - barW - 1} y={H - dH} width={barW} height={dH} fill="#6C55E8" rx="1" />}
                 {b.drafts === 0 && <circle cx={cx - barW / 2 - 0.5} cy={H} r="1.5" fill="#9CA3AF" />}
                 {b.published > 0 && <rect x={cx + 1} y={H - pH} width={barW} height={pH} fill="#6EE7B7" rx="1" />}
                 {b.published === 0 && <circle cx={cx + barW / 2 + 0.5} cy={H} r="1.5" fill="#D1FAE5" />}
@@ -177,7 +177,7 @@ function UsageTrendChart({
           })}
         </svg>
         <div className="flex items-center gap-4 mt-1">
-          <div className="flex items-center gap-1.5"><div className="w-3 h-2 rounded-sm bg-[#0D4C3C]" /><span className="text-[10px] text-[#9CA3AF]">AI Drafts</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-3 h-2 rounded-sm bg-[#111111]" /><span className="text-[10px] text-[#9CA3AF]">AI Drafts</span></div>
           <div className="flex items-center gap-1.5"><div className="w-3 h-2 rounded-sm bg-[#6EE7B7]" /><span className="text-[10px] text-[#9CA3AF]">Replies</span></div>
         </div>
       </div>
@@ -509,9 +509,9 @@ export function ClientDetailPage() {
 
   if (loading) return (
     <div className="px-8 py-8">
-      <div className="h-4 bg-[#E5EAE8] rounded animate-pulse w-48 mb-8" />
-      <div className="grid grid-cols-3 gap-4 mb-6">{[0,1,2].map(i => <div key={i} className="h-24 bg-[#E5EAE8] rounded-xl animate-pulse" />)}</div>
-      <div className="h-48 bg-[#E5EAE8] rounded-xl animate-pulse" />
+      <div className="h-4 bg-[#E5E7EB] rounded animate-pulse w-48 mb-8" />
+      <div className="grid grid-cols-3 gap-4 mb-6">{[0,1,2].map(i => <div key={i} className="h-24 bg-[#E5E7EB] rounded-xl animate-pulse" />)}</div>
+      <div className="h-48 bg-[#E5E7EB] rounded-xl animate-pulse" />
     </div>
   );
 
@@ -566,15 +566,15 @@ export function ClientDetailPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex items-center gap-0 border-b border-[#E5EAE8] mb-6 overflow-x-auto">
+      <div className="flex items-center gap-0 border-b border-[#E5E7EB] mb-6 overflow-x-auto">
         {TABS.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
-              activeTab === tab.id ? 'border-[#0D4C3C] text-[#0D4C3C]' : 'border-transparent text-[#6B7280] hover:text-[#374151]'
+              activeTab === tab.id ? 'border-[#6C55E8] text-[#6C55E8]' : 'border-transparent text-[#6B7280] hover:text-[#374151]'
             }`}>
             {tab.label}
             {tab.badge !== undefined && tab.badge > 0 && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#E5EAE8] text-[#374151]">{tab.badge}</span>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#E5E7EB] text-[#374151]">{tab.badge}</span>
             )}
           </button>
         ))}
@@ -586,7 +586,7 @@ export function ClientDetailPage() {
           <UsageTrendChart events={rawUsageEvents} aiDrafts={usage?.aiDrafts ?? 0} published={usage?.published ?? 0}
             members={members.length} connections={connections.length} usagePct={usagePct} usageLimit={usage?.limit ?? 50} />
           <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]"><h2 className="text-sm font-semibold text-[#111827]">Organisation</h2></div>
+            <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]"><h2 className="text-sm font-semibold text-[#111827]">Organisation</h2></div>
             <dl className="divide-y divide-[#F3F4F6]">
               {[
                 { label: 'ID', value: <span className="font-mono text-xs">{formatId(org.ref_id)}</span> },
@@ -609,7 +609,7 @@ export function ClientDetailPage() {
         <div className="space-y-4">
           {/* Subscription card */}
           <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7] flex items-center justify-between">
               <h2 className="text-sm font-semibold text-[#111827]">Subscription</h2>
               {sub?.cancel_at_period_end && <span className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded">Cancels at period end</span>}
             </div>
@@ -637,21 +637,21 @@ export function ClientDetailPage() {
             </dl>
             {/* Change Plan */}
             {plans.length > 0 && (
-              <div className="px-6 py-4 border-t border-[#F3F4F6] bg-[#F8FAF9]">
+              <div className="px-6 py-4 border-t border-[#F3F4F6] bg-[#FAFAF7]">
                 <p className="text-xs font-semibold text-[#374151] uppercase tracking-wide mb-2">Change Plan</p>
                 <div className="flex items-center gap-2">
                   <div className="flex-1"><Dropdown fullWidth value={selectedPlanId} onChange={setSelectedPlanId} options={plans.map(p => ({ value: p.id, label: p.name }))} /></div>
                   <button onClick={handleChangePlan} disabled={changingPlan || !selectedPlanId || selectedPlanId === sub?.plan_id}
-                    className="px-3 py-2 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-50 rounded transition-colors">
+                    className="px-3 py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] disabled:opacity-50 rounded transition-colors">
                     {changingPlan ? '…' : 'Apply'}
                   </button>
                 </div>
-                {planMsg && <p className={`mt-2 text-xs ${planMsg.startsWith('Error') ? 'text-red-600' : 'text-[#0D4C3C]'}`}>{planMsg}</p>}
+                {planMsg && <p className={`mt-2 text-xs ${planMsg.startsWith('Error') ? 'text-red-600' : 'text-[#6C55E8]'}`}>{planMsg}</p>}
               </div>
             )}
             {/* History */}
             <div className="border-t border-[#F3F4F6]">
-              <div className="px-6 py-3 bg-[#F8FAF9] flex items-center justify-between">
+              <div className="px-6 py-3 bg-[#FAFAF7] flex items-center justify-between">
                 <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide">History</p>
                 <span className="text-[10px] text-[#9CA3AF]">{subHistory.length} event{subHistory.length !== 1 ? 's' : ''}</span>
               </div>
@@ -666,7 +666,7 @@ export function ClientDetailPage() {
                     const planTo = meta.to_plan as string | undefined;
                     return (
                       <div key={h.id} className="px-6 py-3 flex items-center gap-3">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#0D4C3C] flex-shrink-0 mt-0.5" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#111111] flex-shrink-0 mt-0.5" />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs text-[#374151] capitalize font-medium">{label}</p>
                           {planFrom && planTo && <p className="text-[10px] text-[#9CA3AF] mt-0.5"><span className="font-semibold">{planFrom}</span>{' → '}<span className="font-semibold">{planTo}</span></p>}
@@ -682,14 +682,14 @@ export function ClientDetailPage() {
 
           {/* Custom Override */}
           <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-semibold text-[#111827]">Custom Override</h2>
                 {override && !overrideEditing && <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-[#FEF3C7] text-[#92400E]">Active</span>}
               </div>
               {!overrideEditing && (
                 <button onClick={() => { setOverrideMsg(null); setOverrideEditing(true); }}
-                  className="px-3 py-1.5 text-xs font-semibold text-[#0D4C3C] border border-[#0D4C3C]/30 rounded-lg hover:bg-[#E6F2EE] transition-colors">
+                  className="px-3 py-1.5 text-xs font-semibold text-[#6C55E8] border border-[#6C55E8]/30 rounded-lg hover:bg-[#D8CCFF] transition-colors">
                   {override ? 'Edit' : 'Set Override'}
                 </button>
               )}
@@ -723,7 +723,7 @@ export function ClientDetailPage() {
                     )}
                   </div>
                 )}
-                {overrideMsg && <p className={`mt-3 text-xs ${overrideMsg.startsWith('Error') ? 'text-red-600' : 'text-[#0D4C3C]'}`}>{overrideMsg}</p>}
+                {overrideMsg && <p className={`mt-3 text-xs ${overrideMsg.startsWith('Error') ? 'text-red-600' : 'text-[#6C55E8]'}`}>{overrideMsg}</p>}
               </div>
             )}
             {overrideEditing && (
@@ -734,43 +734,43 @@ export function ClientDetailPage() {
                     <div className="flex items-center justify-between mb-1">
                       <label className="text-xs font-medium text-[#374151]">AI Drafts / month</label>
                       <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input type="checkbox" checked={overrideForm.ai_drafts_unlimited} onChange={e => setOverrideForm(f => ({ ...f, ai_drafts_unlimited: e.target.checked }))} className="w-3.5 h-3.5 accent-[#0D4C3C]" />
+                        <input type="checkbox" checked={overrideForm.ai_drafts_unlimited} onChange={e => setOverrideForm(f => ({ ...f, ai_drafts_unlimited: e.target.checked }))} className="w-3.5 h-3.5 accent-[#6C55E8]" />
                         <span className="text-xs text-[#6B7280]">Unlimited</span>
                       </label>
                     </div>
-                    <input type="number" min="0" disabled={overrideForm.ai_drafts_unlimited} value={overrideForm.ai_drafts} onChange={e => setOverrideForm(f => ({ ...f, ai_drafts: e.target.value }))} placeholder="blank = use plan" className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
+                    <input type="number" min="0" disabled={overrideForm.ai_drafts_unlimited} value={overrideForm.ai_drafts} onChange={e => setOverrideForm(f => ({ ...f, ai_drafts: e.target.value }))} placeholder="blank = use plan" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
                   </div>
                   {/* Replies */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="text-xs font-medium text-[#374151]">Published Replies / month</label>
                       <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input type="checkbox" checked={overrideForm.replies_unlimited} onChange={e => setOverrideForm(f => ({ ...f, replies_unlimited: e.target.checked }))} className="w-3.5 h-3.5 accent-[#0D4C3C]" />
+                        <input type="checkbox" checked={overrideForm.replies_unlimited} onChange={e => setOverrideForm(f => ({ ...f, replies_unlimited: e.target.checked }))} className="w-3.5 h-3.5 accent-[#6C55E8]" />
                         <span className="text-xs text-[#6B7280]">Unlimited</span>
                       </label>
                     </div>
-                    <input type="number" min="0" disabled={overrideForm.replies_unlimited} value={overrideForm.replies} onChange={e => setOverrideForm(f => ({ ...f, replies: e.target.value }))} placeholder="blank = use plan" className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
+                    <input type="number" min="0" disabled={overrideForm.replies_unlimited} value={overrideForm.replies} onChange={e => setOverrideForm(f => ({ ...f, replies: e.target.value }))} placeholder="blank = use plan" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
                   </div>
                   {/* Locations */}
                   <div>
                     <label className="block text-xs font-medium text-[#374151] mb-1">Max Locations</label>
-                    <input type="number" min="1" value={overrideForm.locations} onChange={e => setOverrideForm(f => ({ ...f, locations: e.target.value }))} placeholder="blank = use plan" className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:border-[#0D4C3C]" />
+                    <input type="number" min="1" value={overrideForm.locations} onChange={e => setOverrideForm(f => ({ ...f, locations: e.target.value }))} placeholder="blank = use plan" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:border-[#6C55E8]" />
                   </div>
                   {/* Team members */}
                   <div>
                     <label className="block text-xs font-medium text-[#374151] mb-1">Max Team Members</label>
-                    <input type="number" min="1" value={overrideForm.team_members} onChange={e => setOverrideForm(f => ({ ...f, team_members: e.target.value }))} placeholder="blank = use plan" className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:border-[#0D4C3C]" />
+                    <input type="number" min="1" value={overrideForm.team_members} onChange={e => setOverrideForm(f => ({ ...f, team_members: e.target.value }))} placeholder="blank = use plan" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:border-[#6C55E8]" />
                   </div>
                   {/* Campaign emails */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="text-xs font-medium text-[#374151]">Campaign Emails / month</label>
                       <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input type="checkbox" checked={overrideForm.campaign_emails_unlimited} onChange={e => setOverrideForm(f => ({ ...f, campaign_emails_unlimited: e.target.checked }))} className="w-3.5 h-3.5 accent-[#0D4C3C]" />
+                        <input type="checkbox" checked={overrideForm.campaign_emails_unlimited} onChange={e => setOverrideForm(f => ({ ...f, campaign_emails_unlimited: e.target.checked }))} className="w-3.5 h-3.5 accent-[#6C55E8]" />
                         <span className="text-xs text-[#6B7280]">Unlimited</span>
                       </label>
                     </div>
-                    <input type="number" min="0" disabled={overrideForm.campaign_emails_unlimited} value={overrideForm.campaign_emails} onChange={e => setOverrideForm(f => ({ ...f, campaign_emails: e.target.value }))} placeholder="blank = use plan" className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
+                    <input type="number" min="0" disabled={overrideForm.campaign_emails_unlimited} value={overrideForm.campaign_emails} onChange={e => setOverrideForm(f => ({ ...f, campaign_emails: e.target.value }))} placeholder="blank = use plan" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
                   </div>
                   {/* Custom price */}
                   <div>
@@ -778,7 +778,7 @@ export function ClientDetailPage() {
                     <div className="flex gap-2">
                       <div className="relative flex-1">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#9CA3AF]">$</span>
-                        <input type="number" min="0" step="0.01" value={overrideForm.custom_price} onChange={e => setOverrideForm(f => ({ ...f, custom_price: e.target.value }))} placeholder="e.g. 299" className="w-full pl-6 pr-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:border-[#0D4C3C]" />
+                        <input type="number" min="0" step="0.01" value={overrideForm.custom_price} onChange={e => setOverrideForm(f => ({ ...f, custom_price: e.target.value }))} placeholder="e.g. 299" className="w-full pl-6 pr-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:border-[#6C55E8]" />
                       </div>
                       <Dropdown value={overrideForm.billing_interval} onChange={v => setOverrideForm(f => ({ ...f, billing_interval: v }))}
                         options={[{ value: 'monthly', label: '/ month' }, { value: 'annual', label: '/ year' }]} />
@@ -788,25 +788,25 @@ export function ClientDetailPage() {
                   {/* Contract dates */}
                   <div>
                     <label className="block text-xs font-medium text-[#374151] mb-1">Contract Start</label>
-                    <input type="date" value={overrideForm.contract_start} onChange={e => setOverrideForm(f => ({ ...f, contract_start: e.target.value }))} className="w-full text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] border border-[#E5EAE8] focus:outline-none focus:border-[#0D4C3C]" />
+                    <input type="date" value={overrideForm.contract_start} onChange={e => setOverrideForm(f => ({ ...f, contract_start: e.target.value }))} className="w-full text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] border border-[#E5E7EB] focus:outline-none focus:border-[#6C55E8]" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-[#374151] mb-1">Contract End</label>
-                    <input type="date" value={overrideForm.contract_end} onChange={e => setOverrideForm(f => ({ ...f, contract_end: e.target.value }))} className="w-full text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] border border-[#E5EAE8] focus:outline-none focus:border-[#0D4C3C]" />
+                    <input type="date" value={overrideForm.contract_end} onChange={e => setOverrideForm(f => ({ ...f, contract_end: e.target.value }))} className="w-full text-xs shadow-sm rounded-xl px-3 py-2 text-[#374151] border border-[#E5E7EB] focus:outline-none focus:border-[#6C55E8]" />
                   </div>
                 </div>
                 <div className="mt-4">
                   <label className="block text-xs font-medium text-[#374151] mb-1">Internal Notes</label>
-                  <textarea rows={3} value={overrideForm.notes} onChange={e => setOverrideForm(f => ({ ...f, notes: e.target.value }))} placeholder="e.g. Negotiated by sales, includes onboarding support" className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:border-[#0D4C3C] resize-none" />
+                  <textarea rows={3} value={overrideForm.notes} onChange={e => setOverrideForm(f => ({ ...f, notes: e.target.value }))} placeholder="e.g. Negotiated by sales, includes onboarding support" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:border-[#6C55E8] resize-none" />
                 </div>
                 <div className="mt-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {override && <button onClick={handleClearOverride} disabled={clearingOverride} className="px-3 py-2 text-xs font-medium text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50">{clearingOverride ? 'Clearing…' : 'Clear Override'}</button>}
-                    {overrideMsg && <p className={`text-xs ${overrideMsg.startsWith('Error') ? 'text-red-600' : 'text-[#0D4C3C]'}`}>{overrideMsg}</p>}
+                    {overrideMsg && <p className={`text-xs ${overrideMsg.startsWith('Error') ? 'text-red-600' : 'text-[#6C55E8]'}`}>{overrideMsg}</p>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => { setOverrideEditing(false); setOverrideMsg(null); }} className="px-3 py-2 text-xs font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors">Cancel</button>
-                    <button onClick={handleSaveOverride} disabled={savingOverride} className="px-4 py-2 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#0a3d30] rounded-lg transition-colors disabled:opacity-50">{savingOverride ? 'Saving…' : 'Save'}</button>
+                    <button onClick={() => { setOverrideEditing(false); setOverrideMsg(null); }} className="px-3 py-2 text-xs font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors">Cancel</button>
+                    <button onClick={handleSaveOverride} disabled={savingOverride} className="px-4 py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-[#0a3d30] rounded-lg transition-colors disabled:opacity-50">{savingOverride ? 'Saving…' : 'Save'}</button>
                   </div>
                 </div>
               </div>
@@ -818,7 +818,7 @@ export function ClientDetailPage() {
       {/* ── Members Tab ── */}
       {activeTab === 'members' && (
         <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]"><h2 className="text-sm font-semibold text-[#111827]">Team Members</h2></div>
+          <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]"><h2 className="text-sm font-semibold text-[#111827]">Team Members</h2></div>
           {impersonateErr && <div className="mx-6 mt-3 px-3 py-2 bg-[#FEF2F2] text-red-700 text-xs rounded-lg">{impersonateErr}</div>}
           {members.length === 0 ? <p className="px-6 py-8 text-sm text-[#9CA3AF] text-center">No members found.</p> : (
             <table className="w-full text-sm">
@@ -833,7 +833,7 @@ export function ClientDetailPage() {
               </thead>
               <tbody className="divide-y divide-[#F3F4F6]">
                 {members.map(m => (
-                  <tr key={m.user_id} className="hover:bg-[#F8FAF9]">
+                  <tr key={m.user_id} className="hover:bg-[#FAFAF7]">
                     <td className="px-5 py-3.5 font-medium text-[#111827]">{m.display_name ?? '—'}</td>
                     <td className="px-5 py-3.5 text-[#374151] text-xs">{m.email ?? '—'}</td>
                     <td className="px-5 py-3.5">
@@ -844,7 +844,7 @@ export function ClientDetailPage() {
                       <td className="px-5 py-3.5 text-right">
                         <button onClick={() => handleImpersonate(m.user_id)} disabled={impersonating === m.user_id}
                           title={`Impersonate ${m.display_name ?? m.email ?? 'user'} in the portal`}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F8FAF9] hover:border-[#0D4C3C] hover:text-[#0D4C3C] transition-colors disabled:opacity-50">
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#FAFAF7] hover:border-[#6C55E8] hover:text-[#6C55E8] transition-colors disabled:opacity-50">
                           {impersonating === m.user_id
                             ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                             : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
@@ -873,7 +873,7 @@ export function ClientDetailPage() {
             ].map(({ label, value }) => (
               <div key={label} className="bg-white shadow-sm rounded-xl px-5 py-4">
                 <p className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-1">{label}</p>
-                <p className="text-2xl font-bold text-[#0D4C3C]">{value}</p>
+                <p className="text-2xl font-bold text-[#6C55E8]">{value}</p>
               </div>
             ))}
           </div>
@@ -889,7 +889,7 @@ export function ClientDetailPage() {
                 return (
                   <div key={g.id} className="bg-white shadow-sm rounded-xl overflow-hidden">
                     {/* Connection header */}
-                    <div className="px-5 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] flex items-center gap-3">
+                    <div className="px-5 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7] flex items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-[#111827] truncate">{g.google_email ?? '—'}</p>
                         <p className="text-xs text-[#9CA3AF] mt-0.5">Connected {formatDate(g.connected_at)}</p>
@@ -912,7 +912,7 @@ export function ClientDetailPage() {
                         </thead>
                         <tbody className="divide-y divide-[#F3F4F6]">
                           {locs.map(loc => (
-                            <tr key={loc.id} className="hover:bg-[#F8FAF9]">
+                            <tr key={loc.id} className="hover:bg-[#FAFAF7]">
                               <td className="px-5 py-3.5 text-[#374151] font-medium">{loc.display_name ?? '—'}</td>
                               <td className="px-5 py-3.5 text-[#6B7280] text-xs">{loc.address ?? '—'}</td>
                               <td className="px-5 py-3.5">
@@ -939,7 +939,7 @@ export function ClientDetailPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             {[
-              { label: 'AI Drafts (this month)', value: usage?.aiDrafts ?? 0, color: 'text-[#0D4C3C]' },
+              { label: 'AI Drafts (this month)', value: usage?.aiDrafts ?? 0, color: 'text-[#6C55E8]' },
               { label: 'Replies (this month)', value: usage?.published ?? 0, color: 'text-[#059669]' },
               { label: 'Events (12 months)', value: rawUsageEvents.length, color: 'text-[#374151]' },
             ].map(({ label, value, color }) => (
@@ -950,7 +950,7 @@ export function ClientDetailPage() {
             ))}
           </div>
           <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]"><h2 className="text-sm font-semibold text-[#111827]">Monthly Breakdown (12 months)</h2></div>
+            <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]"><h2 className="text-sm font-semibold text-[#111827]">Monthly Breakdown (12 months)</h2></div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-[#F3F4F6]">
@@ -971,9 +971,9 @@ export function ClientDetailPage() {
                       return { label: d.toLocaleString('en', { month: 'long', year: 'numeric' }), drafts, replies, total: drafts + replies };
                     }).reverse();
                     return rows.map(r => (
-                      <tr key={r.label} className="hover:bg-[#F8FAF9]">
+                      <tr key={r.label} className="hover:bg-[#FAFAF7]">
                         <td className="px-5 py-3 text-sm text-[#374151]">{r.label}</td>
-                        <td className="px-5 py-3 text-right text-sm font-medium text-[#0D4C3C]">{r.drafts.toLocaleString()}</td>
+                        <td className="px-5 py-3 text-right text-sm font-medium text-[#6C55E8]">{r.drafts.toLocaleString()}</td>
                         <td className="px-5 py-3 text-right text-sm font-medium text-[#059669]">{r.replies.toLocaleString()}</td>
                         <td className="px-5 py-3 text-right text-sm font-semibold text-[#111827]">{r.total.toLocaleString()}</td>
                       </tr>
@@ -990,7 +990,7 @@ export function ClientDetailPage() {
       {activeTab === 'refunds' && (
         <div className="space-y-4">
           <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] flex items-center justify-between flex-wrap gap-3">
+            <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7] flex items-center justify-between flex-wrap gap-3">
               <h2 className="text-sm font-semibold text-[#111827]">Refund Requests</h2>
               <Dropdown value={refundStatusFilter} onChange={setRefundStatusFilter}
                 options={[
@@ -1029,7 +1029,7 @@ export function ClientDetailPage() {
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {r.status === 'REQUESTED' && (
                             <button onClick={() => handleUpdateRefundStatus(r.id, 'UNDER_REVIEW')} disabled={updatingRefund === r.id}
-                              className="px-2.5 py-1.5 text-xs font-medium border border-[#E5EAE8] rounded-lg hover:bg-[#F8FAF9] transition-colors disabled:opacity-50">Review</button>
+                              className="px-2.5 py-1.5 text-xs font-medium border border-[#E5E7EB] rounded-lg hover:bg-[#FAFAF7] transition-colors disabled:opacity-50">Review</button>
                           )}
                           <button onClick={() => handleUpdateRefundStatus(r.id, 'APPROVED')} disabled={updatingRefund === r.id}
                             className="px-2.5 py-1.5 text-xs font-medium text-[#065F46] bg-[#ECFDF5] hover:bg-green-100 rounded-lg transition-colors disabled:opacity-50">Approve</button>
@@ -1053,17 +1053,17 @@ export function ClientDetailPage() {
       {/* ── Activity Tab ── */}
       {activeTab === 'activity' && (
         <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9] flex items-center justify-between">
+          <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Audit Activity</h2>
-            <button onClick={loadAudit} className="px-3 py-1.5 text-xs font-medium border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors">Refresh</button>
+            <button onClick={loadAudit} className="px-3 py-1.5 text-xs font-medium border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors">Refresh</button>
           </div>
           {auditLoading ? <p className="px-6 py-8 text-sm text-[#9CA3AF] text-center">Loading…</p> : auditEvents.length === 0 ? (
             <p className="px-6 py-8 text-sm text-[#9CA3AF] text-center">No audit events.</p>
           ) : (
             <div className="divide-y divide-[#F3F4F6]">
               {auditEvents.map(ev => (
-                <div key={ev.id} className="px-6 py-3.5 flex items-start gap-3 hover:bg-[#F8FAF9]">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#0D4C3C] flex-shrink-0 mt-1.5" />
+                <div key={ev.id} className="px-6 py-3.5 flex items-start gap-3 hover:bg-[#FAFAF7]">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#111111] flex-shrink-0 mt-1.5" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-[#374151] capitalize">{ev.action.replace(/_/g, ' ')}</p>
                     {ev.metadata && Object.keys(ev.metadata).length > 0 && (
@@ -1083,14 +1083,14 @@ export function ClientDetailPage() {
         <div className="space-y-4">
           {/* New note form */}
           <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]"><h2 className="text-sm font-semibold text-[#111827]">Add Internal Note</h2></div>
+            <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]"><h2 className="text-sm font-semibold text-[#111827]">Add Internal Note</h2></div>
             <div className="px-6 py-5">
               <textarea rows={4} value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Add a support note, observation, or escalation detail…"
-                className="w-full px-3 py-2.5 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:border-[#0D4C3C] resize-none" />
+                className="w-full px-3 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:border-[#6C55E8] resize-none" />
               {noteMsg && <p className="mt-2 text-xs text-red-600">{noteMsg}</p>}
               <div className="mt-3 flex justify-end">
                 <button onClick={handleAddNote} disabled={savingNote || !newNote.trim()}
-                  className="px-4 py-2 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#0a3d30] rounded-lg transition-colors disabled:opacity-50">
+                  className="px-4 py-2 text-xs font-semibold text-white bg-[#111111] hover:bg-[#0a3d30] rounded-lg transition-colors disabled:opacity-50">
                   {savingNote ? 'Saving…' : 'Add Note'}
                 </button>
               </div>
@@ -1098,7 +1098,7 @@ export function ClientDetailPage() {
           </div>
           {/* Notes list */}
           <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]"><h2 className="text-sm font-semibold text-[#111827]">Notes History</h2></div>
+            <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]"><h2 className="text-sm font-semibold text-[#111827]">Notes History</h2></div>
             {supportLoading ? <p className="px-6 py-8 text-sm text-[#9CA3AF] text-center">Loading…</p> : supportNotes.length === 0 ? (
               <p className="px-6 py-8 text-sm text-[#9CA3AF] text-center">No notes yet.</p>
             ) : (
@@ -1120,3 +1120,4 @@ export function ClientDetailPage() {
     </div>
   );
 }
+

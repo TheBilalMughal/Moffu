@@ -19,7 +19,7 @@ const ROLE_LABEL: Record<PlatformRole, string> = {
 };
 
 const ROLE_COLOR: Record<PlatformRole, string> = {
-  owner: 'bg-[#E6F2EE] text-[#0D4C3C]',
+  owner: 'bg-[#D8CCFF] text-[#6C55E8]',
   super_admin: 'bg-[#FEF3C7] text-[#92400E]',
   admin: 'bg-[#EDE9FE] text-[#5B21B6]',
   finance: 'bg-[#ECFDF5] text-[#065F46]',
@@ -310,7 +310,7 @@ export function PlatformMembersPage() {
         {canManage(platformRole) && (
           <button
             onClick={openAdd}
-            className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-2 bg-[#111111] hover:bg-[#6C55E8] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -331,7 +331,7 @@ export function PlatformMembersPage() {
             placeholder="Search by name or email…"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setSelected(new Set()); }}
-            className="w-full pl-9 pr-3 py-2 text-sm shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+            className="w-full pl-9 pr-3 py-2 text-sm shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"
           />
         </div>
 
@@ -343,7 +343,7 @@ export function PlatformMembersPage() {
               <button
                 onClick={handleBulkDeactivate}
                 disabled={bulkWorking}
-                className="px-3 py-1.5 text-xs font-semibold text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] disabled:opacity-50 transition-colors"
+                className="px-3 py-1.5 text-xs font-semibold text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] disabled:opacity-50 transition-colors"
               >
                 Deactivate
               </button>
@@ -378,7 +378,7 @@ export function PlatformMembersPage() {
         <div className="h-full flex flex-col bg-white shadow-sm rounded-xl overflow-hidden">
           <div className="flex-1 overflow-auto">
             <table className="w-full text-sm">
-              <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+              <thead className="bg-[#FAFAF7] border-b border-[#E5E7EB] sticky top-0 z-10">
                 <tr>
                   <th className="px-4 py-2.5 w-10">
                     <input
@@ -386,7 +386,7 @@ export function PlatformMembersPage() {
                       type="checkbox"
                       checked={allSelected}
                       onChange={toggleAll}
-                      className="w-4 h-4 accent-[#0D4C3C] cursor-pointer"
+                      className="w-4 h-4 accent-[#6C55E8] cursor-pointer"
                       aria-label="Select all"
                     />
                   </th>
@@ -405,7 +405,7 @@ export function PlatformMembersPage() {
                     <tr key={i}>
                       {Array.from({ length: 8 }).map((_, j) => (
                         <td key={j} className="px-5 py-1.5">
-                          <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-24" />
+                          <div className="h-3.5 bg-[#E5E7EB] rounded animate-pulse w-24" />
                         </td>
                       ))}
                     </tr>
@@ -420,7 +420,7 @@ export function PlatformMembersPage() {
                   filtered.map((m) => (
                     <tr
                       key={m.id}
-                      className={`hover:bg-[#F8FAF9] transition-colors ${selected.has(m.id) ? 'bg-[#F0F9F5]' : ''}`}
+                      className={`hover:bg-[#FAFAF7] transition-colors ${selected.has(m.id) ? 'bg-[#F0F9F5]' : ''}`}
                     >
                       <td className="px-4 py-1.5">
                         {m.role !== 'owner' ? (
@@ -428,7 +428,7 @@ export function PlatformMembersPage() {
                             type="checkbox"
                             checked={selected.has(m.id)}
                             onChange={() => toggleRow(m.id)}
-                            className="w-4 h-4 accent-[#0D4C3C] cursor-pointer"
+                            className="w-4 h-4 accent-[#6C55E8] cursor-pointer"
                           />
                         ) : (
                           <span title="Owner accounts cannot be selected" className="inline-block w-4 h-4 text-[#D1D5DB] text-center leading-4 cursor-not-allowed">—</span>
@@ -457,7 +457,7 @@ export function PlatformMembersPage() {
                         {m.ref_id != null ? (
                           <Link
                             to={`/users/${m.ref_id.split('-')[1]}`}
-                            className="text-xs font-medium text-[#0D4C3C] hover:underline"
+                            className="text-xs font-medium text-[#6C55E8] hover:underline"
                           >
                             View
                           </Link>
@@ -484,7 +484,7 @@ export function PlatformMembersPage() {
               <>
                 <div className="flex items-center gap-2.5 mb-4">
                   <div className="w-8 h-8 rounded-full bg-[#ECFDF5] flex items-center justify-center flex-shrink-0">
-                    <svg className="w-4 h-4 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
@@ -495,7 +495,7 @@ export function PlatformMembersPage() {
                   Share these credentials with <span className="font-medium text-[#111827]">{formName.trim()}</span>. They can reset their password from the login page.
                 </p>
 
-                <div className="bg-[#F8FAF9] border border-[#E5EAE8] rounded-lg p-4 space-y-2.5 mb-5">
+                <div className="bg-[#FAFAF7] border border-[#E5E7EB] rounded-lg p-4 space-y-2.5 mb-5">
                   <div>
                     <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-0.5">Email</p>
                     <p className="text-sm font-mono text-[#111827]">{formEmail.trim().toLowerCase()}</p>
@@ -506,7 +506,7 @@ export function PlatformMembersPage() {
                       <p className="text-sm font-mono text-[#111827] flex-1 break-all">{createdPassword}</p>
                       <button
                         onClick={() => copyPassword(createdPassword)}
-                        className="flex-shrink-0 text-xs font-medium text-[#0D4C3C] hover:underline"
+                        className="flex-shrink-0 text-xs font-medium text-[#6C55E8] hover:underline"
                       >
                         {copiedPassword ? 'Copied!' : 'Copy'}
                       </button>
@@ -516,7 +516,7 @@ export function PlatformMembersPage() {
 
                 <button
                   onClick={closeAdd}
-                  className="w-full py-2 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] rounded-lg transition-colors"
+                  className="w-full py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg transition-colors"
                 >
                   Done
                 </button>
@@ -534,7 +534,7 @@ export function PlatformMembersPage() {
                       value={formName}
                       onChange={(e) => setFormName(e.target.value)}
                       placeholder="Jane Smith"
-                      className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+                      className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"
                     />
                   </div>
 
@@ -545,7 +545,7 @@ export function PlatformMembersPage() {
                       value={formEmail}
                       onChange={(e) => setFormEmail(e.target.value)}
                       placeholder="jane@example.com"
-                      className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+                      className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"
                     />
                   </div>
 
@@ -558,7 +558,7 @@ export function PlatformMembersPage() {
                       value={formPhone}
                       onChange={(e) => setFormPhone(e.target.value)}
                       placeholder="+1 555 000 0000"
-                      className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+                      className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"
                     />
                   </div>
 
@@ -578,7 +578,7 @@ export function PlatformMembersPage() {
                       <button
                         type="button"
                         onClick={() => { const pw = generatePassword(); setFormPassword(pw); setShowPassword(true); }}
-                        className="text-xs font-medium text-[#0D4C3C] hover:underline"
+                        className="text-xs font-medium text-[#6C55E8] hover:underline"
                       >
                         Auto-generate
                       </button>
@@ -589,7 +589,7 @@ export function PlatformMembersPage() {
                         value={formPassword}
                         onChange={(e) => setFormPassword(e.target.value)}
                         placeholder="Min. 8 characters"
-                        className="w-full px-3 py-2 pr-9 text-sm border border-[#E5EAE8] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] font-mono"
+                        className="w-full px-3 py-2 pr-9 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8] font-mono"
                       />
                       <button
                         type="button"
@@ -620,14 +620,14 @@ export function PlatformMembersPage() {
                   <button
                     onClick={closeAdd}
                     disabled={saving}
-                    className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] disabled:opacity-50 transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] disabled:opacity-50 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleAdd}
                     disabled={saving || !formName.trim() || !formEmail.trim() || !formPassword.trim()}
-                    className="px-4 py-2 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] rounded-lg disabled:opacity-50 transition-colors"
+                    className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg disabled:opacity-50 transition-colors"
                   >
                     {saving ? 'Creating…' : 'Create member'}
                   </button>
@@ -642,3 +642,4 @@ export function PlatformMembersPage() {
     </div>
   );
 }
+

@@ -87,9 +87,9 @@ export function OrgDetailPage() {
   if (loading) {
     return (
       <div className="px-8 py-8 max-w-2xl">
-        <div className="h-4 bg-[#E5EAE8] rounded animate-pulse w-40 mb-8" />
+        <div className="h-4 bg-[#E5E7EB] rounded animate-pulse w-40 mb-8" />
         <div className="bg-white shadow-sm rounded-xl p-6 animate-pulse space-y-4">
-          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-4 bg-[#E5EAE8] rounded w-56" />)}
+          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-4 bg-[#E5E7EB] rounded w-56" />)}
         </div>
       </div>
     );
@@ -131,7 +131,7 @@ export function OrgDetailPage() {
       </div>
 
       <div className="bg-white shadow-sm rounded-xl overflow-hidden mb-5">
-        <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
+        <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]">
           <h2 className="text-sm font-semibold text-[#111827]">Organization details</h2>
         </div>
         <dl className="divide-y divide-[#F3F4F6]">
@@ -160,3 +160,4 @@ export function OrgDetailPage() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
@@ -144,7 +144,7 @@ export function RefundsPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search org, reason…"
-            className="w-full pl-9 pr-4 py-2 text-sm border border-[#E5EAE8] rounded-xl bg-white text-[#374151] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]" />
+            className="w-full pl-9 pr-4 py-2 text-sm border border-[#E5E7EB] rounded-xl bg-white text-[#374151] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]" />
         </div>
         <Dropdown value={statusFilter} onChange={setStatusFilter} options={STATUS_OPTIONS} clearable />
         <DateRangePicker from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }} alignRight />
@@ -177,9 +177,9 @@ export function RefundsPage() {
                 const isExpanded = expandedId === r.id;
                 return (
                   <>
-                    <tr key={r.id} className="hover:bg-[#F8FAF9] cursor-pointer" onClick={() => setExpandedId(isExpanded ? null : r.id)}>
+                    <tr key={r.id} className="hover:bg-[#FAFAF7] cursor-pointer" onClick={() => setExpandedId(isExpanded ? null : r.id)}>
                       <td className="px-5 py-3.5">
-                        <Link to={`/clients/${refToSlug(r.org_ref_id)}`} onClick={e => e.stopPropagation()} className="font-medium text-[#111827] hover:text-[#0D4C3C] transition-colors">{r.org_name}</Link>
+                        <Link to={`/clients/${refToSlug(r.org_ref_id)}`} onClick={e => e.stopPropagation()} className="font-medium text-[#111827] hover:text-[#6C55E8] transition-colors">{r.org_name}</Link>
                         <p className="text-[10px] text-[#9CA3AF] font-mono">{formatId(r.org_ref_id)}</p>
                       </td>
                       <td className="px-5 py-3.5">
@@ -197,7 +197,7 @@ export function RefundsPage() {
                                   next === 'APPROVED' || next === 'REFUNDED' ? 'text-[#065F46] bg-[#ECFDF5] hover:bg-green-100' :
                                   next === 'REJECTED' || next === 'FAILED' ? 'text-red-700 bg-[#FEF2F2] hover:bg-red-100' :
                                   next === 'PROCESSING' ? 'text-[#7C3AED] bg-[#F3E8FF] hover:bg-purple-100' :
-                                  'border border-[#E5EAE8] hover:bg-[#F8FAF9] text-[#374151]'
+                                  'border border-[#E5E7EB] hover:bg-[#FAFAF7] text-[#374151]'
                                 }`}>
                                 {updating === r.id ? '…' : next.replace(/_/g, ' ')}
                               </button>
@@ -223,9 +223,9 @@ export function RefundsPage() {
                             <div>
                               <label className="block text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-1">Add / update note</label>
                               <textarea rows={2} value={noteEdit[r.id] ?? r.admin_note ?? ''} onChange={e => setNoteEdit(n => ({ ...n, [r.id]: e.target.value }))}
-                                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:border-[#0D4C3C] resize-none" />
+                                className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:border-[#6C55E8] resize-none" />
                               <button onClick={() => supabase.from('refund_requests').update({ admin_note: noteEdit[r.id] }).eq('id', r.id).then(() => load())}
-                                className="mt-1.5 px-3 py-1 text-xs font-medium border border-[#E5EAE8] rounded-lg hover:bg-[#F8FAF9] transition-colors">Save note</button>
+                                className="mt-1.5 px-3 py-1 text-xs font-medium border border-[#E5E7EB] rounded-lg hover:bg-[#FAFAF7] transition-colors">Save note</button>
                             </div>
                           </div>
                           <div className="mt-3 flex items-center gap-6 text-xs text-[#9CA3AF]">
@@ -245,3 +245,4 @@ export function RefundsPage() {
     </div>
   );
 }
+

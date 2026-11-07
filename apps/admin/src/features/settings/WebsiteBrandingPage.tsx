@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+﻿import { useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToastStore } from '@/lib/toast';
 
@@ -145,7 +145,7 @@ export function WebsiteBrandingPage() {
             <button onClick={() => setCsvFile(null)} className="text-sm text-[#9CA3AF] hover:text-[#374151]">Cancel</button>
           )}
         </div>
-        <div className="mt-4 bg-[#F8FAF9] rounded-xl border border-[#E5E7EB] px-4 py-3">
+        <div className="mt-4 bg-[#FAFAF7] rounded-xl border border-[#E5E7EB] px-4 py-3">
           <p className="text-xs font-mono text-[#6B7280]">ref_id,logo_url</p>
           <p className="text-xs font-mono text-[#6B7280]">ORG-00001,https://cdn.example.com/logos/org1.png</p>
           <p className="text-xs font-mono text-[#6B7280]">ORG-00002,https://cdn.example.com/logos/org2.png</p>
@@ -154,3 +154,4 @@ export function WebsiteBrandingPage() {
     </div>
   );
 }
+

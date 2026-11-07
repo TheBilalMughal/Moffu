@@ -19,7 +19,7 @@ const ROLE_LABEL: Record<PlatformRole, string> = {
 };
 
 const ROLE_COLOR: Record<PlatformRole, string> = {
-  owner: 'bg-[#E6F2EE] text-[#0D4C3C]',
+  owner: 'bg-[#D8CCFF] text-[#6C55E8]',
   super_admin: 'bg-[#FEF3C7] text-[#92400E]',
   admin: 'bg-[#EDE9FE] text-[#5B21B6]',
   finance: 'bg-[#ECFDF5] text-[#065F46]',
@@ -217,10 +217,10 @@ export function TeamMemberDetailPage() {
   if (loading) {
     return (
       <div className="h-full overflow-y-auto px-8 py-8">
-        <div className="h-4 bg-[#E5EAE8] rounded animate-pulse w-48 mb-8" />
+        <div className="h-4 bg-[#E5E7EB] rounded animate-pulse w-48 mb-8" />
         <div className="bg-white shadow-sm rounded-xl p-6 animate-pulse space-y-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-4 bg-[#E5EAE8] rounded w-64" />
+            <div key={i} className="h-4 bg-[#E5E7EB] rounded w-64" />
           ))}
         </div>
       </div>
@@ -286,7 +286,7 @@ export function TeamMemberDetailPage() {
 
       {/* Info card */}
       <div className="bg-white shadow-sm rounded-xl overflow-hidden mb-5">
-        <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
+        <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]">
           <h2 className="text-sm font-semibold text-[#111827]">Member details</h2>
         </div>
         <dl className="divide-y divide-[#F3F4F6]">
@@ -320,7 +320,7 @@ export function TeamMemberDetailPage() {
       {/* Edit form */}
       {canManage(platformRole) && (
         <div className="bg-white shadow-sm rounded-xl overflow-hidden mb-5">
-          <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
+          <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]">
             <h2 className="text-sm font-semibold text-[#111827]">Edit member</h2>
           </div>
           <div className="p-6 space-y-4">
@@ -330,7 +330,7 @@ export function TeamMemberDetailPage() {
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg text-[#111827] focus:outline-none focus:border-[#0D4C3C]"
+                className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] focus:outline-none focus:border-[#6C55E8]"
               />
             </div>
             <div>
@@ -340,13 +340,13 @@ export function TeamMemberDetailPage() {
                 value={editPhone}
                 onChange={(e) => setEditPhone(e.target.value)}
                 placeholder="+1 555 000 0000"
-                className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C]"
+                className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"
               />
             </div>
             <div>
               <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">Platform role</label>
               {member.role === 'owner' ? (
-                <div className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg bg-[#F9FAFB] text-[#9CA3AF] select-none">
+                <div className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-[#F9FAFB] text-[#9CA3AF] select-none">
                   Owner — cannot be changed
                 </div>
               ) : (
@@ -360,7 +360,7 @@ export function TeamMemberDetailPage() {
             </div>
 
             {saveMsg && (
-              <p className={`text-sm px-3 py-2 rounded-lg ${saveMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#E6F2EE] border border-[#A7D7C5] text-[#0D4C3C]'}`}>
+              <p className={`text-sm px-3 py-2 rounded-lg ${saveMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#D8CCFF] border border-[#A7D7C5] text-[#6C55E8]'}`}>
                 {saveMsg}
               </p>
             )}
@@ -369,7 +369,7 @@ export function TeamMemberDetailPage() {
               <button
                 onClick={handleSave}
                 disabled={saving || !editName.trim()}
-                className="px-4 py-2 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] rounded-lg disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Saving…' : 'Save changes'}
               </button>
@@ -381,7 +381,7 @@ export function TeamMemberDetailPage() {
       {/* Reset password */}
       {canManage(platformRole) && (
         <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#E5EAE8] bg-[#F8FAF9]">
+          <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]">
             <h2 className="text-sm font-semibold text-[#111827]">Set password</h2>
           </div>
           <div className="p-6">
@@ -399,7 +399,7 @@ export function TeamMemberDetailPage() {
                   setShowNewPassword(true);
                   setResetMsg(null);
                 }}
-                className="text-xs font-medium text-[#0D4C3C] hover:underline"
+                className="text-xs font-medium text-[#6C55E8] hover:underline"
               >
                 Auto-generate
               </button>
@@ -411,14 +411,14 @@ export function TeamMemberDetailPage() {
                 value={newPassword}
                 onChange={(e) => { setNewPassword(e.target.value); setResetMsg(null); }}
                 placeholder="Min. 8 characters"
-                className="w-full px-3 py-2 pr-16 text-sm border border-[#E5EAE8] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] font-mono"
+                className="w-full px-3 py-2 pr-16 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8] font-mono"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 {newPassword && (
                   <button
                     type="button"
                     onClick={() => copyToClipboard(newPassword)}
-                    className="text-xs font-medium text-[#0D4C3C] hover:underline"
+                    className="text-xs font-medium text-[#6C55E8] hover:underline"
                   >
                     {passwordCopied ? 'Copied!' : 'Copy'}
                   </button>
@@ -444,7 +444,7 @@ export function TeamMemberDetailPage() {
             </div>
 
             {resetMsg && (
-              <p className={`text-sm px-3 py-2 rounded-lg mb-4 ${resetMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#E6F2EE] border border-[#A7D7C5] text-[#0D4C3C]'}`}>
+              <p className={`text-sm px-3 py-2 rounded-lg mb-4 ${resetMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#D8CCFF] border border-[#A7D7C5] text-[#6C55E8]'}`}>
                 {resetMsg}
               </p>
             )}
@@ -452,7 +452,7 @@ export function TeamMemberDetailPage() {
             <button
               onClick={handleSetPassword}
               disabled={resetting || !newPassword.trim()}
-              className="px-4 py-2 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] rounded-lg disabled:opacity-50 transition-colors"
+              className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg disabled:opacity-50 transition-colors"
             >
               {resetting ? 'Setting…' : 'Set password'}
             </button>
@@ -462,3 +462,4 @@ export function TeamMemberDetailPage() {
     </div>
   );
 }
+

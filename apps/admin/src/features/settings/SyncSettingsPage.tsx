@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useToastStore } from '@/lib/toast';
 
@@ -94,7 +94,7 @@ export function SyncSettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="w-5 h-5 border-2 border-[#0D4C3C] border-t-transparent rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-[#6C55E8] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -130,8 +130,8 @@ export function SyncSettingsPage() {
                     onClick={() => setInterval(opt.value)}
                     className={`px-3 py-2 text-sm rounded-lg border transition-colors text-center ${
                       interval === opt.value
-                        ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]'
-                        : 'border-[#E5EAE8] text-[#374151] hover:bg-[#F3F4F6]'
+                        ? 'bg-[#111111] text-white border-[#6C55E8]'
+                        : 'border-[#E5E7EB] text-[#374151] hover:bg-[#F3F4F6]'
                     }`}
                   >
                     {opt.label}
@@ -144,7 +144,7 @@ export function SyncSettingsPage() {
                 <button
                   onClick={handleSaveInterval}
                   disabled={savingInterval}
-                  className="px-4 py-1.5 bg-[#0D4C3C] text-white text-sm font-medium rounded-lg hover:bg-[#0a3d30] disabled:opacity-50 transition-colors"
+                  className="px-4 py-1.5 bg-[#111111] text-white text-sm font-medium rounded-lg hover:bg-[#0a3d30] disabled:opacity-50 transition-colors"
                 >
                   {savingInterval ? 'Saving…' : 'Save'}
                 </button>
@@ -172,7 +172,7 @@ export function SyncSettingsPage() {
             {hasSaved && !editingSecret && (
               <button
                 onClick={() => setEditingSecret(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors"
               >
                 <EditIcon /> Edit
               </button>
@@ -187,7 +187,7 @@ export function SyncSettingsPage() {
                   value={secret}
                   onChange={e => setSecret(e.target.value)}
                   placeholder="Random secret key…"
-                  className="w-full px-3 py-2.5 pr-10 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] font-mono placeholder:font-sans placeholder:text-[#C4CAC8]"
+                  className="w-full px-3 py-2.5 pr-10 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] font-mono placeholder:font-sans placeholder:text-[#C4CAC8]"
                   autoFocus
                 />
                 <button
@@ -198,14 +198,14 @@ export function SyncSettingsPage() {
                   {showSecret ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
               </div>
-              <button type="button" onClick={generateSecret} className="text-xs text-[#0D4C3C] hover:underline font-medium">
+              <button type="button" onClick={generateSecret} className="text-xs text-[#6C55E8] hover:underline font-medium">
                 Generate random secret
               </button>
               <div className="flex items-center gap-3 pt-1">
                 <button
                   onClick={handleSaveSecret}
                   disabled={savingSecret}
-                  className="px-4 py-1.5 bg-[#0D4C3C] text-white text-sm font-medium rounded-lg hover:bg-[#0a3d30] disabled:opacity-50 transition-colors"
+                  className="px-4 py-1.5 bg-[#111111] text-white text-sm font-medium rounded-lg hover:bg-[#0a3d30] disabled:opacity-50 transition-colors"
                 >
                   {savingSecret ? 'Saving…' : 'Save secret'}
                 </button>
@@ -247,7 +247,7 @@ export function SyncSettingsPage() {
 
 function SyncIcon() {
   return (
-    <svg className="w-5 h-5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-5 h-5 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
     </svg>
   );
@@ -281,3 +281,4 @@ function CopyIcon() {
     </svg>
   );
 }
+
