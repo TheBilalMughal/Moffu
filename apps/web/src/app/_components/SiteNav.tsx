@@ -1,47 +1,37 @@
 import Link from 'next/link';
 
+
 const portalUrl = process.env.PORTAL_URL ?? 'https://app.moffu.pro';
 
 export function SiteNav() {
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-black/8">
-      <div className="w-full px-6 lg:px-12 h-14 flex items-center justify-between gap-6">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-          <div className="w-6 h-6 bg-[#0D4C3C] rounded flex items-center justify-center">
-            <svg width="13" height="10" viewBox="0 0 13 10" fill="none" aria-hidden="true">
-              <path d="M1 9V1l5.5 5.5L12 1v8" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <span className="text-sm font-bold text-[#111827] tracking-tight">moffu.</span>
+    <header className="sticky top-0 z-50 bg-white border-b border-[#E5E7EB]">
+      <div className="w-full px-8 lg:px-16 h-16 flex items-center justify-between">
+        <Link href="/" className="flex items-center">
+          <img src="/images/logo.png" alt="Moffu" className="h-8 w-auto" />
         </Link>
 
-        {/* Nav links */}
-        <nav className="hidden md:flex items-center gap-7" aria-label="Main navigation">
-          <Link href="/#how-it-works" className="text-xs font-medium text-[#6B7280] hover:text-[#111827] transition-colors">
-            how it works
+        <nav className="hidden md:flex items-center gap-8" aria-label="Main navigation">
+          <Link href="/#product" className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150">
+            Product
           </Link>
-          <Link href="/feature" className="text-xs font-medium text-[#6B7280] hover:text-[#111827] transition-colors">
-            features
+          <Link href="/feature" className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150">
+            Features
           </Link>
-          <Link href="/#pricing" className="text-xs font-medium text-[#6B7280] hover:text-[#111827] transition-colors">
-            pricing
+          <Link href="/#how-it-works" className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150">
+            How It Works
           </Link>
-          <Link href="/#faq" className="text-xs font-medium text-[#6B7280] hover:text-[#111827] transition-colors">
-            faqs
+          <Link href="/#pricing" className="text-sm text-[#374151] hover:text-[#111827] transition-colors duration-150">
+            Pricing
           </Link>
         </nav>
 
-        {/* CTA */}
-        <div className="flex items-center gap-4">
-          <a href={`${portalUrl}/auth/login`} className="hidden md:block text-xs font-medium text-[#374151] hover:text-[#111827] transition-colors">
-            Log in
-          </a>
+        <div className="flex items-center gap-5">
           <a
-            href={`${portalUrl}/auth/signup`}
-            className="text-xs font-semibold bg-[#111827] text-white px-4 py-2 rounded-lg hover:bg-[#1f2937] transition-colors"
+            href={`${portalUrl}/auth/login`}
+            className="text-sm bg-[#0D4C3C] hover:bg-[#083F32] text-white px-5 py-2.5 rounded-lg font-medium transition-colors duration-150"
           >
-            Start Free →
+            Get Started
           </a>
         </div>
       </div>
