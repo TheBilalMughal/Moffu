@@ -38,15 +38,6 @@ const FOOTER_NAV = [
   },
 ];
 
-function LogoMark() {
-  return (
-    <div className="w-8 h-8 bg-[#0D4C3C] rounded-lg flex items-center justify-center flex-shrink-0">
-      <svg width="18" height="14" viewBox="0 0 18 14" fill="none" aria-hidden="true">
-        <path d="M1 13V1l8 8L17 1v12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    </div>
-  );
-}
 
 export function SiteFooter({ portalUrl = 'https://app.moffu.pro' }: { portalUrl?: string }) {
   return (
@@ -79,9 +70,12 @@ export function SiteFooter({ portalUrl = 'https://app.moffu.pro' }: { portalUrl?
         <div className="grid grid-cols-2 lg:grid-cols-6 gap-10 mb-14">
           {/* Brand col */}
           <div className="col-span-2">
-            <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <LogoMark />
-              <span className="font-semibold text-white text-[15px]">Moffu</span>
+            <Link href="/" className="inline-block mb-4">
+              <img
+                src="/images/logo-transparent.png"
+                alt="Moffu"
+                style={{ height: '28px', width: 'auto', filter: 'invert(1)' }}
+              />
             </Link>
             <p className="text-[13px] text-[#9CA3AF] leading-relaxed mb-6 max-w-[220px]">
               AI-powered Google review responses that sound like your brand.
