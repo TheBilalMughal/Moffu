@@ -349,7 +349,8 @@ function BrandsSection() {
       </div>
 
       {/* Marquee */}
-      <div className="marquee-wrap overflow-hidden cursor-default">
+      <div className="max-w-[1380px] mx-auto px-6 lg:px-16">
+      <div className="marquee-wrap overflow-hidden cursor-default rounded-xl">
         <div className="marquee-track">
           {doubled.map((b, i) => (
             <div
@@ -367,6 +368,7 @@ function BrandsSection() {
             </div>
           ))}
         </div>
+      </div>
       </div>
     </section>
   );
