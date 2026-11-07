@@ -89,8 +89,8 @@ export function SiteNavbar({ portalUrl }: { portalUrl: string }) {
                 src="/images/moffu-logo.png"
                 alt="Moffu"
                 style={scrolled
-                  ? { height: '66px', width: 'auto', marginTop: '-19px', marginLeft: '-8px' }
-                  : { height: '142px', width: 'auto', marginTop: '-41px', marginLeft: '-17px' }
+                  ? { height: '66px', width: 'auto', marginTop: '-19px', marginLeft: '-8px', mixBlendMode: 'multiply' }
+                  : { height: '142px', width: 'auto', marginTop: '-41px', marginLeft: '-17px', mixBlendMode: 'multiply' }
                 }
               />
             </div>
