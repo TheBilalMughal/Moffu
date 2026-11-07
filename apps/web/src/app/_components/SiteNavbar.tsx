@@ -77,23 +77,12 @@ export function SiteNavbar({ portalUrl }: { portalUrl: string }) {
           }`}
         >
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
-            <div
-              className={`overflow-hidden transition-all duration-300 ${!scrolled ? 'logo-bounce' : ''}`}
-              style={scrolled
-                ? { height: '26px', width: '50px' }
-                : { height: '56px', width: '108px' }
-              }
-            >
-              <img
-                src="/images/moffu-logo-transparent.png"
-                alt="Moffu"
-                style={scrolled
-                  ? { height: '66px', width: 'auto', marginTop: '-19px', marginLeft: '-8px' }
-                  : { height: '142px', width: 'auto', marginTop: '-41px', marginLeft: '-17px' }
-                }
-              />
-            </div>
+          <Link href="/" className={`flex-shrink-0 ${!scrolled ? 'logo-bounce' : ''}`}>
+            <img
+              src="/images/logo-transparent.png"
+              alt="Moffu"
+              style={scrolled ? { height: '26px', width: 'auto' } : { height: '56px', width: 'auto' }}
+            />
           </Link>
 
           {/* Nav links */}
