@@ -75,6 +75,7 @@ export function SiteFooter({ portalUrl = 'https://app.moffu.pro' }: { portalUrl?
 
       {/* ── Footer nav + bottom bar ── */}
       <div className="px-8 lg:px-16 pt-12 pb-10 border-t border-white/10">
+        <div className="max-w-[1380px] mx-auto w-full">
         <div className="grid grid-cols-2 lg:grid-cols-6 gap-10 mb-14">
           {/* Brand col */}
           <div className="col-span-2">
@@ -139,6 +140,7 @@ export function SiteFooter({ portalUrl = 'https://app.moffu.pro' }: { portalUrl?
             <Link href="/terms" className="text-[12px] text-[#6B7280] hover:text-white transition-colors duration-150">Terms</Link>
             <Link href="/cookies" className="text-[12px] text-[#6B7280] hover:text-white transition-colors duration-150">Cookies</Link>
           </div>
+        </div>
         </div>
       </div>
     </footer>
