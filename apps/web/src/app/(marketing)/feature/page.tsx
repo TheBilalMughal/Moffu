@@ -182,8 +182,8 @@ export default async function FeaturePage() {
 
       <main>
 
-        {/* ── Hero ── */}
-        <section className="bg-white px-6 lg:px-16 pt-40 pb-24">
+        {/* ── Hero + Features grid (combined) ── */}
+        <section className="bg-white px-6 lg:px-16 pt-40 pb-24" aria-labelledby="features-heading">
           <div className="max-w-[1380px] mx-auto">
             <p className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-6">
               Features
@@ -203,17 +203,10 @@ export default async function FeaturePage() {
               portalUrl={portalUrl}
               className="inline-block bg-[#111827] text-white px-7 py-3.5 rounded-lg font-black text-sm hover:scale-105 active:scale-95 transition-transform duration-150"
             />
-          </div>
-        </section>
 
-        {/* ── Features grid ── */}
-        <section className="bg-[#F3F4F6] px-6 lg:px-16 py-24" aria-labelledby="features-heading">
-          <div className="max-w-[1380px] mx-auto">
-            <p className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-4">
+            <div className="mt-20 border-t border-[#E5E7EB] pt-16">
+            <h2 id="features-heading" className="text-[clamp(1.75rem,3vw,2.5rem)] font-black text-[#111827] leading-tight mb-12 max-w-xl">
               What's included
-            </p>
-            <h2 id="features-heading" className="text-[clamp(2rem,4vw,3rem)] font-black text-[#111827] leading-tight mb-14 max-w-xl">
-              Everything Brand Brain can do
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {FEATURES.map(({ title, description, icon }) => (
@@ -225,6 +218,7 @@ export default async function FeaturePage() {
                   <p className="text-sm text-[#6B7280] leading-relaxed">{description}</p>
                 </div>
               ))}
+            </div>
             </div>
           </div>
         </section>

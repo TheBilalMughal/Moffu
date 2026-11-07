@@ -28,7 +28,6 @@ function HeroSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean;
           <div className="flex flex-col items-center gap-4 w-full max-w-xl mx-auto">
             <HeroEmailForm portalUrl={portalUrl} />
             <p className="text-sm text-[#111827]">fr no credit card. free for real.</p>
-            <p className="text-xs text-[#111827]">*7 replies a week included.</p>
           </div>
         </div>
 
