@@ -326,7 +326,7 @@ const FEATURES_GRID = [
 
 interface BrandClient { name: string; client_type: string | null; logo_url: string | null; }
 
-function BrandsSection({ brands, speed }: { brands: BrandClient[]; speed?: number }) {
+function BrandsSection({ brands, speed }: { brands: BrandClient[]; speed?: number | undefined }) {
   if (brands.length === 0) return null;
   const doubled = [...brands, ...brands, ...brands, ...brands];
   return (
