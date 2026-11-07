@@ -163,26 +163,6 @@ function ValuePropSection() {
 
 
 // ---------------------------------------------------------------------------
-// Industries
-// ---------------------------------------------------------------------------
-
-function IndustriesSection() {
-  return (
-    <section className="bg-white px-6 lg:px-16 py-20">
-      <div className="max-w-[1380px] mx-auto">
-        <p className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-3">who it's for</p>
-        <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-black leading-[1.1] text-[#111827] mb-4">
-          On Google?<br />Moffu's for you.
-        </h2>
-        <p className="text-[#111827]/65 text-base max-w-xl">
-          Any business with a Google Business Profile can use Moffu, whatever you sell, wherever you are. Moffu replies in 37 languages.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Features
 // ---------------------------------------------------------------------------
 
@@ -503,7 +483,6 @@ export default async function HomePage() {
     <main>
       <HeroSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       <ValuePropSection />
-      <IndustriesSection />
       <FeaturesSection />
       <CaseStudySection />
       <PricingSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
