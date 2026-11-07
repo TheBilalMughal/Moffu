@@ -12,47 +12,48 @@ import { createServerClient } from '../../lib/supabase/server';
 
 function HeroSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean; portalUrl: string }) {
   return (
-    <section className="bg-[#D4FF53] px-6 lg:px-12 pt-16 pb-14 md:pt-20 md:pb-18">
-      <div className="max-w-5xl mx-auto">
-        {/* Headline */}
-        <p className="text-sm font-semibold text-[#1a2e00]/60 uppercase tracking-widest mb-6">
+    <section className="bg-[#D4FF53] px-6 lg:px-12 pt-20 pb-16 md:pt-24 md:pb-20">
+      <div className="max-w-5xl mx-auto text-center">
+        {/* Eyebrow */}
+        <p className="text-sm font-medium text-[#1a2e00]/60 mb-8 tracking-wide">
           your Google reviews, all of them,
         </p>
-        <h1 className="font-black leading-[0.95] tracking-tight text-[#111827] mb-2">
+
+        {/* Headline */}
+        <h1 className="font-black leading-[0.92] tracking-tight text-[#111827] mb-0">
           <span
-            className="block text-[clamp(3.5rem,10vw,7rem)] line-through decoration-[#0D4C3C] decoration-[6px]"
+            className="block text-[clamp(4rem,12vw,9rem)] line-through decoration-[#0D4C3C] decoration-[7px] opacity-60"
             aria-hidden="true"
           >
             unanswered
           </span>
-          <span className="block text-[clamp(3.75rem,11vw,8rem)]">ANSWERED.</span>
+          <span className="block text-[clamp(4.5rem,13vw,10rem)]">ANSWERED.</span>
         </h1>
 
-        <p className="text-xs font-semibold text-[#1a2e00]/50 uppercase tracking-[0.2em] mt-6 mb-10">
-          YOUR BUSINESS. YOUR VOICE. YOUR REPUTATION BACK.
+        <p className="text-xs font-bold text-[#1a2e00]/50 uppercase tracking-[0.25em] mt-7 mb-3">
+          YOUR BUSINESS. YOUR VOICE. YOUR TIME BACK.
         </p>
 
-        {/* CTA row */}
-        <div className="flex flex-wrap items-center gap-3 mb-5">
+        <Link
+          href="/feature"
+          className="inline-block text-sm font-semibold text-[#111827] underline underline-offset-2 decoration-[#111827]/30 hover:decoration-[#111827] transition-colors mb-10"
+        >
+          see moffu reply to your reviews
+        </Link>
+
+        {/* CTA */}
+        <div className="flex flex-col items-center gap-4">
           <WaitlistButton
             enabled={waitlistEnabled}
-            label={waitlistEnabled ? 'Join Waitlist' : 'Start Free'}
+            label={waitlistEnabled ? 'Join Waitlist →' : 'Start Free →'}
             source="hero"
             portalUrl={portalUrl}
-            arrow
-            className="inline-flex items-center gap-2 bg-[#111827] text-white font-semibold text-sm px-6 py-3 rounded-lg hover:bg-[#1f2937] transition-colors"
+            arrow={false}
+            className="inline-flex items-center gap-2 bg-[#111827] text-white font-semibold text-base px-8 py-3.5 rounded-lg hover:bg-[#1f2937] transition-colors"
           />
-          <Link
-            href="/feature"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#111827] hover:opacity-70 transition-opacity"
-          >
-            See Moffu in Action
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-            </svg>
-          </Link>
+          <p className="text-xs text-[#1a2e00]/50">No trial. No credit card. Free for all locations.*</p>
+          <p className="text-xs text-[#1a2e00]/40">*Up to 7 replies each week per location.</p>
         </div>
-        <p className="text-xs text-[#1a2e00]/50">No credit card. Free for all locations · Up to 7 replies each week per location.</p>
       </div>
     </section>
   );
