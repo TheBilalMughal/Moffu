@@ -44,7 +44,7 @@ export default function PrivacyPage() {
               We store access tokens securely on our servers to maintain the integration. You can
               revoke access at any time by disconnecting your Google account from our platform or
               through your Google Account security settings at{' '}
-              <a href="https://myaccount.google.com/permissions" className="text-[#0D4C3C] underline" target="_blank" rel="noopener noreferrer">
+              <a href="https://myaccount.google.com/permissions" className="text-[#6C55E8] underline" target="_blank" rel="noopener noreferrer">
                 myaccount.google.com/permissions
               </a>.
             </p>
@@ -98,7 +98,7 @@ export default function PrivacyPage() {
             <p>
               We retain your account data and review history for as long as your account is active.
               You may request deletion of your data by contacting us at{' '}
-              <a href="mailto:support@moffu.com" className="text-[#0D4C3C] underline">support@moffu.com</a>.
+              <a href="mailto:support@moffu.com" className="text-[#6C55E8] underline">support@moffu.com</a>.
               Upon account deletion, we will delete or anonymize your personal data within 30 days,
               except where retention is required by law.
             </p>
@@ -127,7 +127,7 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3">
               To exercise these rights, contact us at{' '}
-              <a href="mailto:support@moffu.com" className="text-[#0D4C3C] underline">support@moffu.com</a>.
+              <a href="mailto:support@moffu.com" className="text-[#6C55E8] underline">support@moffu.com</a>.
             </p>
           </section>
 
@@ -137,7 +137,7 @@ export default function PrivacyPage() {
               We use essential cookies for authentication and session management. We may use
               analytics cookies to understand usage patterns. You can manage cookie preferences
               through your browser settings. See our{' '}
-              <a href="/cookies" className="text-[#0D4C3C] underline">Cookie Policy</a> for details.
+              <a href="/cookies" className="text-[#6C55E8] underline">Cookie Policy</a> for details.
             </p>
           </section>
 
@@ -165,7 +165,7 @@ export default function PrivacyPage() {
             </p>
             <div className="mt-3 p-4 bg-gray-50 rounded-lg">
               <p><strong>Moffu</strong></p>
-              <p>Email: <a href="mailto:support@moffu.com" className="text-[#0D4C3C] underline">support@moffu.com</a></p>
+              <p>Email: <a href="mailto:support@moffu.com" className="text-[#6C55E8] underline">support@moffu.com</a></p>
             </div>
           </section>
 

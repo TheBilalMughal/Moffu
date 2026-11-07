@@ -64,7 +64,7 @@ export function SignupForm() {
   if (success) {
     return (
       <div className="text-center py-8">
-        <div className="w-14 h-14 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center mx-auto mb-5">
+        <div className="w-14 h-14 rounded-full bg-[#EDE9FF] text-[#6C55E8] flex items-center justify-center mx-auto mb-5">
           <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
@@ -160,14 +160,14 @@ export function SignupForm() {
         )}
 
         <button type="submit" disabled={loading}
-          className="w-full bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-60 text-white py-3 rounded-lg text-sm font-semibold transition-colors duration-150">
+          className="w-full bg-[#111111] hover:bg-[#6C55E8] disabled:opacity-60 text-white py-3 rounded-lg text-sm font-semibold transition-colors duration-150">
           {loading ? 'Creating account…' : 'Create account'}
         </button>
       </form>
 
       <p className="text-center text-sm text-[#6B7280]">
         Already have an account?{' '}
-        <Link href="/login" className="text-[#0D4C3C] font-semibold hover:underline">Log in</Link>
+        <Link href="/login" className="text-[#6C55E8] font-semibold hover:underline">Log in</Link>
       </p>
     </div>
   );

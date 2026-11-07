@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 function LogoMark() {
   return (
-    <div className="w-8 h-8 bg-[#0D4C3C] rounded-lg flex items-center justify-center flex-shrink-0">
+    <div className="w-8 h-8 bg-[#111111] rounded-lg flex items-center justify-center flex-shrink-0">
       <svg width="18" height="14" viewBox="0 0 18 14" fill="none" aria-hidden="true">
         <path d="M1 13V1l8 8L17 1v12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -56,7 +56,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </Link>
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-sm text-[#0D4C3C] font-medium hover:opacity-80 transition-opacity"
+            className="flex items-center gap-1.5 text-sm text-[#6C55E8] font-medium hover:opacity-80 transition-opacity"
           >
             Back to website
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

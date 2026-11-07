@@ -31,7 +31,7 @@ export function HeroEmailForm({ portalUrl }: { portalUrl: string }) {
   if (done) {
     return (
       <div className="flex items-center gap-3 bg-white rounded-xl px-6 py-4 w-full max-w-lg">
-        <svg className="w-5 h-5 text-[#2ECC8A] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <svg className="w-5 h-5 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
         </svg>
         <p className="text-sm font-semibold text-[#111827]">You're on the list! We'll be in touch soon.</p>
@@ -60,7 +60,7 @@ export function HeroEmailForm({ portalUrl }: { portalUrl: string }) {
         <button
           type="submit"
           disabled={loading}
-          className={`btn-bounce bg-[#111827] text-base font-black px-7 py-3.5 rounded-lg tracking-tight whitespace-nowrap disabled:opacity-60 inline-block transition-colors duration-200 ${email.includes('@') ? 'text-[#2ECC8A]' : 'text-white'}`}
+          className={`btn-bounce bg-[#111827] text-base font-black px-7 py-3.5 rounded-lg tracking-tight whitespace-nowrap disabled:opacity-60 inline-block transition-colors duration-200 ${email.includes('@') ? 'text-[#D8CCFF]' : 'text-white'}`}
         >
           {loading ? '…' : 'Join Waitlist →'}
         </button>

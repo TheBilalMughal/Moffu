@@ -150,7 +150,7 @@ export function ReviewMockup() {
                     <div
                       key={i}
                       className="w-1.5 h-1.5 rounded-full transition-all duration-300"
-                      style={{ background: reviewIdx === i ? '#2ECC8A' : '#E5E7EB' }}
+                      style={{ background: reviewIdx === i ? '#6C55E8' : '#E5E7EB' }}
                     />
                   ))}
                 </div>
@@ -191,12 +191,12 @@ export function ReviewMockup() {
                   }}
                 >
                   <div className="bg-[#F3F4F6] rounded-xl p-3 border border-[#E5E7EB] relative">
-                    <div className="absolute -left-3 top-3 w-2.5 h-2.5 rounded-full bg-[#2ECC8A] flex items-center justify-center">
+                    <div className="absolute -left-3 top-3 w-2.5 h-2.5 rounded-full bg-[#6C55E8] flex items-center justify-center">
                       <svg className="w-1.5 h-1.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/>
                       </svg>
                     </div>
-                    <p className="text-[9px] font-bold text-[#2ECC8A] uppercase tracking-wider mb-1">Replied by Moffu</p>
+                    <p className="text-[9px] font-bold text-[#6C55E8] uppercase tracking-wider mb-1">Replied by Moffu</p>
                     <p className="text-[10px] text-[#111827]/70 leading-relaxed">{review.reply}</p>
                   </div>
                 </div>
@@ -212,7 +212,7 @@ export function ReviewMockup() {
                   style={{
                     width:      reviewIdx === i ? '16px' : '5px',
                     height:     '5px',
-                    background: reviewIdx === i ? '#2ECC8A' : '#E5E7EB',
+                    background: reviewIdx === i ? '#6C55E8' : '#E5E7EB',
                   }}
                 />
               ))}

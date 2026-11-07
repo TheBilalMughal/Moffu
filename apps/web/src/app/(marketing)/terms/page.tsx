@@ -44,7 +44,7 @@ export default function TermsPage() {
               You must create an account to use the Service. You agree to provide accurate and
               complete information and to keep your account credentials secure. You are responsible
               for all activity that occurs under your account. Notify us immediately at{' '}
-              <a href="mailto:support@moffu.com" className="text-[#0D4C3C] underline">support@moffu.com</a>{' '}
+              <a href="mailto:support@moffu.com" className="text-[#6C55E8] underline">support@moffu.com</a>{' '}
               if you suspect unauthorized use.
             </p>
           </section>
@@ -71,7 +71,7 @@ export default function TermsPage() {
               </li>
               <li>
                 Your use of Google data through Moffu is subject to{' '}
-                <a href="https://policies.google.com/terms" className="text-[#0D4C3C] underline" target="_blank" rel="noopener noreferrer">
+                <a href="https://policies.google.com/terms" className="text-[#6C55E8] underline" target="_blank" rel="noopener noreferrer">
                   Google&apos;s Terms of Service
                 </a>
               </li>
@@ -177,7 +177,7 @@ export default function TermsPage() {
             </p>
             <div className="mt-3 p-4 bg-gray-50 rounded-lg">
               <p><strong>Moffu</strong></p>
-              <p>Email: <a href="mailto:support@moffu.com" className="text-[#0D4C3C] underline">support@moffu.com</a></p>
+              <p>Email: <a href="mailto:support@moffu.com" className="text-[#6C55E8] underline">support@moffu.com</a></p>
             </div>
           </section>
 

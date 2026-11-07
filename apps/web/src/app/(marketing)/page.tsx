@@ -15,7 +15,7 @@ import { createServerClient } from '../../lib/supabase/server';
 
 function HeroSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean; portalUrl: string }) {
   return (
-    <section className="bg-[#2ECC8A]">
+    <section className="bg-[#D8CCFF]">
       {/* Hero content — fills full screen height, padded for fixed navbar */}
       <div className="px-6 lg:px-16 flex flex-col" style={{ minHeight: '100svh', paddingTop: '7rem' }}>
         <div className="flex-1 flex flex-col items-center justify-center text-center py-16">
@@ -27,7 +27,21 @@ function HeroSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean;
 
           <div className="flex flex-col items-center gap-4 w-full max-w-xl mx-auto">
             <HeroEmailForm portalUrl={portalUrl} />
-            <p className="text-sm text-[#111827]">fr no credit card. free for real.</p>
+            <p className="text-sm text-[#111827]/60">no credit card needed &nbsp;·&nbsp; free forever, no cap.</p>
+          </div>
+
+          {/* Social proof strip */}
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-10">
+            {[
+              { stat: '10k+', label: 'reviews replied' },
+              { stat: '4.9★', label: 'avg rating boost' },
+              { stat: '2 min', label: 'setup, literally' },
+            ].map(({ stat, label }) => (
+              <div key={stat} className="flex items-center gap-2">
+                <span className="text-base font-black text-[#111827]">{stat}</span>
+                <span className="text-xs text-[#111827]/50 font-medium">{label}</span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -432,7 +446,7 @@ function CaseStudySection() {
 
           {/* After */}
           <div className="rounded-2xl p-7 border border-[#E5E7EB] bg-[#F3F4F6]">
-            <p className="text-xs font-semibold text-[#2ECC8A] uppercase tracking-widest mb-6">After Moffu</p>
+            <p className="text-xs font-semibold text-[#6C55E8] uppercase tracking-widest mb-6">After Moffu</p>
             <ul className="space-y-4">
               {[
                 ['4.6★ average', '— 0.7 points gained'],
@@ -441,8 +455,8 @@ function CaseStudySection() {
                 ['47 new reviews', '— via email campaign'],
               ].map(([bold, rest]) => (
                 <li key={bold} className="flex items-center gap-3 text-sm text-[#111827]/80">
-                  <span className="w-5 h-5 rounded-full bg-[#2ECC8A]/25 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-2.5 h-2.5 text-[#2ECC8A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
+                  <span className="w-5 h-5 rounded-full bg-[#6C55E8]/20 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-2.5 h-2.5 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
                   </span>
                   <span><strong className="text-[#111827] font-semibold">{bold}</strong><span className="text-[#111827]/50">{rest}</span></span>
                 </li>
@@ -453,7 +467,7 @@ function CaseStudySection() {
 
         {/* Quote */}
         <div className="rounded-2xl p-7 border border-[#E5E7EB] bg-[#F3F4F6]">
-          <svg className="w-7 h-7 text-[#2ECC8A] mb-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <svg className="w-7 h-7 text-[#6C55E8] mb-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
           </svg>
           <p className="text-[#111827] text-lg font-medium italic leading-relaxed mb-4">

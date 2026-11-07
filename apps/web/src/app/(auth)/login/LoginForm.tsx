@@ -127,11 +127,11 @@ export function LoginForm() {
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
-              className="w-4 h-4 rounded border-[#D1D5DB] accent-[#0D4C3C]"
+              className="w-4 h-4 rounded border-[#D1D5DB] accent-[#6C55E8]"
             />
             <span className="text-sm text-[#374151]">Remember me</span>
           </label>
-          <Link href="/forgot-password" className="text-sm text-[#0D4C3C] font-medium hover:underline">
+          <Link href="/forgot-password" className="text-sm text-[#6C55E8] font-medium hover:underline">
             Forgot password?
           </Link>
         </div>
@@ -145,7 +145,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-60 text-white py-3 rounded-lg text-sm font-semibold transition-colors duration-150"
+          className="w-full bg-[#111111] hover:bg-[#6C55E8] disabled:opacity-60 text-white py-3 rounded-lg text-sm font-semibold transition-colors duration-150"
         >
           {loading ? 'Signing in…' : 'Log in'}
         </button>
@@ -153,7 +153,7 @@ export function LoginForm() {
 
       <p className="text-center text-sm text-[#6B7280]">
         Don't have an account?{' '}
-        <Link href="/signup" className="text-[#0D4C3C] font-semibold hover:underline">Sign up</Link>
+        <Link href="/signup" className="text-[#6C55E8] font-semibold hover:underline">Sign up</Link>
       </p>
     </div>
   );

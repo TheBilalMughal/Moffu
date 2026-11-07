@@ -62,7 +62,7 @@ export default function CookiesPage() {
             </p>
             <p className="mt-3">
               For more information on managing cookies, visit{' '}
-              <a href="https://www.aboutcookies.org" className="text-[#0D4C3C] underline" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.aboutcookies.org" className="text-[#6C55E8] underline" target="_blank" rel="noopener noreferrer">
                 aboutcookies.org
               </a>.
             </p>
@@ -81,7 +81,7 @@ export default function CookiesPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">6. Contact</h2>
             <p>
               If you have questions about our use of cookies, contact us at{' '}
-              <a href="mailto:privacy@moffu.com" className="text-[#0D4C3C] underline">privacy@moffu.com</a>.
+              <a href="mailto:privacy@moffu.com" className="text-[#6C55E8] underline">privacy@moffu.com</a>.
             </p>
           </section>
 

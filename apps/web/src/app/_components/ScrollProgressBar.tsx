@@ -20,7 +20,7 @@ export function ScrollProgressBar() {
   return (
     <div className="sticky top-16 z-40 h-[3px] w-full bg-transparent overflow-hidden">
       <div
-        className="h-full bg-[#0D4C3C] transition-[width] duration-200 ease-out"
+        className="h-full bg-[#6C55E8] transition-[width] duration-200 ease-out"
         style={{ width: `${pct}%` }}
         role="progressbar"
         aria-valuenow={pct}

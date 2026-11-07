@@ -110,7 +110,7 @@ export function SiteNavbar({ portalUrl }: { portalUrl: string }) {
                 >
                   {label}
                   {scrolled && isActive && (
-                    <span className="absolute bottom-0.5 left-3 right-3 h-[2px] rounded-full bg-[#2ECC8A]" />
+                    <span className="absolute bottom-0.5 left-3 right-3 h-[2px] rounded-full bg-[#6C55E8]" />
                   )}
                 </Link>
               );

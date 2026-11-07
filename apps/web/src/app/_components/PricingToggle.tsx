@@ -68,7 +68,7 @@ export function PricingToggle({
             {/* Sliding bouncy pill — covers exactly one half */}
             <div
               aria-hidden="true"
-              className="absolute top-1.5 bottom-1.5 rounded-lg bg-[#2ECC8A] pointer-events-none"
+              className="absolute top-1.5 bottom-1.5 rounded-lg bg-[#6C55E8] pointer-events-none"
               style={{
                 left:       annual ? '50%'  : '6px',
                 right:      annual ? '6px'  : '50%',
@@ -97,7 +97,7 @@ export function PricingToggle({
               {toggleDiscount > 0 && (
                 <span
                   className={`text-[11px] px-2 py-0.5 rounded-md font-bold transition-all duration-200 ${
-                    annual ? 'bg-white/25 text-white' : 'bg-[#D1FAE5] text-[#065F46]'
+                    annual ? 'bg-white/25 text-white' : 'bg-[#EDE9FF] text-[#6C55E8]'
                   }`}
                 >
                   -{toggleDiscount}%
@@ -133,7 +133,7 @@ export function PricingToggle({
               {/* Badge */}
               {featured && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                  <span className="bg-[#2ECC8A] text-[#111827] text-[11px] font-bold px-3 py-1 rounded-md whitespace-nowrap">
+                  <span className="bg-[#D8CCFF] text-[#111111] text-[11px] font-bold px-3 py-1 rounded-md whitespace-nowrap">
                     {plan.badge_text || 'Most Popular'}
                   </span>
                 </div>
@@ -182,7 +182,7 @@ export function PricingToggle({
               <ul className="space-y-3 mb-7 flex-1">
                 {plan.features.map((feat) => (
                   <li key={feat} className="flex items-center gap-2.5">
-                    <div className="w-4 h-4 flex-shrink-0 text-[#2ECC8A]">
+                    <div className="w-4 h-4 flex-shrink-0 text-[#6C55E8]">
                       <CheckSolid />
                     </div>
                     <span className={`text-sm ${featured ? 'text-white/75' : 'text-[#111827]/75'}`}>{feat}</span>
@@ -196,8 +196,8 @@ export function PricingToggle({
                   href="mailto:sales@moffu.com"
                   className={`block w-full text-center py-3 rounded-lg text-sm font-semibold transition-all duration-150 ${
                     featured
-                      ? 'border-2 border-white text-white hover:bg-white hover:text-[#0D4C3C] active:scale-95'
-                      : 'border-2 border-[#111827] text-[#111827] hover:bg-[#111827] hover:text-[#2ECC8A]'
+                      ? 'border-2 border-white text-white hover:bg-white hover:text-[#6C55E8] active:scale-95'
+                      : 'border-2 border-[#111827] text-[#111827] hover:bg-[#6C55E8] hover:border-[#6C55E8] hover:text-white'
                   }`}
                 >
                   Contact Sales Team
@@ -208,7 +208,7 @@ export function PricingToggle({
                   label={waitlistEnabled ? 'Join Waitlist' : 'Get Started'}
                   source="pricing"
                   portalUrl={portalUrl}
-                  className="block w-full text-center py-3 rounded-lg text-sm font-semibold border-2 border-white text-white hover:bg-white hover:text-[#0D4C3C] active:scale-95 transition-all duration-150"
+                  className="block w-full text-center py-3 rounded-lg text-sm font-semibold border-2 border-white text-white hover:bg-white hover:text-[#6C55E8] active:scale-95 transition-all duration-150"
                 />
               ) : (
                 <WaitlistButton
@@ -216,7 +216,7 @@ export function PricingToggle({
                   label={waitlistEnabled ? 'Join Waitlist' : 'Get Started'}
                   source="pricing"
                   portalUrl={portalUrl}
-                  className="block w-full text-center py-3 rounded-lg text-sm font-semibold border-2 border-[#111827] text-[#111827] hover:bg-[#111827] hover:text-[#2ECC8A] transition-all duration-150"
+                  className="block w-full text-center py-3 rounded-lg text-sm font-semibold border-2 border-[#111827] text-[#111827] hover:bg-[#6C55E8] hover:border-[#6C55E8] hover:text-white transition-all duration-150"
                 />
               )}
             </div>

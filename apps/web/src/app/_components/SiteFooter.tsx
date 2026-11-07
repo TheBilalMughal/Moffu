@@ -46,13 +46,13 @@ export function SiteFooter({ portalUrl = 'https://app.moffu.pro' }: { portalUrl?
       {/* ── CTA ── */}
       <div className="flex-1 flex items-center px-8 lg:px-16 py-20">
         <div className="max-w-[1380px] mx-auto w-full">
-          <h2 className="text-[clamp(3rem,9vw,7rem)] font-black leading-[1.0] text-[#2ECC8A] mb-8">
+          <h2 className="text-[clamp(3rem,9vw,7rem)] font-black leading-[1.0] text-[#D8CCFF] mb-8">
             Start answering.<br />Stop ignoring.
           </h2>
           <div className="flex flex-wrap items-center gap-4">
             <a
               href={`${portalUrl}/auth/signup`}
-              className="inline-flex items-center gap-2 bg-[#2ECC8A] text-[#111827] font-bold text-sm px-7 py-3.5 rounded-lg hover:scale-105 active:scale-95 transition-transform duration-150"
+              className="inline-flex items-center gap-2 bg-[#D8CCFF] text-[#111111] font-bold text-sm px-7 py-3.5 rounded-lg hover:scale-105 active:scale-95 transition-transform duration-150"
             >
               Start Free →
             </a>

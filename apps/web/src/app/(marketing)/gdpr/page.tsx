@@ -58,7 +58,7 @@ export default function GdprPage() {
             </ul>
             <p className="mt-4">
               To exercise any of these rights, contact us at{' '}
-              <a href="mailto:privacy@moffu.com" className="text-[#0D4C3C] underline">privacy@moffu.com</a>.
+              <a href="mailto:privacy@moffu.com" className="text-[#6C55E8] underline">privacy@moffu.com</a>.
               We will respond within 30 days.
             </p>
           </section>
@@ -87,7 +87,7 @@ export default function GdprPage() {
             <p>
               You have the right to lodge a complaint with your local data protection supervisory
               authority if you believe we have not complied with GDPR. In the UK, this is the{' '}
-              <a href="https://ico.org.uk" className="text-[#0D4C3C] underline" target="_blank" rel="noopener noreferrer">
+              <a href="https://ico.org.uk" className="text-[#6C55E8] underline" target="_blank" rel="noopener noreferrer">
                 Information Commissioner&apos;s Office (ICO)
               </a>.
             </p>
@@ -97,7 +97,7 @@ export default function GdprPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">8. Contact</h2>
             <p>
               For GDPR-related enquiries, contact our data protection team at{' '}
-              <a href="mailto:privacy@moffu.com" className="text-[#0D4C3C] underline">privacy@moffu.com</a>.
+              <a href="mailto:privacy@moffu.com" className="text-[#6C55E8] underline">privacy@moffu.com</a>.
             </p>
           </section>
 

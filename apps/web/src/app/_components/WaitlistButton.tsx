@@ -105,8 +105,8 @@ export function WaitlistButton({
             <div className="px-7 py-6">
               {done ? (
                 <div className="text-center py-4">
-                  <div className="w-14 h-14 rounded-full bg-[#E6F2EE] flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-7 h-7 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-14 h-14 rounded-full bg-[#EDE9FF] flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-7 h-7 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
                     </svg>
                   </div>
@@ -116,7 +116,7 @@ export function WaitlistButton({
                   </p>
                   <button
                     onClick={() => setOpen(false)}
-                    className="mt-5 w-full bg-[#0D4C3C] hover:bg-[#083F32] text-white font-semibold text-sm py-3 rounded-xl transition-colors"
+                    className="mt-5 w-full bg-[#111111] hover:bg-[#6C55E8] text-white font-semibold text-sm py-3 rounded-xl transition-colors"
                   >
                     Done
                   </button>
@@ -155,7 +155,7 @@ export function WaitlistButton({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
+                    className="w-full bg-[#111111] hover:bg-[#6C55E8] disabled:opacity-60 text-white font-semibold text-sm py-3 rounded-xl transition-colors"
                   >
                     {loading ? 'Joining…' : 'Join waitlist'}
                   </button>
