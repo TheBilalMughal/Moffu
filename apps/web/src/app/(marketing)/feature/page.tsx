@@ -168,6 +168,7 @@ export default async function FeaturePage() {
     .eq('key', 'waitlist_enabled')
     .single();
   const waitlistEnabled = wSetting?.value === 'true';
+
   return (
     <>
       <script
@@ -180,66 +181,47 @@ export default async function FeaturePage() {
       />
 
       <main>
-        {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="px-8 lg:px-16 py-4 bg-white border-b border-[#F3F4F6]">
-          <ol className="flex items-center gap-2 text-[13px]" itemScope itemType="https://schema.org/BreadcrumbList">
-            <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-              <Link
-                href="/"
-                itemProp="item"
-                className="text-[#6B7280] hover:text-[#0D4C3C] transition-colors duration-150"
-              >
-                <span itemProp="name">Home</span>
-              </Link>
-              <meta itemProp="position" content="1" />
-            </li>
-            <li aria-hidden="true">
-              <svg className="w-3.5 h-3.5 text-[#D1D5DB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </li>
-            <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-              <span itemProp="name" className="text-[#111827] font-medium">Features</span>
-              <meta itemProp="position" content="2" />
-            </li>
-          </ol>
-        </nav>
 
-        {/* Hero */}
-        <section className="bg-white px-8 lg:px-16 py-20 text-center max-w-4xl mx-auto reveal">
-          <p className="text-[11px] font-semibold text-[#0D4C3C] uppercase tracking-[0.14em] mb-4">
-            · Feature
-          </p>
-          <h1 className="text-[2.75rem] lg:text-[3.5rem] leading-[1.1] font-bold text-[#111827] mb-6">
-            Teach your AI how your<br className="hidden sm:block" /> brand communicates.
-          </h1>
-          <p className="text-[1.125rem] text-[#6B7280] leading-relaxed mb-10 max-w-2xl mx-auto">
-            Brand Brain is the layer between raw AI and your business. Configure it once with
-            your tone, rules, and preferences — and every Google review response sounds
-            authentically like you.
-          </p>
-          <WaitlistButton
-            enabled={waitlistEnabled}
-            label={waitlistEnabled ? 'Join Waitlist' : 'Start Free Trial'}
-            source="feature_hero"
-            portalUrl={portalUrl}
-            className="inline-block bg-[#0D4C3C] hover:bg-[#083F32] text-white px-7 py-3.5 rounded-lg font-semibold text-sm transition-colors duration-150"
-          />
+        {/* ── Hero ── */}
+        <section className="bg-white px-6 lg:px-16 pt-40 pb-24">
+          <div className="max-w-[1380px] mx-auto">
+            <p className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-6">
+              Features
+            </p>
+            <h1 className="text-[clamp(2.5rem,6vw,5rem)] font-black leading-[1.05] tracking-tight text-[#111827] mb-8 max-w-3xl">
+              Teach your AI how your brand communicates.
+            </h1>
+            <p className="text-lg text-[#6B7280] leading-relaxed mb-10 max-w-2xl">
+              Brand Brain is the layer between raw AI and your business. Configure it once with
+              your tone, rules, and preferences — and every Google review response sounds
+              authentically like you.
+            </p>
+            <WaitlistButton
+              enabled={waitlistEnabled}
+              label={waitlistEnabled ? 'Join Waitlist' : 'Start Free →'}
+              source="feature_hero"
+              portalUrl={portalUrl}
+              className="inline-block bg-[#111827] text-white px-7 py-3.5 rounded-lg font-black text-sm hover:scale-105 active:scale-95 transition-transform duration-150"
+            />
+          </div>
         </section>
 
-        {/* Features grid */}
-        <section className="bg-[#F8FAFB] px-8 lg:px-16 py-20" aria-labelledby="features-heading">
-          <div className="max-w-5xl mx-auto">
-            <h2 id="features-heading" className="text-[2rem] font-bold text-[#111827] text-center mb-14">
+        {/* ── Features grid ── */}
+        <section className="bg-[#F3F4F6] px-6 lg:px-16 py-24" aria-labelledby="features-heading">
+          <div className="max-w-[1380px] mx-auto">
+            <p className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-4">
+              What's included
+            </p>
+            <h2 id="features-heading" className="text-[clamp(2rem,4vw,3rem)] font-black text-[#111827] leading-tight mb-14 max-w-xl">
               Everything Brand Brain can do
             </h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 reveal-stagger">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {FEATURES.map(({ title, description, icon }) => (
                 <div key={title} className="bg-white rounded-xl p-7 border border-[#E5E7EB]">
-                  <div className="w-10 h-10 rounded-lg bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center mb-5">
+                  <div className="w-10 h-10 rounded-lg bg-[#F3F4F6] text-[#111827] flex items-center justify-center mb-5">
                     {icon}
                   </div>
-                  <h3 className="font-bold text-[#111827] mb-2">{title}</h3>
+                  <h3 className="font-black text-[#111827] mb-2">{title}</h3>
                   <p className="text-sm text-[#6B7280] leading-relaxed">{description}</p>
                 </div>
               ))}
@@ -247,62 +229,80 @@ export default async function FeaturePage() {
           </div>
         </section>
 
-        {/* How it works */}
-        <section className="bg-white px-8 lg:px-16 py-20" aria-labelledby="how-heading">
-          <div className="max-w-4xl mx-auto">
-            <h2 id="how-heading" className="text-[2rem] font-bold text-[#111827] text-center mb-14">
-              How Brand Brain works
+        {/* ── How it works ── */}
+        <section className="bg-white px-6 lg:px-16 py-24" aria-labelledby="how-heading">
+          <div className="max-w-[1380px] mx-auto">
+            <p className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-4">
+              How it works
+            </p>
+            <h2 id="how-heading" className="text-[clamp(2rem,4vw,3rem)] font-black text-[#111827] leading-tight mb-14 max-w-xl">
+              Up and running in four steps.
             </h2>
-            <div className="grid sm:grid-cols-2 gap-6 reveal-stagger">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {HOW_IT_WORKS.map(({ step, title, body }) => (
-                <div key={step} className="flex gap-5">
-                  <div className="text-[2rem] font-bold text-[#E5E7EB] leading-none flex-shrink-0 w-10">
-                    {step}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-[#111827] mb-1.5">{title}</h3>
-                    <p className="text-sm text-[#6B7280] leading-relaxed">{body}</p>
-                  </div>
+                <div key={step}>
+                  <p className="text-[3rem] font-black text-[#E5E7EB] leading-none mb-4">{step}</p>
+                  <h3 className="font-black text-[#111827] mb-2 text-[0.9375rem]">{title}</h3>
+                  <p className="text-sm text-[#6B7280] leading-relaxed">{body}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* FAQ */}
-        <section className="bg-[#F8FAFB] px-8 lg:px-16 py-20" aria-labelledby="faq-heading">
-          <div className="max-w-3xl mx-auto">
-            <h2 id="faq-heading" className="text-[2rem] font-bold text-[#111827] text-center mb-12">
+        {/* ── FAQ ── */}
+        <section className="bg-[#F3F4F6] px-6 lg:px-16 py-24" aria-labelledby="faq-heading">
+          <div className="max-w-[1380px] mx-auto">
+            <p className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-4">
+              FAQ
+            </p>
+            <h2 id="faq-heading" className="text-[clamp(2rem,4vw,3rem)] font-black text-[#111827] leading-tight mb-14 max-w-xl">
               Frequently asked questions
             </h2>
-            <div className="space-y-6 reveal-stagger">
+            <div className="grid lg:grid-cols-2 gap-4">
               {FAQ.map(({ q, a }) => (
-                <div key={q} className="bg-white rounded-xl p-7 border border-[#E5E7EB]">
-                  <h3 className="font-bold text-[#111827] mb-2">{q}</h3>
-                  <p className="text-sm text-[#6B7280] leading-relaxed">{a}</p>
-                </div>
+                <details key={q} className="group border border-[#E5E7EB] rounded-xl overflow-hidden">
+                  <summary className="flex items-center justify-between px-6 py-5 cursor-pointer list-none select-none hover:bg-[#F3F4F6] transition-colors bg-white">
+                    <span className="text-sm font-black text-[#111827] pr-4">{q}</span>
+                    <svg className="w-4 h-4 text-[#9CA3AF] flex-shrink-0 transition-transform duration-200 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </summary>
+                  <div className="px-6 pb-5 pt-1 bg-white text-sm text-[#6B7280] leading-relaxed">
+                    {a}
+                  </div>
+                </details>
               ))}
             </div>
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="bg-white border-t border-[#E5E7EB] px-8 lg:px-16 py-20 text-center reveal">
-          <h2 className="text-[2rem] font-bold text-[#111827] mb-4">
-            Ready to set up your Brand Brain?
-          </h2>
-          <p className="text-[#6B7280] mb-8 text-[1.0625rem] max-w-xl mx-auto">
-            Connect your Google Business Profile and start responding to reviews
-            in your brand voice — today.
-          </p>
-          <WaitlistButton
-            enabled={waitlistEnabled}
-            label={waitlistEnabled ? 'Join Waitlist' : 'Get Started Free'}
-            source="feature_cta"
-            portalUrl={portalUrl}
-            className="inline-block bg-[#0D4C3C] hover:bg-[#083F32] text-white px-8 py-4 rounded-lg font-semibold text-sm transition-colors duration-150"
-          />
+        {/* ── CTA ── */}
+        <section className="bg-[#111827] px-6 lg:px-16 py-24">
+          <div className="max-w-[1380px] mx-auto">
+            <h2 className="text-[clamp(2.5rem,6vw,5rem)] font-black leading-[1.05] text-[#2ECC8A] mb-8">
+              Ready to set up<br />your Brand Brain?
+            </h2>
+            <p className="text-white/60 mb-10 text-lg max-w-xl leading-relaxed">
+              Connect your Google Business Profile and start responding to reviews
+              in your brand voice — today.
+            </p>
+            <div className="flex flex-wrap items-center gap-4">
+              <WaitlistButton
+                enabled={waitlistEnabled}
+                label={waitlistEnabled ? 'Join Waitlist' : 'Get Started Free →'}
+                source="feature_cta"
+                portalUrl={portalUrl}
+                className="inline-block bg-[#2ECC8A] text-[#111827] px-7 py-3.5 rounded-lg font-black text-sm hover:scale-105 active:scale-95 transition-transform duration-150"
+              />
+              <Link href="/#pricing" className="text-sm font-medium text-white/50 hover:text-white transition-colors">
+                View pricing →
+              </Link>
+            </div>
+            <p className="text-xs text-white/25 mt-5">No credit card required · Free plan available · Cancel anytime</p>
+          </div>
         </section>
+
       </main>
     </>
   );
