@@ -324,21 +324,11 @@ const FEATURES_GRID = [
 // Who's on it (marquee logos)
 // ---------------------------------------------------------------------------
 
-const BRANDS = [
-  { name: 'Brewed Awakening', type: 'Coffee Co.' },
-  { name: 'Curl Theory', type: 'Hair Studio' },
-  { name: 'The Glow Lab', type: 'Skin & Spa' },
-  { name: 'Felix & Co.', type: 'Restaurant' },
-  { name: 'Peel & Press', type: 'Juice Bar' },
-  { name: 'Oak & Stone', type: 'Boutique Hotel' },
-  { name: 'Mint Dental', type: 'Dental Clinic' },
-  { name: 'Drift Fitness', type: 'Gym & Studio' },
-  { name: 'Larder & Lane', type: 'Bakery' },
-  { name: 'Nova Auto', type: 'Auto Repair' },
-];
+interface BrandClient { name: string; client_type: string | null; logo_url: string | null; }
 
-function BrandsSection() {
-  const doubled = [...BRANDS, ...BRANDS];
+function BrandsSection({ brands }: { brands: BrandClient[] }) {
+  if (brands.length === 0) return null;
+  const doubled = [...brands, ...brands];
   return (
     <section className="bg-white py-16 overflow-hidden border-b border-[#E5E7EB]">
       <div className="max-w-[1380px] mx-auto px-6 lg:px-16 mb-10">
@@ -357,13 +347,16 @@ function BrandsSection() {
               key={i}
               className="flex-shrink-0 mx-5 flex items-center gap-3 bg-[#F3F4F6] rounded-xl px-5 py-3.5 select-none"
             >
-              {/* Monogram */}
-              <div className="w-9 h-9 rounded-lg bg-[#111827] flex items-center justify-center text-white text-xs font-black flex-shrink-0">
-                {b.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
-              </div>
+              {b.logo_url ? (
+                <img src={b.logo_url} alt={b.name} className="w-9 h-9 rounded-lg object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-9 h-9 rounded-lg bg-[#111827] flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+                  {b.name.split(' ').map((w: string) => w[0]).slice(0, 2).join('')}
+                </div>
+              )}
               <div>
                 <p className="text-sm font-black text-[#111827] whitespace-nowrap leading-tight">{b.name}</p>
-                <p className="text-[11px] text-[#111827]/45 whitespace-nowrap">{b.type}</p>
+                <p className="text-[11px] text-[#111827]/45 whitespace-nowrap">{b.client_type ?? ''}</p>
               </div>
             </div>
           ))}
@@ -622,18 +615,18 @@ export default async function HomePage() {
   const supabase = await createServerClient();
   const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? 'https://app.moffu.pro';
 
-  const { data: wSetting } = await supabase
-    .from('platform_settings')
-    .select('value')
-    .eq('key', 'waitlist_enabled')
-    .single();
-  const waitlistEnabled = wSetting?.value === 'true';
+  const [wSettingRes, brandsRes] = await Promise.all([
+    supabase.from('platform_settings').select('value').eq('key', 'waitlist_enabled').single(),
+    supabase.from('marketing_clients').select('name, client_type, logo_url').order('sort_order').order('created_at'),
+  ]);
+  const waitlistEnabled = wSettingRes.data?.value === 'true';
+  const brands: BrandClient[] = (brandsRes.data ?? []) as BrandClient[];
 
   return (
     <main>
       <HeroSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       <ValuePropSection />
-      <BrandsSection />
+      <BrandsSection brands={brands} />
       <FeaturesSection />
       <CaseStudySection />
       <PricingSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />

@@ -27,8 +27,7 @@ import { SyncSettingsPage } from '@/features/settings/SyncSettingsPage';
 import { GeneralSettingsPage } from '@/features/settings/GeneralSettingsPage';
 import { EmailSettingsPage } from '@/features/settings/EmailSettingsPage';
 import { SecuritySettingsPage } from '@/features/settings/SecuritySettingsPage';
-import { WebsiteBrandingPage } from '@/features/settings/WebsiteBrandingPage';
-import { WebsiteAutomationPage } from '@/features/settings/WebsiteAutomationPage';
+import { ClientLogoPage } from '@/features/settings/ClientLogoPage';
 import { RefundsPage } from '@/features/billing/RefundsPage';
 import { ReportsPage } from '@/features/analytics/ReportsPage';
 import { IntegrationsHealthPage } from '@/features/platform/IntegrationsHealthPage';
@@ -72,14 +71,12 @@ export function App() {
           <Route path="roles" element={<RolesPage />} />
           <Route path="audit" element={<AuditPage />} />
           <Route path="settings" element={<SettingsLayout />}>
-            <Route index element={<Navigate to="general" replace />} />
-            {/* General */}
-            <Route path="general" element={<GeneralSettingsPage />} />
+            <Route index element={<Navigate to="website/client-logo" replace />} />
             {/* Website tab */}
-            <Route path="website" element={<Navigate to="website/branding" replace />} />
-            <Route path="website/branding"   element={<WebsiteBrandingPage />} />
-            <Route path="website/packages"   element={<PackagesSettingsPage />} />
-            <Route path="website/automation" element={<WebsiteAutomationPage />} />
+            <Route path="website" element={<Navigate to="website/client-logo" replace />} />
+            <Route path="website/client-logo" element={<ClientLogoPage />} />
+            {/* General tab */}
+            <Route path="general" element={<GeneralSettingsPage />} />
             {/* API tab */}
             <Route path="api" element={<Navigate to="api/ai" replace />} />
             <Route path="api/ai"     element={<AISettingsPage />} />
@@ -88,13 +85,13 @@ export function App() {
             {/* Notifications tab */}
             <Route path="notifications" element={<Navigate to="notifications/email" replace />} />
             <Route path="notifications/email" element={<EmailSettingsPage />} />
-            {/* Security */}
+            {/* Security tab */}
             <Route path="security" element={<SecuritySettingsPage />} />
             {/* Legacy redirects */}
-            <Route path="packages" element={<Navigate to="/settings/website/packages" replace />} />
-            <Route path="ai"       element={<Navigate to="/settings/api/ai"           replace />} />
-            <Route path="google"   element={<Navigate to="/settings/api/google"        replace />} />
-            <Route path="sync"     element={<Navigate to="/settings/api/sync"          replace />} />
+            <Route path="packages" element={<Navigate to="/settings/general" replace />} />
+            <Route path="ai"       element={<Navigate to="/settings/api/ai"   replace />} />
+            <Route path="google"   element={<Navigate to="/settings/api/google" replace />} />
+            <Route path="sync"     element={<Navigate to="/settings/api/sync"   replace />} />
             <Route path="email"    element={<Navigate to="/settings/notifications/email" replace />} />
           </Route>
           {/* Legacy redirects */}

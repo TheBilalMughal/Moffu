@@ -83,23 +83,21 @@ interface Tab {
 
 const TABS: Tab[] = [
   {
+    id: 'website',
+    label: 'Website',
+    icon: Icon.website,
+    root: '/settings/website',
+    defaultPath: '/settings/website/client-logo',
+    sidebar: [
+      { label: 'Client Logo', path: '/settings/website/client-logo', icon: Icon.branding },
+    ],
+  },
+  {
     id: 'general',
     label: 'General',
     icon: Icon.general,
     root: '/settings/general',
     defaultPath: '/settings/general',
-  },
-  {
-    id: 'website',
-    label: 'Website',
-    icon: Icon.website,
-    root: '/settings/website',
-    defaultPath: '/settings/website/branding',
-    sidebar: [
-      { label: 'Branding',    path: '/settings/website/branding',    icon: Icon.branding    },
-      { label: 'Packages',    path: '/settings/website/packages',    icon: Icon.packages    },
-      { label: 'Automation',  path: '/settings/website/automation',  icon: Icon.automation  },
-    ],
   },
   {
     id: 'api',
