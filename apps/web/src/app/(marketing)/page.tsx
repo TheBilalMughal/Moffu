@@ -482,17 +482,10 @@ function FAQSection() {
         </h2>
         <div className="grid md:grid-cols-2 gap-3">
           {FAQ_ITEMS.map((item) => (
-            <details key={item.q} className="group border border-[#E5E7EB] rounded-xl overflow-hidden">
-              <summary className="flex items-center justify-between px-5 py-4 cursor-pointer list-none select-none hover:bg-[#F3F4F6] transition-colors">
-                <span className="text-sm font-semibold text-[#111827] pr-4">{item.q}</span>
-                <svg className="w-4 h-4 text-[#111827]/40 flex-shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
-                </svg>
-              </summary>
-              <div className="px-5 pb-5 pt-1 text-sm text-[#111827]/65 leading-relaxed border-t border-[#F3F4F6]">
-                {item.a}
-              </div>
-            </details>
+            <div key={item.q} className="border border-[#E5E7EB] rounded-xl px-5 py-5">
+              <p className="text-sm font-black text-[#111827] mb-2">{item.q}</p>
+              <p className="text-sm text-[#111827]/65 leading-relaxed">{item.a}</p>
+            </div>
           ))}
         </div>
       </div>
