@@ -173,7 +173,7 @@ function StatsSection() {
     { label: 'You with Moffu', pct: 100, highlight: true },
   ];
   return (
-    <section className="bg-[#EDF5F1] px-6 lg:px-16 py-16">
+    <section className="bg-[#F3F4F6] px-6 lg:px-16 py-16">
       <div className="max-w-[1380px] mx-auto">
         <div className="flex items-center justify-between mb-8">
           <p className="text-sm font-semibold text-[#111827]">Google review reply rate</p>
@@ -269,7 +269,7 @@ function FeaturesSection() {
       {FEATURES.map(({ title, body, tinted }) => (
         <section
           key={title}
-          className={`px-6 lg:px-16 py-20 ${tinted ? 'bg-[#EDF5F1]' : 'bg-white'}`}
+          className={`px-6 lg:px-16 py-20 ${tinted ? 'bg-[#F3F4F6]' : 'bg-white'}`}
         >
           <div className="max-w-[1380px] mx-auto grid md:grid-cols-2 gap-8 items-center">
             <div>
@@ -414,7 +414,7 @@ async function fetchPricingPlans(): Promise<PricingPlan[]> {
 async function PricingSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean; portalUrl: string }) {
   const plans = await fetchPricingPlans();
   return (
-    <section id="pricing" className="bg-[#EDF5F1] px-6 lg:px-16 min-h-[100svh] flex items-center py-20">
+    <section id="pricing" className="bg-[#F3F4F6] px-6 lg:px-16 min-h-[100svh] flex items-center py-20">
       <div className="max-w-[1380px] mx-auto w-full">
         <PricingToggle plans={plans} waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       </div>
@@ -480,7 +480,7 @@ function FAQSection() {
         <div className="grid md:grid-cols-2 gap-3">
           {FAQ_ITEMS.map((item) => (
             <details key={item.q} className="group border border-[#E5E7EB] rounded-xl overflow-hidden">
-              <summary className="flex items-center justify-between px-5 py-4 cursor-pointer list-none select-none hover:bg-[#EDF5F1] transition-colors">
+              <summary className="flex items-center justify-between px-5 py-4 cursor-pointer list-none select-none hover:bg-[#F3F4F6] transition-colors">
                 <span className="text-sm font-semibold text-[#111827] pr-4">{item.q}</span>
                 <svg className="w-4 h-4 text-[#111827]/40 flex-shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
