@@ -338,14 +338,13 @@ function BrandsSection({ brands }: { brands: BrandClient[] }) {
         </h2>
       </div>
 
-      {/* Marquee */}
-      <div className="max-w-[1380px] mx-auto px-6 lg:px-16">
-      <div className="marquee-wrap overflow-hidden cursor-default rounded-xl">
+      {/* Marquee — full viewport width so logos enter from the right edge */}
+      <div className="marquee-wrap overflow-hidden cursor-default w-full">
         <div className="marquee-track">
           {doubled.map((b, i) => (
             <div
               key={i}
-              className="flex-shrink-0 mx-8 flex items-center select-none"
+              className="flex-shrink-0 mx-10 flex items-center select-none"
             >
               {b.logo_url ? (
                 <img src={b.logo_url} alt={b.name} className="h-9 w-auto max-w-[120px] object-contain flex-shrink-0" />
@@ -357,7 +356,6 @@ function BrandsSection({ brands }: { brands: BrandClient[] }) {
             </div>
           ))}
         </div>
-      </div>
       </div>
     </section>
   );
