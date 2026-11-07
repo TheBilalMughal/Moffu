@@ -328,7 +328,7 @@ interface BrandClient { name: string; client_type: string | null; logo_url: stri
 
 function BrandsSection({ brands }: { brands: BrandClient[] }) {
   if (brands.length === 0) return null;
-  const doubled = [...brands, ...brands];
+  const doubled = [...brands, ...brands, ...brands, ...brands];
   return (
     <section className="bg-white py-16 overflow-hidden border-b border-[#E5E7EB]">
       <div className="max-w-[1380px] mx-auto px-6 lg:px-16 mb-10">
