@@ -57,7 +57,7 @@ export function PricingToggle({
         {/* Left: heading */}
         <div className="flex-1">
           <p className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-3">pricing</p>
-          <h2 className="text-[clamp(2.25rem,5vw,3.75rem)] font-black text-[#111827] leading-[1.05]">
+          <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-black text-[#111827] leading-[1.05]">
             Plans for every<br />stage of growth.
           </h2>
         </div>

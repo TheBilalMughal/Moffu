@@ -188,7 +188,7 @@ export default async function FeaturePage() {
             <p className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-6">
               Features
             </p>
-            <h1 className="text-[clamp(2.5rem,6vw,5rem)] font-black leading-[1.05] tracking-tight text-[#111827] mb-8 max-w-3xl">
+            <h1 className="text-[clamp(2rem,5vw,3.5rem)] font-black leading-[1.05] tracking-tight text-[#111827] mb-8 max-w-3xl">
               Teach your AI how your brand communicates.
             </h1>
             <p className="text-lg text-[#6B7280] leading-relaxed mb-10 max-w-2xl">
@@ -205,7 +205,7 @@ export default async function FeaturePage() {
             />
 
             <div className="mt-20 border-t border-[#E5E7EB] pt-16">
-            <h2 id="features-heading" className="text-[clamp(1.75rem,3vw,2.5rem)] font-black text-[#111827] leading-tight mb-12 max-w-xl">
+            <h2 id="features-heading" className="text-[clamp(1.5rem,2.5vw,2rem)] font-black text-[#111827] leading-tight mb-12 max-w-xl">
               What's included
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -229,7 +229,7 @@ export default async function FeaturePage() {
             <p className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-4">
               How it works
             </p>
-            <h2 id="how-heading" className="text-[clamp(2rem,4vw,3rem)] font-black text-[#111827] leading-tight mb-14 max-w-xl">
+            <h2 id="how-heading" className="text-[clamp(1.75rem,3.5vw,2.5rem)] font-black text-[#111827] leading-tight mb-14 max-w-xl">
               Up and running in four steps.
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -250,7 +250,7 @@ export default async function FeaturePage() {
             <p className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-4">
               FAQ
             </p>
-            <h2 id="faq-heading" className="text-[clamp(2rem,4vw,3rem)] font-black text-[#111827] leading-tight mb-14 max-w-xl">
+            <h2 id="faq-heading" className="text-[clamp(1.75rem,3.5vw,2.5rem)] font-black text-[#111827] leading-tight mb-14 max-w-xl">
               Frequently asked questions
             </h2>
             <div className="grid lg:grid-cols-2 gap-4">
@@ -274,7 +274,7 @@ export default async function FeaturePage() {
         {/* ── CTA ── */}
         <section className="bg-white px-6 lg:px-16 py-24">
           <div className="max-w-[1380px] mx-auto">
-            <h2 className="text-[clamp(2.5rem,6vw,5rem)] font-black leading-[1.05] text-[#111827] mb-8">
+            <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black leading-[1.05] text-[#111827] mb-8">
               Ready to set up<br />your Brand Brain?
             </h2>
             <p className="text-[#6B7280] mb-10 text-lg max-w-xl leading-relaxed">
