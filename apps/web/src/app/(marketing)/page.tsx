@@ -168,7 +168,7 @@ function ValuePropSection() {
   ];
 
   return (
-    <section id="how-it-works" className="bg-[#F3F4F6] px-6 lg:px-16 py-24 overflow-visible">
+    <section id="how-it-works" className="bg-white px-6 lg:px-16 py-24 overflow-visible">
       <div className="max-w-[1380px] mx-auto grid md:grid-cols-2 gap-16 items-center">
 
         {/* Left: copy */}
@@ -322,7 +322,7 @@ const FEATURES_GRID = [
 
 function FeaturesSection() {
   return (
-    <section id="features" className="bg-white px-6 lg:px-16 py-24">
+    <section id="features" className="bg-[#F3F4F6] px-6 lg:px-16 py-24">
       <div className="max-w-[1380px] mx-auto">
         <p className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-6">
           Features
@@ -338,7 +338,7 @@ function FeaturesSection() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES_GRID.map(({ title, description, icon }) => (
-              <div key={title} className="bg-[#F3F4F6] rounded-xl p-7">
+              <div key={title} className="bg-white rounded-xl p-7 border border-[#E5E7EB]">
                 <div className="w-10 h-10 rounded-lg bg-white text-[#111827] flex items-center justify-center mb-5">
                   {icon}
                 </div>
