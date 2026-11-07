@@ -27,6 +27,8 @@ import { SyncSettingsPage } from '@/features/settings/SyncSettingsPage';
 import { GeneralSettingsPage } from '@/features/settings/GeneralSettingsPage';
 import { EmailSettingsPage } from '@/features/settings/EmailSettingsPage';
 import { SecuritySettingsPage } from '@/features/settings/SecuritySettingsPage';
+import { WebsiteBrandingPage } from '@/features/settings/WebsiteBrandingPage';
+import { WebsiteAutomationPage } from '@/features/settings/WebsiteAutomationPage';
 import { RefundsPage } from '@/features/billing/RefundsPage';
 import { ReportsPage } from '@/features/analytics/ReportsPage';
 import { IntegrationsHealthPage } from '@/features/platform/IntegrationsHealthPage';
@@ -71,13 +73,29 @@ export function App() {
           <Route path="audit" element={<AuditPage />} />
           <Route path="settings" element={<SettingsLayout />}>
             <Route index element={<Navigate to="general" replace />} />
+            {/* General */}
             <Route path="general" element={<GeneralSettingsPage />} />
-            <Route path="packages" element={<PackagesSettingsPage />} />
-            <Route path="ai" element={<AISettingsPage />} />
-            <Route path="google" element={<GoogleSettingsPage />} />
-            <Route path="sync" element={<SyncSettingsPage />} />
-            <Route path="email" element={<EmailSettingsPage />} />
+            {/* Website tab */}
+            <Route path="website" element={<Navigate to="website/branding" replace />} />
+            <Route path="website/branding"   element={<WebsiteBrandingPage />} />
+            <Route path="website/packages"   element={<PackagesSettingsPage />} />
+            <Route path="website/automation" element={<WebsiteAutomationPage />} />
+            {/* API tab */}
+            <Route path="api" element={<Navigate to="api/ai" replace />} />
+            <Route path="api/ai"     element={<AISettingsPage />} />
+            <Route path="api/google" element={<GoogleSettingsPage />} />
+            <Route path="api/sync"   element={<SyncSettingsPage />} />
+            {/* Notifications tab */}
+            <Route path="notifications" element={<Navigate to="notifications/email" replace />} />
+            <Route path="notifications/email" element={<EmailSettingsPage />} />
+            {/* Security */}
             <Route path="security" element={<SecuritySettingsPage />} />
+            {/* Legacy redirects */}
+            <Route path="packages" element={<Navigate to="/settings/website/packages" replace />} />
+            <Route path="ai"       element={<Navigate to="/settings/api/ai"           replace />} />
+            <Route path="google"   element={<Navigate to="/settings/api/google"        replace />} />
+            <Route path="sync"     element={<Navigate to="/settings/api/sync"          replace />} />
+            <Route path="email"    element={<Navigate to="/settings/notifications/email" replace />} />
           </Route>
           {/* Legacy redirects */}
           <Route path="team" element={<Navigate to="/users" replace />} />
