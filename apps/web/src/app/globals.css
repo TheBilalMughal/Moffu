@@ -46,6 +46,14 @@
   .reveal-stagger.revealed > *:nth-child(5) { opacity: 1; transform: translateY(0); transition-delay: 320ms; }
   .reveal-stagger.revealed > *:nth-child(6) { opacity: 1; transform: translateY(0); transition-delay: 400ms; }
 
+  /* Floating review card animations */
+  @keyframes floatA { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-10px) rotate(-1deg)} }
+  @keyframes floatB { 0%,100%{transform:translateY(0) rotate(1deg)} 50%{transform:translateY(-14px) rotate(1deg)} }
+  @keyframes floatC { 0%,100%{transform:translateY(0) rotate(-0.5deg)} 50%{transform:translateY(-8px) rotate(-0.5deg)} }
+  .float-a { animation: floatA 5s ease-in-out infinite }
+  .float-b { animation: floatB 6s ease-in-out 0.4s infinite }
+  .float-c { animation: floatC 4.5s ease-in-out 0.8s infinite }
+
   /* Reduced motion — respect user preference */
   @media (prefers-reduced-motion: reduce) {
     *,

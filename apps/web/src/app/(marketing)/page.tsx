@@ -169,14 +169,6 @@ function ValuePropSection() {
 
   return (
     <section id="how-it-works" className="bg-[#F3F4F6] px-6 lg:px-16 py-24 overflow-visible">
-      <style>{`
-        @keyframes floatA { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-10px) rotate(-1deg)} }
-        @keyframes floatB { 0%,100%{transform:translateY(0) rotate(1deg)} 50%{transform:translateY(-14px) rotate(1deg)} }
-        @keyframes floatC { 0%,100%{transform:translateY(0) rotate(-0.5deg)} 50%{transform:translateY(-8px) rotate(-0.5deg)} }
-        .float-a { animation: floatA 5s ease-in-out infinite }
-        .float-b { animation: floatB 6s ease-in-out 0.4s infinite }
-        .float-c { animation: floatC 4.5s ease-in-out 0.8s infinite }
-      `}</style>
       <div className="max-w-[1380px] mx-auto grid md:grid-cols-2 gap-16 items-center">
 
         {/* Left: copy */}
