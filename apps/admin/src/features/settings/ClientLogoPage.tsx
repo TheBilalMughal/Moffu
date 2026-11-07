@@ -253,20 +253,48 @@ function ClientPanel({ client, onClose, onSaved, onDeleted }: PanelProps) {
 
 // ── Main page ─────────────────────────────────────────────────────────────
 
+const SPEED_PRESETS = [
+  { label: 'Slow',      seconds: 20 },
+  { label: 'Normal',    seconds: 12 },
+  { label: 'Fast',      seconds: 8  },
+  { label: 'Very Fast', seconds: 5  },
+];
+
 export function ClientLogoPage() {
   const [clients, setClients] = useState<MarketingClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [panel, setPanel] = useState<{ client: MarketingClient | null } | null>(null);
+  const [marqueeSpeed, setMarqueeSpeed] = useState<number>(8);
+  const [savingSpeed, setSavingSpeed] = useState(false);
+  const { success: toastSuccess, error: toastError } = useToastStore();
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase
-      .from('marketing_clients')
-      .select('*')
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: true });
-    setClients((data ?? []) as MarketingClient[]);
+    const [clientsRes, speedRes] = await Promise.all([
+      supabase
+        .from('marketing_clients')
+        .select('*')
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('platform_settings')
+        .select('value')
+        .eq('key', 'marquee_speed_seconds')
+        .single(),
+    ]);
+    setClients((clientsRes.data ?? []) as MarketingClient[]);
+    if (speedRes.data?.value) setMarqueeSpeed(Number(speedRes.data.value));
     setLoading(false);
+  }
+
+  async function handleSpeedSave(seconds: number) {
+    setSavingSpeed(true);
+    const { error } = await supabase
+      .from('platform_settings')
+      .upsert({ key: 'marquee_speed_seconds', value: String(seconds) }, { onConflict: 'key' });
+    if (error) { toastError('Failed to save speed: ' + error.message); }
+    else { setMarqueeSpeed(seconds); toastSuccess('Marquee speed updated'); }
+    setSavingSpeed(false);
   }
 
   useEffect(() => { load(); }, []);
@@ -398,6 +426,36 @@ export function ClientLogoPage() {
           {clients.length} client{clients.length !== 1 ? 's' : ''} · shown in marquee order on homepage
         </p>
       )}
+
+      {/* Marquee Speed */}
+      <div className="mt-10 bg-white rounded-xl border border-[#E5E7EB] px-6 py-6">
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-[#111827]">Marquee speed</h3>
+          <p className="text-xs text-[#6B7280] mt-0.5">Controls how fast logos scroll on the homepage.</p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {SPEED_PRESETS.map(({ label, seconds }) => {
+            const active = marqueeSpeed === seconds;
+            return (
+              <button
+                key={seconds}
+                onClick={() => handleSpeedSave(seconds)}
+                disabled={savingSpeed}
+                className={`text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 ${
+                  active
+                    ? 'bg-[#111827] text-white'
+                    : 'bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[11px] text-[#9CA3AF] mt-3">
+          Current: {marqueeSpeed}s per loop
+        </p>
+      </div>
 
       {/* Panel */}
       {panel !== null && (

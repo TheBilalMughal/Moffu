@@ -326,7 +326,7 @@ const FEATURES_GRID = [
 
 interface BrandClient { name: string; client_type: string | null; logo_url: string | null; }
 
-function BrandsSection({ brands }: { brands: BrandClient[] }) {
+function BrandsSection({ brands, speed }: { brands: BrandClient[]; speed?: number }) {
   if (brands.length === 0) return null;
   const doubled = [...brands, ...brands, ...brands, ...brands];
   return (
@@ -340,7 +340,7 @@ function BrandsSection({ brands }: { brands: BrandClient[] }) {
 
       {/* Marquee */}
       <div className="max-w-[1380px] mx-auto overflow-hidden">
-        <div className="marquee-track">
+        <div className="marquee-track" style={speed ? { animationDuration: `${speed}s` } : undefined}>
           {doubled.map((b, i) => (
             <div
               key={i}
@@ -609,18 +609,20 @@ export default async function HomePage() {
   const supabase = await createServerClient();
   const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? 'https://app.moffu.pro';
 
-  const [wSettingRes, brandsRes] = await Promise.all([
+  const [wSettingRes, brandsRes, speedRes] = await Promise.all([
     supabase.from('platform_settings').select('value').eq('key', 'waitlist_enabled').single(),
     supabase.from('marketing_clients').select('name, client_type, logo_url').order('sort_order').order('created_at'),
+    supabase.from('platform_settings').select('value').eq('key', 'marquee_speed_seconds').single(),
   ]);
   const waitlistEnabled = wSettingRes.data?.value === 'true';
   const brands: BrandClient[] = (brandsRes.data ?? []) as BrandClient[];
+  const marqueeSpeed = speedRes.data?.value ? Number(speedRes.data.value) : undefined;
 
   return (
     <main>
       <HeroSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       <ValuePropSection />
-      <BrandsSection brands={brands} />
+      <BrandsSection brands={brands} speed={marqueeSpeed} />
       <FeaturesSection />
       <CaseStudySection />
       <PricingSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
