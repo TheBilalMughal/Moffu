@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 const NAV_LINKS = [
@@ -78,13 +78,22 @@ export function SiteNavbar({ portalUrl }: { portalUrl: string }) {
         >
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
-            <span
-              className={`font-black tracking-tighter leading-none inline-block transition-all duration-300 ${scrolled ? '' : 'logo-bounce'} ${
-                scrolled ? 'text-[1.6rem] text-[#111827]' : 'text-[3.5rem] text-[#111827]'
-              }`}
+            <div
+              className={`overflow-hidden transition-all duration-300 ${!scrolled ? 'logo-bounce' : ''}`}
+              style={scrolled
+                ? { height: '26px', width: '50px' }
+                : { height: '56px', width: '108px' }
+              }
             >
-              moffu.
-            </span>
+              <img
+                src="/images/moffu-logo.png"
+                alt="Moffu"
+                style={scrolled
+                  ? { height: '66px', width: 'auto', marginTop: '-19px', marginLeft: '-8px' }
+                  : { height: '142px', width: 'auto', marginTop: '-41px', marginLeft: '-17px' }
+                }
+              />
+            </div>
           </Link>
 
           {/* Nav links */}

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: '%s | Moffu',
   },
   description: 'Brand-trained AI reputation agent for Google Business Profile.',
-  icons: { icon: '/images/fevicon.png' },
+  icons: { icon: '/images/favicon-m.svg', shortcut: '/images/favicon-m.svg' },
   robots: {
     index: false,
     follow: false,
