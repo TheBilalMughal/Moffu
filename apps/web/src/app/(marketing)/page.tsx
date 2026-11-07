@@ -161,43 +161,6 @@ function ValuePropSection() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Stats comparison
-// ---------------------------------------------------------------------------
-
-function StatsSection() {
-  const rows = [
-    { label: 'Independent restaurants', pct: 15 },
-    { label: 'Chains', pct: 56 },
-    { label: 'You with Moffu', pct: 100, highlight: true },
-  ];
-  return (
-    <section className="bg-[#F3F4F6] px-6 lg:px-16 py-16">
-      <div className="max-w-[1380px] mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <p className="text-sm font-semibold text-[#111827]">Google review reply rate</p>
-          <p className="text-xs text-[#111827]/50">the numbers tell the story</p>
-        </div>
-        <div className="space-y-5">
-          {rows.map(({ label, pct, highlight }) => (
-            <div key={label}>
-              <div className="flex items-center justify-between mb-2">
-                <span className={`text-sm ${highlight ? 'font-semibold text-[#111827]' : 'text-[#111827]/60'}`}>{label}</span>
-                <span className={`text-sm font-bold ${highlight ? 'text-[#111827]' : 'text-[#111827]/50'}`}>{pct}%</span>
-              </div>
-              <div className="h-2 bg-[#B8EDDA] rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full ${highlight ? 'bg-[#2ECC8A]' : 'bg-[#2ECC8A]/30'}`}
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Industries
@@ -557,7 +520,6 @@ export default async function HomePage() {
     <main>
       <HeroSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       <ValuePropSection />
-      <StatsSection />
       <IndustriesSection />
       <FeaturesSection />
       <CaseStudySection />
