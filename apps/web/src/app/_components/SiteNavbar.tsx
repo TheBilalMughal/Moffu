@@ -73,7 +73,7 @@ export function SiteNavbar({ portalUrl }: { portalUrl: string }) {
           className={`pointer-events-auto flex items-center transition-all duration-300 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] ${
             scrolled
               ? 'nav-compact bg-white/75 backdrop-blur-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-white/60 rounded-2xl mx-4 px-5 h-[52px] w-full max-w-[720px]'
-              : 'bg-transparent w-full max-w-[96rem] px-6 lg:px-16 h-28'
+              : 'bg-transparent w-full max-w-[1200px] px-6 lg:px-16 h-28'
           }`}
         >
           {/* Logo */}
