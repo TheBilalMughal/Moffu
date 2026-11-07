@@ -320,6 +320,58 @@ const FEATURES_GRID = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Who's on it (marquee logos)
+// ---------------------------------------------------------------------------
+
+const BRANDS = [
+  { name: 'Brewed Awakening', type: 'Coffee Co.' },
+  { name: 'Curl Theory', type: 'Hair Studio' },
+  { name: 'The Glow Lab', type: 'Skin & Spa' },
+  { name: 'Felix & Co.', type: 'Restaurant' },
+  { name: 'Peel & Press', type: 'Juice Bar' },
+  { name: 'Oak & Stone', type: 'Boutique Hotel' },
+  { name: 'Mint Dental', type: 'Dental Clinic' },
+  { name: 'Drift Fitness', type: 'Gym & Studio' },
+  { name: 'Larder & Lane', type: 'Bakery' },
+  { name: 'Nova Auto', type: 'Auto Repair' },
+];
+
+function BrandsSection() {
+  const doubled = [...BRANDS, ...BRANDS];
+  return (
+    <section className="bg-white py-16 overflow-hidden border-y border-[#E5E7EB]">
+      <div className="max-w-[1380px] mx-auto px-6 lg:px-16 mb-10">
+        <p className="text-xs font-semibold text-[#111827]/40 uppercase tracking-widest">who&apos;s already on it</p>
+        <h2 className="text-[clamp(1.5rem,3vw,2rem)] font-black text-[#111827] mt-2">
+          Businesses that stopped ghosting their reviews.
+        </h2>
+      </div>
+
+      {/* Marquee */}
+      <div className="marquee-wrap overflow-hidden cursor-default">
+        <div className="marquee-track">
+          {doubled.map((b, i) => (
+            <div
+              key={i}
+              className="flex-shrink-0 mx-5 flex items-center gap-3 bg-[#F3F4F6] rounded-xl px-5 py-3.5 select-none"
+            >
+              {/* Monogram */}
+              <div className="w-9 h-9 rounded-lg bg-[#111827] flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+                {b.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
+              </div>
+              <div>
+                <p className="text-sm font-black text-[#111827] whitespace-nowrap leading-tight">{b.name}</p>
+                <p className="text-[11px] text-[#111827]/45 whitespace-nowrap">{b.type}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function FeaturesSection() {
   return (
     <section id="features" className="bg-[#F3F4F6] px-6 lg:px-16 py-24">
@@ -579,6 +631,7 @@ export default async function HomePage() {
     <main>
       <HeroSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       <ValuePropSection />
+      <BrandsSection />
       <FeaturesSection />
       <CaseStudySection />
       <PricingSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
