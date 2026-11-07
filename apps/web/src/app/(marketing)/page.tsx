@@ -309,20 +309,16 @@ function FeaturesSection() {
         <p className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-6">
           Features
         </p>
-        <h2 className="text-[clamp(2.5rem,6vw,5rem)] font-black leading-[1.05] tracking-tight text-[#111827] mb-8 max-w-3xl">
+        <h2 className="text-[clamp(1.75rem,3.5vw,3rem)] font-black leading-[1.05] tracking-tight text-[#111827] mb-6 max-w-3xl">
           Teach your AI how your brand communicates.
         </h2>
-        <p className="text-lg text-[#6B7280] leading-relaxed mb-16 max-w-2xl">
+        <p className="text-lg text-[#6B7280] leading-relaxed mb-14 max-w-2xl">
           Brand Brain is the layer between raw AI and your business. Configure it once with
           your tone, rules, and preferences — and every Google review response sounds
           authentically like you.
         </p>
 
-        <div className="border-t border-[#E5E7EB] pt-16">
-          <h3 className="text-[clamp(1.75rem,3vw,2.5rem)] font-black text-[#111827] leading-tight mb-12 max-w-xl">
-            What's included
-          </h3>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES_GRID.map(({ title, description, icon }) => (
               <div key={title} className="bg-[#F3F4F6] rounded-xl p-7">
                 <div className="w-10 h-10 rounded-lg bg-white text-[#111827] flex items-center justify-center mb-5">
@@ -332,7 +328,6 @@ function FeaturesSection() {
                 <p className="text-sm text-[#6B7280] leading-relaxed">{description}</p>
               </div>
             ))}
-          </div>
         </div>
       </div>
     </section>
