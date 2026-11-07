@@ -244,52 +244,98 @@ function IndustriesSection() {
 // Features
 // ---------------------------------------------------------------------------
 
-const FEATURES = [
+const FEATURES_GRID = [
   {
-    title: 'Replies that run themselves.',
-    body: 'Moffu reads each review and replies in your voice, the same day. No extra staff. Set it once and every new review gets a thoughtful, on-brand response automatically.',
-    tinted: true,
+    title: 'Tone & Personality',
+    description: 'Define how your brand speaks — formal, friendly, warm, or professional. Brand Brain applies it consistently across every response.',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+      </svg>
+    ),
   },
   {
-    title: 'Hours back for what matters.',
-    body: 'Reviews get answered in the background while you work on what moves your business. No more Sunday-night review piles or scrambling for the right words.',
-    tinted: false,
+    title: 'Negative Review Handling',
+    description: 'Set rules for how to respond to 1-star and 2-star reviews. Empathetic, solution-focused replies — without you writing each one.',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
   },
   {
-    title: 'Brand voice that scales.',
-    body: 'Reply like a chain without hiring one. Set your tone, your language, and per-star rules — then Moffu sounds like you across every location, every time.',
-    tinted: true,
+    title: 'Response Rules',
+    description: 'Tell your AI what to always say, never say, and how to handle common topics like wait times, staff, or pricing.',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Location-Specific Settings',
+    description: 'Running multiple locations? Customise Brand Brain per location — different staff names, local offers, and neighbourhood context.',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Language Support',
+    description: 'Serve customers in their language. Brand Brain keeps your tone consistent whether responding in English, Spanish, or beyond.',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Always Your Approval',
+    description: 'Brand Brain drafts — you approve. Every AI response is a suggestion until you publish it. You stay in control at all times.',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+      </svg>
+    ),
   },
 ];
 
 function FeaturesSection() {
   return (
-    <div>
-      {FEATURES.map(({ title, body, tinted }) => (
-        <section
-          key={title}
-          className={`px-6 lg:px-16 py-20 ${tinted ? 'bg-[#F3F4F6]' : 'bg-white'}`}
-        >
-          <div className="max-w-[1380px] mx-auto grid md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-black leading-[1.1] mb-4 text-[#111827]">
-                {title}
-              </h2>
-              <p className="text-base leading-relaxed text-[#111827]/65">
-                {body}
-              </p>
-            </div>
-            <div className="flex justify-center md:justify-end">
-              <div className="w-10 h-10 rounded-xl bg-[#2ECC8A] flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                </svg>
+    <section id="features" className="bg-white px-6 lg:px-16 py-24">
+      <div className="max-w-[1380px] mx-auto">
+        <p className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-6">
+          Features
+        </p>
+        <h2 className="text-[clamp(2.5rem,6vw,5rem)] font-black leading-[1.05] tracking-tight text-[#111827] mb-8 max-w-3xl">
+          Teach your AI how your brand communicates.
+        </h2>
+        <p className="text-lg text-[#6B7280] leading-relaxed mb-16 max-w-2xl">
+          Brand Brain is the layer between raw AI and your business. Configure it once with
+          your tone, rules, and preferences — and every Google review response sounds
+          authentically like you.
+        </p>
+
+        <div className="border-t border-[#E5E7EB] pt-16">
+          <h3 className="text-[clamp(1.75rem,3vw,2.5rem)] font-black text-[#111827] leading-tight mb-12 max-w-xl">
+            What's included
+          </h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {FEATURES_GRID.map(({ title, description, icon }) => (
+              <div key={title} className="bg-[#F3F4F6] rounded-xl p-7">
+                <div className="w-10 h-10 rounded-lg bg-white text-[#111827] flex items-center justify-center mb-5">
+                  {icon}
+                </div>
+                <h4 className="font-black text-[#111827] mb-2">{title}</h4>
+                <p className="text-sm text-[#6B7280] leading-relaxed">{description}</p>
               </div>
-            </div>
+            ))}
           </div>
-        </section>
-      ))}
-    </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
