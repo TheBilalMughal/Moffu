@@ -31,7 +31,7 @@ export function SiteNavbar({ portalUrl }: { portalUrl: string }) {
       const el = document.getElementById(id);
       if (!el) return;
       const obs = new IntersectionObserver(
-        ([entry]) => { if (entry.isIntersecting) setActiveSection(id); },
+        ([entry]) => { if (entry?.isIntersecting) setActiveSection(id); },
         { rootMargin: '-35% 0px -55% 0px' },
       );
       obs.observe(el);
