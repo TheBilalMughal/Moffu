@@ -278,12 +278,12 @@ export default async function FeaturePage() {
         </section>
 
         {/* ── CTA ── */}
-        <section className="bg-[#111827] px-6 lg:px-16 py-24">
+        <section className="bg-white px-6 lg:px-16 py-24">
           <div className="max-w-[1380px] mx-auto">
-            <h2 className="text-[clamp(2.5rem,6vw,5rem)] font-black leading-[1.05] text-[#2ECC8A] mb-8">
+            <h2 className="text-[clamp(2.5rem,6vw,5rem)] font-black leading-[1.05] text-[#111827] mb-8">
               Ready to set up<br />your Brand Brain?
             </h2>
-            <p className="text-white/60 mb-10 text-lg max-w-xl leading-relaxed">
+            <p className="text-[#6B7280] mb-10 text-lg max-w-xl leading-relaxed">
               Connect your Google Business Profile and start responding to reviews
               in your brand voice — today.
             </p>
@@ -293,13 +293,13 @@ export default async function FeaturePage() {
                 label={waitlistEnabled ? 'Join Waitlist' : 'Get Started Free →'}
                 source="feature_cta"
                 portalUrl={portalUrl}
-                className="inline-block bg-[#2ECC8A] text-[#111827] px-7 py-3.5 rounded-lg font-black text-sm hover:scale-105 active:scale-95 transition-transform duration-150"
+                className="inline-block bg-[#111827] text-white px-7 py-3.5 rounded-lg font-black text-sm hover:scale-105 active:scale-95 transition-transform duration-150"
               />
-              <Link href="/#pricing" className="text-sm font-medium text-white/50 hover:text-white transition-colors">
+              <Link href="/#pricing" className="text-sm font-medium text-[#111827]/40 hover:text-[#111827] transition-colors">
                 View pricing →
               </Link>
             </div>
-            <p className="text-xs text-white/25 mt-5">No credit card required · Free plan available · Cancel anytime</p>
+            <p className="text-xs text-[#111827]/25 mt-5">No credit card required · Free plan available · Cancel anytime</p>
           </div>
         </section>
 
