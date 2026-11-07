@@ -107,7 +107,7 @@ export function SiteNavbar({ portalUrl }: { portalUrl: string }) {
                             ? 'bg-[#111827]/8 text-[#111827]'
                             : 'text-[#111827]/55 hover:text-[#111827] hover:bg-[#111827]/5'
                         }`
-                      : `text-lg text-[#111827] inline-block hover:opacity-70`
+                      : `text-sm text-[#111827] inline-block hover:opacity-70`
                   }`}
                 >
                   {label}
