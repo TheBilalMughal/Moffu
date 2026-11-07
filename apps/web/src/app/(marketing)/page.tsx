@@ -338,8 +338,9 @@ function BrandsSection({ brands }: { brands: BrandClient[] }) {
         </h2>
       </div>
 
-      {/* Marquee — full viewport width so logos enter from the right edge */}
-      <div className="marquee-wrap overflow-hidden cursor-default w-full">
+      {/* Marquee */}
+      <div className="max-w-[1380px] mx-auto px-6 lg:px-16">
+      <div className="marquee-wrap overflow-hidden cursor-default">
         <div className="marquee-track">
           {doubled.map((b, i) => (
             <div
@@ -356,6 +357,7 @@ function BrandsSection({ brands }: { brands: BrandClient[] }) {
             </div>
           ))}
         </div>
+      </div>
       </div>
     </section>
   );
