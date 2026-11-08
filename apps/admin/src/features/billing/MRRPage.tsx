@@ -180,6 +180,7 @@ function exportCSV(subs: EnrichedSub[], dateFrom: string, dateTo: string) {
 export function MRRPage() {
   const [subs, setSubs] = useState<EnrichedSub[]>([]);
   const [loading, setLoading] = useState(true);
+  const [trendOpen, setTrendOpen] = useState(true);
 
   // Filters
   const [dateFrom, setDateFrom] = useState('');
@@ -496,18 +497,35 @@ export function MRRPage() {
         {/* Trend chart */}
         <div className="col-span-3 bg-white shadow-sm rounded-xl p-5">
           <div className="flex items-center justify-between mb-1">
-            <h2 className="text-sm font-semibold text-[#111827]">New MRR — 12 Month Trend</h2>
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1.5 text-[10px] text-[#9CA3AF]">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#111111] inline-block"/>Current month
-              </span>
-              <span className="flex items-center gap-1.5 text-[10px] text-[#9CA3AF]">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#FCA5A5] inline-block"/>Churn
-              </span>
-            </div>
+            <button
+              onClick={() => setTrendOpen(o => !o)}
+              className="flex items-center gap-2 group"
+            >
+              <h2 className="text-sm font-semibold text-[#111827] group-hover:text-[#6C55E8] transition-colors">New MRR — 12 Month Trend</h2>
+              <svg
+                className={`w-4 h-4 text-[#9CA3AF] group-hover:text-[#6C55E8] transition-all ${trendOpen ? 'rotate-0' : '-rotate-90'}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            {trendOpen && (
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1.5 text-[10px] text-[#9CA3AF]">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-[#111111] inline-block"/>Current month
+                </span>
+                <span className="flex items-center gap-1.5 text-[10px] text-[#9CA3AF]">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-[#FCA5A5] inline-block"/>Churn
+                </span>
+              </div>
+            )}
           </div>
-          <p className="text-xs text-[#9CA3AF] mb-4">New paid subscriptions acquired each month</p>
-          <MRRTrendChart data={trendData}/>
+          {trendOpen && (
+            <>
+              <p className="text-xs text-[#9CA3AF] mb-4">New paid subscriptions acquired each month</p>
+              <MRRTrendChart data={trendData}/>
+            </>
+          )}
         </div>
 
         {/* Plan breakdown */}
