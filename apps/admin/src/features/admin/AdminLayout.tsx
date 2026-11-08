@@ -896,11 +896,7 @@ export function AdminLayout() {
       <aside className="w-14 flex-shrink-0 bg-[#111111] flex flex-col items-center py-4 gap-1 z-20">
         {/* Logo */}
         <div className="mb-5 flex items-center justify-center">
-          <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
+          <img src="/images/fevicon.png" alt="Moffu" className="w-8 h-8 rounded-lg object-contain" />
         </div>
 
         {/* Group icons */}
