@@ -264,9 +264,20 @@ export function ClientLogoPage() {
   const [clients, setClients] = useState<MarketingClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [panel, setPanel] = useState<{ client: MarketingClient | null } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MarketingClient | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [marqueeSpeed, setMarqueeSpeed] = useState<number>(8);
   const [savingSpeed, setSavingSpeed] = useState(false);
   const { success: toastSuccess, error: toastError } = useToastStore();
+
+  async function handleDirectDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase.from('marketing_clients').delete().eq('id', deleteTarget.id);
+    if (error) { toastError('Delete failed: ' + error.message); }
+    else { toastSuccess('Client removed'); setClients(prev => prev.filter(c => c.id !== deleteTarget.id)); setDeleteTarget(null); }
+    setDeleting(false);
+  }
 
   async function load() {
     setLoading(true);
@@ -375,7 +386,7 @@ export function ClientLogoPage() {
               </tr>
             ) : (
               clients.map(c => (
-                <tr key={c.id} className="hover:bg-[#FAFAF7] transition-colors">
+                <tr key={c.id} className="hover:bg-[#F9FAFB] transition-colors">
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2.5">
                       <ClientAvatar name={c.name} logoUrl={c.logo_url} size={28} />
@@ -407,7 +418,7 @@ export function ClientLogoPage() {
                       </button>
                       <span className="text-[#E5E7EB]">|</span>
                       <button
-                        onClick={() => { setPanel({ client: c }); }}
+                        onClick={() => setDeleteTarget(c)}
                         className="text-xs font-medium text-red-500 hover:underline"
                       >
                         Delete
@@ -456,6 +467,46 @@ export function ClientLogoPage() {
           Current: {marqueeSpeed}s per loop
         </p>
       </div>
+
+      {/* Delete confirm dialog */}
+      {deleteTarget !== null && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setDeleteTarget(null)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4.5 h-4.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-black text-[#111827]">Remove client?</p>
+                  <p className="text-xs text-[#6B7280] mt-0.5">
+                    <span className="font-medium text-[#111827]">{deleteTarget.name}</span> will no longer appear in the homepage marquee.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleDirectDelete}
+                  disabled={deleting}
+                  className="flex-1 text-sm font-black text-white bg-red-600 hover:bg-red-700 px-4 py-2.5 rounded-lg disabled:opacity-50 transition-colors"
+                >
+                  {deleting ? 'Removing…' : 'Yes, remove'}
+                </button>
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={deleting}
+                  className="flex-1 text-sm font-semibold text-[#374151] bg-[#F3F4F6] hover:bg-[#E5E7EB] px-4 py-2.5 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Panel */}
       {panel !== null && (
