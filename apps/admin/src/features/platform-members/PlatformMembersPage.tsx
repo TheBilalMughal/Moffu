@@ -50,7 +50,7 @@ function isSuperAdmin(platformRole: string | null) {
 }
 
 export function PlatformMembersPage() {
-  const { platformRole } = useAdminAuthStore();
+  const { platformRole, user: currentUser } = useAdminAuthStore();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -489,7 +489,7 @@ export function PlatformMembersPage() {
                           ) : (
                             <span className="text-xs text-[#9CA3AF]">View</span>
                           )}
-                          {canManage(platformRole) && m.role !== 'owner' && (
+                          {canManage(platformRole) && m.role !== 'owner' && m.user_id !== currentUser?.id && (
                             <button
                               onClick={() => handleRowToggle(m)}
                               disabled={rowToggling.has(m.id)}
@@ -498,7 +498,7 @@ export function PlatformMembersPage() {
                               {rowToggling.has(m.id) ? '\u2026' : m.is_active ? 'Deactivate' : 'Reactivate'}
                             </button>
                           )}
-                          {isSuperAdmin(platformRole) && m.role !== 'owner' && (
+                          {isSuperAdmin(platformRole) && m.role !== 'owner' && m.user_id !== currentUser?.id && (
                             rowDeleteConfirm.has(m.id) ? (
                               <span className="flex items-center gap-1.5">
                                 <button onClick={() => handleRowDelete(m)} disabled={rowDeleting.has(m.id)} className="text-xs font-semibold text-red-600 hover:text-red-700 disabled:opacity-40">

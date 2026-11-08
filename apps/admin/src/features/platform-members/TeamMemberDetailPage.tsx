@@ -72,7 +72,7 @@ async function callAdminFn(fnName: string, body: Record<string, string>, accessT
 
 export function TeamMemberDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { platformRole } = useAdminAuthStore();
+  const { platformRole, user: currentUser } = useAdminAuthStore();
 
   const [member, setMember] = useState<MemberDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -357,7 +357,7 @@ export function TeamMemberDetailPage() {
         <p className="text-sm text-[#9CA3AF] font-mono mb-4">{formatId(member.refId)}</p>
 
         {/* Actions */}
-        {manage && member.role !== 'owner' && (
+        {manage && member.role !== 'owner' && member.userId !== currentUser?.id && (
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={handleToggleActive}
