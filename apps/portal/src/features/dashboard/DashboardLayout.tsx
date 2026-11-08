@@ -834,20 +834,18 @@ function RailGroupButton({
   onClick: () => void;
 }) {
   return (
-    <div className="relative group">
-      <button
-        onClick={onClick}
-        className={'w-10 h-10 flex items-center justify-center rounded-lg transition-colors ' + (
-          isActive ? 'bg-[#6C55E8] text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
-        )}
-        aria-label={label}
-      >
-        {icon}
-      </button>
-      <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-2 py-1 rounded-md bg-[#111111] border border-white/10 shadow-lg text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+    <button
+      onClick={onClick}
+      title={label}
+      className={'w-10 h-10 rounded-lg flex items-center justify-center transition-colors relative group ' + (
+        isActive ? 'bg-[#6C55E8] text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
+      )}
+    >
+      {icon}
+      <span className="pointer-events-none absolute left-full ml-2 px-2 py-1 rounded-md bg-[#111111] border border-white/10 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg">
         {label}
-      </div>
-    </div>
+      </span>
+    </button>
   );
 }
 
@@ -989,6 +987,12 @@ export function DashboardLayout() {
   })();
   const activeGroup = RAIL_GROUPS.find(g => g.id === activeGroupId) ?? RAIL_GROUPS[0]!;
 
+  // Derive current page label for breadcrumb
+  const currentPage = RAIL_GROUPS.flatMap(g => g.items).find(item => {
+    if (item.end) return location.pathname === item.to;
+    return location.pathname === item.to || location.pathname.startsWith(item.to + '/');
+  })?.label ?? null;
+
   return (
     <FeatureAccessContext.Provider value={{ access: featureAccess, loading: featureLoading }}>
       {adminDowngradePlan && (
@@ -1027,11 +1031,11 @@ export function DashboardLayout() {
 
         {/* Text Sidebar */}
         <aside className={'fixed inset-y-0 left-0 z-50 w-56 flex flex-col bg-white border-r border-[#E5E7EB] transform transition-transform duration-200 ease-out md:relative md:w-52 md:flex-shrink-0 md:translate-x-0 ' + (sidebarOpen ? 'translate-x-0' : '-translate-x-full')}>
-          <div className="px-4 h-14 flex items-center justify-between border-b border-[#E5E7EB] flex-shrink-0">
+          <div className="relative px-4 py-5 flex items-center justify-center flex-shrink-0">
             <img src="/images/logo.png" alt="Moffu" className="h-7 w-auto" />
             <button
               onClick={() => setSidebarOpen(false)}
-              className="md:hidden p-1.5 rounded-lg text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors"
+              className="md:hidden absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors"
               aria-label="Close menu"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1078,8 +1082,9 @@ export function DashboardLayout() {
         {/* Main Content */}
         <main className="flex-1 overflow-hidden flex flex-col min-w-0 z-30">
           {/* Topbar */}
-          <div className="flex-shrink-0 h-14 flex items-center justify-between px-4 md:px-6 gap-3 bg-white border-b border-[#E5E7EB]">
-            <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex-shrink-0 h-14 flex items-center justify-between px-6 gap-4">
+            {/* Left: hamburger (mobile) + breadcrumb (desktop) */}
+            <div className="flex items-center gap-2 min-w-0">
               <button
                 onClick={() => setSidebarOpen(true)}
                 className="md:hidden p-2 rounded-lg text-[#6B7280] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors flex-shrink-0"
@@ -1090,15 +1095,24 @@ export function DashboardLayout() {
                 </svg>
               </button>
               <img src="/images/logo.png" alt="Moffu" className="h-6 w-auto md:hidden flex-shrink-0" />
-              <div className="hidden md:flex items-center gap-2.5">
-                <TopbarLocationPicker />
-                <QuickStatsPill />
+              <div className="hidden md:flex items-center gap-1.5 min-w-0">
+                <span className="text-sm font-semibold text-[#111111]">{activeGroup.label}</span>
+                {currentPage && currentPage !== activeGroup.label && (
+                  <>
+                    <svg className="w-3 h-3 text-[#D1D5DB] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7"/>
+                    </svg>
+                    <span className="text-sm text-[#6B7280] truncate">{currentPage}</span>
+                  </>
+                )}
               </div>
             </div>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <div className="hidden md:flex items-center gap-1.5">
+            {/* Right: location + stats + search + bell + profile */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <div className="hidden md:flex items-center gap-1.5 mr-1">
+                <TopbarLocationPicker />
+                <QuickStatsPill />
                 <GlobalSearch />
-                <div className="w-px h-5 bg-[#E5E7EB] mx-0.5 flex-shrink-0"/>
               </div>
               <NotificationsBell />
               <TopbarProfile />
@@ -1106,7 +1120,7 @@ export function DashboardLayout() {
           </div>
 
           {/* Mobile location picker row */}
-          <div className="md:hidden px-4 py-2 flex items-center gap-2 bg-white border-b border-[#F3F4F6]">
+          <div className="md:hidden px-4 py-2 flex items-center gap-2">
             <TopbarLocationPicker />
             <QuickStatsPill />
           </div>
