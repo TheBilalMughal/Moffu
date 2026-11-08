@@ -63,14 +63,24 @@ export function PricingToggle({
 
         {/* Right: toggle */}
         <div className="flex-shrink-0 pb-1">
-          <div className="inline-flex items-center bg-[#F3F4F6] rounded-xl p-1 gap-1">
+          <div className="relative inline-flex bg-[#F3F4F6] rounded-xl p-1">
+            {/* Sliding pill — translateX(100%) = exactly one button width */}
+            <div
+              aria-hidden="true"
+              className="absolute top-1 bottom-1 rounded-lg bg-[#6C55E8] pointer-events-none"
+              style={{
+                left: '4px',
+                width: 'calc(50% - 4px)',
+                transform: annual ? 'translateX(100%)' : 'translateX(0)',
+                transition: 'transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              }}
+            />
+
             <button
               type="button"
               onClick={() => setAnnual(false)}
-              className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ${
-                !annual
-                  ? 'bg-[#6C55E8] text-white'
-                  : 'text-[#111827]/45 hover:text-[#111827]'
+              className={`relative z-10 flex-1 px-5 py-2 text-sm font-semibold rounded-lg whitespace-nowrap transition-colors duration-200 ${
+                !annual ? 'text-white' : 'text-[#111827]/45 hover:text-[#111827]'
               }`}
             >
               Monthly
@@ -79,10 +89,8 @@ export function PricingToggle({
             <button
               type="button"
               onClick={() => setAnnual(true)}
-              className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ${
-                annual
-                  ? 'bg-[#6C55E8] text-white'
-                  : 'text-[#111827]/45 hover:text-[#111827]'
+              className={`relative z-10 flex-1 flex items-center justify-center gap-2 px-5 py-2 text-sm font-semibold rounded-lg whitespace-nowrap transition-colors duration-200 ${
+                annual ? 'text-white' : 'text-[#111827]/45 hover:text-[#111827]'
               }`}
             >
               Annual
