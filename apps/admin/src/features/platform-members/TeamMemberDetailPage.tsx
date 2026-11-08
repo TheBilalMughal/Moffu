@@ -57,6 +57,19 @@ function generatePassword() {
   return chars.sort(() => Math.random() - 0.5).join('');
 }
 
+async function callAdminFn(fnName: string, body: Record<string, string>, accessToken: string, anonKey: string, supabaseUrl: string) {
+  const res = await fetch(`${supabaseUrl}/functions/v1/${fnName}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,
+      'apikey': anonKey,
+    },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
 export function TeamMemberDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { platformRole } = useAdminAuthStore();
@@ -65,19 +78,23 @@ export function TeamMemberDetailPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // Info card edit state
-  const [editing, setEditing] = useState(false);
+  // Info card
+  const [infoEditing, setInfoEditing] = useState(false);
   const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editRole, setEditRole] = useState<PlatformRole>('viewer');
-  const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [infoSaving, setInfoSaving] = useState(false);
+  const [infoMsg, setInfoMsg] = useState<string | null>(null);
 
-  // Password card state
+  // Password card
+  const [pwEditing, setPwEditing] = useState(false);
   const [newPassword, setNewPassword] = useState('');
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [resetting, setResetting] = useState(false);
-  const [resetMsg, setResetMsg] = useState<string | null>(null);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState<string | null>(null);
   const [passwordCopied, setPasswordCopied] = useState(false);
 
   // Activate/deactivate
@@ -122,6 +139,7 @@ export function TeamMemberDetailPage() {
 
     setMember(detail);
     setEditName(detail.displayName);
+    setEditEmail(detail.email);
     setEditPhone(detail.phone ?? '');
     setEditRole(detail.role);
     setLoading(false);
@@ -129,86 +147,107 @@ export function TeamMemberDetailPage() {
 
   useEffect(() => { load(); }, [id]);
 
-  function handleEditToggle() {
+  function openInfoEdit() {
     if (!member) return;
     setEditName(member.displayName);
+    setEditEmail(member.email);
     setEditPhone(member.phone ?? '');
     setEditRole(member.role);
-    setSaveMsg(null);
-    setEditing(true);
+    setInfoMsg(null);
+    setInfoEditing(true);
   }
 
-  function handleCancel() {
-    setEditing(false);
-    setSaveMsg(null);
-  }
+  function cancelInfoEdit() { setInfoEditing(false); setInfoMsg(null); }
 
-  async function handleSave() {
+  async function handleSaveInfo() {
     if (!member) return;
-    setSaving(true);
-    setSaveMsg(null);
+    setInfoSaving(true);
+    setInfoMsg(null);
 
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token ?? '';
+    const url = import.meta.env.VITE_SUPABASE_URL as string;
+    const anon = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+
+    // Update profile (name + phone)
     const { error: profileErr } = await supabase
       .from('profiles')
       .update({ display_name: editName.trim(), phone: editPhone.trim() || null, updated_at: new Date().toISOString() })
       .eq('id', member.userId);
 
+    // Update role
     const { error: roleErr } = await supabase
       .from('platform_members')
       .update({ role: editRole })
       .eq('id', member.memberId);
 
-    setSaving(false);
+    // Update email if changed
+    let emailErr: string | null = null;
+    if (editEmail.trim() && editEmail.trim() !== member.email) {
+      const result = await callAdminFn('admin-update-email', { user_id: member.userId, email: editEmail.trim() }, token, anon, url);
+      if (!result.success) emailErr = result.error ?? 'Failed to update email.';
+    }
 
-    if (profileErr || roleErr) {
-      setSaveMsg(`Error: ${profileErr?.message ?? roleErr?.message}`);
+    setInfoSaving(false);
+
+    if (profileErr || roleErr || emailErr) {
+      setInfoMsg(`Error: ${profileErr?.message ?? roleErr?.message ?? emailErr}`);
       return;
     }
 
-    setSaveMsg('Saved.');
-    setEditing(false);
+    setInfoMsg('Saved.');
+    setInfoEditing(false);
     load();
   }
+
+  function openPwEdit() {
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowNew(false);
+    setShowConfirm(false);
+    setPwMsg(null);
+    setPwEditing(true);
+  }
+
+  function cancelPwEdit() { setPwEditing(false); setPwMsg(null); }
 
   async function handleSetPassword() {
     if (!member) return;
     if (!newPassword.trim() || newPassword.length < 8) {
-      setResetMsg('Error: Password must be at least 8 characters.');
+      setPwMsg('Error: Password must be at least 8 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPwMsg('Error: Passwords do not match.');
       return;
     }
 
-    setResetting(true);
-    setResetMsg(null);
+    setPwSaving(true);
+    setPwMsg(null);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-set-password`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token}`,
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({ user_id: member.userId, password: newPassword }),
-        },
+      const result = await callAdminFn(
+        'admin-set-password',
+        { user_id: member.userId, password: newPassword },
+        session?.access_token ?? '',
+        import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+        import.meta.env.VITE_SUPABASE_URL as string,
       );
 
-      const result = await res.json();
-
-      if (!res.ok || !result.success) {
-        setResetMsg(`Error: ${result.error ?? 'Failed to set password.'}`);
+      if (!result.success) {
+        setPwMsg(`Error: ${result.error ?? 'Failed to set password.'}`);
         return;
       }
 
-      setResetMsg('Password updated.');
+      setPwMsg('Password updated.');
+      setPwEditing(false);
       setNewPassword('');
-      setShowNewPassword(false);
+      setConfirmPassword('');
     } catch (err) {
-      setResetMsg(`Error: ${err instanceof Error ? err.message : 'Network error.'}`);
+      setPwMsg(`Error: ${err instanceof Error ? err.message : 'Network error.'}`);
     } finally {
-      setResetting(false);
+      setPwSaving(false);
     }
   }
 
@@ -301,27 +340,25 @@ export function TeamMemberDetailPage() {
         )}
       </div>
 
-      {/* Two cards in one row */}
+      {/* Two cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
         {/* Card 1 — Member info */}
         <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
           <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Member info</h2>
-            {manage && !editing && (
-              <button
-                onClick={handleEditToggle}
-                className="text-xs font-medium text-[#6C55E8] hover:underline"
-              >
+            {manage && !infoEditing && (
+              <button onClick={openInfoEdit} className="text-xs font-medium text-[#6C55E8] hover:underline">
                 Edit
               </button>
             )}
           </div>
           <div className="p-5 space-y-4">
+
             {/* Name */}
             <div>
               <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">Full name</label>
-              {editing ? (
+              {infoEditing ? (
                 <input
                   type="text"
                   value={editName}
@@ -333,10 +370,19 @@ export function TeamMemberDetailPage() {
               )}
             </div>
 
-            {/* Email — always read-only */}
+            {/* Email */}
             <div>
               <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">Email</label>
-              <p className="text-sm text-[#111827]">{member.email}</p>
+              {infoEditing ? (
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] focus:outline-none focus:border-[#6C55E8]"
+                />
+              ) : (
+                <p className="text-sm text-[#111827]">{member.email}</p>
+              )}
             </div>
 
             {/* Phone */}
@@ -344,7 +390,7 @@ export function TeamMemberDetailPage() {
               <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">
                 Phone <span className="font-normal text-[#9CA3AF]">(optional)</span>
               </label>
-              {editing ? (
+              {infoEditing ? (
                 <input
                   type="tel"
                   value={editPhone}
@@ -360,7 +406,7 @@ export function TeamMemberDetailPage() {
             {/* Role */}
             <div>
               <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">Role</label>
-              {editing && member.role !== 'owner' ? (
+              {infoEditing && member.role !== 'owner' ? (
                 <Dropdown
                   fullWidth
                   value={editRole}
@@ -374,7 +420,7 @@ export function TeamMemberDetailPage() {
               )}
             </div>
 
-            {/* Meta — read-only always */}
+            {/* Meta */}
             <div className="pt-2 border-t border-[#F3F4F6] grid grid-cols-2 gap-3">
               <div>
                 <p className="text-xs font-semibold text-[#6B7280] mb-0.5">Last login</p>
@@ -386,26 +432,26 @@ export function TeamMemberDetailPage() {
               </div>
             </div>
 
-            {saveMsg && (
-              <p className={`text-sm px-3 py-2 rounded-lg ${saveMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#ECFDF5] border border-[#A7D7C5] text-[#065F46]'}`}>
-                {saveMsg}
+            {infoMsg && (
+              <p className={`text-sm px-3 py-2 rounded-lg ${infoMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#ECFDF5] border border-[#A7D7C5] text-[#065F46]'}`}>
+                {infoMsg}
               </p>
             )}
 
-            {editing && (
+            {infoEditing && (
               <div className="flex items-center gap-2 justify-end pt-1">
                 <button
-                  onClick={handleCancel}
+                  onClick={cancelInfoEdit}
                   className="px-4 py-2 text-sm font-medium text-[#374151] bg-[#F3F4F6] hover:bg-[#E5E7EB] rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleSave}
-                  disabled={saving || !editName.trim()}
+                  onClick={handleSaveInfo}
+                  disabled={infoSaving || !editName.trim() || !editEmail.trim()}
                   className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg disabled:opacity-50 transition-colors"
                 >
-                  {saving ? 'Saving\u2026' : 'Save'}
+                  {infoSaving ? 'Saving\u2026' : 'Save'}
                 </button>
               </div>
             )}
@@ -415,76 +461,117 @@ export function TeamMemberDetailPage() {
         {/* Card 2 — Set password */}
         {manage && (
           <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#E5E7EB]">
+            <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
               <h2 className="text-sm font-semibold text-[#111827]">Set password</h2>
+              {!pwEditing && (
+                <button onClick={openPwEdit} className="text-xs font-medium text-[#6C55E8] hover:underline">
+                  Edit
+                </button>
+              )}
             </div>
             <div className="p-5">
-              <p className="text-sm text-[#6B7280] mb-4">
-                Set a new password for <span className="font-medium text-[#111827]">{member.displayName}</span>. Share it with them directly.
-              </p>
+              {!pwEditing ? (
+                <p className="text-sm text-[#9CA3AF]">Click Edit to set a new password for {member.displayName}.</p>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-[#6B7280]">
+                    Set a new password for <span className="font-medium text-[#111827]">{member.displayName}</span>. Share it with them directly.
+                  </p>
 
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-[#6B7280]">New password</label>
-                <button
-                  type="button"
-                  onClick={() => { setNewPassword(generatePassword()); setShowNewPassword(true); setResetMsg(null); }}
-                  className="text-xs font-medium text-[#6C55E8] hover:underline"
-                >
-                  Auto-generate
-                </button>
-              </div>
+                  {/* New password */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-semibold text-[#6B7280]">New password</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const pw = generatePassword();
+                          setNewPassword(pw);
+                          setConfirmPassword(pw);
+                          setShowNew(true);
+                          setPwMsg(null);
+                        }}
+                        className="text-xs font-medium text-[#6C55E8] hover:underline"
+                      >
+                        Auto-generate
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type={showNew ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(e) => { setNewPassword(e.target.value); setPwMsg(null); }}
+                        placeholder="Min. 8 characters"
+                        className="w-full px-3 py-2 pr-16 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8] font-mono"
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                        {newPassword && (
+                          <button type="button" onClick={() => copyToClipboard(newPassword)} className="text-xs font-medium text-[#6C55E8] hover:underline">
+                            {passwordCopied ? 'Copied!' : 'Copy'}
+                          </button>
+                        )}
+                        <button type="button" onClick={() => setShowNew((v) => !v)} className="text-[#9CA3AF] hover:text-[#374151] transition-colors" aria-label={showNew ? 'Hide' : 'Show'}>
+                          {showNew ? (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="relative mb-4">
-                <input
-                  type={showNewPassword ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={(e) => { setNewPassword(e.target.value); setResetMsg(null); }}
-                  placeholder="Min. 8 characters"
-                  className="w-full px-3 py-2 pr-16 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8] font-mono"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                  {newPassword && (
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(newPassword)}
-                      className="text-xs font-medium text-[#6C55E8] hover:underline"
-                    >
-                      {passwordCopied ? 'Copied!' : 'Copy'}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword((v) => !v)}
-                    className="text-[#9CA3AF] hover:text-[#374151] transition-colors"
-                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showNewPassword ? (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                      </svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
+                  {/* Confirm password */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">Confirm password</label>
+                    <div className="relative">
+                      <input
+                        type={showConfirm ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => { setConfirmPassword(e.target.value); setPwMsg(null); }}
+                        placeholder="Repeat password"
+                        className={`w-full px-3 py-2 pr-10 text-sm border rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none font-mono ${
+                          confirmPassword && confirmPassword !== newPassword
+                            ? 'border-red-300 focus:border-red-400'
+                            : 'border-[#E5E7EB] focus:border-[#6C55E8]'
+                        }`}
+                      />
+                      <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151] transition-colors" aria-label={showConfirm ? 'Hide' : 'Show'}>
+                        {showConfirm ? (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        )}
+                      </button>
+                    </div>
+                    {confirmPassword && confirmPassword !== newPassword && (
+                      <p className="text-xs text-red-500 mt-1">Passwords do not match.</p>
                     )}
-                  </button>
+                  </div>
+
+                  {pwMsg && (
+                    <p className={`text-sm px-3 py-2 rounded-lg ${pwMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#ECFDF5] border border-[#A7D7C5] text-[#065F46]'}`}>
+                      {pwMsg}
+                    </p>
+                  )}
+
+                  <div className="flex items-center gap-2 justify-end pt-1">
+                    <button
+                      onClick={cancelPwEdit}
+                      className="px-4 py-2 text-sm font-medium text-[#374151] bg-[#F3F4F6] hover:bg-[#E5E7EB] rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSetPassword}
+                      disabled={pwSaving || !newPassword.trim() || !confirmPassword.trim()}
+                      className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg disabled:opacity-50 transition-colors"
+                    >
+                      {pwSaving ? 'Setting\u2026' : 'Save'}
+                    </button>
+                  </div>
                 </div>
-              </div>
-
-              {resetMsg && (
-                <p className={`text-sm px-3 py-2 rounded-lg mb-4 ${resetMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#ECFDF5] border border-[#A7D7C5] text-[#065F46]'}`}>
-                  {resetMsg}
-                </p>
               )}
-
-              <button
-                onClick={handleSetPassword}
-                disabled={resetting || !newPassword.trim()}
-                className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg disabled:opacity-50 transition-colors"
-              >
-                {resetting ? 'Setting\u2026' : 'Set password'}
-              </button>
             </div>
           </div>
         )}
