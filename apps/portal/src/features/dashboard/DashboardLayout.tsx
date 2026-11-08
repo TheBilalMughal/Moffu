@@ -643,9 +643,13 @@ function TopbarProfile() {
         className="flex items-center gap-2 bg-transparent hover:opacity-90 transition-opacity"
         title={displayName || email}
       >
-        <div className="w-8 h-8 rounded-full bg-[#111827] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
-          {initials}
-        </div>
+        {user?.user_metadata?.avatar_url ? (
+          <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-[#111827] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+            {initials}
+          </div>
+        )}
         {displayName && (
           <span className="text-sm font-medium text-[#374151] hidden sm:block">{displayName}</span>
         )}
@@ -655,9 +659,13 @@ function TopbarProfile() {
         <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-50">
           {/* Profile card */}
           <div className="px-4 py-4 bg-[#FAFAF7] border-b border-[#E5E7EB] flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-[#111827] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-              {initials}
-            </div>
+            {user?.user_metadata?.avatar_url ? (
+              <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-11 h-11 rounded-full object-cover flex-shrink-0" />
+            ) : (
+              <div className="w-11 h-11 rounded-full bg-[#111827] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+                {initials}
+              </div>
+            )}
             <div className="min-w-0">
               <p className="text-sm font-semibold text-[#111827] truncate">{displayName || email}</p>
               {displayName && <p className="text-xs text-[#6B7280] truncate mt-0.5">{email}</p>}
@@ -716,6 +724,14 @@ function UpgradeWidget() {
 }
 
 // -- Rail Groups ---------------------------------------------------------------
+
+function AccountIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+  );
+}
 
 interface RailGroupItem {
   to: string;
@@ -784,6 +800,14 @@ const RAIL_GROUPS: RailGroup[] = [
     label: 'Team',
     items: [
       { to: '/team', label: 'Team', icon: <TeamIcon />, featureKey: 'feature_team' },
+    ],
+  },
+  {
+    id: 'account',
+    icon: <AccountIcon />,
+    label: 'Account',
+    items: [
+      { to: '/settings/account', label: 'Account', icon: <AccountIcon />, featureKey: null },
     ],
   },
   {
@@ -1059,6 +1083,18 @@ export function DashboardLayout() {
               onClick={() => navigate(group.items[0]!.to)}
             />
           ))}
+          <div className="mt-auto pt-2">
+            <button
+              onClick={() => { authService.logout().then(() => { window.location.replace('/auth/login'); }); }}
+              className="w-10 h-10 flex items-center justify-center rounded-xl text-[#6B7280] hover:bg-white/10 hover:text-white transition-colors"
+              title="Log out"
+              aria-label="Log out"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
         </aside>
 
         {/* Text Sidebar */}

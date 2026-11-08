@@ -504,7 +504,6 @@ export function SettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.user_metadata?.avatar_url ?? null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [accountEditOpen, setAccountEditOpen] = useState(false);
-  const [passwordEditOpen, setPasswordEditOpen] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
 
   // Preferences
@@ -512,12 +511,6 @@ export function SettingsPage() {
   const [savingTimezone, setSavingTimezone] = useState(false);
   const [origTimezone, setOrigTimezone] = useState('');
 
-  // Password
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [savingPassword, setSavingPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Sessions
   const [isOwner, setIsOwner] = useState(false);
@@ -619,16 +612,6 @@ export function SettingsPage() {
     if (error) { showToast(error.message, 'error'); }
     else { setOrigTimezone(timezone); showToast('Timezone saved.', 'success'); }
     setSavingTimezone(false);
-  }
-
-  async function handleChangePassword() {
-    if (newPassword.length < 8) { showToast('Password must be at least 8 characters.', 'error'); return; }
-    if (newPassword !== confirmPassword) { showToast('Passwords do not match.', 'error'); return; }
-    setSavingPassword(true);
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) { showToast(error.message, 'error'); }
-    else { showToast('Password changed successfully.', 'success'); setNewPassword(''); setConfirmPassword(''); setPasswordEditOpen(false); setShowNewPassword(false); setShowConfirmPassword(false); }
-    setSavingPassword(false);
   }
 
   async function handleSignOutDevice() {
@@ -850,8 +833,7 @@ export function SettingsPage() {
       </div>
 
       {section === 'account' && (<>
-      {/* Row 1 — Account + Change Password */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+      <div className="max-w-lg mb-5">
 
         {/* Account */}
         <div className="bg-white rounded-xl border border-[#E5E7EB]">          <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
@@ -926,7 +908,7 @@ export function SettingsPage() {
                     </div>
                   )}
                   <div>
-                    <label className="cursor-pointer flex items-center gap-1.5 text-xs font-medium text-[#6B7280] border border-[#D1D5DB] rounded-lg px-3 py-1.5 hover:bg-[#EDE9FE] hover:text-[#6C55E8] hover:border-[#6C55E8]/40 transition-colors">
+                    <label className="cursor-pointer text-xs font-medium text-[#6C55E8] hover:underline transition-colors">
                       <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); }} />
                       {avatarUploading ? 'Uploading...' : 'Upload Photo'}
                     </label>
@@ -972,87 +954,6 @@ export function SettingsPage() {
                       setPhoneCountry(origPhoneCountry);
                       setPhoneNational(origPhoneNational);
                       setAccountEditOpen(false);
-                    }}
-                    className="text-sm font-medium text-[#6B7280] hover:text-[#374151] px-5 py-2.5 rounded-lg border border-[#E5E7EB] transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Change Password */}
-        <div className="bg-white rounded-xl border border-[#E5E7EB]">
-          <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[#111827]">Change Password</h2>
-            {!passwordEditOpen && (
-              <button
-                type="button"
-                onClick={() => setPasswordEditOpen(true)}
-                className="text-xs font-medium text-[#6C55E8] hover:underline"
-              >
-                Edit
-              </button>
-            )}
-          </div>
-          <div className="px-6 py-5 space-y-4">
-            {!passwordEditOpen ? (
-              <div>
-                <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1">Password</p>
-                <p className="text-sm text-[#111827] tracking-widest">{`\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022`}</p>
-              </div>
-            ) : (
-              <>
-                <div>
-                  <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">New Password</label>
-                  <div className="relative">
-                    <input
-                      type={showNewPassword ? 'text' : 'password'}
-                      value={newPassword}
-                      onChange={e => setNewPassword(e.target.value)}
-                      placeholder="At least 8 characters"
-                      className={`${inputCls} pr-10`}
-                    />
-                    <button type="button" onClick={() => setShowNewPassword(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151]">
-                      <EyeIcon open={showNewPassword} />
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Confirm Password</label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={e => setConfirmPassword(e.target.value)}
-                      placeholder="Repeat new password"
-                      className={`${inputCls} pr-10`}
-                    />
-                    <button type="button" onClick={() => setShowConfirmPassword(v => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151]">
-                      <EyeIcon open={showConfirmPassword} />
-                    </button>
-                  </div>
-                </div>
-                <div className="flex gap-2 pt-1">
-                  <button
-                    onClick={handleChangePassword}
-                    disabled={savingPassword || !newPassword || !confirmPassword}
-                    className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#6C55E8] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
-                  >
-                    {savingPassword ? 'Saving...' : 'Save'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPasswordEditOpen(false);
-                      setNewPassword('');
-                      setConfirmPassword('');
-                      setShowNewPassword(false);
-                      setShowConfirmPassword(false);
                     }}
                     className="text-sm font-medium text-[#6B7280] hover:text-[#374151] px-5 py-2.5 rounded-lg border border-[#E5E7EB] transition-colors"
                   >

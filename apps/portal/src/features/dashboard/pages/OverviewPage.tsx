@@ -456,7 +456,7 @@ function TrendChart({ trend }: { trend: { date: string; count: number }[] }) {
           return (
             <div key={day.date} className="flex-1 flex flex-col justify-end h-full" title={`${day.date}: ${day.count}`}>
               <div
-                className="w-full bg-gradient-to-t from-[#6C55E8] to-[#1a6b55] rounded-t-md transition-all"
+                className="w-full bg-[#6C55E8] rounded-t-md transition-all"
                 style={{ height: day.count > 0 ? `${Math.max(pct, 8)}%` : '2px', opacity: day.count > 0 ? 1 : 0.2 }}
               />
             </div>
