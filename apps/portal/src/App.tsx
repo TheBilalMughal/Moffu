@@ -72,7 +72,10 @@ export function App() {
           <Route path="/google-profile" element={<FeatureGatePage feature="feature_google_profile"><GoogleProfilePage /></FeatureGatePage>} />
           <Route path="/brand-brain" element={<FeatureGatePage feature="feature_brand_brain"><BrandBrainPage /></FeatureGatePage>} />
           <Route path="/billing"   element={<BillingPage />} />
-          <Route path="/settings"  element={<SettingsPage />} />
+          <Route path="/settings" element={<Navigate to="/settings/account" replace />} />
+          <Route path="/settings/account" element={<SettingsPage />} />
+          <Route path="/settings/preferences" element={<SettingsPage />} />
+          <Route path="/settings/integrations" element={<SettingsPage />} />
           <Route path="/team"      element={<FeatureGatePage feature="feature_team"><TeamPage /></FeatureGatePage>} />
           <Route path="/campaigns"     element={<CampaignsPage />} />
           <Route path="/campaigns/:id" element={<CampaignDetailPage />} />

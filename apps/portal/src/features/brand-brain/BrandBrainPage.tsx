@@ -539,7 +539,7 @@ function ImportRepliesModal({ onApply, onClose, analyzing }: {
         <div className="px-6 py-4 border-t border-[#E5E7EB] flex items-center justify-end gap-2">
           <button onClick={onClose} className="text-sm text-[#6B7280] font-medium px-4 py-2 rounded-lg hover:bg-[#F3F4F6] transition-colors">Cancel</button>
           <button onClick={() => onApply(text)} disabled={count < 2 || analyzing}
-            className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors">
+            className="flex items-center gap-2 bg-[#111827] hover:bg-[#1F2937] disabled:opacity-50 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors">
             {analyzing
               ? <><svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Analyzing…</>
               : 'Analyze voice'
@@ -1236,7 +1236,7 @@ function PreviewStepActions({ generating, previewDraft, saving, onGenerate, onSa
         }
       </button>
       <button onClick={onSave} disabled={saving}
-        className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-colors">
+        className="flex items-center gap-2 bg-[#111827] hover:bg-[#1F2937] disabled:opacity-50 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-colors">
         {saving
           ? <><svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Saving…</>
           : <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>Save Brand Brain</>
@@ -1371,7 +1371,7 @@ function Step8({ settings, onChange, saving, onSave }: {
 
       <div className="flex items-center gap-3">
         <button onClick={onSave} disabled={saving}
-          className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-colors">
+          className="flex items-center gap-2 bg-[#111827] hover:bg-[#1F2937] disabled:opacity-50 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-colors">
           {saving
             ? <><svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Saving…</>
             : <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>Save Marketing Settings</>
@@ -1642,7 +1642,7 @@ export function BrandBrainPage() {
           </div>
         </div>
         <button onClick={handleSave} disabled={saving}
-          className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] disabled:opacity-40 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors">
+          className="flex items-center gap-2 bg-[#111827] hover:bg-[#1F2937] disabled:opacity-40 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors">
           {saving
             ? <><svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Saving…</>
             : <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>Save</>
@@ -1667,7 +1667,7 @@ export function BrandBrainPage() {
               <p className="text-sm text-[#6B7280] mt-1">This step is not included in your current plan. Upgrade to unlock it.</p>
             </div>
             <button onClick={() => navigate('/billing')}
-              className="bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors">
+              className="bg-[#111827] hover:bg-[#1F2937] text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors">
               View Plans
             </button>
           </div>
@@ -1700,13 +1700,13 @@ export function BrandBrainPage() {
         </div>
         {!isLastStep ? (
           <button onClick={goNext}
-            className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors">
+            className="flex items-center gap-2 bg-[#111827] hover:bg-[#1F2937] text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors">
             Next
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
           </button>
         ) : (
           <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-bold px-5 py-2 rounded-xl transition-colors">
+            className="flex items-center gap-2 bg-[#111827] hover:bg-[#1F2937] disabled:opacity-50 text-white text-sm font-bold px-5 py-2 rounded-xl transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
             {saving ? 'Saving…' : 'Save & Finish'}
           </button>

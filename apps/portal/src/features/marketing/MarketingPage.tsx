@@ -125,7 +125,7 @@ export function MarketingPage() {
         </div>
         <button
           onClick={() => navigate('/marketing/new')}
-          className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+          className="flex items-center gap-2 bg-[#111827] hover:bg-[#1F2937] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
@@ -207,7 +207,7 @@ export function MarketingPage() {
                         </div>
                         <button
                           onClick={() => navigate('/marketing/new')}
-                          className="bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+                          className="bg-[#111827] hover:bg-[#1F2937] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
                         >
                           Create Post
                         </button>

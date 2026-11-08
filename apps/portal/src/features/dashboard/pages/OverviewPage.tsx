@@ -817,7 +817,7 @@ function EmptyState() {
         <p className="text-sm text-[#6B7280] max-w-xs mx-auto mb-5">
           Connect your Google Business Profile to start seeing and responding to reviews.
         </p>
-        <Link to="/settings" className="inline-flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
+        <Link to="/settings" className="inline-flex items-center gap-2 bg-[#111827] hover:bg-[#1F2937] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
           Connect Google
         </Link>
       </div>

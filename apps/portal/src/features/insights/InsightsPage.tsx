@@ -543,7 +543,7 @@ function ContextModal({ keyword, onConfirm, onClose }: {
         <div className="px-6 pb-5 flex items-center justify-end gap-3">
           <button onClick={onClose} className="text-sm font-medium text-[#6B7280] hover:text-[#374151] px-4 py-2 rounded-xl hover:bg-[#F3F4F6] transition-colors">Cancel</button>
           <button onClick={handleSave} disabled={saving || !context.trim()}
-            className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2 rounded-xl disabled:opacity-50 transition-colors">
+            className="flex items-center gap-2 bg-[#111827] hover:bg-[#1F2937] text-white text-sm font-semibold px-5 py-2 rounded-xl disabled:opacity-50 transition-colors">
             {saving && <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>}
             {saving ? 'Saving…' : 'Add to Agent'}
           </button>
@@ -688,7 +688,7 @@ function AgentKeywordsTab({ keywordContexts, onRemove, onUpdate }: {
                   <>
                     <button onClick={async () => { setSavingId(kc.id); await onUpdate(kc.id, editValue); setSavingId(null); setEditingId(null); }}
                       disabled={savingId === kc.id}
-                      className="text-[10px] font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-2.5 py-1 rounded-lg disabled:opacity-50 transition-colors">
+                      className="text-[10px] font-semibold text-white bg-[#111827] hover:bg-[#1F2937] px-2.5 py-1 rounded-lg disabled:opacity-50 transition-colors">
                       {savingId === kc.id ? '…' : 'Save'}
                     </button>
                     <button onClick={() => setEditingId(null)} className="text-[10px] font-medium text-[#6B7280] hover:text-[#374151] px-2 py-1 rounded-lg hover:bg-[#F3F4F6] transition-colors">Cancel</button>

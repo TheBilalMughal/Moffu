@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { supabase } from '@/lib/supabase';
 import { googleService, type GoogleConnection, type GoogleLocation, type BusinessSearchResult } from '@/features/google/google.service';
@@ -450,6 +450,8 @@ function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: stri
 export function SettingsPage() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const section = pathname.includes('/preferences') ? 'preferences' : pathname.includes('/integrations') ? 'integrations' : 'account';
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast, show: showToast } = useToast();
 
@@ -805,10 +807,15 @@ export function SettingsPage() {
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8">
       <div className="mb-7">
-        <h1 className="text-[1.5rem] font-bold text-[#111827]">Settings</h1>
-        <p className="text-sm text-[#6B7280] mt-0.5">Manage your account and preferences.</p>
+        <h1 className="text-[1.5rem] font-bold text-[#111827]">
+          {section === 'preferences' ? 'Preferences' : section === 'integrations' ? 'Integrations' : 'Account'}
+        </h1>
+        <p className="text-sm text-[#6B7280] mt-0.5">
+          {section === 'preferences' ? 'Manage your timezone, sessions and data.' : section === 'integrations' ? 'Connect your business accounts and services.' : 'Manage your profile and login details.'}
+        </p>
       </div>
 
+      {section === 'account' && (<>
       {/* Row 1 — Account + Change Password */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
 
@@ -828,6 +835,23 @@ export function SettingsPage() {
           <div className="px-6 py-5 space-y-4">
             {!accountEditOpen ? (
               <>
+                {/* Profile avatar */}
+                <div className="flex items-center gap-3 pb-2">
+                  <div className="w-14 h-14 rounded-full bg-[#111827] flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
+                    {(() => {
+                      const name = user?.user_metadata?.display_name ?? user?.user_metadata?.full_name ?? '';
+                      const email = user?.email ?? '';
+                      const parts = name.trim().split(/\s+/).filter(Boolean);
+                      if (parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+                      if (parts.length === 1) return parts[0][0].toUpperCase();
+                      return email ? email[0].toUpperCase() : '?';
+                    })()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-[#111827]">{(user?.user_metadata?.display_name ?? user?.user_metadata?.full_name) || user?.email || '—'}</p>
+                    <p className="text-xs text-[#9CA3AF]">{user?.email ?? ''}</p>
+                  </div>
+                </div>
                 <div>
                   <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1">Display Name</p>
                   <p className="text-sm text-[#111827]">{savedDisplayName || '—'}</p>
@@ -875,7 +899,7 @@ export function SettingsPage() {
                     type="button"
                     onClick={handleSaveAccount}
                     disabled={savingProfile || !displayName.trim()}
-                    className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
+                    className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#1F2937] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
                   >
                     {savingProfile ? 'Saving...' : 'Save'}
                   </button>
@@ -955,7 +979,7 @@ export function SettingsPage() {
                   <button
                     onClick={handleChangePassword}
                     disabled={savingPassword || !newPassword || !confirmPassword}
-                    className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
+                    className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#1F2937] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
                   >
                     {savingPassword ? 'Saving...' : 'Save'}
                   </button>
@@ -978,7 +1002,9 @@ export function SettingsPage() {
           </div>
         </div>
       </div>
+      </>)}
 
+      {section === 'preferences' && (<>
       {/* Row 2 — Preferences + Sessions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
 
@@ -995,7 +1021,7 @@ export function SettingsPage() {
             <button
               onClick={handleSaveTimezone}
               disabled={savingTimezone || timezone === origTimezone}
-              className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
+              className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#1F2937] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
             >
               {savingTimezone ? 'Saving...' : 'Save timezone'}
             </button>
@@ -1041,7 +1067,9 @@ export function SettingsPage() {
           </div>
         </div>
       </div>
+      </>)}
 
+      {section === 'integrations' && (<>
       {/* Integrations */}
       <div className="bg-white rounded-xl border border-[#E5E7EB] mb-5">        <div className="px-6 py-4 border-b border-[#E5E7EB]">
           <h2 className="text-sm font-semibold text-[#111827]">Integrations</h2>
@@ -1166,7 +1194,7 @@ export function SettingsPage() {
                       </button>
                       <button
                         onClick={() => { setShowLocationUpgrade(false); navigate('/billing'); }}
-                        className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-[#111827] hover:bg-[#083F32] rounded-xl transition-colors"
+                        className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-[#111827] hover:bg-[#1F2937] rounded-xl transition-colors"
                       >
                         View Plans
                       </button>
@@ -1192,7 +1220,7 @@ export function SettingsPage() {
                     <button
                       onClick={handleBizSearch}
                       disabled={bizSearching || !bizSearch.trim()}
-                      className="text-xs font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-4 py-2 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap"
+                      className="text-xs font-semibold text-white bg-[#111827] hover:bg-[#1F2937] px-4 py-2 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap"
                     >
                       {bizSearching ? 'Searching...' : 'Search'}
                     </button>
@@ -1316,7 +1344,7 @@ export function SettingsPage() {
                           const iv = autoInterval === 'custom' ? `${customHours}h` : autoInterval;
                           saveAutoSync(autoEnabled, iv);
                         }}
-                        className="text-xs font-semibold text-white bg-[#111827] hover:bg-[#083F32] disabled:opacity-40 px-3.5 py-1.5 rounded-lg transition-colors"
+                        className="text-xs font-semibold text-white bg-[#111827] hover:bg-[#1F2937] disabled:opacity-40 px-3.5 py-1.5 rounded-lg transition-colors"
                       >
                         {savingSync ? 'Saving...' : 'Save interval'}
                       </button>
@@ -1353,7 +1381,9 @@ export function SettingsPage() {
           </div>
         </div>
       </div>
+      </>)}
 
+      {section === 'preferences' && (<>
       {/* Data & Privacy */}
       <div className="bg-white rounded-xl border border-[#E5E7EB]">        <div className="px-6 py-4 border-b border-[#E5E7EB]">
           <h2 className="text-sm font-semibold text-[#111827]">Data &amp; Privacy</h2>
@@ -1425,6 +1455,8 @@ export function SettingsPage() {
           </div>
         </div>
       </div>
+
+      </>)}
 
       {toast && <Toast message={toast.message} type={toast.type} onDone={() => {}} />}
 
