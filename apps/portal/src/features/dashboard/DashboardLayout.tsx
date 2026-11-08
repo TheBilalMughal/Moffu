@@ -65,6 +65,14 @@ function BillingIcon() {
   );
 }
 
+function PlanIcon() {
+  return (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+    </svg>
+  );
+}
+
 function TeamIcon() {
   return (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -139,9 +147,13 @@ function SidebarProfile() {
         onClick={() => setOpen(!open)}
         className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/60 transition-colors group"
       >
-        <div className="w-8 h-8 rounded-full bg-[#111827] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
-          {initials}
-        </div>
+        {user?.user_metadata?.avatar_url ? (
+          <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-[#111827] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+            {initials}
+          </div>
+        )}
         <div className="text-left flex-1 min-w-0">
           <p className="text-sm font-semibold text-[#111827] leading-tight truncate">
             {displayName || email}
@@ -771,8 +783,16 @@ const RAIL_GROUPS: RailGroup[] = [
     icon: <TeamIcon />,
     label: 'Team',
     items: [
-      { to: '/team',    label: 'Team',    icon: <TeamIcon />,    featureKey: 'feature_team' },
-      { to: '/billing', label: 'Billing', icon: <BillingIcon />, featureKey: null },
+      { to: '/team', label: 'Team', icon: <TeamIcon />, featureKey: 'feature_team' },
+    ],
+  },
+  {
+    id: 'plan',
+    icon: <PlanIcon />,
+    label: 'Plan',
+    items: [
+      { to: '/billing',          label: 'Plan',    icon: <PlanIcon />,    featureKey: null },
+      { to: '/billing/payments', label: 'Billing', icon: <BillingIcon />, featureKey: null },
     ],
   },
   {
@@ -805,7 +825,7 @@ function NavItem({
   return (
     <NavLink
       to={to}
-      end={end}
+      end={end ?? false}
       className={({ isActive }) =>
         'relative flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ' + (
           isLocked
@@ -1066,7 +1086,7 @@ export function DashboardLayout() {
                   to={item.to}
                   label={item.label}
                   icon={item.icon}
-                  end={item.end}
+                  end={item.end ?? false}
                   isLocked={isLocked(item.featureKey)}
                 />
               ))}
@@ -1079,7 +1099,7 @@ export function DashboardLayout() {
                   to={item.to}
                   label={item.label}
                   icon={item.icon}
-                  end={item.end}
+                  end={item.end ?? false}
                   isLocked={isLocked(item.featureKey)}
                 />
               ))}
@@ -1095,7 +1115,7 @@ export function DashboardLayout() {
         {/* Main Content */}
         <main className="flex-1 overflow-hidden flex flex-col min-w-0 z-30">
           {/* Topbar */}
-          <div className="flex-shrink-0 h-14 flex items-center justify-between px-6 gap-4">
+          <div className="flex-shrink-0 h-14 flex items-center justify-between px-6 gap-4 bg-[#F3F4F6]">
             {/* Left: hamburger (mobile) + breadcrumb (desktop) */}
             <div className="flex items-center gap-2 min-w-0">
               <button

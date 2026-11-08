@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { billingService, type Plan, type Subscription, type UsageSummary, type UsageDay } from './billing.service';
 import { LocationSelectionModal } from './LocationSelectionModal';
 import { supabase } from '@/lib/supabase';
@@ -338,6 +339,8 @@ function AddLocationDialog({ plan, onClose }: { plan: Plan; onClose: () => void 
 // --- Main page ---
 
 export function BillingPage() {
+  const { pathname } = useLocation();
+  const billingSubView = pathname === '/billing/payments' ? 'billing' : 'plan';
   const [plans, setPlans] = useState<Plan[]>([]);
   const [sub, setSub] = useState<Subscription | null>(null);
   const [usage, setUsage] = useState<UsageSummary | null>(null);
@@ -519,8 +522,8 @@ export function BillingPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-[#111827]">Billing & Plans</h2>
-          <p className="text-sm text-[#6B7280] mt-0.5">Manage your subscription and track feature usage.</p>
+          <h2 className="text-xl font-bold text-[#111827]">{billingSubView === 'plan' ? 'Plan' : 'Billing'}</h2>
+          <p className="text-sm text-[#6B7280] mt-0.5">{billingSubView === 'plan' ? 'Manage your subscription and track feature usage.' : 'View your payment history and invoices.'}</p>
         </div>
         <button
           onClick={() => setShowCompare(true)}
@@ -891,11 +894,22 @@ export function BillingPage() {
       </div>
 
       {/* Flat notice */}
-      <p className="text-xs text-[#9CA3AF]">
-        Payments coming soon — Stripe integration is in progress. Upgrades and billing management will be available shortly.
-      </p>
+      {billingSubView === 'plan' && (
+        <p className="text-xs text-[#9CA3AF]">
+          Payments coming soon. Stripe integration is in progress.
+        </p>
+      )}
+      {billingSubView === 'billing' && (
+        <div className="bg-white rounded-xl border border-[#E5E7EB] p-8 text-center mt-4">
+          <svg className="w-10 h-10 mx-auto mb-3 text-[#D1D5DB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <p className="text-sm font-semibold text-[#374151] mb-1">No payment history yet</p>
+          <p className="text-xs text-[#9CA3AF]">Payment history and invoices will appear here once Stripe billing is active.</p>
+        </div>
+      )}
 
-      </div>{/* end scrollable */}
+            </div>{/* end scrollable */}
     </div>
   );
 }

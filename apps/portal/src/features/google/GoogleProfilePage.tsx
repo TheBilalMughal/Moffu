@@ -654,11 +654,12 @@ export function GoogleProfilePage() {
 
           {/* Refresh */}
           <button onClick={fetchData} disabled={loading}
-            className="p-1.5 rounded-xl border bg-white/60 backdrop-blur-sm border-white/70 text-[#6B7280] hover:border-[#374151] hover:text-[#374151] transition-colors shadow-sm disabled:opacity-40">
+            className="flex items-center gap-1.5 text-xs font-medium text-[#6B7280] border border-[#D1D5DB] rounded-lg px-3 py-1.5 hover:bg-[#EDE9FE] hover:text-[#6C55E8] hover:border-[#6C55E8]/40 transition-colors disabled:opacity-40">
             <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
+            {loading ? 'Refreshing...' : 'Refresh'}
           </button>
         </div>
       </div>

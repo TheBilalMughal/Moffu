@@ -545,7 +545,7 @@ export function CampaignsPage() {
       )}
 
       {/* Header */}
-      <div className="relative z-10 px-4 md:px-8 py-4 flex-shrink-0 border-b border-white/60 flex items-center justify-between gap-4">
+      <div className="relative z-10 px-4 md:px-8 py-4 flex-shrink-0 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#111827]">Review Request Campaigns</h1>
           <p className="text-sm text-[#6B7280] mt-0.5">Ask customers to leave a review via email</p>

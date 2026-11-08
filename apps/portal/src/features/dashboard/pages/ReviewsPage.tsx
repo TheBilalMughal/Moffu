@@ -1649,7 +1649,7 @@ async function handleFlag(id: string) {
       )}
 
       {/* Header */}
-      <div className="relative z-10 px-4 md:px-10 py-4 flex items-center justify-between gap-4 flex-shrink-0 backdrop-blur-sm border-b border-white/60">
+      <div className="relative z-10 px-4 md:px-10 py-4 flex items-center justify-between gap-4 flex-shrink-0 backdrop-blur-sm">
         <div>
           <h1 className="text-xl font-bold text-[#111827]">Reviews</h1>
         </div>
@@ -1667,7 +1667,7 @@ async function handleFlag(id: string) {
             </svg>
           </button>
           <button onClick={() => exportCSV(filtered, locations)} title="Export filtered reviews as CSV"
-            className="flex items-center gap-1.5 text-sm text-[#6B7280] hover:text-[#111827] border border-[#D1D5DB] hover:border-[#374151] px-3 py-1.5 rounded-lg transition-colors">
+            className="flex items-center gap-1.5 text-sm text-[#6B7280] hover:text-[#6C55E8] border border-[#D1D5DB] hover:border-[#6C55E8] px-3 py-1.5 rounded-lg transition-colors">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>

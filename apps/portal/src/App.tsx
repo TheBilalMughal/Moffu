@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { authService } from '@/features/auth/auth.service';
@@ -75,6 +75,7 @@ export function App() {
           <Route path="/google-profile" element={<FeatureGatePage feature="feature_google_profile"><GoogleProfilePage /></FeatureGatePage>} />
           <Route path="/brand-brain" element={<FeatureGatePage feature="feature_brand_brain"><BrandBrainPage /></FeatureGatePage>} />
           <Route path="/billing"   element={<BillingPage />} />
+          <Route path="/billing/payments" element={<BillingPage />} />
           <Route path="/settings" element={<Navigate to="/settings/account" replace />} />
           <Route path="/settings/account" element={<SettingsPage />} />
           <Route path="/settings/preferences" element={<SettingsPage />} />

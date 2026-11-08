@@ -447,6 +447,19 @@ function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: stri
 
 // -- Main page -----------------------------------------------------------------
 
+function fmtDateTime(iso: string): string {
+  const d = new Date(iso);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mon = months[d.getMonth()];
+  const yyyy = d.getFullYear();
+  let hh = d.getHours();
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const ampm = hh >= 12 ? 'PM' : 'AM';
+  hh = hh % 12 || 12;
+  return `${dd}-${mon}-${yyyy} ${String(hh).padStart(2,'0')}:${mm} ${ampm}`;
+}
+
 export function SettingsPage() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -488,6 +501,8 @@ export function SettingsPage() {
   const [phoneNational, setPhoneNational] = useState('');
   const [origPhoneCountry, setOrigPhoneCountry] = useState('PK');
   const [origPhoneNational, setOrigPhoneNational] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(user?.user_metadata?.avatar_url ?? null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [accountEditOpen, setAccountEditOpen] = useState(false);
   const [passwordEditOpen, setPasswordEditOpen] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -550,6 +565,25 @@ export function SettingsPage() {
       .maybeSingle()
       .then(({ data }) => setIsOwner(!!data));
   }, [user?.id]);
+
+  async function handleAvatarUpload(file: File) {
+    if (!user) return;
+    setAvatarUploading(true);
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg';
+      const path = `${user.id}/avatar.${ext}`;
+      const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+      if (upErr) { showToast('Upload failed: ' + upErr.message, 'error'); return; }
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+      const publicUrl = urlData.publicUrl + '?t=' + Date.now();
+      const { error: metaErr } = await supabase.auth.updateUser({ data: { avatar_url: publicUrl } });
+      if (metaErr) { showToast('Failed to save avatar.', 'error'); return; }
+      setAvatarUrl(publicUrl);
+      showToast('Avatar updated.', 'success');
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
 
   async function handleSaveAccount() {
     const trimmed = displayName.trim();
@@ -837,16 +871,20 @@ export function SettingsPage() {
               <>
                 {/* Profile avatar */}
                 <div className="flex items-center gap-3 pb-2">
-                  <div className="w-14 h-14 rounded-full bg-[#111827] flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
-                    {(() => {
-                      const name = user?.user_metadata?.display_name ?? user?.user_metadata?.full_name ?? '';
-                      const email = user?.email ?? '';
-                      const parts = name.trim().split(/\s+/).filter(Boolean);
-                      if (parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
-                      if (parts.length === 1) return parts[0][0].toUpperCase();
-                      return email ? email[0].toUpperCase() : '?';
-                    })()}
-                  </div>
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="w-14 h-14 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-[#111827] flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
+                      {(() => {
+                        const name = user?.user_metadata?.display_name ?? user?.user_metadata?.full_name ?? '';
+                        const email = user?.email ?? '';
+                        const parts = name.trim().split(/\s+/).filter(Boolean);
+                        if (parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+                        if (parts.length === 1) return parts[0][0].toUpperCase();
+                        return email ? email.charAt(0).toUpperCase() : '?';
+                      })()}
+                    </div>
+                  )}
                   <div>
                     <p className="text-sm font-semibold text-[#111827]">{(user?.user_metadata?.display_name ?? user?.user_metadata?.full_name) || user?.email || '—'}</p>
                     <p className="text-xs text-[#9CA3AF]">{user?.email ?? ''}</p>
@@ -871,6 +909,30 @@ export function SettingsPage() {
               </>
             ) : (
               <>
+                {/* Avatar upload */}
+                <div className="flex items-center gap-4 pb-2">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="w-14 h-14 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-[#111827] flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
+                      {(() => {
+                        const name = user?.user_metadata?.display_name ?? user?.user_metadata?.full_name ?? '';
+                        const email = user?.email ?? '';
+                        const parts = name.trim().split(/\s+/).filter(Boolean);
+                        if (parts.length >= 2) return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+                        if (parts.length === 1) return parts[0][0].toUpperCase();
+                        return email ? email.charAt(0).toUpperCase() : '?';
+                      })()}
+                    </div>
+                  )}
+                  <div>
+                    <label className="cursor-pointer flex items-center gap-1.5 text-xs font-medium text-[#6B7280] border border-[#D1D5DB] rounded-lg px-3 py-1.5 hover:bg-[#EDE9FE] hover:text-[#6C55E8] hover:border-[#6C55E8]/40 transition-colors">
+                      <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); }} />
+                      {avatarUploading ? 'Uploading...' : 'Upload Photo'}
+                    </label>
+                    <p className="text-xs text-[#9CA3AF] mt-1">JPG, PNG or GIF. Max 2MB.</p>
+                  </div>
+                </div>
                 <div>
                   <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Display Name</label>
                   <input
@@ -1256,7 +1318,7 @@ export function SettingsPage() {
                 </div>
               )}
               {isConnected && connection?.last_synced_at && (
-                <p className="mt-4 text-xs text-[#9CA3AF]">Last synced: {new Date(connection.last_synced_at).toLocaleString()}</p>
+                <p className="mt-4 text-xs text-[#9CA3AF]">Last synced: {fmtDateTime(connection.last_synced_at)}</p>
               )}
 
               {/* Auto-Sync */}

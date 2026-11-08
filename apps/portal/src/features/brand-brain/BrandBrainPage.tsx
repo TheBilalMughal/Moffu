@@ -288,7 +288,7 @@ function StepIndicator({ current, steps, completed, stepMask, onJump }: {
   current: number; steps: typeof WIZARD_STEPS; completed: Set<number>; stepMask: number; onJump: (n: number) => void;
 }) {
   return (
-    <div className="relative z-10 flex items-center gap-0 px-4 md:px-10 py-4 border-b border-white/60 overflow-x-auto flex-shrink-0">
+    <div className="relative z-10 flex items-center gap-0 px-4 md:px-10 py-4 overflow-x-auto flex-shrink-0">
       {steps.map((step, idx) => {
         const isActive = step.id === current;
         const isDone = completed.has(step.id) && !isActive;
@@ -1626,7 +1626,7 @@ export function BrandBrainPage() {
       {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
 
       {/* Header */}
-      <div className="relative z-10 px-4 md:px-10 py-4 border-b border-white/60 flex items-center justify-between flex-shrink-0">
+      <div className="relative z-10 px-4 md:px-10 py-4 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-xl font-bold text-[#111827]">Brand Brain</h1>
