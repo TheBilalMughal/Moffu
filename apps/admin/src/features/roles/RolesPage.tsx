@@ -252,13 +252,13 @@ function SavePreviewModal({
           </div>
         )}
         <div className="px-6 py-4 border-t border-[#E5E7EB] flex justify-end gap-2">
-          <button onClick={onCancel} disabled={saving} className="px-4 py-1.5 text-sm text-[#374151] bg-white border border-[#D1D5DB] hover:bg-[#F3F4F6] transition-colors disabled:opacity-50">
+          <button onClick={onCancel} disabled={saving} className="px-4 py-1.5 text-sm text-[#374151] bg-white border border-[#D1D5DB] rounded-lg hover:bg-[#F3F4F6] transition-colors disabled:opacity-50">
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={saving}
-            className="px-4 py-1.5 text-sm font-semibold text-white bg-[#111111] hover:bg-[#0a3d30] transition-colors disabled:opacity-50 flex items-center gap-1.5"
+            className="px-4 py-1.5 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
           >
             {saving && <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />}
             {saving ? 'Saving…' : `Apply ${toAdd.length + toRemove.length} change${toAdd.length + toRemove.length !== 1 ? 's' : ''}`}
@@ -316,25 +316,42 @@ function RoleDiffModal({
         </div>
 
         {/* Compare role picker */}
-        <div className="px-6 pt-4 pb-2 flex items-center gap-3 text-sm">
-          <span className="font-semibold text-[#6C55E8] w-28">{baseLabel}</span>
-          <span className="text-[#9CA3AF]">vs</span>
-          <Dropdown
-            value={compareRole}
-            onChange={(v) => onChangeCompare(v as RoleKey)}
-            options={ROLES.filter((r) => r.key !== baseRole).map((r) => ({ value: r.key, label: r.label }))}
-          />
+        <div className="px-6 pt-4 pb-3 border-b border-[#F3F4F6] flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-1">
+            <span className="w-7 h-7 rounded-lg bg-[#D8CCFF] text-[#6C55E8] text-xs font-bold flex items-center justify-center flex-shrink-0">
+              {baseLabel[0]}
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-[#111827] leading-tight">{baseLabel}</p>
+              <p className="text-[10px] text-[#9CA3AF]">base role</p>
+            </div>
+          </div>
+          <svg className="w-4 h-4 text-[#D1D5DB] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          </svg>
+          <div className="flex-1">
+            <Dropdown
+              value={compareRole}
+              onChange={(v) => onChangeCompare(v as RoleKey)}
+              options={ROLES.filter((r) => r.key !== baseRole).map((r) => ({ value: r.key, label: r.label }))}
+            />
+          </div>
         </div>
 
-        <div className="overflow-y-auto max-h-[calc(80vh-140px)]">
+        <div className="overflow-y-auto max-h-[calc(80vh-170px)]">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-[#FAFAF7] border-b border-[#E5E7EB]">
+            <thead className="sticky top-0 bg-white border-b border-[#E5E7EB]">
               <tr>
-                <th className="px-5 py-2 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Page</th>
-                <th className="px-3 py-2 text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-16">View</th>
-                <th className="px-3 py-2 text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-16">Add</th>
-                <th className="px-3 py-2 text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-16">Edit</th>
-                <th className="px-3 py-2 text-center text-xs font-semibold text-[#6B7280] uppercase tracking-wide w-16">Delete</th>
+                <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Page</th>
+                {(['view', 'add', 'edit', 'delete'] as const).map((a) => (
+                  <th key={a} className="px-3 py-2.5 text-center w-20">
+                    <p className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide">{a}</p>
+                    <div className="flex items-center justify-center gap-1 mt-0.5">
+                      <span className="text-[9px] font-bold text-[#6C55E8] bg-[#D8CCFF] px-1 py-px rounded">{baseLabel.slice(0, 3)}</span>
+                      <span className="text-[9px] font-bold text-[#6B7280] bg-[#F3F4F6] px-1 py-px rounded">{cmpLabel.slice(0, 3)}</span>
+                    </div>
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F3F4F6]">
@@ -346,25 +363,39 @@ function RoleDiffModal({
                 });
 
                 return (
-                  <tr key={mod.label} className={rowDiff ? 'bg-amber-50' : ''}>
-                    <td className="px-5 py-1.5 font-medium text-[#111827]">{mod.label}</td>
+                  <tr key={mod.label} className={rowDiff ? 'bg-amber-50/60' : 'hover:bg-[#FAFAF7]'}>
+                    <td className="px-5 py-2 font-medium text-[#111827]">
+                      {rowDiff && <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 mr-2 mb-px" />}
+                      {mod.label}
+                    </td>
                     {actions.map((a) => {
                       const keys = mod.crud[a] as readonly string[] | null;
-                      if (!keys) return <td key={a} className="px-3 py-1.5 text-center"><span className="text-[#D1D5DB] text-xs">—</span></td>;
+                      if (!keys) return <td key={a} className="px-3 py-2 text-center"><span className="text-[#E5E7EB] text-xs">—</span></td>;
 
                       const bGrant = keys.every((k) => base.has(k));
                       const cGrant = keys.every((k) => cmp.has(k));
                       const diff   = bGrant !== cGrant;
 
                       return (
-                        <td key={a} className="px-3 py-1.5">
-                          <div className={`flex items-center justify-center gap-1 ${diff ? 'font-semibold' : ''}`}>
-                            <span className={`text-xs ${bGrant ? 'text-sky-600' : 'text-[#D1D5DB]'}`} title={baseLabel}>
-                              {bGrant ? '✓' : '✗'}
+                        <td key={a} className="px-3 py-2">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <span
+                              className={`inline-flex w-5 h-5 items-center justify-center rounded text-[10px] font-bold flex-shrink-0 ${
+                                bGrant ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#C4CAC8]'
+                              }`}
+                              title={baseLabel}
+                            >
+                              {bGrant ? '✓' : '—'}
                             </span>
-                            <span className="text-[10px] text-[#D1D5DB]">/</span>
-                            <span className={`text-xs ${cGrant ? 'text-sky-600' : diff ? 'text-red-400' : 'text-[#D1D5DB]'}`} title={cmpLabel}>
-                              {cGrant ? '✓' : '✗'}
+                            <span
+                              className={`inline-flex w-5 h-5 items-center justify-center rounded text-[10px] font-bold flex-shrink-0 ${
+                                cGrant
+                                  ? diff ? 'bg-amber-100 text-amber-700' : 'bg-[#F3F4F6] text-[#6B7280]'
+                                  : diff ? 'bg-red-50 text-red-400' : 'bg-[#F3F4F6] text-[#C4CAC8]'
+                              }`}
+                              title={cmpLabel}
+                            >
+                              {cGrant ? '✓' : '—'}
                             </span>
                           </div>
                         </td>
@@ -375,9 +406,20 @@ function RoleDiffModal({
               })}
             </tbody>
           </table>
-          <p className="px-5 py-2 text-[10px] text-[#9CA3AF] border-t border-[#F3F4F6]">
-            Left value = {baseLabel} &nbsp;·&nbsp; Right value = {cmpLabel} &nbsp;·&nbsp; Amber rows have differences
-          </p>
+          <div className="px-5 py-2.5 border-t border-[#F3F4F6] flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <span className="inline-flex w-4 h-4 items-center justify-center rounded bg-[#D8CCFF] text-[8px] font-bold text-[#6C55E8]">✓</span>
+              <span className="text-[10px] text-[#9CA3AF]">{baseLabel}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="inline-flex w-4 h-4 items-center justify-center rounded bg-[#F3F4F6] text-[8px] font-bold text-[#6B7280]">✓</span>
+              <span className="text-[10px] text-[#9CA3AF]">{cmpLabel}</span>
+            </div>
+            <div className="flex items-center gap-1.5 ml-auto">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400" />
+              <span className="text-[10px] text-[#9CA3AF]">rows with differences</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -624,7 +666,7 @@ export function RolesPage() {
             <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
               <button
                 onClick={() => { setDiffRole(selectedRole === 'owner' ? 'admin' : 'owner'); setShowDiff(true); }}
-                className="px-3 py-1.5 text-xs font-medium text-[#374151] bg-white border border-[#D1D5DB] hover:bg-[#F3F4F6] transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 text-xs font-medium text-[#374151] bg-white border border-[#D1D5DB] rounded-lg hover:bg-[#F3F4F6] transition-colors flex items-center gap-1.5"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -724,14 +766,14 @@ export function RolesPage() {
                       <button
                         onClick={handleDiscard}
                         disabled={saving}
-                        className="px-3 py-1.5 text-xs font-medium text-[#374151] bg-white border border-[#D1D5DB] hover:bg-[#F3F4F6] transition-colors disabled:opacity-50"
+                        className="px-3 py-1.5 text-xs font-medium text-[#374151] bg-white border border-[#D1D5DB] rounded-lg hover:bg-[#F3F4F6] transition-colors disabled:opacity-50"
                       >
                         Discard
                       </button>
                       <button
                         onClick={() => { setSaveError(null); setShowPreview(true); }}
                         disabled={saving}
-                        className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#0a3d30] transition-colors disabled:opacity-50"
+                        className="px-3 py-1.5 text-xs font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg transition-colors disabled:opacity-50"
                       >
                         Save Changes
                       </button>
