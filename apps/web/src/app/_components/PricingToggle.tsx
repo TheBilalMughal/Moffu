@@ -69,7 +69,7 @@ export function PricingToggle({
               onClick={() => setAnnual(false)}
               className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ${
                 !annual
-                  ? 'bg-white text-[#111827] shadow-sm'
+                  ? 'bg-[#6C55E8] text-white'
                   : 'text-[#111827]/45 hover:text-[#111827]'
               }`}
             >
@@ -81,7 +81,7 @@ export function PricingToggle({
               onClick={() => setAnnual(true)}
               className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ${
                 annual
-                  ? 'bg-white text-[#111827] shadow-sm'
+                  ? 'bg-[#6C55E8] text-white'
                   : 'text-[#111827]/45 hover:text-[#111827]'
               }`}
             >
@@ -89,7 +89,7 @@ export function PricingToggle({
               {toggleDiscount > 0 && (
                 <span
                   className={`text-[11px] px-1.5 py-0.5 rounded font-bold transition-colors duration-200 ${
-                    annual ? 'bg-[#6C55E8] text-white' : 'bg-[#111827]/10 text-[#111827]/50'
+                    annual ? 'bg-white/20 text-white' : 'bg-[#6C55E8]/10 text-[#6C55E8]'
                   }`}
                 >
                   -{toggleDiscount}%
