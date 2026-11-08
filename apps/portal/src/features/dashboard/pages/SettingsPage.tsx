@@ -915,7 +915,7 @@ export function SettingsPage() {
             {!passwordEditOpen ? (
               <div>
                 <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1">Password</p>
-                <p className="text-sm text-[#111827] tracking-widest">••••••••</p>
+                <p className="text-sm text-[#111827] tracking-widest">{`\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022`}</p>
               </div>
             ) : (
               <>
