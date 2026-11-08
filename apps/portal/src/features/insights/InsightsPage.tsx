@@ -754,7 +754,7 @@ function FilterDropdown<T extends string>({ value, onChange, options }: {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 text-xs font-medium text-[#6B7280] border border-[#D1D5DB] hover:border-[#374151] hover:text-[#111827] rounded-lg px-3 py-1.5 transition-colors">
+        className="flex items-center gap-1.5 text-xs font-medium text-[#6B7280] border border-[#D1D5DB] hover:border-[#6C55E8] hover:text-[#6C55E8] rounded-lg px-3 py-1.5 transition-colors">
         <span>{current?.label}</span>
         <svg className="w-3 h-3 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
       </button>
@@ -901,7 +901,7 @@ export function InsightsPage() {
       <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#111827]/4 blur-3xl" aria-hidden="true"/>
 
       {/* Header */}
-      <div className="relative z-10 px-4 md:px-8 py-4 flex-shrink-0 border-b border-white/60">
+      <div className="relative z-10 px-4 md:px-8 py-4 flex-shrink-0">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-[#111827]">Review Insights</h1>
@@ -917,7 +917,7 @@ export function InsightsPage() {
         </div>
 
         {/* Stat strip */}
-        {!loading && totalReviews > 0 && (
+        {section === 'trends' && !loading && totalReviews > 0 && (
           <div className="flex gap-3 mt-4 flex-wrap">
             <StatCard label="Reviews" value={totalReviews} sub={`${reviewsThisWeek} this week`}
               color="default"
@@ -947,21 +947,21 @@ export function InsightsPage() {
 
       {/* Filter bar */}
       {section !== 'agent' && (
-        <div className="flex-shrink-0 border-b border-[#E5E7EB]/60 px-4 md:px-8 py-2.5 flex items-center gap-2.5 flex-wrap">
+        <div className="flex-shrink-0 px-4 md:px-8 py-2.5 flex items-center gap-2.5 flex-wrap">
           <FilterDropdown value={dateRange} onChange={setDateRange} options={dateOptions}/>
           <FilterDropdown value={starFilter} onChange={setStarFilter} options={starOptions}/>
           {section === 'trends' && (
             <>
               <button onClick={() => setShowBigrams(b => !b)}
                 className={`flex items-center gap-1.5 text-xs font-medium border rounded-lg px-3 py-1.5 transition-colors ${
-                  showBigrams ? 'border-[#6C55E8] text-[#6C55E8] bg-[#EDE9FE]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#111827]'
+                  showBigrams ? 'border-[#6C55E8] text-[#6C55E8] bg-[#EDE9FE]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#6C55E8] hover:text-[#6C55E8]'
                 }`}>
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
                 {showBigrams ? 'Phrases' : 'Single words'}
               </button>
               <button onClick={() => setShowWordCloud(s => !s)}
                 className={`flex items-center gap-1.5 text-xs font-medium border rounded-lg px-3 py-1.5 transition-colors ${
-                  showWordCloud ? 'border-[#6C55E8] text-[#6C55E8] bg-[#EDE9FE]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#111827]'
+                  showWordCloud ? 'border-[#6C55E8] text-[#6C55E8] bg-[#EDE9FE]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#6C55E8] hover:text-[#6C55E8]'
                 }`}>
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
                 Word Cloud
