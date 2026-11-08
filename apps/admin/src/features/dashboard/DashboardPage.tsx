@@ -410,21 +410,15 @@ export function DashboardPage() {
       const freePlanId = (freePlanRes.data as { id: string } | null)?.id ?? '';
       const internalFilter = internalIds.length > 0 ? `(${internalIds.join(',')})` : null;
 
-      // Build filtered queries
-      let usersAllQ   = supabase.from('profiles').select('id', { count: 'exact', head: true });
-      let usersMonthQ = supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', ms);
-      let subsQ       = supabase.from('subscriptions').select('id, plan_id, billing_interval', { count: 'exact' }).eq('status', 'active');
-      if (internalFilter) {
-        usersAllQ   = usersAllQ.not('id', 'in', internalFilter);
-        usersMonthQ = usersMonthQ.not('id', 'in', internalFilter);
-        subsQ       = subsQ.not('user_id', 'in', internalFilter);
-      }
-      if (freePlanId) subsQ = subsQ.neq('plan_id', freePlanId);
+      // Build filtered paid-subs query
+      let subsQ = supabase.from('subscriptions').select('id, plan_id, billing_interval', { count: 'exact' }).eq('status', 'active');
+      if (internalFilter) subsQ = subsQ.not('user_id', 'in', internalFilter);
+      if (freePlanId)     subsQ = subsQ.neq('plan_id', freePlanId);
 
       // Phase 2: all KPI queries in parallel
       const [
         orgsAll, orgsThisMonth,
-        usersAll, usersThisMonth,
+        orgMembersRes,
         activeSubsRes,
         reviewsAll, reviewsToday,
         connectedRes,
@@ -433,8 +427,7 @@ export function DashboardPage() {
       ] = await Promise.all([
         supabase.from('organizations').select('id', { count: 'exact', head: true }),
         supabase.from('organizations').select('id', { count: 'exact', head: true }).gte('created_at', ms),
-        usersAllQ,
-        usersMonthQ,
+        supabase.from('org_members').select('user_id, created_at'),
         subsQ,
         supabase.from('reviews').select('id', { count: 'exact', head: true }),
         supabase.from('reviews').select('id', { count: 'exact', head: true }).gte('created_at', td),
@@ -443,7 +436,13 @@ export function DashboardPage() {
         supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('currency', 'USD'),
       ]);
 
-      // Calculate MRR from paid subs (already filtered — no free, no internal)
+      // Customer users = distinct org_members, excluding internal staff
+      type OrgMemberRow = { user_id: string; created_at: string };
+      const orgMembers = ((orgMembersRes.data ?? []) as OrgMemberRow[]).filter(m => !internalIds.includes(m.user_id));
+      const totalUsers = new Set(orgMembers.map(m => m.user_id)).size;
+      const newUsersThisMonth = new Set(orgMembers.filter(m => m.created_at >= ms).map(m => m.user_id)).size;
+
+      // Calculate MRR from paid subs (filtered — no free, no internal)
       const activeSubs = (activeSubsRes.data ?? []) as { id: string; plan_id: string; billing_interval: string | null }[];
       const prices = (pricesRes.data ?? []) as { plan_id: string; billing_interval: string; amount_cents: number }[];
       const priceMap = new Map(prices.map(p => [`${p.plan_id}:${p.billing_interval}`, p.amount_cents]));
@@ -456,8 +455,8 @@ export function DashboardPage() {
       setKpi({
         totalOrgs: orgsAll.count ?? 0,
         newOrgsThisMonth: orgsThisMonth.count ?? 0,
-        totalUsers: usersAll.count ?? 0,
-        newUsersThisMonth: usersThisMonth.count ?? 0,
+        totalUsers,
+        newUsersThisMonth,
         activeSubs: activeSubsRes.count ?? 0,
         mrrCents,
         mrrLastMonthCents: 0,
@@ -487,6 +486,7 @@ export function DashboardPage() {
         recentOrgsRes,
         auditRes,
         pastDueOrgsRes, failedConnRes,
+        internalChartRes,
       ] = await Promise.all([
         supabase.from('organizations').select('created_at').gte('created_at', ago30).order('created_at'),
         supabase.from('organizations').select('created_at').gte('created_at', ago365).order('created_at'),
@@ -495,11 +495,12 @@ export function DashboardPage() {
         supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('currency', 'USD'),
         supabase.from('subscriptions').select('plan_id, billing_interval, status'),
         supabase.from('google_connections').select('state'),
-        supabase.from('subscriptions').select('status'),
+        supabase.from('subscriptions').select('status, plan_id, user_id'),
         supabase.from('organizations').select('id, name, created_at, ref_id').order('created_at', { ascending: false }).limit(8),
         supabase.from('audit_events').select('id, action, resource_type, actor_id, org_id, created_at').order('created_at', { ascending: false }).limit(10),
         supabase.from('subscriptions').select('id, user_id').eq('status', 'past_due').limit(5),
         supabase.from('google_connections').select('id, org_id, state').in('state', ['REFRESH_FAILED', 'ERROR']).limit(5),
+        supabase.from('platform_members').select('user_id').eq('is_active', true),
       ]);
 
       // Daily new orgs (30 days)
@@ -563,11 +564,13 @@ export function DashboardPage() {
       });
       setGoogleStates(Array.from(gmap.entries()).map(([s, c]) => ({ status: s, count: c })));
 
-      // Subscription states
+      // Subscription states — exclude free plan + internal staff
+      const chartFreePlanId = (plansRes.data ?? []).find((p: { id: string; slug: string }) => p.slug === 'free')?.id ?? '';
+      const chartInternalIds = ((internalChartRes.data ?? []) as { user_id: string }[]).map(m => m.user_id);
       const smap = new Map<string, number>();
-      ((subStatesRes.data ?? []) as { status: string }[]).forEach(r => {
-        smap.set(r.status, (smap.get(r.status) ?? 0) + 1);
-      });
+      ((subStatesRes.data ?? []) as { status: string; plan_id: string; user_id: string }[])
+        .filter(r => (!chartFreePlanId || r.plan_id !== chartFreePlanId) && !chartInternalIds.includes(r.user_id))
+        .forEach(r => { smap.set(r.status, (smap.get(r.status) ?? 0) + 1); });
       setSubStates(Array.from(smap.entries()).map(([s, c]) => ({ status: s, count: c })));
 
       // Top recent orgs — enrich with plan + review counts
