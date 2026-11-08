@@ -340,7 +340,7 @@ function AddLocationDialog({ plan, onClose }: { plan: Plan; onClose: () => void 
 
 export function BillingPage() {
   const { pathname } = useLocation();
-  const billingSubView = pathname === '/billing/plan' ? 'plan' : 'billing';
+  const billingSubView = pathname === '/plan' ? 'plan' : 'billing';
   const [plans, setPlans] = useState<Plan[]>([]);
   const [sub, setSub] = useState<Subscription | null>(null);
   const [usage, setUsage] = useState<UsageSummary | null>(null);
@@ -928,7 +928,7 @@ export function BillingPage() {
                     )}
                   </div>
                 </div>
-                <a href="/billing/plan" className="text-xs font-semibold text-[#6C55E8] hover:underline">
+                <a href="/plan" className="text-xs font-semibold text-[#6C55E8] hover:underline">
                   Manage Plan
                 </a>
               </div>
