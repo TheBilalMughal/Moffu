@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { brandBrainService, KeywordContext } from '@/features/brand-brain/brandBrain.service';
 import { useLocationStore } from '@/features/location/location.store';
@@ -779,7 +780,8 @@ export function InsightsPage() {
   const [loading, setLoading] = useState(true);
 
   const { selectedId: globalLocationId, locations: selectedLocations } = useLocationStore();
-  const [tab, setTab] = useState<Tab>('keywords');
+  const { pathname } = useLocation();
+  const section: Tab = pathname.includes('/ratings') ? 'rating' : pathname.includes('/agent-rules') ? 'agent' : 'trends';
   const [dateRange, setDateRange] = useState<DateRange>('30d');
   const [starFilter, setStarFilter] = useState<string>('all');
   const [showBigrams, setShowBigrams] = useState(false);
@@ -892,13 +894,6 @@ export function InsightsPage() {
     { value: '1',   label: '1★ only' },
   ];
 
-  const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'keywords', label: 'Keywords', icon: <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg> },
-    { id: 'trends',   label: 'Trends',   icon: <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4"/></svg> },
-    { id: 'rating',   label: 'Ratings',  icon: <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg> },
-    { id: 'agent',    label: `Agent Rules${keywordContexts.length > 0 ? ` (${keywordContexts.length})` : ''}`, icon: <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg> },
-  ];
-
   return (
     <div className="relative h-full flex flex-col overflow-hidden">
       {/* Ambient blobs */}
@@ -947,25 +942,15 @@ export function InsightsPage() {
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="flex items-center gap-0 mt-4 -mb-4 border-b border-[#E5E7EB]/60">
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
-                tab === t.id ? 'border-[#6C55E8] text-[#6C55E8]' : 'border-transparent text-[#6B7280] hover:text-[#374151]'
-              }`}>
-              {t.icon}{t.label}
-            </button>
-          ))}
-        </div>
+
       </div>
 
       {/* Filter bar */}
-      {tab !== 'agent' && (
+      {section !== 'agent' && (
         <div className="flex-shrink-0 border-b border-[#E5E7EB]/60 px-4 md:px-8 py-2.5 flex items-center gap-2.5 flex-wrap">
           <FilterDropdown value={dateRange} onChange={setDateRange} options={dateOptions}/>
           <FilterDropdown value={starFilter} onChange={setStarFilter} options={starOptions}/>
-          {tab === 'keywords' && (
+          {section === 'trends' && (
             <>
               <button onClick={() => setShowBigrams(b => !b)}
                 className={`flex items-center gap-1.5 text-xs font-medium border rounded-lg px-3 py-1.5 transition-colors ${
@@ -997,7 +982,7 @@ export function InsightsPage() {
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 space-y-5">
 
         {/* ── Keywords tab ── */}
-        {tab === 'keywords' && (
+        {section === 'trends' && (
           loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5"><SkeletonPanel/><SkeletonPanel/></div>
           ) : totalReviews === 0 ? (
@@ -1085,7 +1070,7 @@ export function InsightsPage() {
         )}
 
         {/* ── Trends tab ── */}
-        {tab === 'trends' && (
+        {section === 'trends' && (
           loading ? <SkeletonPanel/> : (
             <>
               {/* Sentiment momentum */}
@@ -1122,7 +1107,7 @@ export function InsightsPage() {
         )}
 
         {/* ── Rating Analysis tab ── */}
-        {tab === 'rating' && (
+        {section === 'rating' && (
           loading ? <SkeletonPanel/> : (
             <>
               {/* Rating distribution */}
@@ -1189,7 +1174,7 @@ export function InsightsPage() {
         )}
 
         {/* ── Agent Rules tab ── */}
-        {tab === 'agent' && (
+        {section === 'agent' && (
           loading ? <SkeletonPanel/> : (
             <AgentKeywordsTab
               keywordContexts={keywordContexts}

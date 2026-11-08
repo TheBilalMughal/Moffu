@@ -101,7 +101,7 @@ const navItems: { to: string; label: string; icon: React.ReactNode; featureKey: 
   { to: '/dashboard',      label: 'Overview',       icon: <ChartBarIcon />,       featureKey: null },
   { to: '/google-profile', label: 'Google Profile', icon: <GoogleProfileIcon />,  featureKey: 'feature_google_profile' },
   { to: '/reviews',        label: 'Reviews',        icon: <StarIcon />,           featureKey: null },
-  { to: '/insights',       label: 'Insights',       icon: <InsightsIcon />,       featureKey: 'feature_insights' },
+  { to: '/insights/trends', label: 'Insights', icon: <InsightsIcon />, featureKey: 'feature_insights' },
   { to: '/brand-brain', label: 'Brand Brain', icon: <SlidersIcon />,    featureKey: 'feature_brand_brain' },
   { to: '/marketing',   label: 'Marketing',   icon: <MarketingIcon />,  featureKey: null },
   { to: '/campaigns',   label: 'Campaigns',   icon: <CampaignIcon />,   featureKey: null },
@@ -736,7 +736,16 @@ const RAIL_GROUPS: RailGroup[] = [
     items: [
       { to: '/reviews',        label: 'Reviews',        icon: <StarIcon />,          featureKey: null },
       { to: '/google-profile', label: 'Google Profile', icon: <GoogleProfileIcon />, featureKey: 'feature_google_profile' },
-      { to: '/insights',       label: 'Insights',       icon: <InsightsIcon />,      featureKey: 'feature_insights' },
+    ],
+  },
+  {
+    id: 'insights',
+    icon: <InsightsIcon />,
+    label: 'Insights',
+    items: [
+      { to: '/insights/trends',      label: 'Trends',      icon: (<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>), featureKey: 'feature_insights' },
+      { to: '/insights/ratings',     label: 'Ratings',     icon: (<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>), featureKey: 'feature_insights' },
+      { to: '/insights/agent-rules', label: 'Agent Rules', icon: (<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>), featureKey: 'feature_insights' },
     ],
   },
   {

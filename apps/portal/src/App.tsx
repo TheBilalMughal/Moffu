@@ -68,7 +68,10 @@ export function App() {
         <Route element={<AuthGuard><DashboardLayout /></AuthGuard>}>
           <Route path="/dashboard" element={<OverviewPage />} />
           <Route path="/reviews"   element={<ReviewsPage />} />
-          <Route path="/insights"  element={<FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage>} />
+          <Route path="/insights" element={<Navigate to="/insights/trends" replace />} />
+          <Route path="/insights/trends"      element={<FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage>} />
+          <Route path="/insights/ratings"     element={<FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage>} />
+          <Route path="/insights/agent-rules" element={<FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage>} />
           <Route path="/google-profile" element={<FeatureGatePage feature="feature_google_profile"><GoogleProfilePage /></FeatureGatePage>} />
           <Route path="/brand-brain" element={<FeatureGatePage feature="feature_brand_brain"><BrandBrainPage /></FeatureGatePage>} />
           <Route path="/billing"   element={<BillingPage />} />
