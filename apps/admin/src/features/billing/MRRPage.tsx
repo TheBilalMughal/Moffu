@@ -191,13 +191,14 @@ export function MRRPage() {
 
   async function load() {
     setLoading(true);
-    const [subsRes, plansRes, pricesRes, orgMembersRes] = await Promise.all([
+    const [subsRes, plansRes, pricesRes, orgMembersRes, internalRes] = await Promise.all([
       supabase.from('subscriptions').select(
         'id, user_id, plan_id, status, billing_interval, created_at, current_period_end, cancel_at_period_end'
       ).order('created_at', { ascending: false }),
       supabase.from('plans').select('id, slug, name').order('sort_order'),
       supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('currency', 'USD'),
       supabase.from('org_members').select('user_id, org_id').eq('role', 'owner'),
+      supabase.from('platform_members').select('user_id').eq('is_active', true),
     ]);
 
     const allPlans = (plansRes.data ?? []) as PlanRaw[];
@@ -212,6 +213,11 @@ export function MRRPage() {
     );
     const orgIds = [...new Set([...orgByOwner.values()])];
 
+    // Internal Moffu staff — excluded from all MRR/subscription counts
+    const internalUserIds = new Set(
+      ((internalRes.data ?? []) as { user_id: string }[]).map((m) => m.user_id)
+    );
+
     // Fetch org-level price overrides so Scale/custom clients show correct MRR
     type OverrideRaw = { org_id: string; custom_price_cents: number | null; billing_interval: string | null };
     const overridesRes = orgIds.length > 0
@@ -221,7 +227,9 @@ export function MRRPage() {
       ((overridesRes.data ?? []) as OverrideRaw[]).filter((o) => o.custom_price_cents != null).map((o) => [o.org_id, o])
     );
 
-    const allSubs = (subsRes.data ?? []) as (SubRaw & { user_id: string })[];
+    // Exclude internal staff — only real client subscriptions
+    const allSubs = ((subsRes.data ?? []) as (SubRaw & { user_id: string })[])
+      .filter((s) => !internalUserIds.has(s.user_id));
     const enriched: EnrichedSub[] = allSubs.map((s) => {
       const plan = planById.get(s.plan_id);
       const interval = s.billing_interval ?? 'monthly';

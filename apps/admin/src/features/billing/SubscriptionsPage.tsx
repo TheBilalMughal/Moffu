@@ -462,11 +462,12 @@ export function SubscriptionsPage() {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    const [subsRes, plansRes, pricesRes, orgMembersOwnerRes] = await Promise.all([
+    const [subsRes, plansRes, pricesRes, orgMembersOwnerRes, internalRes] = await Promise.all([
       supabase.from('subscriptions').select('id, user_id, plan_id, status, billing_interval, current_period_start, current_period_end, cancel_at_period_end, stripe_subscription_id, stripe_customer_id, created_at').order('created_at', { ascending: false }),
       supabase.from('plans').select('id, slug, name').order('sort_order'),
       supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('currency', 'USD'),
       supabase.from('org_members').select('user_id, org_id, role').eq('role', 'owner'),
+      supabase.from('platform_members').select('user_id').eq('is_active', true),
     ]);
 
     type SubRaw = { id: string; user_id: string; plan_id: string; status: string; billing_interval: string | null; current_period_start: string; current_period_end: string; cancel_at_period_end: boolean; stripe_subscription_id: string | null; stripe_customer_id: string | null; created_at: string };
@@ -483,8 +484,13 @@ export function SubscriptionsPage() {
     setPriceMap(priceMap);
     const orgByOwner = new Map<string, string>((orgMembersOwnerRes.data ?? []).map((m: OrgMemberRaw) => [m.user_id, m.org_id]));
 
-    // Exclude internal/platform users — only keep subs whose user is an org owner
-    const subs = allSubsRaw.filter((s) => orgByOwner.has(s.user_id));
+    // Internal Moffu staff — excluded from all subscription counts and Free plan stats
+    const internalUserIds = new Set(
+      ((internalRes.data ?? []) as { user_id: string }[]).map((m) => m.user_id)
+    );
+
+    // Keep only real client subs: must be org owner AND not an internal staff member
+    const subs = allSubsRaw.filter((s) => orgByOwner.has(s.user_id) && !internalUserIds.has(s.user_id));
 
     const ownerUserIds = subs.map((s) => s.user_id);
     const orgIds = [...new Set([...orgByOwner.values()])];

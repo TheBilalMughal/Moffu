@@ -110,25 +110,10 @@ export const teamService = {
   },
 
   async getSeatUsage(orgId: string): Promise<{ used: number; limit: number | null }> {
-    const [membersRes, invRes, subRes] = await Promise.all([
-      supabase.from('org_members').select('id', { count: 'exact', head: true }).eq('org_id', orgId).eq('status', 'active'),
-      supabase.from('invitations').select('id', { count: 'exact', head: true })
-        .eq('org_id', orgId).is('accepted_at', null).is('revoked_at', null)
-        .gt('expires_at', new Date().toISOString()),
-      supabase.from('subscriptions').select('plan_id').eq('user_id', (await supabase.auth.getUser()).data.user?.id ?? '').eq('status', 'active').limit(1).maybeSingle(),
-    ]);
-
-    const used = (membersRes.count ?? 0) + (invRes.count ?? 0);
-
-    if (!subRes.data?.plan_id) return { used, limit: null };
-
-    const { data: ent } = await supabase
-      .from('plan_entitlements')
-      .select('limit_value')
-      .eq('plan_id', subRes.data.plan_id)
-      .eq('key', 'team_members')
-      .maybeSingle();
-
-    return { used, limit: ent?.limit_value ?? null };
+    // Uses server-side RPC so platform (internal) members are excluded from the count.
+    const { data, error } = await supabase.rpc('get_seat_usage', { p_org_id: orgId });
+    if (error || !data) return { used: 0, limit: null };
+    const result = data as { used: number; limit: number | null };
+    return { used: result.used ?? 0, limit: result.limit ?? null };
   },
 };
