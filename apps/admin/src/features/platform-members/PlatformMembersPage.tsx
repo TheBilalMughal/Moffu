@@ -63,6 +63,11 @@ export function PlatformMembersPage() {
   const [bulkWorking, setBulkWorking] = useState(false);
   const [bulkError, setBulkError] = useState<string | null>(null);
 
+  // Row-level actions
+  const [rowToggling, setRowToggling] = useState<Set<string>>(new Set());
+  const [rowDeleting, setRowDeleting] = useState<Set<string>>(new Set());
+  const [rowDeleteConfirm, setRowDeleteConfirm] = useState<Set<string>>(new Set());
+
   // Add modal
   const [showAddModal, setShowAddModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -214,6 +219,30 @@ export function PlatformMembersPage() {
   }
 
   // ── Selection helpers ─────────────────────────────────────────────────────
+
+  async function handleRowToggle(m: Member) {
+    setRowToggling((prev) => new Set([...prev, m.id]));
+    await supabase.from('platform_members').update({ is_active: !m.is_active }).eq('id', m.id);
+    setRowToggling((prev) => { const n = new Set(prev); n.delete(m.id); return n; });
+    loadMembers();
+  }
+
+  async function handleRowDelete(m: Member) {
+    setRowDeleting((prev) => new Set([...prev, m.id]));
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-delete-member`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token}`,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+      },
+      body: JSON.stringify({ member_ids: [m.id] }),
+    });
+    setRowDeleting((prev) => { const n = new Set(prev); n.delete(m.id); return n; });
+    setRowDeleteConfirm((prev) => { const n = new Set(prev); n.delete(m.id); return n; });
+    if ((await res.json()).success) loadMembers();
+  }
 
   const filtered = members.filter(
     (m) =>
@@ -454,16 +483,40 @@ export function PlatformMembersPage() {
                       </td>
                       <td className="px-5 py-1.5 text-[#9CA3AF] text-xs">{formatDate(m.last_sign_in_at)}</td>
                       <td className="px-5 py-1.5 text-right">
-                        {m.ref_id != null ? (
-                          <Link
-                            to={`/users/${m.ref_id.split('-')[1]}`}
-                            className="text-xs font-medium text-[#6C55E8] hover:underline"
-                          >
-                            View
-                          </Link>
-                        ) : (
-                          <span className="text-xs text-[#9CA3AF]">View</span>
-                        )}
+                        <div className="flex items-center justify-end gap-3">
+                          {m.ref_id != null ? (
+                            <Link to={`/users/${m.ref_id.split('-')[1]}`} className="text-xs font-medium text-[#6C55E8] hover:underline">View</Link>
+                          ) : (
+                            <span className="text-xs text-[#9CA3AF]">View</span>
+                          )}
+                          {canManage(platformRole) && m.role !== 'owner' && (
+                            <button
+                              onClick={() => handleRowToggle(m)}
+                              disabled={rowToggling.has(m.id)}
+                              className="text-xs font-medium text-[#374151] hover:text-[#111827] disabled:opacity-40 transition-colors"
+                            >
+                              {rowToggling.has(m.id) ? '\u2026' : m.is_active ? 'Deactivate' : 'Reactivate'}
+                            </button>
+                          )}
+                          {isSuperAdmin(platformRole) && m.role !== 'owner' && (
+                            rowDeleteConfirm.has(m.id) ? (
+                              <span className="flex items-center gap-1.5">
+                                <button onClick={() => handleRowDelete(m)} disabled={rowDeleting.has(m.id)} className="text-xs font-semibold text-red-600 hover:text-red-700 disabled:opacity-40">
+                                  {rowDeleting.has(m.id) ? '\u2026' : 'Yes'}
+                                </button>
+                                <span className="text-[#D1D5DB] text-xs">/</span>
+                                <button onClick={() => setRowDeleteConfirm((prev) => { const n = new Set(prev); n.delete(m.id); return n; })} className="text-xs font-medium text-[#9CA3AF] hover:text-[#374151]">No</button>
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => setRowDeleteConfirm((prev) => new Set([...prev, m.id]))}
+                                className="text-xs font-medium text-red-500 hover:text-red-700 transition-colors"
+                              >
+                                Delete
+                              </button>
+                            )
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
