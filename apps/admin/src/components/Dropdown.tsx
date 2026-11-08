@@ -112,7 +112,7 @@ export function Dropdown({
                   type="button"
                   onClick={() => { onChange(opt.value); setOpen(false); setSearchQ(''); }}
                   className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${
-                    sel ? 'text-[#6C55E8] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'
+                    sel ? 'text-[#6C55E8] font-medium bg-[#F3F0FE]' : 'text-[#374151] hover:bg-[#F8F9FA]'
                   }`}
                 >
                   <span>{opt.label}</span>
