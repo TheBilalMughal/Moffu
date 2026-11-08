@@ -195,8 +195,8 @@ function PlanComparisonModal({ plans, sub, billingInterval, currentPlan, onDowng
               return (
                 <div key={plan.id} className={`text-center p-4 rounded-xl border ${isCurrent ? 'border-[#6C55E8] bg-[#F9FAFB]' : 'border-[#F3F4F6]'}`}>
                   {isCurrent && <p className="text-[10px] font-bold text-[#6C55E8] mb-1">Current</p>}
-                  <p className="text-sm font-bold text-[#111827]">{plan.name}</p>
-                  <p className="text-lg font-bold text-[#111827] mt-1">
+                  <p className={`text-sm font-bold ${isCurrent ? "text-[#6C55E8]" : "text-[#111827]"}`}>{plan.name}</p>
+                  <p className={`text-lg font-bold mt-1 ${isCurrent ? "text-[#6C55E8]" : "text-[#111827]"}`}>
                     {plan.contact_sales ? (
                       <span className="text-sm font-semibold text-[#374151]">Custom</span>
                     ) : price && price.amount_cents > 0 ? (
