@@ -81,6 +81,7 @@ const NAV_FINANCE = [
   {
     to: '/coupons',
     label: 'Coupons',
+    allowedRoles: ['owner', 'super_admin'],
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
@@ -120,6 +121,7 @@ const NAV_PLATFORM = [
   {
     to: '/flags',
     label: 'Feature Flags',
+    allowedRoles: ['owner', 'super_admin'],
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
@@ -150,6 +152,7 @@ const NAV_ADMINISTRATION = [
   {
     to: '/roles',
     label: 'Roles',
+    allowedRoles: ['owner', 'super_admin'],
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -167,7 +170,7 @@ const NAV_ADMINISTRATION = [
   },
 ];
 
-type NavItemData = { to: string; label: string; icon: React.ReactNode; end?: boolean };
+type NavItemData = { to: string; label: string; icon: React.ReactNode; end?: boolean; allowedRoles?: string[] };
 
 interface SettingsSection {
   label: string;
@@ -318,6 +321,7 @@ const RAIL_GROUPS = [
     label: 'Finance',
     to: '/mrr',
     end: false,
+    allowedRoles: ['owner', 'super_admin', 'finance'],
     test: (p: string) => ['/mrr', '/payments', '/coupons', '/refunds'].some(x => p === x || p.startsWith(x + '/')),
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -329,6 +333,7 @@ const RAIL_GROUPS = [
     label: 'Platform',
     to: '/broadcasts',
     end: false,
+    allowedRoles: ['owner', 'super_admin', 'admin'],
     test: (p: string) => ['/broadcasts', '/waitlist', '/flags', '/integrations'].some(x => p === x || p.startsWith(x + '/')),
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -340,6 +345,7 @@ const RAIL_GROUPS = [
     label: 'Admin',
     to: '/users',
     end: false,
+    allowedRoles: ['owner', 'super_admin', 'admin'],
     test: (p: string) => ['/users', '/roles', '/audit'].some(x => p === x || p.startsWith(x + '/')),
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -876,7 +882,7 @@ export function AdminLayout() {
   const visibleRailGroups = RAIL_GROUPS.filter(g => !g.allowedRoles || g.allowedRoles.includes(platformRole ?? ''));
   const activeGroup = visibleRailGroups.find(g => g.test(location.pathname)) ?? visibleRailGroups[0]!;
   const navConfig = GROUP_NAV_CONFIG[activeGroup.label];
-  const activeNavItems = navConfig?.items ?? [];
+  const activeNavItems = (navConfig?.items ?? []).filter(item => !item.allowedRoles || item.allowedRoles.includes(platformRole ?? ''));
   const activeNavLabel = navConfig?.label ?? null;
 
   // Derive current page label for breadcrumb

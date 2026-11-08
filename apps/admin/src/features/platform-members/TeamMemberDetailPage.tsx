@@ -471,12 +471,15 @@ export function TeamMemberDetailPage() {
             {/* Role */}
             <div>
               <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">Role</label>
-              {infoEditing && member.role !== 'owner' ? (
+              {infoEditing && member.role !== 'owner' && member.userId !== currentUser?.id ? (
                 <Dropdown
                   fullWidth
                   value={editRole}
                   onChange={(v) => setEditRole(v as PlatformRole)}
-                  options={ROLES.filter((r) => r !== 'owner').map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
+                  options={(() => {
+                    const myIdx = ROLES.indexOf(platformRole as PlatformRole);
+                    return ROLES.filter((_r, i) => i > myIdx).map((r) => ({ value: r, label: ROLE_LABEL[r] }));
+                  })()}
                 />
               ) : (
                 <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${ROLE_COLOR[member.role]}`}>
