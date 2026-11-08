@@ -144,7 +144,7 @@ export function DateRangePicker({ from, to, onChange, alignRight = false }: Date
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${hasValue ? 'border-[#6C55E8] bg-[#D8CCFF] text-[#6C55E8]' : 'border-[#E5E7EB] text-[#374151] hover:bg-[#F3F4F6]'}`}
+        className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg border transition-colors ${hasValue ? 'border-[#6C55E8] bg-[#D8CCFF] text-[#6C55E8]' : 'border-[#E5E7EB] bg-white text-[#374151] hover:border-[#6C55E8] hover:text-[#6C55E8]'}`}
       >
         <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

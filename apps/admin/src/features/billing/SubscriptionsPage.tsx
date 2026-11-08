@@ -659,7 +659,7 @@ export function SubscriptionsPage() {
         <div className="flex items-center gap-2 relative">
           <div className="relative">
             <button onClick={() => setShowSaved((v) => !v)}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors">
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-[#374151] bg-white border border-[#E5E7EB] rounded-lg hover:border-[#6C55E8] hover:text-[#6C55E8] transition-colors">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
               Saved Filters
             </button>
