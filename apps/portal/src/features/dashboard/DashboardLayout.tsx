@@ -701,6 +701,158 @@ function UpgradeWidget() {
   );
 }
 
+// -- Rail Groups ---------------------------------------------------------------
+
+interface RailGroupItem {
+  to: string;
+  label: string;
+  icon: React.ReactNode;
+  featureKey: string | null;
+  end?: boolean;
+}
+
+interface RailGroup {
+  id: string;
+  icon: React.ReactNode;
+  label: string;
+  items: RailGroupItem[];
+}
+
+const RAIL_GROUPS: RailGroup[] = [
+  {
+    id: 'overview',
+    icon: <ChartBarIcon />,
+    label: 'Overview',
+    items: [
+      { to: '/dashboard', label: 'Overview', icon: <ChartBarIcon />, featureKey: null, end: true },
+    ],
+  },
+  {
+    id: 'reviews',
+    icon: <StarIcon />,
+    label: 'Reviews',
+    items: [
+      { to: '/reviews',        label: 'Reviews',        icon: <StarIcon />,          featureKey: null },
+      { to: '/google-profile', label: 'Google Profile', icon: <GoogleProfileIcon />, featureKey: 'feature_google_profile' },
+      { to: '/insights',       label: 'Insights',       icon: <InsightsIcon />,      featureKey: 'feature_insights' },
+    ],
+  },
+  {
+    id: 'ai',
+    icon: <SlidersIcon />,
+    label: 'Brand Brain',
+    items: [
+      { to: '/brand-brain', label: 'Brand Brain', icon: <SlidersIcon />, featureKey: 'feature_brand_brain' },
+    ],
+  },
+  {
+    id: 'engage',
+    icon: <CampaignIcon />,
+    label: 'Engage',
+    items: [
+      { to: '/campaigns', label: 'Campaigns', icon: <CampaignIcon />,  featureKey: null },
+      { to: '/marketing', label: 'Marketing', icon: <MarketingIcon />, featureKey: null },
+      { to: '/feedback',  label: 'Feedback',  icon: <FeedbackIcon />,  featureKey: null },
+    ],
+  },
+  {
+    id: 'team',
+    icon: <TeamIcon />,
+    label: 'Team',
+    items: [
+      { to: '/team',    label: 'Team',    icon: <TeamIcon />,    featureKey: 'feature_team' },
+      { to: '/billing', label: 'Billing', icon: <BillingIcon />, featureKey: null },
+    ],
+  },
+  {
+    id: 'settings',
+    icon: <CogIcon />,
+    label: 'Settings',
+    items: [
+      { to: '/settings', label: 'Settings', icon: <CogIcon />, featureKey: null },
+    ],
+  },
+];
+
+// -- NavItem -------------------------------------------------------------------
+
+function NavItem({
+  to,
+  label,
+  icon,
+  end,
+  isLocked,
+}: {
+  to: string;
+  label: string;
+  icon: React.ReactNode;
+  end?: boolean;
+  isLocked: boolean;
+}) {
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      className={({ isActive }) =>
+        'relative flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ' + (
+          isLocked
+            ? 'text-[#9CA3AF] hover:bg-[#F3F4F6]'
+            : isActive
+              ? 'bg-[#D8CCFF]/70 text-[#111111]'
+              : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
+        )
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <span className={isLocked ? 'text-[#D1D5DB]' : isActive ? 'text-[#6C55E8]' : 'text-[#9CA3AF]'}>
+            {icon}
+          </span>
+          <span className="flex-1">{label}</span>
+          {isLocked && (
+            <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          )}
+        </>
+      )}
+    </NavLink>
+  );
+}
+
+// -- Rail Group Button ---------------------------------------------------------
+
+function RailGroupButton({
+  icon,
+  label,
+  isActive,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <div className="relative group">
+      <button
+        onClick={onClick}
+        className={'w-10 h-10 flex items-center justify-center rounded-lg transition-colors ' + (
+          isActive ? 'bg-[#6C55E8] text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
+        )}
+        aria-label={label}
+      >
+        {icon}
+      </button>
+      <div className="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-2 py-1 rounded-md bg-[#111111] border border-white/10 shadow-lg text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+        {label}
+      </div>
+    </div>
+  );
+}
+
+// -----------------------------------------------------------------------------
+
 export function DashboardLayout() {
   const { setLocations, setSelectedId } = useLocationStore();
   const navigate = useNavigate();
@@ -712,10 +864,8 @@ export function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
 
-  // Close sidebar on route change (mobile)
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
-  // Track auth user — clear store immediately on user change
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setAuthUserId(user?.id ?? null);
@@ -728,7 +878,6 @@ export function DashboardLayout() {
     return () => subscription.unsubscribe();
   }, [setLocations, setSelectedId]);
 
-  // Load this user's locations — keyed on authUserId so it reloads on user switch
   useEffect(() => {
     if (!authUserId) { setLocations([]); return; }
     supabase
@@ -767,10 +916,8 @@ export function DashboardLayout() {
         } else if (e.key === 'feature_insights') {
           map['feature_insights'] = e.bool_value !== false;
         } else if (e.key === 'brand_brain_steps') {
-          // locked when all steps are disabled (mask === 0); UNLIMITED = all accessible
           map['feature_brand_brain'] = e.value_type === 'UNLIMITED' || ((e.limit_value ?? 63) & 63) > 0;
         } else if (e.key === 'team_members') {
-          // team management locked when limit <= 1 (owner only)
           map['feature_team'] = e.value_type === 'UNLIMITED' || (e.limit_value ?? 2) > 1;
         }
       }
@@ -780,15 +927,10 @@ export function DashboardLayout() {
     loadFeatureAccess();
   }, []);
 
-  // Realtime: detect admin-triggered plan downgrades and enforce location limits
   useEffect(() => {
-    let userId: string | null = null;
     let prevPlanId: string | null = null;
-
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
-      userId = user.id;
-
       const channel = supabase
         .channel('subscription-plan-change')
         .on(
@@ -798,210 +940,183 @@ export function DashboardLayout() {
             const newPlanId = (payload.new as { plan_id: string }).plan_id;
             if (!prevPlanId || newPlanId === prevPlanId) { prevPlanId = newPlanId; return; }
             prevPlanId = newPlanId;
-
-            // Fetch new plan details to compare sort_order
             const { data: plans } = await supabase
               .from('plans')
               .select('id, name, sort_order, plan_entitlements(key, value_type, limit_value)')
               .in('id', [newPlanId]);
-
             const newPlan = plans?.[0];
             if (!newPlan) return;
-
-            // Get current plan sort order from the old row
             const oldPlanId = (payload.old as { plan_id?: string }).plan_id;
             if (!oldPlanId) return;
             const { data: oldPlans } = await supabase
               .from('plans').select('sort_order').eq('id', oldPlanId).maybeSingle();
             const oldSortOrder = oldPlans?.sort_order ?? 999;
-
-            if (newPlan.sort_order >= oldSortOrder) return; // upgrade or same, no action needed
-
+            if (newPlan.sort_order >= oldSortOrder) return;
             const locEntitlement = (newPlan.plan_entitlements as Array<{ key: string; value_type: string; limit_value: number | null }>)
               ?.find(e => e.key === 'locations');
             const newLimit = locEntitlement?.value_type === 'UNLIMITED' ? Infinity : (locEntitlement?.limit_value ?? 1);
-
             const { data: activeLocs } = await supabase
               .from('google_locations').select('id').eq('is_selected', true);
             const activeCount = activeLocs?.length ?? 0;
-
             if (activeCount > newLimit) {
               setAdminDowngradePlan({ name: newPlan.name, locationLimit: newLimit === Infinity ? activeCount : newLimit });
             }
           }
         )
         .subscribe();
-
-      // Store current plan_id so we can detect changes
       supabase.from('subscriptions').select('plan_id').eq('user_id', user.id).eq('status', 'active').maybeSingle()
         .then(({ data }) => { prevPlanId = data?.plan_id ?? null; });
-
       return () => { supabase.removeChannel(channel); };
     });
   }, []);
 
   function isLocked(featureKey: string | null): boolean {
     if (!featureKey) return false;
-    if (!(featureKey in featureAccess)) return false; // no entitlement set → accessible
+    if (!(featureKey in featureAccess)) return false;
     return featureAccess[featureKey] === false;
   }
 
-  const sidebarContent = (
-    <>
-      {/* Logo */}
-      <div className="px-5 py-4 border-b border-white/50 flex items-center justify-between">
-        <img src="/images/logo.png" alt="Moffu" className="h-7 w-auto" />
-        {/* Close button — mobile only */}
-        <button
-          onClick={() => setSidebarOpen(false)}
-          className="md:hidden p-1.5 rounded-lg text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors"
-          aria-label="Close menu"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 flex flex-col overflow-y-auto gap-0.5" aria-label="Main navigation">
-        {navItems.map(({ to, label, icon, featureKey }) => {
-          const locked = isLocked(featureKey);
-          return (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/dashboard'}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  locked
-                    ? 'text-[#9CA3AF] hover:bg-[#F3F4F6]'
-                    : isActive
-                      ? 'bg-[#D8CCFF]/70 text-[#111111]'
-                      : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <span className={locked ? 'text-[#D1D5DB]' : isActive ? 'text-[#6C55E8]' : 'text-[#9CA3AF]'}>{icon}</span>
-                  <span className="flex-1">{label}</span>
-                  {locked && (
-                    <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                    </svg>
-                  )}
-                </>
-              )}
-            </NavLink>
-          );
-        })}
-
-        {/* Settings — pinned to bottom */}
-        <div className="mt-auto pt-2">
-          {isFreePlan && <UpgradeWidget />}
-          {navSettings.map(({ to, label, icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-[#D8CCFF]/70 text-[#111111]'
-                    : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <span className={isActive ? 'text-[#6C55E8]' : 'text-[#9CA3AF]'}>{icon}</span>
-                  {label}
-                </>
-              )}
-            </NavLink>
-          ))}
-        </div>
-      </nav>
-    </>
-  );
+  const activeGroupId = (() => {
+    for (const group of RAIL_GROUPS) {
+      for (const item of group.items) {
+        const matches = item.end
+          ? location.pathname === item.to
+          : location.pathname === item.to || location.pathname.startsWith(item.to + '/');
+        if (matches) return group.id;
+      }
+    }
+    return RAIL_GROUPS[0]!.id;
+  })();
+  const activeGroup = RAIL_GROUPS.find(g => g.id === activeGroupId) ?? RAIL_GROUPS[0]!;
 
   return (
     <FeatureAccessContext.Provider value={{ access: featureAccess, loading: featureLoading }}>
-    {adminDowngradePlan && (
-      <LocationSelectionModal
-        newPlanName={adminDowngradePlan.name}
-        locationLimit={adminDowngradePlan.locationLimit}
-        onConfirm={async () => { setAdminDowngradePlan(null); }}
-        onCancel={() => setAdminDowngradePlan(null)}
-      />
-    )}
-    <div className="flex h-screen bg-[#F3F4F6] overflow-hidden">
-
-      {/* Mobile backdrop */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
-          onClick={() => setSidebarOpen(false)}
-          aria-hidden="true"
+      {adminDowngradePlan && (
+        <LocationSelectionModal
+          newPlanName={adminDowngradePlan.name}
+          locationLimit={adminDowngradePlan.locationLimit}
+          onConfirm={async () => { setAdminDowngradePlan(null); }}
+          onCancel={() => setAdminDowngradePlan(null)}
         />
       )}
+      <div className="flex h-screen bg-[#F3F4F6] overflow-hidden">
 
-      {/* Sidebar — drawer on mobile, fixed column on desktop */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 flex flex-col
-        bg-white/95 backdrop-blur-xl border-r border-white/60 shadow-[1px_0_12px_rgba(0,0,0,0.06)]
-        transform transition-transform duration-200 ease-out
-        md:relative md:w-56 md:flex-shrink-0 md:translate-x-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        {sidebarContent}
-      </aside>
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
 
-      {/* Page content */}
-      <main className="flex-1 overflow-hidden flex flex-col min-w-0">
-        {/* Topbar */}
-        <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-8 py-3 gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            {/* Hamburger — mobile only */}
+        {/* Icon Rail � desktop only */}
+        <aside className="hidden md:flex w-14 flex-shrink-0 bg-[#111111] flex-col items-center py-4 gap-1 z-20">
+          <a href="/dashboard" className="w-10 h-10 flex items-center justify-center mb-2" aria-label="Moffu home">
+            <img src="/images/fevicon.png" alt="" className="w-7 h-7 rounded-md object-contain" aria-hidden="true" />
+          </a>
+          {RAIL_GROUPS.map(group => (
+            <RailGroupButton
+              key={group.id}
+              icon={group.icon}
+              label={group.label}
+              isActive={group.id === activeGroupId}
+              onClick={() => navigate(group.items[0]!.to)}
+            />
+          ))}
+        </aside>
+
+        {/* Text Sidebar */}
+        <aside className={'fixed inset-y-0 left-0 z-50 w-56 flex flex-col bg-white border-r border-[#E5E7EB] transform transition-transform duration-200 ease-out md:relative md:w-52 md:flex-shrink-0 md:translate-x-0 ' + (sidebarOpen ? 'translate-x-0' : '-translate-x-full')}>
+          <div className="px-4 h-14 flex items-center justify-between border-b border-[#E5E7EB] flex-shrink-0">
+            <img src="/images/logo.png" alt="Moffu" className="h-7 w-auto" />
             <button
-              onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 rounded-lg text-[#6B7280] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors flex-shrink-0"
-              aria-label="Open menu"
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden p-1.5 rounded-lg text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors"
+              aria-label="Close menu"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
               </svg>
             </button>
-            {/* Mobile logo */}
-            <img src="/images/logo.png" alt="Moffu" className="h-6 w-auto md:hidden flex-shrink-0" />
-            <div className="hidden md:flex items-center gap-2.5">
-              <TopbarLocationPicker />
-              <QuickStatsPill />
+          </div>
+
+          <nav className="flex-1 px-3 py-3 overflow-y-auto flex flex-col gap-0.5" aria-label="Main navigation">
+            {/* Desktop: show active group items */}
+            <div className="hidden md:flex md:flex-col gap-0.5">
+              {activeGroup.items.map(item => (
+                <NavItem
+                  key={item.to}
+                  to={item.to}
+                  label={item.label}
+                  icon={item.icon}
+                  end={item.end}
+                  isLocked={isLocked(item.featureKey)}
+                />
+              ))}
+            </div>
+            {/* Mobile: show all items */}
+            <div className="md:hidden flex flex-col gap-0.5">
+              {RAIL_GROUPS.flatMap(group => group.items).map(item => (
+                <NavItem
+                  key={item.to}
+                  to={item.to}
+                  label={item.label}
+                  icon={item.icon}
+                  end={item.end}
+                  isLocked={isLocked(item.featureKey)}
+                />
+              ))}
+            </div>
+            {isFreePlan && (
+              <div className="mt-auto pt-2">
+                <UpgradeWidget />
+              </div>
+            )}
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-hidden flex flex-col min-w-0 z-30">
+          {/* Topbar */}
+          <div className="flex-shrink-0 h-14 flex items-center justify-between px-4 md:px-6 gap-3 bg-white border-b border-[#E5E7EB]">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="md:hidden p-2 rounded-lg text-[#6B7280] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors flex-shrink-0"
+                aria-label="Open menu"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+              </button>
+              <img src="/images/logo.png" alt="Moffu" className="h-6 w-auto md:hidden flex-shrink-0" />
+              <div className="hidden md:flex items-center gap-2.5">
+                <TopbarLocationPicker />
+                <QuickStatsPill />
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <div className="hidden md:flex items-center gap-1.5">
+                <GlobalSearch />
+                <div className="w-px h-5 bg-[#E5E7EB] mx-0.5 flex-shrink-0"/>
+              </div>
+              <NotificationsBell />
+              <TopbarProfile />
             </div>
           </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <div className="hidden md:flex items-center gap-1.5">
-              <div className="w-px h-5 bg-[#E5E7EB]/80 mx-0.5 flex-shrink-0"/>
-              <GlobalSearch />
-              <div className="w-px h-5 bg-[#E5E7EB]/80 mx-0.5 flex-shrink-0"/>
-            </div>
-            <NotificationsBell />
-            <TopbarProfile />
+
+          {/* Mobile location picker row */}
+          <div className="md:hidden px-4 py-2 flex items-center gap-2 bg-white border-b border-[#F3F4F6]">
+            <TopbarLocationPicker />
+            <QuickStatsPill />
           </div>
-        </div>
 
-        {/* Mobile location picker row */}
-        <div className="md:hidden px-4 pb-2 flex items-center gap-2">
-          <TopbarLocationPicker />
-          <QuickStatsPill />
-        </div>
-
-        {/* Scrollable page area */}
-        <div className="flex-1 overflow-y-auto min-h-0">
-          <Outlet />
-        </div>
-      </main>
-    </div>
+          {/* Page content */}
+          <div className="flex-1 overflow-y-auto min-h-0">
+            <Outlet />
+          </div>
+        </main>
+      </div>
     </FeatureAccessContext.Provider>
   );
 }
