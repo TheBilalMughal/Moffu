@@ -145,9 +145,11 @@ export function DateRangePicker({ from, to, onChange, alignRight = false }: Date
   function handleOpen() {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      setPopupStyle(alignRight
-        ? { position: 'fixed', top: rect.bottom + 8, right: window.innerWidth - rect.right, zIndex: 9999 }
-        : { position: 'fixed', top: rect.bottom + 8, left: rect.left, zIndex: 9999 }
+      const POPUP_WIDTH = 500;
+      const fitsRight = rect.left + POPUP_WIDTH <= window.innerWidth - 16;
+      setPopupStyle(fitsRight
+        ? { position: 'fixed', top: rect.bottom + 8, left: rect.left, zIndex: 9999 }
+        : { position: 'fixed', top: rect.bottom + 8, right: window.innerWidth - rect.right, zIndex: 9999 }
       );
     }
     setOpen(o => !o);
