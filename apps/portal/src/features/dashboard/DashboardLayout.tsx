@@ -795,14 +795,6 @@ const RAIL_GROUPS: RailGroup[] = [
     ],
   },
   {
-    id: 'account',
-    icon: <AccountIcon />,
-    label: 'Account',
-    items: [
-      { to: '/settings/account', label: 'Account', icon: <AccountIcon />, featureKey: null },
-    ],
-  },
-  {
     id: 'team',
     icon: <TeamIcon />,
     label: 'Team',
@@ -818,7 +810,15 @@ const RAIL_GROUPS: RailGroup[] = [
       { to: '/plan',     label: 'Plan',    icon: <PlanIcon />,    featureKey: null },
       { to: '/billing',  label: 'Billing', icon: <BillingIcon />, featureKey: null },
     ],
+  },  {
+    id: 'account',
+    icon: <AccountIcon />,
+    label: 'Account',
+    items: [
+      { to: '/settings/account', label: 'Account', icon: <AccountIcon />, featureKey: null },
+    ],
   },
+
   {
     id: 'settings',
     icon: <CogIcon />,
