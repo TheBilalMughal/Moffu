@@ -423,20 +423,20 @@ function CaseStudySection() {
           The Bloom Café was struggling with unanswered reviews and no time to respond. Here's what changed.
         </p>
 
-        <div className="grid md:grid-cols-2 gap-5 mb-10">
+        <div className="grid md:grid-cols-2 gap-5 mb-5">
           {/* Before */}
-          <div className="rounded-2xl p-7 border border-[#E5E7EB] bg-[#F3F4F6]">
-            <p className="text-xs font-semibold text-[#111827]/40 uppercase tracking-widest mb-6">Before Moffu</p>
-            <ul className="space-y-4">
+          <div className="rounded-2xl p-7 bg-[#F3F4F6]">
+            <p className="text-[11px] font-bold text-[#111827]/40 uppercase tracking-widest mb-5">Before Moffu</p>
+            <ul className="space-y-3.5">
               {[
                 '3.9★ average on Google',
                 '2–3 hrs/week replying to reviews',
                 'Negative reviews left unanswered',
                 'No system to ask for new reviews',
               ].map(item => (
-                <li key={item} className="flex items-center gap-3 text-sm text-[#111827]/60">
-                  <span className="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-2.5 h-2.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12"/></svg>
+                <li key={item} className="flex items-center gap-3 text-sm text-[#111827]/55">
+                  <span className="w-5 h-5 rounded-full bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-2.5 h-2.5 text-[#111827]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12"/></svg>
                   </span>
                   {item}
                 </li>
@@ -445,20 +445,20 @@ function CaseStudySection() {
           </div>
 
           {/* After */}
-          <div className="rounded-2xl p-7 border border-[#E5E7EB] bg-[#F3F4F6]">
-            <p className="text-xs font-semibold text-[#6C55E8] uppercase tracking-widest mb-6">After Moffu</p>
-            <ul className="space-y-4">
+          <div className="rounded-2xl p-7 bg-[#6C55E8]">
+            <p className="text-[11px] font-bold text-white/50 uppercase tracking-widest mb-5">After Moffu</p>
+            <ul className="space-y-3.5">
               {[
                 ['4.6★ average', '— 0.7 points gained'],
                 ['Replies in under 2 min', '— same day, every day'],
                 ['100% reviews responded', '— not one missed'],
                 ['47 new reviews', '— via email campaign'],
               ].map(([bold, rest]) => (
-                <li key={bold} className="flex items-center gap-3 text-sm text-[#111827]/80">
-                  <span className="w-5 h-5 rounded-full bg-[#6C55E8]/20 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-2.5 h-2.5 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
+                <li key={bold} className="flex items-center gap-3 text-sm">
+                  <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>
                   </span>
-                  <span><strong className="text-[#111827] font-semibold">{bold}</strong><span className="text-[#111827]/50">{rest}</span></span>
+                  <span><strong className="text-white font-semibold">{bold}</strong><span className="text-white/55">{rest}</span></span>
                 </li>
               ))}
             </ul>
@@ -466,11 +466,11 @@ function CaseStudySection() {
         </div>
 
         {/* Quote */}
-        <div className="rounded-2xl p-7 border border-[#E5E7EB] bg-[#F3F4F6]">
-          <svg className="w-7 h-7 text-[#6C55E8] mb-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <div className="rounded-2xl p-7 bg-[#F3F4F6]">
+          <svg className="w-6 h-6 text-[#111827]/20 mb-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
           </svg>
-          <p className="text-[#111827] text-lg font-medium italic leading-relaxed mb-4">
+          <p className="text-[#111827] text-base font-medium italic leading-relaxed mb-4">
             "I didn't realise how much a half-star improvement would change our walk-in traffic. Moffu paid for itself in the first month."
           </p>
           <p className="text-[#111827]/40 text-sm font-semibold">Sarah M., Owner · The Bloom Café</p>

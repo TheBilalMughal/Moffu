@@ -79,7 +79,7 @@ export function PricingToggle({
             <button
               type="button"
               onClick={() => setAnnual(false)}
-              className={`relative z-10 flex-1 px-7 py-3 text-base font-semibold rounded-lg transition-colors duration-200 ${
+              className={`relative z-10 flex-1 px-5 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 ${
                 !annual ? 'text-white' : 'text-[#111827]/55 hover:text-[#111827]'
               }`}
             >
@@ -89,7 +89,7 @@ export function PricingToggle({
             <button
               type="button"
               onClick={() => setAnnual(true)}
-              className={`relative z-10 flex-1 px-7 py-3 text-base font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 ${
+              className={`relative z-10 flex-1 px-5 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 ${
                 annual ? 'text-white' : 'text-[#111827]/55 hover:text-[#111827]'
               }`}
             >
