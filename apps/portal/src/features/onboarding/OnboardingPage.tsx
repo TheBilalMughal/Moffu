@@ -63,7 +63,7 @@ function PrimaryBtn({
       type="button"
       onClick={onClick}
       disabled={loading || disabled}
-      className="w-full py-2.5 px-4 bg-[#111827] text-white text-sm font-medium rounded-xl hover:bg-[#1f2937] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="w-full py-2.5 px-4 bg-[#111827] text-white text-sm font-medium rounded-xl hover:bg-[#6C55E8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
       {loading ? (
         <span className="flex items-center justify-center gap-2">

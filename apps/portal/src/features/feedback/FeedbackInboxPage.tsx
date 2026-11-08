@@ -144,7 +144,7 @@ export function FeedbackInboxPage() {
         </div>
         <Link
           to="/feedback/new"
-          className="flex items-center gap-2 px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white text-sm font-semibold rounded-lg transition-colors flex-shrink-0"
+          className="flex items-center gap-2 px-4 py-2 bg-[#111827] hover:bg-[#6C55E8] text-white text-sm font-semibold rounded-lg transition-colors flex-shrink-0"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15"/>

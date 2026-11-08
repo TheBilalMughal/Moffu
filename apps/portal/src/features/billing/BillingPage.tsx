@@ -268,7 +268,7 @@ function PlanComparisonModal({ plans, sub, billingInterval, currentPlan, onDowng
                       Downgrade
                     </button>
                   ) : plan.contact_sales ? (
-                    <a href="mailto:sales@moffu.com" className="w-full py-2 text-xs font-semibold text-white bg-[#111827] rounded-xl flex items-center justify-center hover:bg-[#1f2937] transition-colors">
+                    <a href="mailto:sales@moffu.com" className="w-full py-2 text-xs font-semibold text-white bg-[#111827] rounded-xl flex items-center justify-center hover:bg-[#6C55E8] transition-colors">
                       Contact Sales
                     </a>
                   ) : (
@@ -509,7 +509,7 @@ export function BillingPage() {
             </div>
             <p className="text-sm font-semibold text-[#111827] mb-1">Locations updated</p>
             <p className="text-xs text-[#6B7280] mb-4">{downgradeMsg}</p>
-            <button onClick={() => setDowngradeMsg(null)} className="px-5 py-2 text-xs font-semibold text-white bg-[#111827] rounded-xl hover:bg-[#1f2937]">
+            <button onClick={() => setDowngradeMsg(null)} className="px-5 py-2 text-xs font-semibold text-white bg-[#111827] rounded-xl hover:bg-[#6C55E8]">
               Done
             </button>
           </div>
@@ -873,7 +873,7 @@ export function BillingPage() {
                     </button>
                   );
                   if (plan.contact_sales) return (
-                    <a href="mailto:sales@moffu.com" className="w-full py-2.5 text-xs font-semibold rounded-xl flex items-center justify-center bg-[#111827] text-white hover:bg-[#1f2937] transition-colors">
+                    <a href="mailto:sales@moffu.com" className="w-full py-2.5 text-xs font-semibold rounded-xl flex items-center justify-center bg-[#111827] text-white hover:bg-[#6C55E8] transition-colors">
                       Contact Sales Team
                     </a>
                   );

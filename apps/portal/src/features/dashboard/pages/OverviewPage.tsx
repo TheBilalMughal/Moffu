@@ -817,7 +817,7 @@ function EmptyState() {
         <p className="text-sm text-[#6B7280] max-w-xs mx-auto mb-5">
           Connect your Google Business Profile to start seeing and responding to reviews.
         </p>
-        <Link to="/settings" className="inline-flex items-center gap-2 bg-[#111827] hover:bg-[#1F2937] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
+        <Link to="/settings" className="inline-flex items-center gap-2 bg-[#111827] hover:bg-[#6C55E8] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
           Connect Google
         </Link>
       </div>
@@ -960,7 +960,7 @@ export function OverviewPage() {
             {dash && dash.pending > 0 && (
               <Link
                 to="/reviews"
-                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-[#111827] hover:bg-[#1F2937] rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-[#111827] hover:bg-[#6C55E8] rounded-lg transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

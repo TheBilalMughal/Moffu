@@ -899,7 +899,7 @@ export function SettingsPage() {
                     type="button"
                     onClick={handleSaveAccount}
                     disabled={savingProfile || !displayName.trim()}
-                    className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#1F2937] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
+                    className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#6C55E8] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
                   >
                     {savingProfile ? 'Saving...' : 'Save'}
                   </button>
@@ -979,7 +979,7 @@ export function SettingsPage() {
                   <button
                     onClick={handleChangePassword}
                     disabled={savingPassword || !newPassword || !confirmPassword}
-                    className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#1F2937] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
+                    className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#6C55E8] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
                   >
                     {savingPassword ? 'Saving...' : 'Save'}
                   </button>
@@ -1021,7 +1021,7 @@ export function SettingsPage() {
             <button
               onClick={handleSaveTimezone}
               disabled={savingTimezone || timezone === origTimezone}
-              className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#1F2937] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
+              className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#6C55E8] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
             >
               {savingTimezone ? 'Saving...' : 'Save timezone'}
             </button>
@@ -1113,7 +1113,7 @@ export function SettingsPage() {
                   ) : isAttentionRequired ? (
                     <div className="flex items-center gap-2">
                       <button onClick={handleFetchLocations} disabled={fetchingLocations}
-                        className="text-xs font-semibold text-white bg-[#111827] rounded-lg px-4 py-1.5 hover:bg-[#1f2937] transition-colors disabled:opacity-50">
+                        className="text-xs font-semibold text-white bg-[#111827] rounded-lg px-4 py-1.5 hover:bg-[#6C55E8] transition-colors disabled:opacity-50">
                         {fetchingLocations ? 'Fetching...' : 'Retry fetch locations'}
                       </button>
                       <button onClick={handleDisconnect} disabled={disconnecting}
@@ -1123,7 +1123,7 @@ export function SettingsPage() {
                     </div>
                   ) : (
                     <button onClick={handleConnect} disabled={connectingGoogle}
-                      className="text-xs font-semibold text-white bg-[#111827] rounded-lg px-4 py-1.5 hover:bg-[#1f2937] transition-colors disabled:opacity-50">
+                      className="text-xs font-semibold text-white bg-[#111827] rounded-lg px-4 py-1.5 hover:bg-[#6C55E8] transition-colors disabled:opacity-50">
                       {connectingGoogle ? 'Redirecting...' : 'Connect'}
                     </button>
                   )}
@@ -1194,7 +1194,7 @@ export function SettingsPage() {
                       </button>
                       <button
                         onClick={() => { setShowLocationUpgrade(false); navigate('/billing'); }}
-                        className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-[#111827] hover:bg-[#1F2937] rounded-xl transition-colors"
+                        className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-[#111827] hover:bg-[#6C55E8] rounded-xl transition-colors"
                       >
                         View Plans
                       </button>
@@ -1220,7 +1220,7 @@ export function SettingsPage() {
                     <button
                       onClick={handleBizSearch}
                       disabled={bizSearching || !bizSearch.trim()}
-                      className="text-xs font-semibold text-white bg-[#111827] hover:bg-[#1F2937] px-4 py-2 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap"
+                      className="text-xs font-semibold text-white bg-[#111827] hover:bg-[#6C55E8] px-4 py-2 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap"
                     >
                       {bizSearching ? 'Searching...' : 'Search'}
                     </button>
@@ -1344,7 +1344,7 @@ export function SettingsPage() {
                           const iv = autoInterval === 'custom' ? `${customHours}h` : autoInterval;
                           saveAutoSync(autoEnabled, iv);
                         }}
-                        className="text-xs font-semibold text-white bg-[#111827] hover:bg-[#1F2937] disabled:opacity-40 px-3.5 py-1.5 rounded-lg transition-colors"
+                        className="text-xs font-semibold text-white bg-[#111827] hover:bg-[#6C55E8] disabled:opacity-40 px-3.5 py-1.5 rounded-lg transition-colors"
                       >
                         {savingSync ? 'Saving...' : 'Save interval'}
                       </button>

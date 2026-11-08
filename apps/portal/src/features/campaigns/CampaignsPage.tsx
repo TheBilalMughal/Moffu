@@ -311,7 +311,7 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
                     Upload CSV
                   </button>
                   <button onClick={addContactRow}
-                    className="flex items-center gap-1.5 text-xs font-medium text-white bg-[#111827] px-3 py-1.5 rounded-lg hover:bg-[#1f2937] transition-colors">
+                    className="flex items-center gap-1.5 text-xs font-medium text-white bg-[#111827] px-3 py-1.5 rounded-lg hover:bg-[#6C55E8] transition-colors">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
                     Add Row
                   </button>
@@ -446,7 +446,7 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
             )}
             {step < 4 && (
               <button onClick={() => { setErr(''); setStep(s => s + 1); }} disabled={!canNext()}
-                className="px-4 py-2 text-sm font-medium text-white bg-[#111827] rounded-lg hover:bg-[#1f2937] transition-colors disabled:opacity-40">
+                className="px-4 py-2 text-sm font-medium text-white bg-[#111827] rounded-lg hover:bg-[#6C55E8] transition-colors disabled:opacity-40">
                 Next
               </button>
             )}
@@ -457,7 +457,7 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
                   {saving ? 'Saving…' : 'Save Draft'}
                 </button>
                 <button onClick={handleSend} disabled={saving || sending}
-                  className="px-5 py-2 text-sm font-semibold text-white bg-[#111827] rounded-lg hover:bg-[#1f2937] transition-colors disabled:opacity-50 flex items-center gap-2">
+                  className="px-5 py-2 text-sm font-semibold text-white bg-[#111827] rounded-lg hover:bg-[#6C55E8] transition-colors disabled:opacity-50 flex items-center gap-2">
                   {sending && <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
                   {sending ? 'Sending…' : scheduleType === 'later' ? 'Schedule' : 'Send Now'}
                 </button>
@@ -551,7 +551,7 @@ export function CampaignsPage() {
           <p className="text-sm text-[#6B7280] mt-0.5">Ask customers to leave a review via email</p>
         </div>
         <button onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#111827] rounded-lg hover:bg-[#1f2937] transition-colors">
+          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#111827] rounded-lg hover:bg-[#6C55E8] transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
           New Campaign
         </button>
@@ -588,7 +588,7 @@ export function CampaignsPage() {
             </div>
           </div>
           {quota.limit !== null && quota.used >= quota.limit && (
-            <Link to="/billing" className="text-xs font-semibold text-white bg-[#111827] px-3 py-1.5 rounded-lg hover:bg-[#1f2937] transition-colors flex-shrink-0">
+            <Link to="/billing" className="text-xs font-semibold text-white bg-[#111827] px-3 py-1.5 rounded-lg hover:bg-[#6C55E8] transition-colors flex-shrink-0">
               Upgrade
             </Link>
           )}
@@ -634,7 +634,7 @@ export function CampaignsPage() {
                     <p className="text-sm font-medium text-[#374151]">No campaigns yet</p>
                     <p className="text-xs text-[#9CA3AF]">Send review requests to your customers and grow your rating</p>
                     <button onClick={() => setShowCreate(true)}
-                      className="mt-1 px-4 py-2 text-sm font-medium text-white bg-[#111827] rounded-lg hover:bg-[#1f2937] transition-colors">
+                      className="mt-1 px-4 py-2 text-sm font-medium text-white bg-[#111827] rounded-lg hover:bg-[#6C55E8] transition-colors">
                       Create your first campaign
                     </button>
                   </div>

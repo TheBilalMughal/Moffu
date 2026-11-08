@@ -250,7 +250,7 @@ export function GoogleConnectPage() {
             <button
               onClick={handleConfirm}
               disabled={saving || loading || selected.size === 0}
-              className="w-full py-2.5 text-xs font-semibold text-white bg-[#111827] rounded-xl hover:bg-[#1f2937] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-2.5 text-xs font-semibold text-white bg-[#111827] rounded-xl hover:bg-[#6C55E8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {saving
                 ? 'Saving…'

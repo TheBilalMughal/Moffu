@@ -152,7 +152,7 @@ export function NewFeedbackRequestPage() {
                   New request
                 </button>
                 <Link to="/feedback"
-                  className="flex-1 py-2 text-sm font-semibold text-white bg-[#111827] hover:bg-[#1F2937] rounded-lg transition-colors text-center">
+                  className="flex-1 py-2 text-sm font-semibold text-white bg-[#111827] hover:bg-[#6C55E8] rounded-lg transition-colors text-center">
                   View inbox
                 </Link>
               </div>
@@ -238,7 +238,7 @@ export function NewFeedbackRequestPage() {
             <button
               type="submit"
               disabled={saving || !googleUrl.trim()}
-              className="flex items-center gap-2 px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-[#111827] hover:bg-[#6C55E8] text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {saving
                 ? <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating…</>

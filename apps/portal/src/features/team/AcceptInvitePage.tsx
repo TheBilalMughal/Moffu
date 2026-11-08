@@ -136,7 +136,7 @@ export function AcceptInvitePage() {
                         <button
                           onClick={handleAccept}
                           disabled={accepting}
-                          className="w-full bg-[#111827] hover:bg-[#1F2937] text-white text-sm font-semibold py-3 transition-colors disabled:opacity-50"
+                          className="w-full bg-[#111827] hover:bg-[#6C55E8] text-white text-sm font-semibold py-3 transition-colors disabled:opacity-50"
                         >
                           {accepting ? 'Acceptingâ€¦' : `Accept invitation as ${RoleCap(details.role)}`}
                         </button>
@@ -149,7 +149,7 @@ export function AcceptInvitePage() {
                       </p>
                       <button
                         onClick={handleLogin}
-                        className="w-full bg-[#111827] hover:bg-[#1F2937] text-white text-sm font-semibold py-3 transition-colors"
+                        className="w-full bg-[#111827] hover:bg-[#6C55E8] text-white text-sm font-semibold py-3 transition-colors"
                       >
                         Log in to accept
                       </button>
