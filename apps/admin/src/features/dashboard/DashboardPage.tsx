@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { refToSlug } from '@/lib/format';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
+import { DateRangePicker } from '@/components/DateRangePicker';
 
 function getGreeting(name: string): string {
   const h = new Date().getHours();
@@ -376,6 +377,9 @@ export function DashboardPage() {
 
   const [kpi, setKpi] = useState<KpiData | null>(null);
   const [kpiLoading, setKpiLoading] = useState(true);
+  const [refreshTick, setRefreshTick] = useState(0);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const [dailyOrgs, setDailyOrgs] = useState<DailyCount[]>([]);
   const [monthlyOrgs, setMonthlyOrgs] = useState<MonthlyCount[]>([]);
@@ -446,7 +450,7 @@ export function DashboardPage() {
       setKpiLoading(false);
     }
     loadKpis();
-  }, []);
+  }, [refreshTick]);
 
   // ── Fetch Charts & Tables ───────────────────────────────────────────────────
 
@@ -627,21 +631,33 @@ export function DashboardPage() {
       setChartsLoading(false);
     }
     loadCharts();
-  }, []);
+  }, [refreshTick]);
 
   // ── Derived chart data ─────────────────────────────────────────────────────
 
+  const filteredDailyOrgs = useMemo(() => {
+    if (!dateFrom && !dateTo) return dailyOrgs;
+    return dailyOrgs.filter(d => (!dateFrom || d.date >= dateFrom) && (!dateTo || d.date <= dateTo));
+  }, [dailyOrgs, dateFrom, dateTo]);
+
+  const filteredMonthlyOrgs = useMemo(() => {
+    if (!dateFrom && !dateTo) return monthlyOrgs;
+    const fromYM = dateFrom ? dateFrom.slice(0, 7) : '';
+    const toYM = dateTo ? dateTo.slice(0, 7) : '';
+    return monthlyOrgs.filter(m => (!fromYM || m.month >= fromYM) && (!toYM || m.month <= toYM));
+  }, [monthlyOrgs, dateFrom, dateTo]);
+
   const dailyBarData = useMemo(() =>
-    dailyOrgs.map((d, i) => ({
+    filteredDailyOrgs.map((d, i) => ({
       label: i % 5 === 0 ? d.date.slice(5) : '',
       value: d.count,
-    })), [dailyOrgs]);
+    })), [filteredDailyOrgs]);
 
   const monthlyBarData = useMemo(() =>
-    monthlyOrgs.map(m => ({
+    filteredMonthlyOrgs.map(m => ({
       label: MONTHS_SHORT[parseInt(m.month.slice(5, 7)) - 1] ?? '',
       value: m.count,
-    })), [monthlyOrgs]);
+    })), [filteredMonthlyOrgs]);
 
   const donutSegments = useMemo(() =>
     reviewStatuses
@@ -655,7 +671,7 @@ export function DashboardPage() {
   const totalGoogleConns = useMemo(() => googleStates.reduce((s, r) => s + r.count, 0), [googleStates]);
   const totalSubCount = useMemo(() => subStates.reduce((s, r) => s + r.count, 0), [subStates]);
 
-  const sparkOrgs = useMemo(() => monthlyOrgs.map(m => m.count), [monthlyOrgs]);
+  const sparkOrgs = useMemo(() => filteredMonthlyOrgs.map(m => m.count), [filteredMonthlyOrgs]);
 
   // ── Icons ──────────────────────────────────────────────────────────────────
 
@@ -708,15 +724,23 @@ export function DashboardPage() {
               {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
             </p>
           </div>
-          <button
-            onClick={() => { setKpiLoading(true); setChartsLoading(true); }}
-            className="p-2 rounded-lg border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#6C55E8] hover:border-[#6C55E8] transition-colors"
-            title="Refresh"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-          </button>
+          <div className="flex items-center gap-2">
+            <DateRangePicker from={dateFrom} to={dateTo} onChange={(f, t) => { setDateFrom(f); setDateTo(t); }} />
+            {(dateFrom || dateTo) && (
+              <button onClick={() => { setDateFrom(''); setDateTo(''); }} className="text-xs text-[#9CA3AF] hover:text-red-500 transition-colors px-2 py-1.5">
+                Clear
+              </button>
+            )}
+            <button
+              onClick={() => setRefreshTick(t => t + 1)}
+              className="p-2 rounded-lg border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#6C55E8] hover:border-[#6C55E8] transition-colors"
+              title="Refresh"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            </button>
+          </div>
       </div>
 
       {/* ── KPI Row 1 ── */}
@@ -765,17 +789,17 @@ export function DashboardPage() {
           )}
           <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[#F3F4F6]">
             <div>
-              <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">30-day total</p>
-              <p className="text-sm font-bold text-[#111827]">{dailyOrgs.reduce((s, d) => s + d.count, 0)}</p>
+              <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">{dateFrom || dateTo ? 'Period total' : '30-day total'}</p>
+              <p className="text-sm font-bold text-[#111827]">{filteredDailyOrgs.reduce((s, d) => s + d.count, 0)}</p>
             </div>
             <div>
               <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Peak day</p>
-              <p className="text-sm font-bold text-[#111827]">{Math.max(...dailyOrgs.map(d => d.count), 0)}</p>
+              <p className="text-sm font-bold text-[#111827]">{Math.max(...filteredDailyOrgs.map(d => d.count), 0)}</p>
             </div>
             <div>
               <p className="text-[10px] text-[#9CA3AF] uppercase tracking-wide">Avg / day</p>
               <p className="text-sm font-bold text-[#111827]">
-                {(dailyOrgs.reduce((s, d) => s + d.count, 0) / 30).toFixed(1)}
+                {filteredDailyOrgs.length > 0 ? (filteredDailyOrgs.reduce((s, d) => s + d.count, 0) / filteredDailyOrgs.length).toFixed(1) : '0.0'}
               </p>
             </div>
           </div>

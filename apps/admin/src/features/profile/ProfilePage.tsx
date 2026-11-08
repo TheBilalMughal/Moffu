@@ -168,7 +168,7 @@ export function ProfilePage() {
     : (user?.email ?? '').slice(0, 2).toUpperCase();
 
   return (
-    <div className="h-full overflow-y-auto bg-[#FAFAF7]">
+    <div className="h-full overflow-y-auto">
       <div className="max-w-2xl mx-auto px-6 py-8 space-y-5">
 
         {/* ── Page header ── */}
@@ -181,7 +181,7 @@ export function ProfilePage() {
                 Cancel
               </button>
               <button onClick={saveProfile} disabled={saving}
-                className="px-4 py-2 text-sm font-medium bg-[#111111] text-white rounded-lg hover:bg-[#333] disabled:opacity-50 transition-colors flex items-center gap-2">
+                className="px-4 py-2 text-sm font-medium bg-[#111111] text-white rounded-lg hover:bg-[#6C55E8] disabled:opacity-50 transition-colors flex items-center gap-2">
                 {saving && <SpinIcon />}
                 {saving ? 'Saving…' : 'Save Profile'}
               </button>
@@ -330,7 +330,7 @@ export function ProfilePage() {
               )}
               <div className="flex items-center gap-2 pt-1">
                 <button onClick={savePassword} disabled={pwSaving || !newPw || !confirmPw || newPw !== confirmPw || newPw.length < 8}
-                  className="px-4 py-2 text-sm font-medium bg-[#111111] text-white rounded-lg hover:bg-[#333] disabled:opacity-50 transition-colors flex items-center gap-2">
+                  className="px-4 py-2 text-sm font-medium bg-[#111111] text-white rounded-lg hover:bg-[#6C55E8] disabled:opacity-50 transition-colors flex items-center gap-2">
                   {pwSaving && <SpinIcon />}
                   {pwSaving ? 'Updating…' : 'Save Password'}
                 </button>
