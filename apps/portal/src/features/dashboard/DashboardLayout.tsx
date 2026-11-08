@@ -368,17 +368,19 @@ function NotificationsBell() {
   }, []);
 
   async function load() {
-    const [notifRes, pendingRes] = await Promise.all([
-      supabase.from('user_notifications')
-        .select('id, title, body, type, is_read, created_at')
-        .order('created_at', { ascending: false })
-        .limit(30),
-      supabase.from('reviews')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'NEEDS_REPLY'),
-    ]);
-    setBroadcasts((notifRes.data ?? []) as BroadcastNotif[]);
-    setPendingCount(pendingRes.count ?? 0);
+    try {
+      const [notifRes, pendingRes] = await Promise.all([
+        supabase.from('user_notifications')
+          .select('id, title, body, type, is_read, created_at')
+          .order('created_at', { ascending: false })
+          .limit(30),
+        supabase.from('reviews')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'NEEDS_REPLY'),
+      ]);
+      setBroadcasts((notifRes.data ?? []) as BroadcastNotif[]);
+      setPendingCount(pendingRes.count ?? 0);
+    } catch { /* network unavailable */ }
   }
 
   useEffect(() => { load(); }, []);

@@ -849,29 +849,34 @@ export function OverviewPage() {
     if (!user) return;
 
     async function load() {
-      const [connRes, locRes, brainRes, replyRes, reviewsRes] = await Promise.all([
-        supabase.from('google_connections').select('id').eq('user_id', user!.id).eq('state', 'CONNECTED').limit(1),
-        supabase.from('google_locations').select('id').eq('user_id', user!.id).eq('is_selected', true).limit(1),
-        supabase.from('brand_brain').select('id').eq('user_id', user!.id).limit(1),
-        supabase.from('reviews').select('id').eq('user_id', user!.id).eq('status', 'PUBLISHED').limit(1),
-        supabase.from('reviews')
-          .select('id, rating, status, published_at, body, reviewer_name, location_id')
-          .eq('user_id', user!.id)
-          .order('published_at', { ascending: false }),
-      ]);
+      try {
+        const [connRes, locRes, brainRes, replyRes, reviewsRes] = await Promise.all([
+          supabase.from('google_connections').select('id').eq('user_id', user!.id).eq('state', 'CONNECTED').limit(1),
+          supabase.from('google_locations').select('id').eq('user_id', user!.id).eq('is_selected', true).limit(1),
+          supabase.from('brand_brain').select('id').eq('user_id', user!.id).limit(1),
+          supabase.from('reviews').select('id').eq('user_id', user!.id).eq('status', 'PUBLISHED').limit(1),
+          supabase.from('reviews')
+            .select('id, rating, status, published_at, body, reviewer_name, location_id')
+            .eq('user_id', user!.id)
+            .order('published_at', { ascending: false }),
+        ]);
 
-      setSetup({
-        googleConnected:  (connRes.data?.length ?? 0) > 0,
-        locationSelected: (locRes.data?.length  ?? 0) > 0,
-        brandBrainDone:   (brainRes.data?.length ?? 0) > 0,
-        firstReplyDone:   (replyRes.data?.length ?? 0) > 0,
-        loading: false,
-      });
+        setSetup({
+          googleConnected:  (connRes.data?.length ?? 0) > 0,
+          locationSelected: (locRes.data?.length  ?? 0) > 0,
+          brandBrainDone:   (brainRes.data?.length ?? 0) > 0,
+          firstReplyDone:   (replyRes.data?.length ?? 0) > 0,
+          loading: false,
+        });
 
-      const rows = (reviewsRes.data ?? []) as ReviewRow[];
-      setAllRows(rows);
-      setDash(computeDash(rows));
-      setLoadingDash(false);
+        const rows = (reviewsRes.data ?? []) as ReviewRow[];
+        setAllRows(rows);
+        setDash(computeDash(rows));
+      } catch {
+        setSetup(s => ({ ...s, loading: false }));
+      } finally {
+        setLoadingDash(false);
+      }
     }
 
     load();
