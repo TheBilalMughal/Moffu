@@ -174,7 +174,7 @@ function FlagRow({ flag, orgs, overrides, canEdit, onUpdate, onDelete }: {
 
   return (
     <>
-      <tr className={`hover:bg-[#FAFFFE] transition-colors ${expanded ? 'bg-[#FAFFFE]' : ''}`}>
+      <tr className={`hover:bg-[#F9FAFB] transition-colors ${expanded ? 'bg-[#F9FAFB]' : ''}`}>
         <td className="px-5 py-4">
           <div className="flex items-center gap-3">
             <button onClick={() => setExpanded(e => !e)}

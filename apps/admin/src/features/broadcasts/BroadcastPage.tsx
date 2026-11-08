@@ -336,7 +336,7 @@ function BroadcastRow({ bc, onResend, resending, canManage }: {
     : `User: ${(bc.target_value ?? '').slice(0, 8)}…`;
 
   return (
-    <tr className="hover:bg-[#FAFFFE] transition-colors">
+    <tr className="hover:bg-[#F9FAFB] transition-colors">
       <td className="px-5 py-3.5">
         <p className="font-medium text-[#111827]">{bc.title}</p>
         <p className="text-[10px] text-[#9CA3AF] mt-0.5 line-clamp-1">{bc.body}</p>

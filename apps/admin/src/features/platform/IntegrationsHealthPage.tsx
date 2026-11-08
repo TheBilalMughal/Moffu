@@ -183,7 +183,7 @@ export function IntegrationsHealthPage() {
             </thead>
             <tbody className="divide-y divide-[#F3F4F6]">
               {filtered.map(c => (
-                <tr key={c.id} className="hover:bg-[#FAFAF7]">
+                <tr key={c.id} className="hover:bg-[#F9FAFB]">
                   <td className="px-5 py-3.5">
                     {c.org_ref_id ? (
                       <Link to={`/clients/${refToSlug(c.org_ref_id)}`} className="font-medium text-[#111827] hover:text-[#6C55E8] transition-colors">{c.org_name}</Link>

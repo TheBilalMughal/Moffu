@@ -320,7 +320,7 @@ export function UsagePage() {
               ) : filtered.map(row => (
                 <>
                   <tr key={row.orgId}
-                    className={`hover:bg-[#FAFFFE] transition-colors cursor-pointer ${expanded === row.orgId ? 'bg-[#FAFFFE]' : ''}`}
+                    className={`hover:bg-[#F9FAFB] transition-colors cursor-pointer ${expanded === row.orgId ? 'bg-[#F9FAFB]' : ''}`}
                     onClick={() => setExpanded(e => e === row.orgId ? null : row.orgId)}>
                     <td className="px-5 py-3.5">
                       <Link to={`/clients/${refToSlug(row.orgRef)}`} onClick={e => e.stopPropagation()}
