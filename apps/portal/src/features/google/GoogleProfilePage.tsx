@@ -581,7 +581,7 @@ export function GoogleProfilePage() {
   const needsWeeks = metrics.length > 45;
 
   return (
-    <div className="relative w-full px-6 py-6 space-y-6">
+    <div className="relative w-full px-6 py-6 space-y-6 bg-[#F3F4F6]">
       {/* Ambient blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#111827]/5 blur-3xl" />

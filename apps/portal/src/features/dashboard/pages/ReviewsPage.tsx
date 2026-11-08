@@ -1605,7 +1605,7 @@ async function handleFlag(id: string) {
   }).length;
 
   return (
-    <div className="relative h-full flex flex-col overflow-hidden">
+    <div className="relative h-full flex flex-col overflow-hidden bg-[#F3F4F6]">
       {/* Ambient blobs */}
       <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#111827]/5 blur-3xl" aria-hidden="true"/>
       <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#111827]/4 blur-3xl" aria-hidden="true"/>

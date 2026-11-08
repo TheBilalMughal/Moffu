@@ -128,7 +128,7 @@ export function FeedbackInboxPage() {
   const happyPct = total > 0 ? Math.round(((total - unhappy) / total) * 100) : null;
 
   return (
-    <div className="relative min-h-full px-4 md:px-6 py-5 md:py-6">
+    <div className="relative min-h-full px-4 md:px-6 py-5 md:py-6 bg-[#F3F4F6]">
 
       {/* Ambient blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">

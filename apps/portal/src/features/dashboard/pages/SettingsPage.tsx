@@ -803,7 +803,7 @@ export function SettingsPage() {
   const inputCls = 'w-full text-sm text-[#111827] border border-[#E5E7EB] rounded-lg px-4 py-3 focus:outline-none focus:border-[#6C55E8] transition-colors bg-white';
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-[#F3F4F6]">
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8">
       <div className="mb-7">

@@ -940,7 +940,7 @@ export function OverviewPage() {
   const displayName = user?.user_metadata?.full_name ?? user?.email;
 
   return (
-    <div className="relative min-h-full px-4 md:px-6 py-5 md:py-6">
+    <div className="relative min-h-full px-4 md:px-6 py-5 md:py-6 bg-[#F3F4F6]">
       {/* Ambient blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[#111827]/6 blur-3xl" />

@@ -116,7 +116,7 @@ export function MarketingPage() {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-[#F3F4F6]">
       {/* Header */}
       <div className="flex-shrink-0 px-8 pt-6 pb-4 flex items-center justify-between">
         <div>
