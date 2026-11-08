@@ -343,7 +343,7 @@ export function CouponsPage() {
               ) : filtered.map(c => {
                 const status = couponStatus(c);
                 return (
-                  <tr key={c.id} className="hover:bg-[#FAFFFE] transition-colors">
+                  <tr key={c.id} className="hover:bg-[#F9FAFB] transition-colors">
                     {/* Code */}
                     <td className="px-5 py-3.5">
                       <button onClick={() => copyCode(c.code)}
