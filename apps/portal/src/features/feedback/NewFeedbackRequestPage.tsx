@@ -106,7 +106,7 @@ export function NewFeedbackRequestPage() {
               <div className="flex items-center gap-2 px-3.5 py-2.5 bg-white/60 backdrop-blur-sm border border-white/60 rounded-xl mb-3">
                 <span className="flex-1 text-xs text-[#374151] truncate text-left font-mono">{created.link}</span>
                 <button onClick={copyLink}
-                  className={`flex-shrink-0 text-[11px] font-semibold transition-colors ${copied ? 'text-emerald-600' : 'text-[#6C55E8] hover:text-[#083F32]'}`}>
+                  className={`flex-shrink-0 text-[11px] font-semibold transition-colors ${copied ? 'text-emerald-600' : 'text-[#6C55E8] hover:text-[#4F46E5]'}`}>
                   {copied ? 'Copied!' : 'Copy'}
                 </button>
               </div>
@@ -152,7 +152,7 @@ export function NewFeedbackRequestPage() {
                   New request
                 </button>
                 <Link to="/feedback"
-                  className="flex-1 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#6C55E8] to-[#1a6b55] rounded-xl hover:shadow-lg transition-shadow shadow-md shadow-[#6C55E8]/20 text-center">
+                  className="flex-1 py-2 text-sm font-semibold text-white bg-[#111827] hover:bg-[#1F2937] rounded-lg transition-colors text-center">
                   View inbox
                 </Link>
               </div>
@@ -238,7 +238,7 @@ export function NewFeedbackRequestPage() {
             <button
               type="submit"
               disabled={saving || !googleUrl.trim()}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#6C55E8] to-[#1a6b55] text-white text-sm font-semibold rounded-xl hover:shadow-lg transition-shadow shadow-md shadow-[#6C55E8]/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+              className="flex items-center gap-2 px-4 py-2 bg-[#111827] hover:bg-[#1F2937] text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {saving
                 ? <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Creating…</>

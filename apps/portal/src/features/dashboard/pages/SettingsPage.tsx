@@ -1102,7 +1102,7 @@ export function SettingsPage() {
                   {isConnected ? (
                     <div className="flex items-center gap-2">
                       <button onClick={handleSync} disabled={syncing}
-                        className="text-xs font-medium text-[#6C55E8] border border-[#D1D5DB] rounded-lg px-3 py-1.5 hover:bg-[#F3F8F6] transition-colors disabled:opacity-50">
+                        className="text-xs font-medium text-[#6C55E8] border border-[#D1D5DB] rounded-lg px-3 py-1.5 hover:bg-[#EDE9FE] transition-colors disabled:opacity-50">
                         {syncing ? 'Syncing...' : 'Sync now'}
                       </button>
                       <button onClick={handleDisconnect} disabled={disconnecting}

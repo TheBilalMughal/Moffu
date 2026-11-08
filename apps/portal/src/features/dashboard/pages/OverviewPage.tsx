@@ -955,7 +955,7 @@ export function OverviewPage() {
             {dash && dash.pending > 0 && (
               <Link
                 to="/reviews"
-                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-[#6C55E8] to-[#1a6b55] rounded-xl shadow-md shadow-[#6C55E8]/20 hover:shadow-lg transition-shadow"
+                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-[#111827] hover:bg-[#1F2937] rounded-lg transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
