@@ -1030,7 +1030,7 @@ export function DashboardLayout() {
         </aside>
 
         {/* Text Sidebar */}
-        <aside className={'fixed inset-y-0 left-0 z-50 w-56 flex flex-col bg-white border-r border-[#E5E7EB] transform transition-transform duration-200 ease-out md:relative md:w-52 md:flex-shrink-0 md:translate-x-0 ' + (sidebarOpen ? 'translate-x-0' : '-translate-x-full')}>
+        <aside className={'fixed inset-y-0 left-0 z-10 w-56 flex flex-col bg-white border-r border-[#E5E7EB] transform transition-transform duration-200 ease-out md:relative md:w-52 md:flex-shrink-0 md:translate-x-0 ' + (sidebarOpen ? 'translate-x-0' : '-translate-x-full')}>
           <div className="relative px-4 py-5 flex items-center justify-center flex-shrink-0">
             <img src="/images/logo.png" alt="Moffu" className="h-8 w-auto" />
             <button
