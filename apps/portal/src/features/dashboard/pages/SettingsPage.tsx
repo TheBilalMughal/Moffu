@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { supabase } from '@/lib/supabase';
@@ -6,7 +6,7 @@ import { googleService, type GoogleConnection, type GoogleLocation, type Busines
 import { Toast, useToast } from '@/components/Toast';
 import { useFeatureAccess } from '@/components/FeatureGate';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// -- Helpers -------------------------------------------------------------------
 
 const TIMEZONES = Intl.supportedValuesOf('timeZone');
 
@@ -294,7 +294,7 @@ function StateChip({ state }: { state: GoogleConnection['state'] }) {
   return <span className={`text-xs font-medium px-2.5 py-1 rounded-md ${cls}`}>{label}</span>;
 }
 
-// ── PhoneInput ────────────────────────────────────────────────────────────────
+// -- PhoneInput ----------------------------------------------------------------
 
 function PhoneInput({
   countryIso, national, onCountryChange, onNationalChange,
@@ -338,7 +338,7 @@ function PhoneInput({
         </button>
         {open && (
           <div className="absolute z-50 top-full mt-1 left-0 w-64 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden">
-            <div className="px-3 pt-2.5 pb-1.5 border-b border-[#F3F4F6]">
+            <div className="px-3 pt-2.5 pb-1.5 border-b border-[#E5E7EB]">
               <input
                 autoFocus
                 type="text"
@@ -385,7 +385,7 @@ function PhoneInput({
   );
 }
 
-// ── TimezoneSelect ────────────────────────────────────────────────────────────
+// -- TimezoneSelect ------------------------------------------------------------
 
 function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -416,7 +416,7 @@ function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: stri
       </button>
       {open && (
         <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden">
-          <div className="px-3 pt-2.5 pb-1.5 border-b border-[#F3F4F6]">
+          <div className="px-3 pt-2.5 pb-1.5 border-b border-[#E5E7EB]">
             <input
               autoFocus
               type="text"
@@ -445,7 +445,7 @@ function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: stri
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// -- Main page -----------------------------------------------------------------
 
 export function SettingsPage() {
   const { user } = useAuthStore();
@@ -505,7 +505,7 @@ export function SettingsPage() {
   const [isOwner, setIsOwner] = useState(false);
   const [signingOutAll, setSigningOutAll] = useState(false);
   const [signingOutDevice, setSigningOutDevice] = useState(false);
-  const sessionSince = user?.created_at ? new Date(user.created_at).toLocaleDateString() : '—';
+  const sessionSince = user?.created_at ? new Date(user.created_at).toLocaleDateString() : '�';
 
   // Export
   const [exporting, setExporting] = useState(false);
@@ -718,7 +718,7 @@ export function SettingsPage() {
       if (error || !auth_url) { showToast(error ?? 'Could not start Google connection.', 'error'); setConnectingGoogle(false); return; }
       window.location.href = auth_url;
     } catch {
-      showToast('Network error — could not reach server.', 'error');
+      showToast('Network error � could not reach server.', 'error');
       setConnectingGoogle(false);
     }
   }
@@ -800,11 +800,7 @@ export function SettingsPage() {
   const inputCls = 'w-full text-sm text-[#111827] border border-[#E5E7EB] rounded-lg px-4 py-3 focus:outline-none focus:border-[#6C55E8] transition-colors bg-white';
 
   return (
-    <div className="relative h-full flex flex-col overflow-hidden">
-      {/* Ambient blobs */}
-      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#111827]/5 blur-3xl" aria-hidden="true"/>
-      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#111827]/4 blur-3xl" aria-hidden="true"/>
-
+    <div className="h-full flex flex-col">
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8">
       <div className="mb-7">
@@ -812,13 +808,11 @@ export function SettingsPage() {
         <p className="text-sm text-[#6B7280] mt-0.5">Manage your account and preferences.</p>
       </div>
 
-      {/* Row 1 — Account + Change Password */}
+      {/* Row 1 � Account + Change Password */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
 
         {/* Account */}
-        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-          <div className="px-6 py-4 border-b border-[#F3F4F6] flex items-center justify-between">
+        <div className="bg-white rounded-xl border border-[#E5E7EB]">          <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Account</h2>
             {!accountEditOpen && (
               <button
@@ -835,11 +829,11 @@ export function SettingsPage() {
               <>
                 <div>
                   <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1">Display Name</p>
-                  <p className="text-sm text-[#111827]">{savedDisplayName || '—'}</p>
+                  <p className="text-sm text-[#111827]">{savedDisplayName || '�'}</p>
                 </div>
                 <div>
                   <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1">Email</p>
-                  <p className="text-sm text-[#111827]">{user?.email ?? '—'}</p>
+                  <p className="text-sm text-[#111827]">{user?.email ?? '�'}</p>
                 </div>
                 <div>
                   <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1">Phone Number</p>
@@ -864,7 +858,7 @@ export function SettingsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Email</label>
-                  <p className="text-sm text-[#111827] bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-4 py-3">{user?.email ?? '—'}</p>
+                  <p className="text-sm text-[#111827] bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-4 py-3">{user?.email ?? '�'}</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Phone Number</label>
@@ -903,9 +897,7 @@ export function SettingsPage() {
         </div>
 
         {/* Change Password */}
-        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-          <div className="px-6 py-4 border-b border-[#F3F4F6]">
+        <div className="bg-white rounded-xl border border-[#E5E7EB]">          <div className="px-6 py-4 border-b border-[#E5E7EB]">
             <h2 className="text-sm font-semibold text-[#111827]">Change Password</h2>
           </div>
           <div className="px-6 py-5 space-y-4">
@@ -952,13 +944,11 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* Row 2 — Preferences + Sessions */}
+      {/* Row 2 � Preferences + Sessions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
 
         {/* Preferences */}
-        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-          <div className="px-6 py-4 border-b border-[#F3F4F6]">
+        <div className="bg-white rounded-xl border border-[#E5E7EB]">          <div className="px-6 py-4 border-b border-[#E5E7EB]">
             <h2 className="text-sm font-semibold text-[#111827]">Preferences</h2>
           </div>
           <div className="px-6 py-5 space-y-4">
@@ -978,9 +968,7 @@ export function SettingsPage() {
         </div>
 
         {/* Sessions */}
-        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-          <div className="px-6 py-4 border-b border-[#F3F4F6]">
+        <div className="bg-white rounded-xl border border-[#E5E7EB]">          <div className="px-6 py-4 border-b border-[#E5E7EB]">
             <h2 className="text-sm font-semibold text-[#111827]">Active Sessions</h2>
           </div>
           <div className="px-6 py-5">
@@ -1020,9 +1008,7 @@ export function SettingsPage() {
       </div>
 
       {/* Integrations */}
-      <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 mb-5">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-        <div className="px-6 py-4 border-b border-[#F3F4F6]">
+      <div className="bg-white rounded-xl border border-[#E5E7EB] mb-5">        <div className="px-6 py-4 border-b border-[#E5E7EB]">
           <h2 className="text-sm font-semibold text-[#111827]">Integrations</h2>
         </div>
         <div className="px-6 py-5">
@@ -1085,7 +1071,7 @@ export function SettingsPage() {
                   <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                     <strong>Action required:</strong> {connection.error_message.replace(/ensure.*Console\./i, 'Make sure "My Business Account Management API" and "My Business Business Information API" are enabled in Google Cloud Console.')}
                   </p>
-                  <p className="text-xs text-[#9CA3AF] mt-2">Once APIs are enabled, click <strong>Retry fetch locations</strong> above — no need to reconnect.</p>
+                  <p className="text-xs text-[#9CA3AF] mt-2">Once APIs are enabled, click <strong>Retry fetch locations</strong> above � no need to reconnect.</p>
                 </div>
               )}
               {isConnected && locations.length > 0 && (
@@ -1187,7 +1173,7 @@ export function SettingsPage() {
                             <p className="text-sm font-medium text-[#111827] truncate">{biz.name}</p>
                             {biz.address && <p className="text-xs text-[#9CA3AF] truncate">{biz.address}</p>}
                             {biz.rating != null && (
-                              <p className="text-xs text-[#6B7280] mt-0.5">★ {biz.rating} · {biz.reviews_count ?? 0} reviews</p>
+                              <p className="text-xs text-[#6B7280] mt-0.5">? {biz.rating} � {biz.reviews_count ?? 0} reviews</p>
                             )}
                           </div>
                           <button
@@ -1316,9 +1302,7 @@ export function SettingsPage() {
       </div>
 
       {/* Billing shortcut */}
-      <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 mb-5">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-        <div className="px-6 py-4 border-b border-[#F3F4F6]">
+      <div className="bg-white rounded-xl border border-[#E5E7EB] mb-5">        <div className="px-6 py-4 border-b border-[#E5E7EB]">
           <h2 className="text-sm font-semibold text-[#111827]">Billing</h2>
         </div>
         <div className="px-6 py-5">
@@ -1336,9 +1320,7 @@ export function SettingsPage() {
       </div>
 
       {/* Data & Privacy */}
-      <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-        <div className="px-6 py-4 border-b border-[#F3F4F6]">
+      <div className="bg-white rounded-xl border border-[#E5E7EB]">        <div className="px-6 py-4 border-b border-[#E5E7EB]">
           <h2 className="text-sm font-semibold text-[#111827]">Data &amp; Privacy</h2>
         </div>
         <div className="px-6 py-5 space-y-5">
@@ -1377,7 +1359,7 @@ export function SettingsPage() {
             ) : (
               <div className="space-y-3">
                 <p className="text-sm font-semibold text-red-600">Are you absolutely sure?</p>
-                <p className="text-xs text-[#6B7280]">All your data — reviews, replies, Brand Brain profiles and team memberships — will be permanently deleted. This action <strong>cannot be undone</strong>.</p>
+                <p className="text-xs text-[#6B7280]">All your data � reviews, replies, Brand Brain profiles and team memberships � will be permanently deleted. This action <strong>cannot be undone</strong>.</p>
                 <div>
                   <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Type <strong>DELETE</strong> to confirm</label>
                   <input
