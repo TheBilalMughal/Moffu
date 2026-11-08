@@ -100,6 +100,11 @@ export function TeamMemberDetailPage() {
   // Activate/deactivate
   const [toggling, setToggling] = useState(false);
 
+  // Delete
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteMsg, setDeleteMsg] = useState<string | null>(null);
+
   async function load() {
     setLoading(true);
     if (!id) { setNotFound(true); setLoading(false); return; }
@@ -257,6 +262,34 @@ export function TeamMemberDetailPage() {
     setTimeout(() => setPasswordCopied(false), 2000);
   }
 
+  async function handleDelete() {
+    if (!member) return;
+    setDeleting(true);
+    setDeleteMsg(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-delete-member`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+        },
+        body: JSON.stringify({ member_ids: [member.memberId] }),
+      });
+      const result = await res.json();
+      if (!result.success) {
+        setDeleteMsg(result.error ?? 'Failed to delete member.');
+        setDeleting(false);
+        return;
+      }
+      window.location.replace('/users');
+    } catch (err) {
+      setDeleteMsg(err instanceof Error ? err.message : 'Network error.');
+      setDeleting(false);
+    }
+  }
+
   async function handleToggleActive() {
     if (!member) return;
     setToggling(true);
@@ -314,26 +347,58 @@ export function TeamMemberDetailPage() {
       </Link>
 
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-2.5 mb-1">
-            <h1 className="text-2xl font-bold text-[#111827]">{member.displayName}</h1>
-            <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${member.isActive ? 'bg-[#ECFDF5] text-[#065F46]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
-              {member.isActive ? 'Active' : 'Inactive'}
-            </span>
-          </div>
-          <p className="text-sm text-[#9CA3AF] font-mono">{formatId(member.refId)}</p>
+      <div className="mb-6">
+        <div className="flex items-center gap-2.5 mb-1">
+          <h1 className="text-2xl font-bold text-[#111827]">{member.displayName}</h1>
+          <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${member.isActive ? 'bg-[#ECFDF5] text-[#065F46]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+            {member.isActive ? 'Active' : 'Inactive'}
+          </span>
         </div>
+        <p className="text-sm text-[#9CA3AF] font-mono mb-4">{formatId(member.refId)}</p>
+
+        {/* Actions */}
         {manage && member.role !== 'owner' && (
-          <button
-            onClick={handleToggleActive}
-            disabled={toggling}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 ${
-              member.isActive ? 'bg-[#FEF2F2] text-red-700 hover:bg-red-100' : 'bg-[#ECFDF5] text-[#065F46] hover:bg-green-100'
-            }`}
-          >
-            {toggling ? '\u2026' : member.isActive ? 'Deactivate' : 'Reactivate'}
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={handleToggleActive}
+              disabled={toggling}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 ${
+                member.isActive ? 'bg-[#FEF2F2] text-red-700 hover:bg-red-100' : 'bg-[#ECFDF5] text-[#065F46] hover:bg-green-100'
+              }`}
+            >
+              {toggling ? '\u2026' : member.isActive ? 'Deactivate' : 'Reactivate'}
+            </button>
+
+            {!deleteConfirm ? (
+              <button
+                onClick={() => setDeleteConfirm(true)}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#FEF2F2] text-red-700 hover:bg-red-100 transition-colors"
+              >
+                Delete
+              </button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[#374151]">Are you sure?</span>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting\u2026' : 'Yes, delete'}
+                </button>
+                <button
+                  onClick={() => { setDeleteConfirm(false); setDeleteMsg(null); }}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB] transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
+            {deleteMsg && (
+              <span className="text-xs text-red-600">{deleteMsg}</span>
+            )}
+          </div>
         )}
         {member.role === 'owner' && (
           <span className="px-3 py-1.5 text-xs font-semibold text-[#9CA3AF] bg-[#F3F4F6] rounded-lg">Protected</span>
@@ -344,7 +409,7 @@ export function TeamMemberDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
         {/* Card 1 — Member info */}
-        <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl">
           <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Member info</h2>
             {manage && !infoEditing && (
