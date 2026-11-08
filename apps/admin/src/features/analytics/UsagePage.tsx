@@ -267,7 +267,7 @@ export function UsagePage() {
 
         {/* Filters */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-2 bg-white shadow-sm rounded-xl flex-1 max-w-xs">
+          <div className="flex items-center gap-2 px-3 py-2 bg-white shadow-sm rounded-xl flex-1">
             <svg className="w-3.5 h-3.5 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
             <input ref={searchRef} value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Search org…"
