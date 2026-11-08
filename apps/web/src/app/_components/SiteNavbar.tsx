@@ -122,8 +122,8 @@ export function SiteNavbar({ portalUrl }: { portalUrl: string }) {
             href={`${portalUrl}/auth/signup`}
             className={`flex-shrink-0 font-black tracking-tight transition-all duration-300 ${
               scrolled
-                ? 'ml-3 text-sm bg-[#111827] text-white px-4 py-2 rounded-lg hover:scale-105 active:scale-95 transition-transform'
-                : 'ml-10 text-base bg-[#111827] text-white px-7 py-3.5 rounded-lg hover:scale-105 active:scale-95 transition-transform'
+                ? 'ml-auto md:ml-3 text-sm bg-[#111827] text-white px-4 py-2 rounded-lg hover:scale-105 active:scale-95 transition-transform'
+                : 'ml-auto md:ml-10 text-sm md:text-base bg-[#111827] text-white px-4 md:px-7 py-2.5 md:py-3.5 rounded-lg hover:scale-105 active:scale-95 transition-transform'
             }`}
           >
             Start Free →

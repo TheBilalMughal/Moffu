@@ -40,7 +40,7 @@ export function HeroEmailForm({ portalUrl }: { portalUrl: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center bg-white rounded-xl w-full overflow-hidden shadow-sm">
+    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row sm:items-center bg-white rounded-xl w-full overflow-hidden shadow-sm">
       <div className="flex items-center gap-3 flex-1 px-5">
         <svg className="w-5 h-5 text-[#111827]/30 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
@@ -51,16 +51,16 @@ export function HeroEmailForm({ portalUrl }: { portalUrl: string }) {
           onChange={e => setEmail(e.target.value)}
           placeholder="your@email.com"
           required
-          className="flex-1 py-5 text-base font-medium text-[#111827] placeholder:text-[#111827]/35 bg-transparent outline-none"
+          className="flex-1 py-4 sm:py-5 text-base font-medium text-[#111827] placeholder:text-[#111827]/35 bg-transparent outline-none"
         />
       </div>
-      {error && <p className="text-xs text-red-500 px-3">{error}</p>}
-      <div className="p-2">
+      {error && <p className="text-xs text-red-500 px-5 pb-2 sm:px-3 sm:pb-0">{error}</p>}
+      <div className="p-2 pt-0 sm:pt-2">
         <style>{`@keyframes btnBounce{0%,100%{transform:translateY(0) rotate(0deg)}30%{transform:translateY(-6px) rotate(-2deg)}60%{transform:translateY(-2px) rotate(1deg)}}.btn-bounce:hover{animation:btnBounce 0.45s ease}`}</style>
         <button
           type="submit"
           disabled={loading}
-          className={`btn-bounce bg-[#111827] text-base font-black px-7 py-3.5 rounded-lg tracking-tight whitespace-nowrap disabled:opacity-60 inline-block transition-colors duration-200 ${email.includes('@') ? 'text-[#D8CCFF]' : 'text-white'}`}
+          className={`btn-bounce w-full sm:w-auto bg-[#111827] text-base font-black px-7 py-3.5 rounded-lg tracking-tight whitespace-nowrap disabled:opacity-60 inline-block transition-colors duration-200 ${email.includes('@') ? 'text-[#D8CCFF]' : 'text-white'}`}
         >
           {loading ? '…' : 'Join Waitlist →'}
         </button>
