@@ -108,9 +108,9 @@ function UsageHistoryChart({ days }: { days: UsageDay[] }) {
           return (
             <div key={day.date} className="flex-1 flex flex-col justify-end" style={{ height: `${CHART_H}px` }}>
               {barH > 0 && (
-                <div className="w-full rounded-xl overflow-hidden" style={{ height: `${barH}px` }}>
-                  <div className="w-full bg-[#C4B5FD]" style={{ height: `${draftsH}px` }} />
-                  <div className="w-full bg-[#6C55E8]" style={{ height: `${repliesH}px` }} />
+                <div className="w-full flex flex-col rounded-t-sm overflow-hidden" style={{ height: `${barH}px` }}>
+                  {draftsH > 0 && <div className="w-full bg-[#C4B5FD]" style={{ height: `${draftsH}px` }} />}
+                  {repliesH > 0 && <div className="w-full bg-[#6C55E8]" style={{ height: `${repliesH}px` }} />}
                 </div>
               )}
               {barH === 0 && <div className="w-full bg-[#F3F4F6] rounded-xl" style={{ height: '2px' }} />}
@@ -541,7 +541,7 @@ export function BillingPage() {
       {billingSubView === 'plan' && (<>
       {/* Annual savings banner */}
       {annualSavings > 0 && (
-        <div className="flex items-center justify-between bg-[#EDE9FE] border border-[#6C55E8]/20 rounded-xl px-5 py-3 mb-5">
+        <div className="flex items-center justify-between px-1 py-2 mb-4">
           <div className="flex items-center gap-2.5">
             <svg className="w-4 h-4 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -563,9 +563,9 @@ export function BillingPage() {
       {/* Current plan + usage -- 2 equal columns */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
         {/* Current plan card */}
-        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-          <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Current Plan</p>
+        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6">
+
+          <p className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wide mb-4">Current Plan</p>
           <div className="flex items-start gap-4 mb-5">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${planColor.bg}`}>
               <svg className={`w-4.5 h-4.5 ${planColor.text}`} style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -584,7 +584,7 @@ export function BillingPage() {
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[#6B7280] mt-0.5">{PLAN_DESCRIPTIONS[planSlug]}</p>
+              <p className="text-xs text-[#4B5563] mt-0.5">{PLAN_DESCRIPTIONS[planSlug]}</p>
               {!isFree && currentPlan && (
                 <p className="text-xs text-[#9CA3AF] mt-1">
                   {orgOverride?.custom_price_cents
@@ -618,8 +618,8 @@ export function BillingPage() {
         </div>
 
         {/* Usage card */}
-        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6">
+
           <div className="flex items-center justify-between mb-4">
             <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Usage this period</p>
             {usage && (
@@ -696,16 +696,16 @@ export function BillingPage() {
       {/* Usage history + Add-ons -- 2 columns */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
         {/* Usage history chart */}
-        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-          <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Usage history · last 14 days</p>
+        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6">
+
+          <p className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wide mb-4">Usage history · last 14 days</p>
           <UsageHistoryChart days={history} />
         </div>
 
         {/* Add-ons card */}
-        <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
-          <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Add-ons</p>
+        <div className="bg-white rounded-xl border border-[#E5E7EB] p-6">
+
+          <p className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wide mb-4">Add-ons</p>
 
           {/* Active addon line items */}
           {sub && sub.addon_items.length > 0 ? (
