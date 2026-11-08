@@ -13,6 +13,16 @@ interface AdminAuthState {
   initialize: () => () => void;
 }
 
+async function fetchRole(userId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('platform_members')
+    .select('role')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .maybeSingle();
+  return data?.role ?? null;
+}
+
 export const useAdminAuthStore = create<AdminAuthState>((set) => ({
   status: 'loading',
   session: null,
@@ -20,51 +30,64 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
   platformRole: null,
 
   initialize() {
+    let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
+
+    function subscribeRoleChanges(userId: string) {
+      if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+      realtimeChannel = supabase
+        .channel(`platform_member_role_${userId}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'platform_members', filter: `user_id=eq.${userId}` },
+          async () => {
+            const role = await fetchRole(userId);
+            set((s) => ({
+              platformRole: role,
+              status: role ? 'authenticated' : 'unauthorized',
+            }));
+          },
+        )
+        .subscribe();
+    }
+
     adminAuthService.getSession().then(async ({ data }) => {
       if (!data.session) {
         set({ status: 'unauthenticated', session: null, user: null, platformRole: null });
         return;
       }
-
-      // Verify platform membership via DB (RLS will return null if not a platform member)
-      const { data: member } = await supabase
-        .from('platform_members')
-        .select('role')
-        .eq('user_id', data.session.user.id)
-        .eq('is_active', true)
-        .maybeSingle();
-
+      const role = await fetchRole(data.session.user.id);
       set({
-        status: member ? 'authenticated' : 'unauthorized',
+        status: role ? 'authenticated' : 'unauthorized',
         session: data.session,
         user: data.session.user,
-        platformRole: member?.role ?? null,
+        platformRole: role,
       });
+      subscribeRoleChanges(data.session.user.id);
     });
 
     const { data: listener } = adminAuthService.onAuthStateChange(async (event, session) => {
       if (!session) {
+        if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+        realtimeChannel = null;
         set({ status: 'unauthenticated', session: null, user: null, platformRole: null });
         return;
       }
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        const { data: member } = await supabase
-          .from('platform_members')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .eq('is_active', true)
-          .maybeSingle();
-
+        const role = await fetchRole(session.user.id);
         set({
-          status: member ? 'authenticated' : 'unauthorized',
+          status: role ? 'authenticated' : 'unauthorized',
           session,
           user: session.user,
-          platformRole: member?.role ?? null,
+          platformRole: role,
         });
+        subscribeRoleChanges(session.user.id);
       }
     });
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      listener.subscription.unsubscribe();
+      if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+    };
   },
 }));
