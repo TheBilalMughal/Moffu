@@ -95,6 +95,7 @@ function exportCSV(rows: BillingRecord[]) {
 // ── MRR Trend Chart (SVG) ──────────────────────────────────────────────────────
 
 function MrrTrendChart({ records }: { records: BillingRecord[] }) {
+  const [open, setOpen] = useState(true);
   const months = useMemo(() => {
     const now = new Date();
     return Array.from({ length: 12 }, (_, i) => {
@@ -145,8 +146,13 @@ function MrrTrendChart({ records }: { records: BillingRecord[] }) {
 
   return (
     <div className="bg-white shadow-sm rounded-xl p-5 mb-5">
-      <h3 className="text-sm font-semibold text-[#111827] mb-4">MRR Trend — Last 12 Months</h3>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
+      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 group mb-4">
+        <h3 className="text-sm font-semibold text-[#111827] group-hover:text-[#6C55E8] transition-colors">MRR Trend — Last 12 Months</h3>
+        <svg className={`w-4 h-4 text-[#9CA3AF] group-hover:text-[#6C55E8] transition-transform ${open ? 'rotate-0' : '-rotate-90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      {open && <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
         <defs>
           <linearGradient id="mrrGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#6C55E8" stopOpacity="0.12"/>
@@ -170,7 +176,7 @@ function MrrTrendChart({ records }: { records: BillingRecord[] }) {
             <title>{p.label}: {fmt(p.mrr)}</title>
           </g>
         ))}
-      </svg>
+      </svg>}
     </div>
   );
 }
