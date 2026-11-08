@@ -1,4 +1,5 @@
-﻿import { Outlet, useLocation } from 'react-router-dom';
+﻿import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAdminAuthStore } from '@/features/auth/auth.store';
 
 // ── Icons ──────────────────────────────────────────────────────────────────
 
@@ -133,7 +134,13 @@ const TABS: Tab[] = [
 // ── Layout ─────────────────────────────────────────────────────────────────
 
 export function SettingsLayout() {
-  useLocation(); // keep for potential future use
+  useLocation();
+  const { platformRole } = useAdminAuthStore();
+
+  if (!['owner', 'super_admin'].includes(platformRole ?? '')) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <div className="h-full overflow-y-auto min-h-0">
       <Outlet />

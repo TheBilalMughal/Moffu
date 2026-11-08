@@ -351,6 +351,7 @@ const RAIL_GROUPS = [
     label: 'Settings',
     to: '/settings/general',
     end: false,
+    allowedRoles: ['owner', 'super_admin'],
     test: (p: string) => p.startsWith('/settings'),
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -870,8 +871,10 @@ function NavItem({ to, label, icon, end }: { to: string; label: string; icon: Re
 export function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { platformRole } = useAdminAuthStore();
 
-  const activeGroup = RAIL_GROUPS.find(g => g.test(location.pathname)) ?? RAIL_GROUPS[0]!;
+  const visibleRailGroups = RAIL_GROUPS.filter(g => !g.allowedRoles || g.allowedRoles.includes(platformRole ?? ''));
+  const activeGroup = visibleRailGroups.find(g => g.test(location.pathname)) ?? visibleRailGroups[0]!;
   const navConfig = GROUP_NAV_CONFIG[activeGroup.label];
   const activeNavItems = navConfig?.items ?? [];
   const activeNavLabel = navConfig?.label ?? null;
@@ -901,7 +904,7 @@ export function AdminLayout() {
 
         {/* Group icons */}
         <div className="flex-1 flex flex-col items-center gap-1">
-          {RAIL_GROUPS.map(group => {
+          {visibleRailGroups.map(group => {
             const isActive = group.test(location.pathname);
             return (
               <button
