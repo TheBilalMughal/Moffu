@@ -836,7 +836,6 @@ function RailGroupButton({
   return (
     <button
       onClick={onClick}
-      title={label}
       className={'w-10 h-10 rounded-lg flex items-center justify-center transition-colors relative group [&>svg]:w-5 [&>svg]:h-5 ' + (
         isActive ? 'bg-[#6C55E8] text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
       )}

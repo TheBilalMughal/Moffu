@@ -1,11 +1,11 @@
-﻿import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { adminAuthService } from '@/features/auth/auth.service';
 import { supabase } from '@/lib/supabase';
 import { ToastContainer } from '@/components/ToastContainer';
 
-// ── Nav Items ─────────────────────────────────────────────────────────────────
+// -- Nav Items -----------------------------------------------------------------
 
 const NAV_DASHBOARD = [
   {
@@ -278,7 +278,7 @@ const NAV_SETTINGS_GROUPS: SettingsSection[] = [
   },
 ];
 
-// ── Group → Sidebar Nav mapping ──────────────────────────────────────────────
+// -- Group ? Sidebar Nav mapping ----------------------------------------------
 
 const GROUP_NAV_CONFIG: Record<string, { label: string | null; items: NavItemData[] }> = {
   Overview:  { label: null,            items: NAV_DASHBOARD },
@@ -289,7 +289,7 @@ const GROUP_NAV_CONFIG: Record<string, { label: string | null; items: NavItemDat
   Settings:  { label: 'Settings',      items: [] },
 };
 
-// ── Icon Rail Groups ──────────────────────────────────────────────────────────
+// -- Icon Rail Groups ----------------------------------------------------------
 
 const RAIL_GROUPS = [
   {
@@ -370,7 +370,7 @@ const ROLE_LABEL: Record<string, string> = {
   viewer: 'Viewer',
 };
 
-// ── Admin Search ──────────────────────────────────────────────────────────────
+// -- Admin Search --------------------------------------------------------------
 
 interface AdminSearchResult {
   id: string;
@@ -441,7 +441,7 @@ function AdminSearch() {
           value={query}
           onChange={e => setQuery(e.target.value)}
           onFocus={() => setFocused(true)}
-          placeholder={focused ? 'Search anything…' : 'Search  ⌘K'}
+          placeholder={focused ? 'Search anything�' : 'Search  ?K'}
           className="flex-1 text-xs text-[#111827] placeholder-[#9CA3AF] focus:outline-none bg-transparent min-w-0"
         />
         {query && (
@@ -488,7 +488,7 @@ function AdminSearch() {
   );
 }
 
-// ── Admin Notifications Bell ──────────────────────────────────────────────────
+// -- Admin Notifications Bell --------------------------------------------------
 
 interface AdminNotif {
   id: string;
@@ -665,7 +665,7 @@ function AdminNotificationsBell() {
   );
 }
 
-// ── Admin Profile ─────────────────────────────────────────────────────────────
+// -- Admin Profile -------------------------------------------------------------
 
 function AdminProfile() {
   const { user, platformRole } = useAdminAuthStore();
@@ -760,7 +760,7 @@ function AdminProfile() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
             </svg>
-            {signingOut ? 'Signing out…' : 'Sign out'}
+            {signingOut ? 'Signing out�' : 'Sign out'}
           </button>
         </div>
       )}
@@ -768,7 +768,7 @@ function AdminProfile() {
   );
 }
 
-// ── Rail Profile + Logout Buttons ────────────────────────────────────────────
+// -- Rail Profile + Logout Buttons --------------------------------------------
 
 function RailProfileButton() {
   const { user } = useAdminAuthStore();
@@ -816,7 +816,7 @@ function RailProfileButton() {
   );
 }
 
-// ── Settings Grouped Nav ──────────────────────────────────────────────────────
+// -- Settings Grouped Nav ------------------------------------------------------
 
 function SettingsGroupedNav() {
   return (
@@ -842,7 +842,7 @@ function SettingsGroupedNav() {
   );
 }
 
-// ── Layout ────────────────────────────────────────────────────────────────────
+// -- Layout --------------------------------------------------------------------
 
 function NavItem({ to, label, icon, end }: { to: string; label: string; icon: React.ReactNode; end?: boolean | undefined }) {
   return (
@@ -892,7 +892,7 @@ export function AdminLayout() {
     <div className="flex h-screen bg-[#F3F4F6] overflow-hidden">
       <ToastContainer />
 
-      {/* ── Icon Rail ── */}
+      {/* -- Icon Rail -- */}
       <aside className="w-14 flex-shrink-0 bg-[#111111] flex flex-col items-center py-4 gap-1 z-20">
         {/* Logo */}
         <div className="mb-5 flex items-center justify-center">
@@ -907,7 +907,6 @@ export function AdminLayout() {
               <button
                 key={group.label}
                 onClick={() => navigate(group.to)}
-                title={group.label}
                 className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors relative group ${
                   isActive
                     ? 'bg-[#6C55E8] text-white'
@@ -928,14 +927,14 @@ export function AdminLayout() {
 
       </aside>
 
-      {/* ── Nav Sidebar ── */}
+      {/* -- Nav Sidebar -- */}
       <aside className="w-52 flex-shrink-0 bg-white border-r border-[#E5E7EB] flex flex-col z-10">
         {/* Header */}
         <div className="px-4 py-5 flex items-center justify-center flex-shrink-0">
           <img src="/images/logo.png" alt="Moffu" className="h-8 w-auto" />
         </div>
 
-        {/* Nav — contextual: shows only the active group's items */}
+        {/* Nav � contextual: shows only the active group's items */}
         <nav className="flex-1 overflow-y-auto px-2.5 py-4 flex flex-col">
           <div className="flex-1">
             {activeGroup.label === 'Settings' ? (
@@ -958,7 +957,7 @@ export function AdminLayout() {
         </nav>
       </aside>
 
-      {/* ── Main Content ── */}
+      {/* -- Main Content -- */}
       <main className="flex-1 overflow-hidden flex flex-col min-w-0 z-30">
         {/* Topbar */}
         <div className="flex-shrink-0 h-14 flex items-center justify-between px-6 gap-4">
