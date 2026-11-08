@@ -487,6 +487,7 @@ export function SettingsPage() {
   const [origPhoneCountry, setOrigPhoneCountry] = useState('PK');
   const [origPhoneNational, setOrigPhoneNational] = useState('');
   const [accountEditOpen, setAccountEditOpen] = useState(false);
+  const [passwordEditOpen, setPasswordEditOpen] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
 
   // Preferences
@@ -590,7 +591,7 @@ export function SettingsPage() {
     setSavingPassword(true);
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) { showToast(error.message, 'error'); }
-    else { showToast('Password changed successfully.', 'success'); setNewPassword(''); setConfirmPassword(''); }
+    else { showToast('Password changed successfully.', 'success'); setNewPassword(''); setConfirmPassword(''); setPasswordEditOpen(false); setShowNewPassword(false); setShowConfirmPassword(false); }
     setSavingPassword(false);
   }
 
@@ -897,49 +898,83 @@ export function SettingsPage() {
         </div>
 
         {/* Change Password */}
-        <div className="bg-white rounded-xl border border-[#E5E7EB]">          <div className="px-6 py-4 border-b border-[#E5E7EB]">
+        <div className="bg-white rounded-xl border border-[#E5E7EB]">
+          <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Change Password</h2>
+            {!passwordEditOpen && (
+              <button
+                type="button"
+                onClick={() => setPasswordEditOpen(true)}
+                className="text-xs font-medium text-[#6C55E8] hover:underline"
+              >
+                Edit
+              </button>
+            )}
           </div>
           <div className="px-6 py-5 space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">New Password</label>
-              <div className="relative">
-                <input
-                  type={showNewPassword ? 'text' : 'password'}
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                  className={`${inputCls} pr-10`}
-                />
-                <button type="button" onClick={() => setShowNewPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151]">
-                  <EyeIcon open={showNewPassword} />
-                </button>
+            {!passwordEditOpen ? (
+              <div>
+                <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1">Password</p>
+                <p className="text-sm text-[#111827] tracking-widest">••••••••</p>
               </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Confirm Password</label>
-              <div className="relative">
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat new password"
-                  className={`${inputCls} pr-10`}
-                />
-                <button type="button" onClick={() => setShowConfirmPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151]">
-                  <EyeIcon open={showConfirmPassword} />
-                </button>
-              </div>
-            </div>
-            <button
-              onClick={handleChangePassword}
-              disabled={savingPassword || !newPassword || !confirmPassword}
-              className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
-            >
-              {savingPassword ? 'Saving...' : 'Change Password'}
-            </button>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">New Password</label>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      placeholder="At least 8 characters"
+                      className={`${inputCls} pr-10`}
+                    />
+                    <button type="button" onClick={() => setShowNewPassword(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151]">
+                      <EyeIcon open={showNewPassword} />
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Confirm Password</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      placeholder="Repeat new password"
+                      className={`${inputCls} pr-10`}
+                    />
+                    <button type="button" onClick={() => setShowConfirmPassword(v => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151]">
+                      <EyeIcon open={showConfirmPassword} />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={savingPassword || !newPassword || !confirmPassword}
+                    className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
+                  >
+                    {savingPassword ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPasswordEditOpen(false);
+                      setNewPassword('');
+                      setConfirmPassword('');
+                      setShowNewPassword(false);
+                      setShowConfirmPassword(false);
+                    }}
+                    className="text-sm font-medium text-[#6B7280] hover:text-[#374151] px-5 py-2.5 rounded-lg border border-[#E5E7EB] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
