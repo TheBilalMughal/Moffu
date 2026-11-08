@@ -788,11 +788,11 @@ const RAIL_GROUPS: RailGroup[] = [
   },
   {
     id: 'plan',
-    icon: <PlanIcon />,
+    icon: <BillingIcon />,
     label: 'Plan',
     items: [
-      { to: '/billing',          label: 'Plan',    icon: <PlanIcon />,    featureKey: null },
-      { to: '/billing/payments', label: 'Billing', icon: <BillingIcon />, featureKey: null },
+      { to: '/billing',       label: 'Billing', icon: <BillingIcon />, featureKey: null },
+      { to: '/billing/plan',  label: 'Plan',    icon: <PlanIcon />,    featureKey: null },
     ],
   },
   {

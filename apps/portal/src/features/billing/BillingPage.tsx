@@ -340,7 +340,7 @@ function AddLocationDialog({ plan, onClose }: { plan: Plan; onClose: () => void 
 
 export function BillingPage() {
   const { pathname } = useLocation();
-  const billingSubView = pathname === '/billing/payments' ? 'billing' : 'plan';
+  const billingSubView = pathname === '/billing/plan' ? 'plan' : 'billing';
   const [plans, setPlans] = useState<Plan[]>([]);
   const [sub, setSub] = useState<Subscription | null>(null);
   const [usage, setUsage] = useState<UsageSummary | null>(null);
@@ -522,9 +522,10 @@ export function BillingPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-[#111827]">{billingSubView === 'plan' ? 'Plan' : 'Billing'}</h2>
-          <p className="text-sm text-[#6B7280] mt-0.5">{billingSubView === 'plan' ? 'Manage your subscription and track feature usage.' : 'View your payment history and invoices.'}</p>
+          <h2 className="text-xl font-bold text-[#111827]">{billingSubView === 'billing' ? 'Billing' : 'Plan'}</h2>
+          <p className="text-sm text-[#6B7280] mt-0.5">{billingSubView === 'billing' ? 'View your payment history and invoices.' : 'Manage your subscription and track feature usage.'}</p>
         </div>
+{billingSubView === 'plan' && (
         <button
           onClick={() => setShowCompare(true)}
           className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#374151] border border-[#E5E7EB] rounded-lg hover:border-[#6C55E8]/30 hover:text-[#6C55E8] transition-colors"
@@ -534,8 +535,10 @@ export function BillingPage() {
           </svg>
           Compare all plans
         </button>
+      )}
       </div>
 
+      {billingSubView === 'plan' && (<>
       {/* Annual savings banner */}
       {annualSavings > 0 && (
         <div className="flex items-center justify-between bg-[#EDE9FE] border border-[#6C55E8]/20 rounded-xl px-5 py-3 mb-5">
@@ -893,23 +896,86 @@ export function BillingPage() {
         })}
       </div>
 
-      {/* Flat notice */}
-      {billingSubView === 'plan' && (
-        <p className="text-xs text-[#9CA3AF]">
-          Payments coming soon. Stripe integration is in progress.
-        </p>
-      )}
+      </>)}
+
+            {/* Billing view */}
       {billingSubView === 'billing' && (
-        <div className="bg-white rounded-xl border border-[#E5E7EB] p-8 text-center mt-4">
-          <svg className="w-10 h-10 mx-auto mb-3 text-[#D1D5DB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-          <p className="text-sm font-semibold text-[#374151] mb-1">No payment history yet</p>
-          <p className="text-xs text-[#9CA3AF]">Payment history and invoices will appear here once Stripe billing is active.</p>
+        <div className="space-y-6">
+
+          {/* Current plan summary */}
+          <div className="bg-white rounded-xl border border-[#E5E7EB] p-5">
+            <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-3">Current Plan</p>
+            {loading ? (
+              <div className="animate-pulse h-10 bg-[#F3F4F6] rounded-lg" />
+            ) : (
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <div className={`px-2.5 py-1 rounded-lg text-xs font-bold ${planColor.bg} ${planColor.text}`}>
+                    {(currentPlan?.name ?? 'Free').toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-[#111827]">
+                      {isFree ? 'Free plan' : (
+                        sub?.billing_interval === 'annual'
+                          ? `${((currentPlan?.prices.find(p => p.interval === "annual")?.amount_cents ?? 0) / 100).toFixed(0)}/mo (billed annually)`
+                          : `${((currentPlan?.prices.find(p => p.interval === "monthly")?.amount_cents ?? 0) / 100).toFixed(0)}/mo`
+                      )}
+                    </p>
+                    {!isFree && sub?.current_period_end && (
+                      <p className="text-xs text-[#9CA3AF] mt-0.5">
+                        Next billing: {new Date(sub.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <a href="/billing/plan" className="text-xs font-semibold text-[#6C55E8] hover:underline">
+                  Manage Plan
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* Transaction history */}
+          <div className="bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#F3F4F6] flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-[#111827]">Transaction History</p>
+                <p className="text-xs text-[#9CA3AF] mt-0.5">Your past payments and invoices</p>
+              </div>
+            </div>
+
+            {/* Table header */}
+            <div className="hidden md:grid grid-cols-[1fr_auto_auto_auto] gap-4 px-5 py-2.5 bg-[#F9FAFB] border-b border-[#F3F4F6]">
+              <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide">Description</p>
+              <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide text-right">Amount</p>
+              <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide text-right">Status</p>
+              <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide text-right">Invoice</p>
+            </div>
+
+            {/* Empty state */}
+            <div className="px-5 py-12 text-center">
+              <svg className="w-9 h-9 mx-auto mb-3 text-[#E5E7EB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+              </svg>
+              <p className="text-sm font-semibold text-[#374151] mb-1">No transactions yet</p>
+              <p className="text-xs text-[#9CA3AF]">Payment history will appear here once Stripe billing is active.</p>
+            </div>
+          </div>
+
+          {/* Payment method */}
+          <div className="bg-white rounded-xl border border-[#E5E7EB] p-5">
+            <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-3">Payment Method</p>
+            <div className="flex items-center gap-3 text-sm text-[#9CA3AF]">
+              <svg className="w-5 h-5 text-[#D1D5DB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+              <span>Payment method management coming soon (Stripe integration in progress).</span>
+            </div>
+          </div>
+
         </div>
       )}
-
-            </div>{/* end scrollable */}
+      </div>{/* end scrollable */}
     </div>
   );
 }
