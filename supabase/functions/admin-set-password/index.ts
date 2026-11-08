@@ -29,8 +29,8 @@ serve(async (req) => {
       .eq('is_active', true)
       .maybeSingle();
 
-    if (!callerMember || !['super_admin', 'admin'].includes(callerMember.role)) {
-      return json({ error: 'Forbidden — super_admin or admin role required' }, 403);
+    if (!callerMember || !['owner', 'super_admin', 'admin'].includes(callerMember.role)) {
+      return json({ error: 'Forbidden — admin role required' }, 403);
     }
 
     const { user_id, password } = await req.json();
