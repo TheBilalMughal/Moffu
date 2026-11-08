@@ -837,7 +837,7 @@ function RailGroupButton({
     <button
       onClick={onClick}
       title={label}
-      className={'w-10 h-10 rounded-lg flex items-center justify-center transition-colors relative group ' + (
+      className={'w-10 h-10 rounded-lg flex items-center justify-center transition-colors relative group [&>svg]:w-5 [&>svg]:h-5 ' + (
         isActive ? 'bg-[#6C55E8] text-white' : 'text-white/40 hover:text-white hover:bg-white/10'
       )}
     >
@@ -1016,7 +1016,7 @@ export function DashboardLayout() {
         {/* Icon Rail — desktop only */}
         <aside className="hidden md:flex w-14 flex-shrink-0 bg-[#111111] flex-col items-center py-4 gap-1 z-20">
           <a href="/dashboard" className="w-10 h-10 flex items-center justify-center mb-2" aria-label="Moffu home">
-            <img src="/images/fevicon.png" alt="" className="w-7 h-7 rounded-md object-contain" aria-hidden="true" />
+            <img src="/images/fevicon.png" alt="" className="w-8 h-8 rounded-lg object-contain" aria-hidden="true" />
           </a>
           {RAIL_GROUPS.map(group => (
             <RailGroupButton
@@ -1032,7 +1032,7 @@ export function DashboardLayout() {
         {/* Text Sidebar */}
         <aside className={'fixed inset-y-0 left-0 z-50 w-56 flex flex-col bg-white border-r border-[#E5E7EB] transform transition-transform duration-200 ease-out md:relative md:w-52 md:flex-shrink-0 md:translate-x-0 ' + (sidebarOpen ? 'translate-x-0' : '-translate-x-full')}>
           <div className="relative px-4 py-5 flex items-center justify-center flex-shrink-0">
-            <img src="/images/logo.png" alt="Moffu" className="h-7 w-auto" />
+            <img src="/images/logo.png" alt="Moffu" className="h-8 w-auto" />
             <button
               onClick={() => setSidebarOpen(false)}
               className="md:hidden absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] transition-colors"
