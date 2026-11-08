@@ -183,7 +183,7 @@ export function CampaignDetailPage() {
             </div>
           </div>
           {campaign.body && (
-            <div className="px-5 py-4 text-sm text-[#374151] whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto bg-[#FAFFFE]">
+            <div className="px-5 py-4 text-sm text-[#374151] whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto bg-[#FAFAFA]">
               {campaign.body}
             </div>
           )}
@@ -227,7 +227,7 @@ export function CampaignDetailPage() {
             {filteredContacts.length === 0 ? (
               <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-[#9CA3AF]">No contacts match your filter</td></tr>
             ) : filteredContacts.map(c => (
-              <tr key={c.id} className="hover:bg-[#FAFFFE] transition-colors">
+              <tr key={c.id} className="hover:bg-[#FAFAFA] transition-colors">
                 <td className="px-5 py-3 text-[#374151]">{c.name || <span className="text-[#D1D5DB] italic">—</span>}</td>
                 <td className="px-5 py-3 font-medium text-[#111827]">{c.email}</td>
                 <td className="px-5 py-3">

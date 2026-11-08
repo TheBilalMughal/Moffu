@@ -815,7 +815,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
       )}
 
       <tr onClick={onToggle}
-        className={`group cursor-pointer border-b border-[#F3F4F6] last:border-0 transition-colors ${focused ? 'ring-1 ring-inset ring-[#6C55E8]/30' : ''} ${expanded ? 'bg-[#F3F4F6]' : selected ? 'bg-[#EDE9FE] hover:bg-[#DCF0E8]' : uiStatus === 'replied' ? 'bg-green-50 hover:bg-green-100' : uiStatus === 'draft_ready' ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-[#F9FAFB]'}`}>
+        className={`group cursor-pointer border-b border-[#F3F4F6] last:border-0 transition-colors ${focused ? 'ring-1 ring-inset ring-[#6C55E8]/30' : ''} ${expanded ? 'bg-[#F3F4F6]' : selected ? 'bg-[#EDE9FE] hover:bg-[#D8CCFF]' : uiStatus === 'replied' ? 'bg-[#F3F4F6] hover:bg-[#E5E7EB]' : uiStatus === 'draft_ready' ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-[#F9FAFB]'}`}>
 
         {/* Checkbox — hidden for PUBLISHED reviews */}
         <td className="pl-4 pr-2 py-3 w-10" onClick={e => { e.stopPropagation(); if (uiStatus !== 'replied') onSelect(e); }}>
@@ -1679,7 +1679,7 @@ async function handleFlag(id: string) {
             onClick={() => autoSyncEnabled ? setConfirmOffModal('sync') : setAutoModal('sync')}
             disabled={!isConnected}
             title={!isConnected ? 'Connect Google Business Profile first' : autoSyncEnabled ? `Auto Sync ON every ${autoSyncInterval} — click to disable` : 'Enable Auto Sync'}
-            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoSyncEnabled ? 'bg-[#EDE9FE] text-[#6C55E8] border-[#6C55E8]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
+            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoSyncEnabled ? 'bg-[#EDE9FE] text-[#6C55E8] border-[#6C55E8]/40 hover:bg-[#D8CCFF]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${autoSyncEnabled ? 'bg-[#111827]' : 'bg-[#D1D5DB]'}`}/>
             {autoSyncEnabled ? `Auto Sync · ${autoSyncInterval}` : 'Auto Sync'}
           </button>
@@ -1689,7 +1689,7 @@ async function handleFlag(id: string) {
             onClick={() => autoDraftEnabled ? setConfirmOffModal('draft') : setAutoModal('draft')}
             disabled={!isConnected}
             title={!isConnected ? 'Connect Google Business Profile first' : autoDraftEnabled ? `Auto Draft ON${autoDraftSchedule.type === 'scheduled' ? ` (${autoDraftSchedule.from}–${autoDraftSchedule.to})` : ''} — click to disable` : 'Enable Auto Draft'}
-            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoDraftEnabled ? 'bg-[#EDE9FE] text-[#6C55E8] border-[#6C55E8]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
+            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoDraftEnabled ? 'bg-[#EDE9FE] text-[#6C55E8] border-[#6C55E8]/40 hover:bg-[#D8CCFF]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
             {autoRunning === 'draft'
               ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
               : <span className={`w-2 h-2 rounded-full flex-shrink-0 ${autoDraftEnabled ? 'bg-[#111827]' : 'bg-[#D1D5DB]'}`}/>}
@@ -1701,7 +1701,7 @@ async function handleFlag(id: string) {
             onClick={() => autoPublishEnabled ? setConfirmOffModal('publish') : setAutoModal('publish')}
             disabled={!isConnected}
             title={!isConnected ? 'Connect Google Business Profile first' : autoPublishEnabled ? `Auto Publish ON${autoPublishSchedule.type === 'scheduled' ? ` (${autoPublishSchedule.from}–${autoPublishSchedule.to})` : ''} — click to disable` : 'Enable Auto Publish'}
-            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoPublishEnabled ? 'bg-[#EDE9FE] text-[#6C55E8] border-[#6C55E8]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
+            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoPublishEnabled ? 'bg-[#EDE9FE] text-[#6C55E8] border-[#6C55E8]/40 hover:bg-[#D8CCFF]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
             {autoRunning === 'publish'
               ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
               : <span className={`w-2 h-2 rounded-full flex-shrink-0 ${autoPublishEnabled ? 'bg-[#111827]' : 'bg-[#D1D5DB]'}`}/>}
