@@ -1,4 +1,4 @@
-import { useLocation } from 'react-router-dom';
+﻿import { useLocation } from 'react-router-dom';
 import { env } from '@/lib/env';
 
 function LogoMark({ href }: { href: string }) {
@@ -19,8 +19,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <div className="h-screen overflow-hidden flex">
       {/* Left — hero panel */}
-      <div className="hidden lg:flex lg:w-[48%] relative flex-col bg-[#0D4C3C]"
-        style={{ background: 'linear-gradient(145deg, #0D4C3C 0%, #083F32 60%, #052D23 100%)' }}>
+      <div className="hidden lg:flex lg:w-[48%] relative flex-col bg-[#111827]"
+        style={{ background: 'linear-gradient(145deg, #111827 0%, #1a1a2e 60%, #0f0f1a 100%)' }}>
         {/* Logo */}
         <div className="relative z-10 p-8">
           <LogoMark href={env.webUrl} />

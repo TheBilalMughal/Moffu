@@ -139,7 +139,7 @@ function SidebarProfile() {
         onClick={() => setOpen(!open)}
         className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/60 transition-colors group"
       >
-        <div className="w-8 h-8 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-[#111827] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
           {initials}
         </div>
         <div className="text-left flex-1 min-w-0">
@@ -156,11 +156,11 @@ function SidebarProfile() {
       </button>
 
       {open && (
-        <div className="absolute left-0 bottom-full mb-2 w-52 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-50">
+        <div className="absolute left-0 bottom-full mb-2 w-52 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-50">
           <NavLink
             to="/settings"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-4 py-3 text-sm text-[#374151] hover:bg-[#F8FAF9] transition-colors"
+            className="flex items-center gap-2.5 px-4 py-3 text-sm text-[#374151] hover:bg-[#F9FAFB] transition-colors"
           >
             <svg className="w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
@@ -290,7 +290,7 @@ function GlobalSearch() {
       {/* Suggestions dropdown */}
       {open && (
         <div
-          className="absolute right-0 top-full mt-1.5 w-80 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-[200]"
+          className="absolute right-0 top-full mt-1.5 w-80 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-[200]"
           style={{ animation: 'slideDown 0.15s ease' }}
         >
           <style>{`@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}`}</style>
@@ -301,9 +301,9 @@ function GlobalSearch() {
                   key={r.id}
                   onMouseDown={e => e.preventDefault()}
                   onClick={() => { navigate('/reviews'); setFocused(false); setQuery(''); setResults([]); }}
-                  className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#F8FAF9] transition-colors text-left"
+                  className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#FAFAF7] transition-colors text-left"
                 >
-                  <div className="w-6 h-6 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-full bg-[#D8CCFF] text-[#111111] flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">
                     {r.reviewer_name?.[0]?.toUpperCase() ?? '?'}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -426,11 +426,11 @@ function NotificationsBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-[#E5EAE8] rounded-xl shadow-lg z-50 flex flex-col" style={{ maxHeight: '420px' }}>
+        <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-[#E5E7EB] rounded-xl shadow-lg z-50 flex flex-col" style={{ maxHeight: '420px' }}>
           <div className="px-4 py-3 border-b border-[#F3F4F6] flex items-center justify-between flex-shrink-0">
             <p className="text-sm font-semibold text-[#111827]">Notifications</p>
             {unreadBroadcasts > 0 && (
-              <button onClick={markAllRead} className="text-xs text-[#0D4C3C] hover:underline font-medium">
+              <button onClick={markAllRead} className="text-xs text-[#6C55E8] hover:underline font-medium">
                 Mark all read
               </button>
             )}
@@ -467,7 +467,7 @@ function NotificationsBell() {
                 <button
                   key={n.id}
                   onClick={() => { markRead(n.id); setOpen(false); }}
-                  className={`w-full flex items-start gap-3 px-4 py-3 hover:bg-[#F8FAF9] transition-colors text-left ${!n.is_read ? 'bg-[#FAFFFE]' : ''}`}
+                  className={`w-full flex items-start gap-3 px-4 py-3 hover:bg-[#FAFAF7] transition-colors text-left ${!n.is_read ? 'bg-[#FDFCFF]' : ''}`}
                 >
                   <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${style.bg}`}>
                     <svg className={`w-3.5 h-3.5 ${style.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -477,7 +477,7 @@ function NotificationsBell() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
                       <p className="text-xs font-semibold text-[#111827] truncate">{n.title}</p>
-                      {!n.is_read && <span className="w-1.5 h-1.5 rounded-full bg-[#0D4C3C] flex-shrink-0" />}
+                      {!n.is_read && <span className="w-1.5 h-1.5 rounded-full bg-[#6C55E8] flex-shrink-0" />}
                     </div>
                     <p className="text-xs text-[#6B7280] mt-0.5 line-clamp-2">{n.body}</p>
                   </div>
@@ -507,7 +507,7 @@ function QuickStatsPill() {
   if (todayCount === null || todayCount === 0) return null;
 
   return (
-    <span className="flex items-center gap-1 text-xs font-medium text-[#0D4C3C] bg-[#E6F2EE] px-2.5 py-1 rounded-lg">
+    <span className="flex items-center gap-1 text-xs font-medium text-[#6C55E8] bg-[#EDE9FE] px-2.5 py-1 rounded-lg">
       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
       </svg>
@@ -540,8 +540,8 @@ function TopbarLocationPicker() {
         onClick={() => setOpen(o => !o)}
         className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${
           isActive
-            ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium'
-            : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'
+            ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8] font-medium'
+            : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#6C55E8] hover:text-[#6C55E8]'
         }`}
       >
         <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -557,13 +557,13 @@ function TopbarLocationPicker() {
       </button>
 
       {open && (
-        <div className="absolute top-full mt-1.5 left-0 z-[200] bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 min-w-[200px]">
+        <div className="absolute top-full mt-1.5 left-0 z-[200] bg-white border border-[#E5E7EB] rounded-xl shadow-lg py-1.5 min-w-[200px]">
           <button
             onClick={() => { setSelectedId(null); setOpen(false); }}
-            className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${!selectedId ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
+            className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${!selectedId ? 'text-[#6C55E8] font-medium bg-[#EDE9FE]/40' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
           >
             <span>All Locations</span>
-            {!selectedId && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
+            {!selectedId && <svg className="w-3.5 h-3.5 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
           </button>
           {locations.map(l => {
             const avg = locationRatings[l.id];
@@ -572,7 +572,7 @@ function TopbarLocationPicker() {
               <button
                 key={l.id}
                 onClick={() => { setSelectedId(l.id); setOpen(false); }}
-                className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${sel ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
+                className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${sel ? 'text-[#6C55E8] font-medium bg-[#EDE9FE]/40' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
               >
                 <span>{l.display_name ?? l.id}</span>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -584,7 +584,7 @@ function TopbarLocationPicker() {
                       {avg.toFixed(1)}
                     </span>
                   )}
-                  {sel && <svg className="w-3.5 h-3.5 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
+                  {sel && <svg className="w-3.5 h-3.5 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
                 </div>
               </button>
             );
@@ -629,7 +629,7 @@ function TopbarProfile() {
         className="flex items-center gap-2 bg-transparent hover:opacity-90 transition-opacity"
         title={displayName || email}
       >
-        <div className="w-8 h-8 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-[#111827] text-white flex items-center justify-center text-xs font-semibold flex-shrink-0">
           {initials}
         </div>
         {displayName && (
@@ -638,10 +638,10 @@ function TopbarProfile() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden z-50">
+        <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden z-50">
           {/* Profile card */}
-          <div className="px-4 py-4 bg-[#F8FAF9] border-b border-[#E5EAE8] flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-[#0D4C3C] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+          <div className="px-4 py-4 bg-[#FAFAF7] border-b border-[#E5E7EB] flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full bg-[#111827] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
               {initials}
             </div>
             <div className="min-w-0">
@@ -654,7 +654,7 @@ function TopbarProfile() {
           <NavLink
             to="/settings"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-4 py-3 text-sm text-[#374151] hover:bg-[#F8FAF9] transition-colors"
+            className="flex items-center gap-2.5 px-4 py-3 text-sm text-[#374151] hover:bg-[#F9FAFB] transition-colors"
           >
             <svg className="w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z"/>
@@ -684,16 +684,16 @@ function UpgradeWidget() {
     <button
       onClick={() => navigate('/billing')}
       className="w-full mx-0 mb-2 p-3 rounded-xl text-left cursor-pointer group transition-all duration-200
-        bg-gradient-to-br from-[#0D4C3C]/[0.08] to-[#0D4C3C]/[0.04]
-        border border-[#0D4C3C]/[0.12]
-        hover:from-[#0D4C3C]/[0.13] hover:to-[#0D4C3C]/[0.07] hover:border-[#0D4C3C]/20"
+        bg-gradient-to-br from-[#6C55E8]/[0.08] to-[#6C55E8]/[0.04]
+        border border-[#6C55E8]/[0.12]
+        hover:from-[#6C55E8]/[0.13] hover:to-[#6C55E8]/[0.07] hover:border-[#6C55E8]/20"
       type="button"
     >
-      <p className="text-[11px] font-semibold text-[#0D4C3C] mb-0.5">Free Plan</p>
+      <p className="text-[11px] font-semibold text-[#6C55E8] mb-0.5">Free Plan</p>
       <p className="text-[10px] text-[#6B7280] leading-snug mb-2">Unlock more reviews, AI replies &amp; team features</p>
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-[#0D4C3C]">Upgrade now</span>
-        <svg className="w-3 h-3 text-[#0D4C3C] transition-transform duration-150 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <span className="text-[11px] font-semibold text-[#6C55E8]">Upgrade now</span>
+        <svg className="w-3 h-3 text-[#6C55E8] transition-transform duration-150 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7"/>
         </svg>
       </div>
@@ -875,19 +875,23 @@ export function DashboardLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   locked
-                    ? 'text-[#C4CAC8] hover:bg-[#F3F4F6] hover:text-[#9CA3AF]'
+                    ? 'text-[#9CA3AF] hover:bg-[#F3F4F6]'
                     : isActive
-                      ? 'bg-[#0D4C3C] text-white'
+                      ? 'bg-[#D8CCFF]/70 text-[#111111]'
                       : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
                 }`
               }
             >
-              {icon}
-              <span className="flex-1">{label}</span>
-              {locked && (
-                <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                </svg>
+              {({ isActive }) => (
+                <>
+                  <span className={locked ? 'text-[#D1D5DB]' : isActive ? 'text-[#6C55E8]' : 'text-[#9CA3AF]'}>{icon}</span>
+                  <span className="flex-1">{label}</span>
+                  {locked && (
+                    <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                  )}
+                </>
               )}
             </NavLink>
           );
@@ -903,13 +907,17 @@ export function DashboardLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-[#0D4C3C] text-white'
+                    ? 'bg-[#D8CCFF]/70 text-[#111111]'
                     : 'text-[#374151] hover:bg-[#F3F4F6] hover:text-[#111827]'
                 }`
               }
             >
-              {icon}
-              {label}
+              {({ isActive }) => (
+                <>
+                  <span className={isActive ? 'text-[#6C55E8]' : 'text-[#9CA3AF]'}>{icon}</span>
+                  {label}
+                </>
+              )}
             </NavLink>
           ))}
         </div>
@@ -927,7 +935,7 @@ export function DashboardLayout() {
         onCancel={() => setAdminDowngradePlan(null)}
       />
     )}
-    <div className="flex h-screen bg-[#F0F5F3] overflow-hidden">
+    <div className="flex h-screen bg-[#F3F4F6] overflow-hidden">
 
       {/* Mobile backdrop */}
       {sidebarOpen && (
@@ -973,9 +981,9 @@ export function DashboardLayout() {
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <div className="hidden md:flex items-center gap-1.5">
-              <div className="w-px h-5 bg-[#E5EAE8]/80 mx-0.5 flex-shrink-0"/>
+              <div className="w-px h-5 bg-[#E5E7EB]/80 mx-0.5 flex-shrink-0"/>
               <GlobalSearch />
-              <div className="w-px h-5 bg-[#E5EAE8]/80 mx-0.5 flex-shrink-0"/>
+              <div className="w-px h-5 bg-[#E5E7EB]/80 mx-0.5 flex-shrink-0"/>
             </div>
             <NotificationsBell />
             <TopbarProfile />

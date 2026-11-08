@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { googleService } from '@/features/google/google.service';
 import { useLocationStore } from '@/features/location/location.store';
@@ -97,7 +97,7 @@ const PAGE_SIZE = 20;
 const STATUS_CFG: Record<UiStatus, { dot: string; label: string }> = {
   pending:    { dot: 'bg-amber-400', label: 'Pending'     },
   draft_ready:{ dot: 'bg-blue-400',  label: 'Draft Ready' },
-  replied:    { dot: 'bg-[#0D4C3C]', label: 'Replied'    },
+  replied:    { dot: 'bg-[#111827]', label: 'Replied'    },
 };
 
 
@@ -122,7 +122,7 @@ function FilterDropdown({ label, icon, options, value, onChange }: {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${active ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#6C55E8] hover:text-[#6C55E8]'}`}>
         <span className="flex-shrink-0">{icon}</span>
         <span className="text-xs">{active ? selectedLabel : label}</span>
         {active
@@ -133,14 +133,14 @@ function FilterDropdown({ label, icon, options, value, onChange }: {
         }
       </button>
       {open && (
-        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 min-w-[160px]">
+        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E5E7EB] rounded-xl shadow-lg py-1.5 min-w-[160px]">
           {options.map(opt => {
             const sel = opt.value === value;
             return (
               <button key={opt.value} onClick={() => { onChange(opt.value); setOpen(false); }}
-                className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${sel ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}>
+                className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${sel ? 'text-[#6C55E8] font-medium bg-[#F3F4F6]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}>
                 <span>{opt.label}</span>
-                {sel && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
+                {sel && <svg className="w-3.5 h-3.5 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
               </button>
             );
           })}
@@ -168,7 +168,7 @@ function StarDistributionDropdown({ reviews }: { reviews: Review[] }) {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${open ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${open ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#6C55E8] hover:text-[#6C55E8]'}`}>
         <svg className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
         </svg>
@@ -176,7 +176,7 @@ function StarDistributionDropdown({ reviews }: { reviews: Review[] }) {
         <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
       </button>
       {open && (
-        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg p-3 min-w-[192px]">
+        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E5E7EB] rounded-xl shadow-lg p-3 min-w-[192px]">
           {counts.map(({ star, count }) => (
             <div key={star} className="flex items-center gap-2 mb-1.5 last:mb-0">
               <span className="text-xs text-[#6B7280] w-3 text-right">{star}</span>
@@ -413,7 +413,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
             <div className="flex items-center gap-3 mt-1.5 flex-wrap">
               {!showSentiment && (
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-1.5 rounded-full bg-[#0D4C3C]"/>
+                  <div className="w-3 h-1.5 rounded-full bg-[#111827]"/>
                   <span className="text-xs text-[#6B7280]">Reviews</span>
                 </div>
               )}
@@ -451,7 +451,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
             vs Previous
           </button>
           <button onClick={() => setShowSentiment(s => !s)}
-            className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${showSentiment ? 'bg-[#E6F2EE] text-[#0D4C3C] border border-[#0D4C3C]/20' : 'text-[#6B7280] bg-[#F3F4F6]'}`}>
+            className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${showSentiment ? 'bg-[#EDE9FE] text-[#6C55E8] border border-[#6C55E8]/20' : 'text-[#6B7280] bg-[#F3F4F6]'}`}>
             Sentiment
           </button>
           <div className="flex items-center bg-[#F3F4F6] rounded-lg p-0.5 gap-0.5">
@@ -478,8 +478,8 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 180 }} preserveAspectRatio="none" aria-hidden="true">
           <defs>
             <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0D4C3C" stopOpacity="0.12"/>
-              <stop offset="100%" stopColor="#0D4C3C" stopOpacity="0"/>
+              <stop offset="0%" stopColor="#6C55E8" stopOpacity="0.12"/>
+              <stop offset="100%" stopColor="#6C55E8" stopOpacity="0"/>
             </linearGradient>
           </defs>
 
@@ -500,7 +500,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
 
           {hovered !== null && pts[hovered] && (
             <line x1={pts[hovered]!.x} y1={PAD.top} x2={pts[hovered]!.x} y2={PAD.top + innerH}
-              stroke="#0D4C3C" strokeWidth={1} strokeDasharray="3 3" strokeOpacity={0.4}/>
+              stroke="#6C55E8" strokeWidth={1} strokeDasharray="3 3" strokeOpacity={0.4}/>
           )}
 
           {showComparison && prevLine && (
@@ -508,7 +508,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
           )}
 
           {!showSentiment && area && <path d={area} fill="url(#chartGrad)"/>}
-          {!showSentiment && <path d={line} fill="none" stroke="#0D4C3C" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>}
+          {!showSentiment && <path d={line} fill="none" stroke="#6C55E8" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>}
           {showRating && !showSentiment && <path d={ratingLine} fill="none" stroke="#F59E0B" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round"/>}
 
           {showSentiment && (
@@ -529,7 +529,7 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
             <g key={i} onMouseEnter={() => setHovered(i)} style={{ cursor: 'default' }}>
               <rect x={p.x - (innerW / data.length / 2)} y={PAD.top} width={innerW / data.length} height={innerH} fill="transparent"/>
               {!showSentiment && (hovered === i || data[i]!.count > 0) && (
-                <circle cx={p.x} cy={p.y} r={hovered === i ? 4.5 : 3} fill="#0D4C3C" stroke="white" strokeWidth={1.5}/>
+                <circle cx={p.x} cy={p.y} r={hovered === i ? 4.5 : 3} fill="#6C55E8" stroke="white" strokeWidth={1.5}/>
               )}
             </g>
           ))}
@@ -560,27 +560,27 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
             <p className="text-[9px] text-[#9CA3AF] uppercase tracking-wide whitespace-nowrap">Total Reviews</p>
             <p className="text-sm font-bold text-[#111827] mt-0.5">{totalReviews}</p>
           </div>
-          <div className="w-px bg-[#E5EAE8] flex-shrink-0 self-stretch"/>
+          <div className="w-px bg-[#E5E7EB] flex-shrink-0 self-stretch"/>
           <div className="flex-1 min-w-[100px] px-3 py-2">
             <p className="text-[9px] text-[#9CA3AF] uppercase tracking-wide whitespace-nowrap">Avg Rating</p>
             <p className="text-sm font-bold text-amber-500 mt-0.5">{avgRatingStr}</p>
           </div>
-          <div className="w-px bg-[#E5EAE8] flex-shrink-0 self-stretch"/>
+          <div className="w-px bg-[#E5E7EB] flex-shrink-0 self-stretch"/>
           <div className="flex-1 min-w-[100px] px-3 py-2">
             <p className="text-[9px] text-[#9CA3AF] uppercase tracking-wide whitespace-nowrap">Reply Rate</p>
-            <p className="text-sm font-bold text-[#0D4C3C] mt-0.5">{replyRateProp}</p>
+            <p className="text-sm font-bold text-[#6C55E8] mt-0.5">{replyRateProp}</p>
           </div>
-          <div className="w-px bg-[#E5EAE8] flex-shrink-0 self-stretch"/>
+          <div className="w-px bg-[#E5E7EB] flex-shrink-0 self-stretch"/>
           <div className="flex-1 min-w-[110px] px-3 py-2">
             <p className="text-[9px] text-[#9CA3AF] uppercase tracking-wide whitespace-nowrap">Avg Response Time</p>
             <p className="text-sm font-bold text-[#111827] mt-0.5">{avgResponseTimeProp}</p>
           </div>
-          <div className="w-px bg-[#E5EAE8] flex-shrink-0 self-stretch"/>
+          <div className="w-px bg-[#E5E7EB] flex-shrink-0 self-stretch"/>
           <div className="flex-1 min-w-[100px] px-3 py-2">
             <p className="text-[9px] text-[#9CA3AF] uppercase tracking-wide whitespace-nowrap">Replied ≤24h</p>
             <p className={`text-sm font-bold mt-0.5 ${within24h === '—' ? 'text-[#9CA3AF]' : 'text-emerald-600'}`}>{within24h}</p>
           </div>
-          <div className="w-px bg-[#E5EAE8] flex-shrink-0 self-stretch"/>
+          <div className="w-px bg-[#E5E7EB] flex-shrink-0 self-stretch"/>
           <div className="flex-1 min-w-[100px] px-3 py-2">
             <p className="text-[9px] text-[#9CA3AF] uppercase tracking-wide whitespace-nowrap">Replied ≤48h</p>
             <p className={`text-sm font-bold mt-0.5 ${within48h === '—' ? 'text-[#9CA3AF]' : 'text-blue-600'}`}>{within48h}</p>
@@ -609,7 +609,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bg-white rounded-xl shadow-xl w-full max-w-sm">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E5EAE8]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E5E7EB]">
           <h2 className="text-sm font-semibold text-[#111827]">Keyboard Shortcuts</h2>
           <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#374151]">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
@@ -623,7 +623,7 @@ function ShortcutsModal({ onClose }: { onClose: () => void }) {
             </div>
           ))}
         </div>
-        <div className="px-5 py-3 border-t border-[#E5EAE8]">
+        <div className="px-5 py-3 border-t border-[#E5E7EB]">
           <p className="text-xs text-[#9CA3AF]">Shortcuts work when no input is focused.</p>
         </div>
       </div>
@@ -653,15 +653,15 @@ function PublishModal({ review, locationName, onClose, onPublish, initialText }:
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5EAE8]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E7EB]">
           <h2 className="text-base font-semibold text-[#111827]">Review Reply</h2>
           <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#374151]">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
-        <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E5EAE8]">
+        <div className="px-6 py-4 bg-[#FAFAFA] border-b border-[#E5E7EB]">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-xs font-semibold flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[#EDE9FE] text-[#6C55E8] flex items-center justify-center text-xs font-semibold flex-shrink-0">
               {(review.reviewer_name ?? '?').split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}
             </div>
             <div>
@@ -678,14 +678,14 @@ function PublishModal({ review, locationName, onClose, onPublish, initialText }:
         <div className="px-6 py-4">
           <label className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide block mb-2">Your Reply</label>
           <textarea value={text} onChange={e => setText(e.target.value)} rows={5}
-            className="w-full text-sm text-[#374151] border border-[#D1D5DB] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0D4C3C] resize-none"
+            className="w-full text-sm text-[#374151] border border-[#D1D5DB] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#6C55E8] resize-none"
             placeholder="Write your reply…"/>
           {error && <p className="mt-1.5 text-xs text-red-600">{error}</p>}
         </div>
-        <div className="px-6 py-4 border-t border-[#E5EAE8] flex items-center justify-end gap-2">
+        <div className="px-6 py-4 border-t border-[#E5E7EB] flex items-center justify-end gap-2">
           <button onClick={onClose} className="text-sm text-[#6B7280] font-medium px-4 py-2 rounded-lg hover:bg-[#F3F4F6] transition-colors">Cancel</button>
           <button onClick={handle} disabled={publishing || !text.trim()}
-            className="bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors disabled:opacity-50">
+            className="bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors disabled:opacity-50">
             {publishing ? 'Publishing…' : 'Approve & Publish'}
           </button>
         </div>
@@ -706,7 +706,7 @@ function BulkActionBar({ count, generating, publishing, publishableCount, onGene
       <span className="text-sm font-medium">{count} selected</span>
       <div className="w-px h-4 bg-white/20"/>
       <button onClick={onGenerate} disabled={generating || publishing}
-        className="flex items-center gap-1.5 text-sm font-semibold text-[#0D4C3C] bg-white hover:bg-[#F0F7F5] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+        className="flex items-center gap-1.5 text-sm font-semibold text-[#6C55E8] bg-white hover:bg-[#F3F4F6] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
         <svg className={`w-3.5 h-3.5 ${generating ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
         </svg>
@@ -714,7 +714,7 @@ function BulkActionBar({ count, generating, publishing, publishableCount, onGene
       </button>
       {publishableCount > 0 && (
         <button onClick={onPublish} disabled={publishing || generating}
-          className="flex items-center gap-1.5 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+          className="flex items-center gap-1.5 text-sm font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
           <svg className={`w-3.5 h-3.5 ${publishing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
           </svg>
@@ -758,10 +758,10 @@ function PageSizeDropdown({ value, onChange }: { value: number; onChange: (n: nu
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
       </button>
       {open && (
-        <div className="absolute bottom-full mb-1.5 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1 min-w-[110px]">
+        <div className="absolute bottom-full mb-1.5 left-0 z-50 bg-white border border-[#E5E7EB] rounded-xl shadow-lg py-1 min-w-[110px]">
           {[25,50,75,100].map(n => (
             <button key={n} onClick={() => { onChange(n); setOpen(false); }}
-              className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${value===n ? 'text-[#0D4C3C] font-semibold bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F3F4F6]'}`}>
+              className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${value===n ? 'text-[#6C55E8] font-semibold bg-[#F3F4F6]' : 'text-[#374151] hover:bg-[#F3F4F6]'}`}>
               {n} rows
             </button>
           ))}
@@ -815,12 +815,12 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
       )}
 
       <tr onClick={onToggle}
-        className={`group cursor-pointer border-b border-[#F3F4F6] last:border-0 transition-colors ${focused ? 'ring-1 ring-inset ring-[#0D4C3C]/30' : ''} ${expanded ? 'bg-[#F0F7F5]' : selected ? 'bg-[#E6F2EE] hover:bg-[#DCF0E8]' : uiStatus === 'replied' ? 'bg-green-50 hover:bg-green-100' : uiStatus === 'draft_ready' ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-[#F8FAF9]'}`}>
+        className={`group cursor-pointer border-b border-[#F3F4F6] last:border-0 transition-colors ${focused ? 'ring-1 ring-inset ring-[#6C55E8]/30' : ''} ${expanded ? 'bg-[#F3F4F6]' : selected ? 'bg-[#EDE9FE] hover:bg-[#DCF0E8]' : uiStatus === 'replied' ? 'bg-green-50 hover:bg-green-100' : uiStatus === 'draft_ready' ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-[#F9FAFB]'}`}>
 
         {/* Checkbox — hidden for PUBLISHED reviews */}
         <td className="pl-4 pr-2 py-3 w-10" onClick={e => { e.stopPropagation(); if (uiStatus !== 'replied') onSelect(e); }}>
           {uiStatus !== 'replied' ? (
-            <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${selected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] group-hover:border-[#9CA3AF]'}`}>
+            <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${selected ? 'bg-[#111827] border-[#6C55E8]' : 'border-[#D1D5DB] group-hover:border-[#9CA3AF]'}`}>
               {selected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
             </div>
           ) : (
@@ -834,7 +834,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
         {/* Reviewer */}
         <td className="px-3 py-3 w-44">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-xs font-bold flex-shrink-0">{initials}</div>
+            <div className="w-8 h-8 rounded-lg bg-[#EDE9FE] text-[#6C55E8] flex items-center justify-center text-xs font-bold flex-shrink-0">{initials}</div>
             <div className="min-w-0">
               <p className="text-sm font-medium text-[#111827] truncate leading-tight">{review.reviewer_name ?? 'Anonymous'}</p>
               <Stars rating={review.rating}/>
@@ -880,7 +880,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
           <div className="flex items-center gap-2">
             {uiStatus === 'pending' && (
               <button onClick={() => onGenerateDraft(review.id)} disabled={isDrafting}
-                className="flex items-center gap-1.5 text-xs font-medium text-[#0D4C3C] hover:text-[#083F32] border border-[#0D4C3C]/30 hover:border-[#0D4C3C] bg-white hover:bg-[#F0F7F5] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap">
+                className="flex items-center gap-1.5 text-xs font-medium text-[#6C55E8] hover:text-[#083F32] border border-[#6C55E8]/30 hover:border-[#6C55E8] bg-white hover:bg-[#F3F4F6] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap">
                 <svg className={`w-3.5 h-3.5 ${isDrafting ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
                 </svg>
@@ -889,7 +889,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
             )}
             {uiStatus === 'draft_ready' && (
               <button onClick={() => { setModalInitialText(undefined); setModalOpen(true); }} disabled={isPublishing}
-                className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap">
+                className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap">
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
                 Approve & Publish
               </button>
@@ -917,7 +917,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
 
       {/* Expanded */}
       {expanded && (
-        <tr className="bg-[#F8FAF9] border-b border-[#E5EAE8]">
+        <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB]">
           <td colSpan={8} className="pl-4 pr-4 py-4">
             <div className="space-y-4">
               {/* Full review */}
@@ -933,12 +933,12 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <button onClick={() => setHistoryTab(false)}
-                      className={`text-xs font-semibold pb-0.5 border-b-2 transition-colors ${!historyTab ? 'border-[#0D4C3C] text-[#0D4C3C]' : 'border-transparent text-[#9CA3AF] hover:text-[#6B7280]'}`}>
+                      className={`text-xs font-semibold pb-0.5 border-b-2 transition-colors ${!historyTab ? 'border-[#6C55E8] text-[#6C55E8]' : 'border-transparent text-[#9CA3AF] hover:text-[#6B7280]'}`}>
                       Draft
                     </button>
                     {review.draft_history.length > 0 && (
                       <button onClick={() => setHistoryTab(true)}
-                        className={`text-xs font-semibold pb-0.5 border-b-2 transition-colors ${historyTab ? 'border-[#0D4C3C] text-[#0D4C3C]' : 'border-transparent text-[#9CA3AF] hover:text-[#6B7280]'}`}>
+                        className={`text-xs font-semibold pb-0.5 border-b-2 transition-colors ${historyTab ? 'border-[#6C55E8] text-[#6C55E8]' : 'border-transparent text-[#9CA3AF] hover:text-[#6B7280]'}`}>
                         History ({review.draft_history.length})
                       </button>
                     )}
@@ -946,14 +946,14 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
 
                   {!historyTab ? (
                     <>
-                      <p className="text-sm text-[#374151] bg-white border border-[#E5EAE8] rounded-lg px-3 py-2.5 leading-relaxed mb-2">{review.reply_draft}</p>
+                      <p className="text-sm text-[#374151] bg-white border border-[#E5E7EB] rounded-lg px-3 py-2.5 leading-relaxed mb-2">{review.reply_draft}</p>
                       <div className="flex gap-2">
                         <button onClick={e => { e.stopPropagation(); setModalInitialText(undefined); setModalOpen(true); }}
-                          className="text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-3 py-1.5 rounded-lg transition-colors">
+                          className="text-xs font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-3 py-1.5 rounded-lg transition-colors">
                           Approve & Publish
                         </button>
                         <button onClick={e => { e.stopPropagation(); onGenerateDraft(review.id); }}
-                          className="text-xs text-[#6B7280] hover:text-[#0D4C3C] font-medium px-3 py-1.5 rounded-lg hover:bg-[#F0F7F5] transition-colors">
+                          className="text-xs text-[#6B7280] hover:text-[#6C55E8] font-medium px-3 py-1.5 rounded-lg hover:bg-[#F3F4F6] transition-colors">
                           Regenerate
                         </button>
                         <button onClick={async e => { e.stopPropagation(); await onDiscard(review.id); }}
@@ -965,7 +965,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
                   ) : (
                     <div className="space-y-2">
                       {[...review.draft_history].reverse().map((h, i) => (
-                        <div key={i} className="bg-white border border-[#E5EAE8] rounded-lg px-3 py-2.5">
+                        <div key={i} className="bg-white border border-[#E5E7EB] rounded-lg px-3 py-2.5">
                           <p className="text-[10px] text-[#9CA3AF] mb-1">{fmtDate(h.created_at)}</p>
                           <p className="text-sm text-[#374151] leading-relaxed">{h.draft}</p>
                         </div>
@@ -978,7 +978,7 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
               {uiStatus === 'replied' && (review.reply_text || review.reply_draft) && (
                 <div>
                   <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-1.5">Published Reply</p>
-                  <p className="text-sm text-[#374151] bg-white border border-[#E5EAE8] rounded-lg px-3 py-2.5 leading-relaxed">{review.reply_text ?? review.reply_draft}</p>
+                  <p className="text-sm text-[#374151] bg-white border border-[#E5E7EB] rounded-lg px-3 py-2.5 leading-relaxed">{review.reply_text ?? review.reply_draft}</p>
                 </div>
               )}
 
@@ -986,23 +986,23 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
               {uiStatus === 'pending' && (
                 <div className="flex flex-col gap-2">
                   <button onClick={e => { e.stopPropagation(); onGenerateDraft(review.id); }} disabled={isDrafting}
-                    className="flex items-center gap-2 text-sm font-medium text-[#0D4C3C] hover:text-[#083F32] transition-colors disabled:opacity-50 self-start">
+                    className="flex items-center gap-2 text-sm font-medium text-[#6C55E8] hover:text-[#083F32] transition-colors disabled:opacity-50 self-start">
                     <svg className={`w-4 h-4 ${isDrafting ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
                     </svg>
                     {isDrafting ? 'Generating…' : 'Generate AI Draft'}
                   </button>
                   <button onClick={e => { e.stopPropagation(); setShowManual(m => !m); }}
-                    className="text-xs text-[#6B7280] hover:text-[#0D4C3C] self-start transition-colors">
+                    className="text-xs text-[#6B7280] hover:text-[#6C55E8] self-start transition-colors">
                     Write manually
                   </button>
                   {showManual && (
                     <div onClick={e => e.stopPropagation()}>
                       <textarea value={manualText} onChange={e => setManualText(e.target.value)} rows={4}
                         placeholder="Write your reply…"
-                        className="w-full text-sm text-[#374151] border border-[#D1D5DB] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0D4C3C] resize-none transition-colors"/>
+                        className="w-full text-sm text-[#374151] border border-[#D1D5DB] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#6C55E8] resize-none transition-colors"/>
                       <button onClick={async () => { await onPublish(review.id, manualText); }} disabled={!manualText.trim()}
-                        className="mt-2 text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+                        className="mt-2 text-xs font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
                         Publish
                       </button>
                     </div>
@@ -1053,20 +1053,20 @@ function AutoScheduleModal({ mode, onConfirm, onCancel }: {
         <p className="text-xs font-semibold text-[#374151] uppercase tracking-wide mb-3">When should this run?</p>
         <div className="space-y-3 mb-6">
           <label className="flex items-center gap-3 cursor-pointer">
-            <input type="radio" name="sched" value="always" checked={schedType === 'always'} onChange={() => setSchedType('always')} className="accent-[#0D4C3C]"/>
+            <input type="radio" name="sched" value="always" checked={schedType === 'always'} onChange={() => setSchedType('always')} className="accent-[#6C55E8]"/>
             <span className="text-sm font-medium text-[#374151]">Always active</span>
           </label>
           <label className="flex items-start gap-3 cursor-pointer">
-            <input type="radio" name="sched" value="scheduled" checked={schedType === 'scheduled'} onChange={() => setSchedType('scheduled')} className="accent-[#0D4C3C] mt-0.5"/>
+            <input type="radio" name="sched" value="scheduled" checked={schedType === 'scheduled'} onChange={() => setSchedType('scheduled')} className="accent-[#6C55E8] mt-0.5"/>
             <div className="flex-1">
               <span className="text-sm font-medium text-[#374151]">Custom schedule</span>
               {schedType === 'scheduled' && (
                 <div className="flex items-center gap-2 mt-2">
                   <input type="time" value={from} onChange={e => setFrom(e.target.value)}
-                    className="text-sm border border-[#D1D5DB] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#0D4C3C]"/>
+                    className="text-sm border border-[#D1D5DB] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#6C55E8]"/>
                   <span className="text-sm text-[#6B7280]">to</span>
                   <input type="time" value={to} onChange={e => setTo(e.target.value)}
-                    className="text-sm border border-[#D1D5DB] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#0D4C3C]"/>
+                    className="text-sm border border-[#D1D5DB] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#6C55E8]"/>
                 </div>
               )}
             </div>
@@ -1079,7 +1079,7 @@ function AutoScheduleModal({ mode, onConfirm, onCancel }: {
             Cancel
           </button>
           <button onClick={() => onConfirm({ type: schedType, from, to })}
-            className="px-4 py-2 text-sm font-semibold bg-[#0D4C3C] text-white rounded-lg hover:bg-[#083F32] transition-colors">
+            className="px-4 py-2 text-sm font-semibold bg-[#111827] text-white rounded-lg hover:bg-[#083F32] transition-colors">
             Enable
           </button>
         </div>
@@ -1135,14 +1135,14 @@ function AutoSyncModal({ onConfirm, onCancel }: {
         <div className="flex gap-2 flex-wrap mb-6">
           {opts.map(o => (
             <button key={o.value} onClick={() => setInterval(o.value)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${interval === o.value ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+              className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${interval === o.value ? 'bg-[#111827] text-white border-[#6C55E8]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#6C55E8] hover:text-[#6C55E8]'}`}>
               {o.label}
             </button>
           ))}
         </div>
         <div className="flex justify-end gap-2">
           <button onClick={onCancel} className="px-4 py-2 text-sm text-[#6B7280] hover:text-[#111827] transition-colors rounded-lg hover:bg-[#F3F4F6]">Cancel</button>
-          <button onClick={() => onConfirm(interval)} className="px-4 py-2 text-sm font-semibold bg-[#0D4C3C] text-white rounded-lg hover:bg-[#083F32] transition-colors">Enable</button>
+          <button onClick={() => onConfirm(interval)} className="px-4 py-2 text-sm font-semibold bg-[#111827] text-white rounded-lg hover:bg-[#083F32] transition-colors">Enable</button>
         </div>
       </div>
     </div>
@@ -1607,8 +1607,8 @@ async function handleFlag(id: string) {
   return (
     <div className="relative h-full flex flex-col overflow-hidden">
       {/* Ambient blobs */}
-      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
-      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#111827]/5 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#111827]/4 blur-3xl" aria-hidden="true"/>
 
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)}/>}
       {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
@@ -1655,7 +1655,7 @@ async function handleFlag(id: string) {
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           <button onClick={() => setShowChart(s => !s)} title={showChart ? 'Hide chart' : 'Show chart'}
-            className={`p-2 rounded-lg transition-colors ${showChart ? 'text-[#0D4C3C] bg-[#E6F2EE]' : 'text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6]'}`}>
+            className={`p-2 rounded-lg transition-colors ${showChart ? 'text-[#6C55E8] bg-[#EDE9FE]' : 'text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6]'}`}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
             </svg>
@@ -1679,8 +1679,8 @@ async function handleFlag(id: string) {
             onClick={() => autoSyncEnabled ? setConfirmOffModal('sync') : setAutoModal('sync')}
             disabled={!isConnected}
             title={!isConnected ? 'Connect Google Business Profile first' : autoSyncEnabled ? `Auto Sync ON every ${autoSyncInterval} — click to disable` : 'Enable Auto Sync'}
-            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoSyncEnabled ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
-            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${autoSyncEnabled ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}/>
+            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoSyncEnabled ? 'bg-[#EDE9FE] text-[#6C55E8] border-[#6C55E8]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${autoSyncEnabled ? 'bg-[#111827]' : 'bg-[#D1D5DB]'}`}/>
             {autoSyncEnabled ? `Auto Sync · ${autoSyncInterval}` : 'Auto Sync'}
           </button>
 
@@ -1689,10 +1689,10 @@ async function handleFlag(id: string) {
             onClick={() => autoDraftEnabled ? setConfirmOffModal('draft') : setAutoModal('draft')}
             disabled={!isConnected}
             title={!isConnected ? 'Connect Google Business Profile first' : autoDraftEnabled ? `Auto Draft ON${autoDraftSchedule.type === 'scheduled' ? ` (${autoDraftSchedule.from}–${autoDraftSchedule.to})` : ''} — click to disable` : 'Enable Auto Draft'}
-            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoDraftEnabled ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
+            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoDraftEnabled ? 'bg-[#EDE9FE] text-[#6C55E8] border-[#6C55E8]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
             {autoRunning === 'draft'
               ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-              : <span className={`w-2 h-2 rounded-full flex-shrink-0 ${autoDraftEnabled ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}/>}
+              : <span className={`w-2 h-2 rounded-full flex-shrink-0 ${autoDraftEnabled ? 'bg-[#111827]' : 'bg-[#D1D5DB]'}`}/>}
             Auto Draft
           </button>
 
@@ -1701,16 +1701,16 @@ async function handleFlag(id: string) {
             onClick={() => autoPublishEnabled ? setConfirmOffModal('publish') : setAutoModal('publish')}
             disabled={!isConnected}
             title={!isConnected ? 'Connect Google Business Profile first' : autoPublishEnabled ? `Auto Publish ON${autoPublishSchedule.type === 'scheduled' ? ` (${autoPublishSchedule.from}–${autoPublishSchedule.to})` : ''} — click to disable` : 'Enable Auto Publish'}
-            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoPublishEnabled ? 'bg-[#E6F2EE] text-[#0D4C3C] border-[#0D4C3C]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
+            className={`flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${autoPublishEnabled ? 'bg-[#EDE9FE] text-[#6C55E8] border-[#6C55E8]/40 hover:bg-[#DCF0E8]' : 'text-[#6B7280] border-[#D1D5DB] hover:text-[#111827] hover:border-[#374151]'}`}>
             {autoRunning === 'publish'
               ? <svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-              : <span className={`w-2 h-2 rounded-full flex-shrink-0 ${autoPublishEnabled ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}/>}
+              : <span className={`w-2 h-2 rounded-full flex-shrink-0 ${autoPublishEnabled ? 'bg-[#111827]' : 'bg-[#D1D5DB]'}`}/>}
             Auto Publish
           </button>
 
           <button onClick={handleSync} disabled={syncing || !isConnected}
             title={!isConnected ? 'Connect Google Business Profile first' : 'Sync latest reviews'}
-            className="flex items-center gap-2 bg-[#0D4C3C] disabled:opacity-40 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:bg-[#083F32] disabled:cursor-not-allowed">
+            className="flex items-center gap-2 bg-[#111827] disabled:opacity-40 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors hover:bg-[#083F32] disabled:cursor-not-allowed">
             <svg className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
@@ -1723,7 +1723,7 @@ async function handleFlag(id: string) {
       {showChart && (
         <div className="px-4 md:px-10 pt-4 pb-5 flex-shrink-0">
           <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 px-6 py-5">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl"/>
+            <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl"/>
             <div className="relative">
               <ReviewsLineChart
                 reviews={activeReviews}
@@ -1743,10 +1743,10 @@ async function handleFlag(id: string) {
       {/* Filter bar + Table — unified card, same horizontal margin */}
       <div className="flex-1 flex flex-col min-h-0">
         <div className="flex-1 min-h-0 px-3 md:px-6 pt-4 flex flex-col">
-          <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-[#E5EAE8] shadow-sm">
+          <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-[#E5E7EB] shadow-sm">
 
         {/* Filter bar — top of card; no overflow-hidden here so dropdowns escape */}
-        <div className="relative z-20 flex-shrink-0 bg-white border-b border-[#E5EAE8] px-3 md:px-4 py-2.5 rounded-t-2xl">
+        <div className="relative z-20 flex-shrink-0 bg-white border-b border-[#E5E7EB] px-3 md:px-4 py-2.5 rounded-t-2xl">
           <div className="flex items-center gap-2 flex-wrap">
 
             {/* Status tabs */}
@@ -1757,7 +1757,7 @@ async function handleFlag(id: string) {
                 <button key={key} onClick={() => { setStatusFilter(key); setPage(1); }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     active
-                      ? 'bg-[#0D4C3C] text-white'
+                      ? 'bg-[#111827] text-white'
                       : 'text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#374151]'
                   }`}>
                   {labels[key]}
@@ -1778,7 +1778,7 @@ async function handleFlag(id: string) {
               </svg>
               <input type="text" placeholder="Search…" value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1); }}
-                className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-lg focus:outline-none focus:border-[#0D4C3C] w-44 transition-colors"/>
+                className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-lg focus:outline-none focus:border-[#6C55E8] w-44 transition-colors"/>
             </div>
 
             <FilterDropdown label="Rating" value={String(ratingFilter)}
@@ -1808,7 +1808,7 @@ async function handleFlag(id: string) {
             <button
               onClick={() => { setWithBodyFilter(f => !f); setPage(1); }}
               title="Has written text only"
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${withBodyFilter ? 'bg-[#E6F2EE] border-[#0D4C3C] text-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'}`}>
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${withBodyFilter ? 'bg-[#EDE9FE] border-[#6C55E8] text-[#6C55E8]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#6C55E8] hover:text-[#6C55E8]'}`}>
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
               </svg>
@@ -1826,15 +1826,15 @@ async function handleFlag(id: string) {
               {hasFilters && <span className="text-xs text-[#9CA3AF]">{filtered.length} result{filtered.length!==1?'s':''}</span>}
               {hasFilters && <button onClick={clearAll} className="text-xs text-[#9CA3AF] hover:text-red-500 font-medium transition-colors">Clear all</button>}
               {hasFilters && !showPresetInput && (
-                <button onClick={() => setShowPresetInput(true)} className="text-xs text-[#0D4C3C] font-medium hover:underline transition-colors">Save preset</button>
+                <button onClick={() => setShowPresetInput(true)} className="text-xs text-[#6C55E8] font-medium hover:underline transition-colors">Save preset</button>
               )}
               {showPresetInput && (
                 <div className="flex items-center gap-1.5">
                   <input autoFocus type="text" value={presetName} onChange={e => setPresetName(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') savePreset(); if (e.key === 'Escape') setShowPresetInput(false); }}
                     placeholder="Preset name…"
-                    className="text-xs border border-[#D1D5DB] rounded-lg px-2 py-1 focus:outline-none focus:border-[#0D4C3C] w-32"/>
-                  <button onClick={savePreset} className="text-xs text-white bg-[#0D4C3C] px-2 py-1 rounded-lg hover:bg-[#083F32]">Save</button>
+                    className="text-xs border border-[#D1D5DB] rounded-lg px-2 py-1 focus:outline-none focus:border-[#6C55E8] w-32"/>
+                  <button onClick={savePreset} className="text-xs text-white bg-[#111827] px-2 py-1 rounded-lg hover:bg-[#083F32]">Save</button>
                   <button onClick={() => setShowPresetInput(false)} className="text-xs text-[#9CA3AF] hover:text-red-500">×</button>
                 </div>
               )}
@@ -1846,7 +1846,7 @@ async function handleFlag(id: string) {
               <span className="text-xs text-[#9CA3AF]">Presets:</span>
               {presets.map(p => (
                 <div key={p.id} className="flex items-center gap-0.5 bg-[#F3F4F6] rounded-lg px-2 py-0.5">
-                  <button onClick={() => applyPreset(p)} className="text-xs text-[#374151] hover:text-[#0D4C3C] font-medium">{p.name}</button>
+                  <button onClick={() => applyPreset(p)} className="text-xs text-[#374151] hover:text-[#6C55E8] font-medium">{p.name}</button>
                   <button onClick={() => deletePreset(p.id)} className="text-[#9CA3AF] hover:text-red-500 ml-1 text-xs leading-none">×</button>
                 </div>
               ))}
@@ -1866,18 +1866,18 @@ async function handleFlag(id: string) {
             <p className="text-sm font-medium text-[#374151] mb-1">
               {reviews.length === 0 ? (isConnected ? 'No reviews yet — click Sync Reviews' : 'Connect Google Business Profile from Settings') : 'No reviews match your filters'}
             </p>
-            {hasFilters && <button onClick={clearAll} className="text-xs text-[#0D4C3C] underline mt-1">Clear filters</button>}
+            {hasFilters && <button onClick={clearAll} className="text-xs text-[#6C55E8] underline mt-1">Clear filters</button>}
           </div>
         ) : (
           <div className="flex-1 min-h-0 flex flex-col">
             {/* Table header — never scrolls */}
-            <div className="flex-shrink-0 border-b border-[#E5EAE8] bg-[#F8FAF9] overflow-x-auto">
+            <div className="flex-shrink-0 border-b border-[#E5E7EB] bg-[#F9FAFB] overflow-x-auto">
               <table className="w-full min-w-[700px]">
                 <thead>
                   <tr>
                     <th className="pl-4 pr-2 py-3 w-10">
                       <div onClick={toggleSelectAll}
-                        className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${allPageSelected ? 'bg-[#0D4C3C] border-[#0D4C3C]' : 'border-[#D1D5DB] hover:border-[#0D4C3C]'}`}>
+                        className={`w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors ${allPageSelected ? 'bg-[#111827] border-[#6C55E8]' : 'border-[#D1D5DB] hover:border-[#6C55E8]'}`}>
                         {allPageSelected && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
                       </div>
                     </th>
@@ -1930,7 +1930,7 @@ async function handleFlag(id: string) {
           </div>
 
           {/* Pagination — inside card */}
-          <div className="px-4 md:px-6 py-2.5 border-t border-[#E5EAE8]/60 flex items-center justify-between flex-shrink-0 bg-white rounded-b-2xl">
+          <div className="px-4 md:px-6 py-2.5 border-t border-[#E5E7EB]/60 flex items-center justify-between flex-shrink-0 bg-white rounded-b-2xl">
             <div className="flex items-center gap-3">
               <p className="text-xs text-[#9CA3AF]">
                 {filtered.length === 0
@@ -1955,7 +1955,7 @@ async function handleFlag(id: string) {
                 n==='...'
                   ? <span key={`e${i}`} className="w-7 h-7 flex items-center justify-center text-xs text-[#9CA3AF]">…</span>
                   : <button key={n} onClick={()=>setPage(n as number)}
-                      className={`w-7 h-7 rounded-md text-xs font-medium transition-colors ${page===n?'bg-[#0D4C3C] text-white':'text-[#6B7280] hover:bg-[#F3F4F6]'}`}>{n}</button>
+                      className={`w-7 h-7 rounded-md text-xs font-medium transition-colors ${page===n?'bg-[#111827] text-white':'text-[#6B7280] hover:bg-[#F3F4F6]'}`}>{n}</button>
               )}
               <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages}
                 className="p-1.5 rounded-md text-[#6B7280] hover:text-[#374151] hover:bg-[#F3F4F6] disabled:opacity-30 disabled:cursor-not-allowed">

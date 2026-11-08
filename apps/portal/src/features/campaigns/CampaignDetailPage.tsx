@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
@@ -104,7 +104,7 @@ export function CampaignDetailPage() {
     return (
       <div className="px-4 md:px-8 py-6">
         <p className="text-sm text-[#374151]">Campaign not found.</p>
-        <Link to="/campaigns" className="text-xs text-[#0D4C3C] hover:underline mt-2 inline-block">← Back to Campaigns</Link>
+        <Link to="/campaigns" className="text-xs text-[#6C55E8] hover:underline mt-2 inline-block">← Back to Campaigns</Link>
       </div>
     );
   }
@@ -121,7 +121,7 @@ export function CampaignDetailPage() {
     <div className="px-4 md:px-8 py-6">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 mb-6">
-        <Link to="/campaigns" className="text-sm text-[#6B7280] hover:text-[#0D4C3C] transition-colors">Campaigns</Link>
+        <Link to="/campaigns" className="text-sm text-[#6B7280] hover:text-[#6C55E8] transition-colors">Campaigns</Link>
         <svg className="w-3.5 h-3.5 text-[#D1D5DB]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
         <span className="text-sm font-medium text-[#111827]">{campaign.name}</span>
       </div>
@@ -145,7 +145,7 @@ export function CampaignDetailPage() {
       <div className="grid grid-cols-5 gap-4 mb-6">
         <StatCard label="Total Contacts"  value={campaign.total_contacts} />
         <StatCard label="Delivered"       value={campaign.sent_count}     color="text-[#1D4ED8]" sub={pct(campaign.sent_count, campaign.total_contacts) + ' delivery'} />
-        <StatCard label="Opened"          value={campaign.opened_count}   color="text-[#0D4C3C]" sub={pct(campaign.opened_count, campaign.sent_count) + ' open rate'} />
+        <StatCard label="Opened"          value={campaign.opened_count}   color="text-[#6C55E8]" sub={pct(campaign.opened_count, campaign.sent_count) + ' open rate'} />
         <StatCard label="Clicked"         value={campaign.clicked_count}  color="text-[#B45309]" sub={pct(campaign.clicked_count, campaign.sent_count) + ' click rate'} />
         <StatCard label="Unsubscribed"    value={campaign.unsubscribed_count} color="text-[#DC2626]" sub={pct(campaign.unsubscribed_count, campaign.sent_count)} />
       </div>
@@ -156,7 +156,7 @@ export function CampaignDetailPage() {
         <div className="space-y-3">
           {[
             { label: 'Sent',         val: campaign.sent_count,          max: campaign.total_contacts, color: 'bg-[#1D4ED8]' },
-            { label: 'Opened',       val: campaign.opened_count,        max: campaign.total_contacts, color: 'bg-[#0D4C3C]' },
+            { label: 'Opened',       val: campaign.opened_count,        max: campaign.total_contacts, color: 'bg-[#111827]' },
             { label: 'Clicked',      val: campaign.clicked_count,       max: campaign.total_contacts, color: 'bg-[#B45309]' },
             { label: 'Unsubscribed', val: campaign.unsubscribed_count,  max: campaign.total_contacts, color: 'bg-[#DC2626]' },
           ].map(row => (
@@ -202,7 +202,7 @@ export function CampaignDetailPage() {
               {['all', 'sent', 'pending', 'failed', 'opened', 'unsubscribed'].map(s => (
                 <button key={s} onClick={() => setStatusFilter(s)}
                   className={`text-[10px] font-medium px-2.5 py-1 rounded-lg transition-colors capitalize ${
-                    statusFilter === s ? 'bg-[#0D4C3C] text-white' : 'bg-[#F3F4F6] text-[#6B7280] hover:bg-[#E5EAE8]'
+                    statusFilter === s ? 'bg-[#111827] text-white' : 'bg-[#F3F4F6] text-[#6B7280] hover:bg-[#E5E7EB]'
                   }`}>
                   {s}{s !== 'all' && statusCounts[s] ? ` (${statusCounts[s]})` : ''}
                 </button>
@@ -211,7 +211,7 @@ export function CampaignDetailPage() {
             <div className="relative">
               <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
               <input value={contactQ} onChange={e => setContactQ(e.target.value)} placeholder="Search contacts…"
-                className="pl-7 pr-3 py-1.5 text-xs border border-[#E5EAE8] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827] w-48" />
+                className="pl-7 pr-3 py-1.5 text-xs border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827] w-48" />
             </div>
           </div>
         </div>
@@ -237,7 +237,7 @@ export function CampaignDetailPage() {
                 <td className="px-5 py-3 text-xs text-[#6B7280]">{c.sent_at ? fmtDate(c.sent_at) : '—'}</td>
                 <td className="px-5 py-3">
                   {c.opened_at
-                    ? <span className="text-xs text-[#0D4C3C] font-medium">{fmtDate(c.opened_at)}</span>
+                    ? <span className="text-xs text-[#6C55E8] font-medium">{fmtDate(c.opened_at)}</span>
                     : <span className="text-[#D1D5DB]">—</span>}
                 </td>
                 <td className="px-5 py-3">

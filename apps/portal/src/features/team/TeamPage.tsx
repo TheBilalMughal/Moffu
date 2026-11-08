@@ -27,7 +27,7 @@ const ROLE_LABELS: Record<MemberRole, string> = {
 };
 
 const ROLE_COLORS: Record<MemberRole, string> = {
-  owner:   'bg-[#E6F2EE] text-[#0D4C3C]',
+  owner:   'bg-[#EDE9FE] text-[#6C55E8]',
   admin:   'bg-[#EEF2FF] text-[#4338CA]',
   manager: 'bg-[#FEF3C7] text-[#92400E]',
   viewer:  'bg-[#F3F4F6] text-[#374151]',
@@ -89,8 +89,8 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4" onClick={onClose}>
-      <div className="bg-white border border-[#E5EAE8] rounded-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5EAE8]">
+      <div className="bg-white border border-[#E5E7EB] rounded-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E7EB]">
           <h2 className="text-sm font-semibold text-[#111827]">Invite team member</h2>
           <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#374151] p-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,7 +119,7 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
               onChange={(e) => setEmail(e.target.value)}
               placeholder="teammate@example.com"
               disabled={atLimit}
-              className="w-full border border-[#D1D5DB] rounded-lg px-3 py-2 text-sm text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]"
+              className="w-full border border-[#D1D5DB] rounded-lg px-3 py-2 text-sm text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]"
             />
           </div>
 
@@ -130,7 +130,7 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
                 type="button"
                 disabled={atLimit}
                 onClick={() => setRoleOpen(o => !o)}
-                className={`w-full flex items-center justify-between px-3 py-2 text-sm border rounded-lg transition-colors ${atLimit ? 'bg-[#F9FAFB] text-[#9CA3AF] border-[#D1D5DB] cursor-not-allowed' : 'bg-white text-[#111827] border-[#D1D5DB] hover:border-[#0D4C3C]'}`}
+                className={`w-full flex items-center justify-between px-3 py-2 text-sm border rounded-lg transition-colors ${atLimit ? 'bg-[#F9FAFB] text-[#9CA3AF] border-[#D1D5DB] cursor-not-allowed' : 'bg-white text-[#111827] border-[#D1D5DB] hover:border-[#6C55E8]'}`}
               >
                 <span>{INVITE_ROLES.find(r => r.value === role)?.label ?? 'Viewer'}</span>
                 <svg className="w-4 h-4 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,13 +138,13 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
                 </svg>
               </button>
               {roleOpen && !atLimit && (
-                <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1 overflow-hidden">
+                <div className="absolute top-full mt-1 left-0 right-0 z-50 bg-white border border-[#E5E7EB] rounded-xl shadow-lg py-1 overflow-hidden">
                   {INVITE_ROLES.map(r => (
                     <button
                       key={r.value}
                       type="button"
                       onClick={() => { setRole(r.value); setRoleOpen(false); }}
-                      className={`w-full flex items-center justify-between px-3.5 py-2.5 text-sm transition-colors ${r.value === role ? 'bg-[#F0F7F5] text-[#0D4C3C] font-medium' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
+                      className={`w-full flex items-center justify-between px-3.5 py-2.5 text-sm transition-colors ${r.value === role ? 'bg-[#F3F4F6] text-[#6C55E8] font-medium' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
                     >
                       <span>{r.label}</span>
                       <span className="text-xs text-[#9CA3AF]">{r.desc}</span>
@@ -164,7 +164,7 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
             <button
               type="submit"
               disabled={loading || atLimit}
-              className="px-5 py-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-5 py-2 bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Sending…' : 'Send invitation'}
             </button>
@@ -212,12 +212,12 @@ function RoleMenu({ orgId, memberId, current, onDone }: {
         </svg>
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-[#E5EAE8] rounded-xl shadow-sm z-20 min-w-[110px] overflow-hidden">
+        <div className="absolute top-full left-0 mt-1 bg-white border border-[#E5E7EB] rounded-xl shadow-sm z-20 min-w-[110px] overflow-hidden">
           {(['admin', 'manager', 'viewer'] as MemberRole[]).map((r) => (
             <button
               key={r}
               onClick={() => change(r)}
-              className={`w-full text-left px-3 py-2 text-xs hover:bg-[#F9FAFB] ${r === current ? 'text-[#0D4C3C] font-semibold' : 'text-[#374151]'}`}
+              className={`w-full text-left px-3 py-2 text-xs hover:bg-[#F9FAFB] ${r === current ? 'text-[#6C55E8] font-semibold' : 'text-[#374151]'}`}
             >
               {ROLE_LABELS[r]}
             </button>
@@ -324,8 +324,8 @@ export function TeamPage() {
   return (
     <div className="relative h-full flex flex-col overflow-hidden">
       {/* Ambient blobs */}
-      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
-      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#111827]/5 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#111827]/4 blur-3xl" aria-hidden="true"/>
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8">
@@ -339,7 +339,7 @@ export function TeamPage() {
         {canManage && (
           <button
             onClick={() => setShowInvite(true)}
-            className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
+            className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -360,7 +360,7 @@ export function TeamPage() {
               : seatUsed },
         ].map(({ label, value }) => (
           <div key={label} className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 px-5 py-4">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
             <p className="text-xs text-[#6B7280] font-medium">{label}</p>
             <p className="mt-1 text-xl font-bold text-[#111827]">{value}</p>
           </div>
@@ -370,9 +370,9 @@ export function TeamPage() {
       {/* Seat usage bar */}
       {seatLimit !== null && (
         <div className="mb-5">
-          <div className="h-1 bg-[#E5EAE8] rounded-full overflow-hidden">
+          <div className="h-1 bg-[#E5E7EB] rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all ${seatUsed >= seatLimit ? 'bg-amber-400' : 'bg-[#0D4C3C]'}`}
+              className={`h-full rounded-full transition-all ${seatUsed >= seatLimit ? 'bg-amber-400' : 'bg-[#111827]'}`}
               style={{ width: `${Math.min((seatUsed / seatLimit) * 100, 100)}%` }}
             />
           </div>
@@ -387,7 +387,7 @@ export function TeamPage() {
         <div className="py-12 text-sm text-[#9CA3AF]">Setting up your organisationâ€¦</div>
       ) : loading ? (
         <div className="flex items-center gap-3 py-12">
-          <div className="w-5 h-5 border-2 border-[#0D4C3C] border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-[#6C55E8] border-t-transparent rounded-full animate-spin" />
           <span className="text-sm text-[#6B7280]">Loading teamâ€¦</span>
         </div>
       ) : (
@@ -395,14 +395,14 @@ export function TeamPage() {
           {/* Tabs + Search + Filter */}
           <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
             {/* Tabs */}
-            <div className="flex border-b border-[#E5EAE8]">
+            <div className="flex border-b border-[#E5E7EB]">
               {(['members', 'invitations'] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
                   className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
                     tab === t
-                      ? 'border-[#0D4C3C] text-[#0D4C3C]'
+                      ? 'border-[#6C55E8] text-[#6C55E8]'
                       : 'border-transparent text-[#6B7280] hover:text-[#111827]'
                   }`}
                 >
@@ -423,7 +423,7 @@ export function TeamPage() {
                   placeholder="Search name or emailâ€¦"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-xl focus:outline-none focus:border-[#0D4C3C] w-52 placeholder-[#9CA3AF]"
+                  className="pl-8 pr-3 py-1.5 text-sm border border-[#D1D5DB] rounded-xl focus:outline-none focus:border-[#6C55E8] w-52 placeholder-[#9CA3AF]"
                 />
                 {search && (
                   <button onClick={() => setSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151]">
@@ -439,7 +439,7 @@ export function TeamPage() {
                 <button
                   type="button"
                   onClick={() => setRoleFilterOpen(o => !o)}
-                  className={`flex items-center gap-1.5 pl-3 pr-2.5 py-1.5 text-sm border rounded-xl transition-colors ${roleFilter !== 'all' ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#374151] hover:border-[#0D4C3C] bg-white'}`}
+                  className={`flex items-center gap-1.5 pl-3 pr-2.5 py-1.5 text-sm border rounded-xl transition-colors ${roleFilter !== 'all' ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8] font-medium' : 'border-[#D1D5DB] text-[#374151] hover:border-[#6C55E8] bg-white'}`}
                 >
                   <span>{roleFilter === 'all' ? 'All roles' : ROLE_LABELS[roleFilter]}</span>
                   <svg className="w-3.5 h-3.5 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -447,13 +447,13 @@ export function TeamPage() {
                   </svg>
                 </button>
                 {roleFilterOpen && (
-                  <div className="absolute top-full right-0 mt-1.5 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1 min-w-[130px]">
+                  <div className="absolute top-full right-0 mt-1.5 z-50 bg-white border border-[#E5E7EB] rounded-xl shadow-lg py-1 min-w-[130px]">
                     {(['all' as const, ...ALL_ROLES]).map((r) => (
                       <button
                         key={r}
                         type="button"
                         onClick={() => { setRoleFilter(r); setRoleFilterOpen(false); }}
-                        className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${r === roleFilter ? 'bg-[#F0F7F5] text-[#0D4C3C] font-medium' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
+                        className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${r === roleFilter ? 'bg-[#F3F4F6] text-[#6C55E8] font-medium' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}
                       >
                         {r === 'all' ? 'All roles' : ROLE_LABELS[r as MemberRole]}
                       </button>
@@ -466,9 +466,9 @@ export function TeamPage() {
 
           {/* â"€â"€ Members tab â"€â"€ */}
           {tab === 'members' && (
-            <div className="bg-white border border-[#E5EAE8]">
+            <div className="bg-white border border-[#E5E7EB]">
               {/* Table header */}
-              <div className="grid grid-cols-[2fr_2fr_1fr_1fr_80px] gap-4 px-5 py-2.5 border-b border-[#E5EAE8] bg-[#F8FAF9]">
+              <div className="grid grid-cols-[2fr_2fr_1fr_1fr_80px] gap-4 px-5 py-2.5 border-b border-[#E5E7EB] bg-[#F9FAFB]">
                 <span className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide">Member</span>
                 <span className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide">Email</span>
                 <span className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide">Role</span>
@@ -491,7 +491,7 @@ export function TeamPage() {
                       <div key={m.member_id} className="grid grid-cols-[2fr_2fr_1fr_1fr_80px] gap-4 px-5 py-3.5 items-center hover:bg-[#FAFAFA]">
                         {/* Name + avatar */}
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-8 h-8 rounded-xl bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-xs font-bold flex-shrink-0">
+                          <div className="w-8 h-8 rounded-xl bg-[#EDE9FE] text-[#6C55E8] flex items-center justify-center text-xs font-bold flex-shrink-0">
                             {initials(m.display_name, m.email)}
                           </div>
                           <span className="text-sm font-medium text-[#111827] truncate">
@@ -541,9 +541,9 @@ export function TeamPage() {
 
           {/* â"€â"€ Invitations tab â"€â"€ */}
           {tab === 'invitations' && (
-            <div className="bg-white border border-[#E5EAE8]">
+            <div className="bg-white border border-[#E5E7EB]">
               {/* Table header */}
-              <div className="grid grid-cols-[3fr_1fr_1fr_80px] gap-4 px-5 py-2.5 border-b border-[#E5EAE8] bg-[#F8FAF9]">
+              <div className="grid grid-cols-[3fr_1fr_1fr_80px] gap-4 px-5 py-2.5 border-b border-[#E5E7EB] bg-[#F9FAFB]">
                 <span className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide">Email</span>
                 <span className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide">Role</span>
                 <span className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide">Sent</span>

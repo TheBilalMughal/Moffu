@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authService } from '../auth.service';
 import { AuthLayout } from '../components/AuthLayout';
@@ -43,7 +43,7 @@ export function SignupPage() {
     return (
       <AuthLayout>
         <div className="text-center py-8">
-          <div className="w-14 h-14 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center mx-auto mb-5">
+          <div className="w-14 h-14 rounded-full bg-[#EDE9FE] text-[#6C55E8] flex items-center justify-center mx-auto mb-5">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
@@ -54,7 +54,7 @@ export function SignupPage() {
           </p>
           <button
             onClick={async () => { await authService.resendVerification(email); }}
-            className="text-sm text-[#0D4C3C] font-medium hover:underline"
+            className="text-sm text-[#6C55E8] font-medium hover:underline"
           >
             Resend email
           </button>
@@ -100,7 +100,7 @@ export function SignupPage() {
               id="displayName" type="text" required autoComplete="name"
               value={displayName} onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Enter your full name"
-              className="w-full px-4 py-3 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] transition-colors"
+              className="w-full px-4 py-3 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] transition-colors"
             />
           </div>
 
@@ -110,7 +110,7 @@ export function SignupPage() {
               id="email" type="email" required autoComplete="email"
               value={email} onChange={(e) => setEmail(e.target.value)}
               placeholder="you@company.com"
-              className="w-full px-4 py-3 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] transition-colors"
+              className="w-full px-4 py-3 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] transition-colors"
             />
           </div>
 
@@ -121,7 +121,7 @@ export function SignupPage() {
                 id="password" type={showPassword ? 'text' : 'password'} required minLength={8} autoComplete="new-password"
                 value={password} onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 pr-11 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] transition-colors"
+                className="w-full px-4 py-3 pr-11 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] transition-colors"
               />
               <button type="button" onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151] transition-colors"
@@ -138,7 +138,7 @@ export function SignupPage() {
                 id="confirm" type={showConfirm ? 'text' : 'password'} required autoComplete="new-password"
                 value={confirm} onChange={(e) => setConfirm(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 pr-11 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/20 focus:border-[#0D4C3C] transition-colors"
+                className="w-full px-4 py-3 pr-11 text-sm border border-[#D1D5DB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] transition-colors"
               />
               <button type="button" onClick={() => setShowConfirm(!showConfirm)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151] transition-colors"
@@ -153,14 +153,14 @@ export function SignupPage() {
           )}
 
           <button type="submit" disabled={loading}
-            className="w-full bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-60 text-white py-3 rounded-lg text-sm font-semibold transition-colors duration-150">
+            className="w-full bg-[#111827] hover:bg-[#083F32] disabled:opacity-60 text-white py-3 rounded-lg text-sm font-semibold transition-colors duration-150">
             {loading ? 'Creating account…' : 'Create account'}
           </button>
         </form>
 
         <p className="text-center text-sm text-[#6B7280]">
           Already have an account?{' '}
-          <Link to="/auth/login" className="text-[#0D4C3C] font-semibold hover:underline">Log in</Link>
+          <Link to="/auth/login" className="text-[#6C55E8] font-semibold hover:underline">Log in</Link>
         </p>
       </div>
     </AuthLayout>

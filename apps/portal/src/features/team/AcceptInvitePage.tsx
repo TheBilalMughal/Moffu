@@ -6,7 +6,7 @@ import { useOrgStore } from '@/features/onboarding/org.store';
 
 function Spinner() {
   return (
-    <div className="w-6 h-6 border-2 border-[#0D4C3C] border-t-transparent rounded-full animate-spin mx-auto" />
+    <div className="w-6 h-6 border-2 border-[#6C55E8] border-t-transparent rounded-full animate-spin mx-auto" />
   );
 }
 
@@ -58,7 +58,7 @@ export function AcceptInvitePage() {
   // â”€â”€ Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (loading || authStatus === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F8FAF9]">
+      <div className="flex min-h-screen items-center justify-center bg-[#F9FAFB]">
         <Spinner />
       </div>
     );
@@ -66,19 +66,19 @@ export function AcceptInvitePage() {
 
   // â”€â”€ Shell â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F8FAF9] px-4">
-      <div className="bg-white border border-[#E5EAE8] w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-[#F9FAFB] px-4">
+      <div className="bg-white border border-[#E5E7EB] w-full max-w-md">
         {/* Header */}
-        <div className="px-8 py-5 border-b border-[#E5EAE8]">
-          <span className="text-lg font-bold text-[#0D4C3C]">Moffu</span>
+        <div className="px-8 py-5 border-b border-[#E5E7EB]">
+          <span className="text-lg font-bold text-[#6C55E8]">Moffu</span>
         </div>
 
         <div className="px-8 py-8">
           {/* â”€â”€ Done state â”€â”€ */}
           {done && (
             <div className="text-center">
-              <div className="w-12 h-12 bg-[#E6F2EE] rounded-xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-6 h-6 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-12 h-12 bg-[#EDE9FE] rounded-xl flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -99,7 +99,7 @@ export function AcceptInvitePage() {
               <p className="text-sm text-[#6B7280] mb-5">{error}</p>
               <button
                 onClick={() => navigate('/', { replace: true })}
-                className="text-sm font-medium text-[#0D4C3C] hover:underline"
+                className="text-sm font-medium text-[#6C55E8] hover:underline"
               >
                 Go to homepage
               </button>
@@ -114,7 +114,7 @@ export function AcceptInvitePage() {
                   <p className="text-xs text-[#9CA3AF] mb-1">You have been invited by</p>
                   <p className="text-sm font-semibold text-[#111827] mb-4">{details.invited_by}</p>
 
-                  <div className="bg-[#F8FAF9] border border-[#E5EAE8] px-5 py-4 mb-6">
+                  <div className="bg-[#F9FAFB] border border-[#E5E7EB] px-5 py-4 mb-6">
                     <p className="text-base font-bold text-[#111827] mb-0.5">{details.org_name}</p>
                     <p className="text-sm text-[#6B7280]">
                       Role: <span className="font-medium text-[#111827]">{RoleCap(details.role)}</span>
@@ -136,7 +136,7 @@ export function AcceptInvitePage() {
                         <button
                           onClick={handleAccept}
                           disabled={accepting}
-                          className="w-full bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold py-3 transition-colors disabled:opacity-50"
+                          className="w-full bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold py-3 transition-colors disabled:opacity-50"
                         >
                           {accepting ? 'Acceptingâ€¦' : `Accept invitation as ${RoleCap(details.role)}`}
                         </button>
@@ -149,7 +149,7 @@ export function AcceptInvitePage() {
                       </p>
                       <button
                         onClick={handleLogin}
-                        className="w-full bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold py-3 transition-colors"
+                        className="w-full bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold py-3 transition-colors"
                       >
                         Log in to accept
                       </button>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
 interface LocationRow {
@@ -82,7 +82,7 @@ export function LocationSelectionModal({ newPlanName, locationLimit, onConfirm, 
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="px-6 py-5 border-b border-[#E5EAE8] flex items-start justify-between gap-3">
+        <div className="px-6 py-5 border-b border-[#E5E7EB] flex items-start justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold text-[#111827]">Choose locations to keep</h3>
             <p className="text-xs text-[#6B7280] mt-1">
@@ -118,7 +118,7 @@ export function LocationSelectionModal({ newPlanName, locationLimit, onConfirm, 
 
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="w-5 h-5 border-2 border-[#0D4C3C] border-t-transparent rounded-full animate-spin" />
+              <div className="w-5 h-5 border-2 border-[#6C55E8] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
@@ -130,10 +130,10 @@ export function LocationSelectionModal({ newPlanName, locationLimit, onConfirm, 
                     key={loc.id}
                     className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
                       isChecked
-                        ? 'bg-[#F0F7F4] border-[#0D4C3C]/30'
+                        ? 'bg-[#F0F7F4] border-[#6C55E8]/30'
                         : disabled
-                          ? 'bg-[#F9FAFB] border-[#E5EAE8] opacity-50 cursor-not-allowed'
-                          : 'bg-white border-[#E5EAE8] hover:bg-[#F8FAF9]'
+                          ? 'bg-[#F9FAFB] border-[#E5E7EB] opacity-50 cursor-not-allowed'
+                          : 'bg-white border-[#E5E7EB] hover:bg-[#F9FAFB]'
                     }`}
                   >
                     <input
@@ -141,7 +141,7 @@ export function LocationSelectionModal({ newPlanName, locationLimit, onConfirm, 
                       checked={isChecked}
                       disabled={disabled}
                       onChange={() => !disabled && toggle(loc.id)}
-                      className="mt-0.5 w-4 h-4 rounded accent-[#0D4C3C]"
+                      className="mt-0.5 w-4 h-4 rounded accent-[#6C55E8]"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-[#111827] truncate">
@@ -170,7 +170,7 @@ export function LocationSelectionModal({ newPlanName, locationLimit, onConfirm, 
           <button
             onClick={handleConfirm}
             disabled={saving || loading || selected.size === 0}
-            className="w-full py-2.5 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl hover:bg-[#0a3d30] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-2.5 text-xs font-semibold text-white bg-[#111827] rounded-xl hover:bg-[#1f2937] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {saving ? 'Saving…' : `Confirm — keep ${selected.size} location${selected.size !== 1 ? 's' : ''}`}
           </button>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { supabase } from '@/lib/supabase';
@@ -330,14 +330,14 @@ function PhoneInput({
         <button
           type="button"
           onClick={() => { setOpen(o => !o); setQuery(''); }}
-          className="flex items-center gap-1.5 text-sm border border-[#E5EAE8] rounded-lg px-3 py-3 focus:outline-none focus:border-[#0D4C3C] transition-colors bg-white text-[#111827] whitespace-nowrap"
+          className="flex items-center gap-1.5 text-sm border border-[#E5E7EB] rounded-lg px-3 py-3 focus:outline-none focus:border-[#6C55E8] transition-colors bg-white text-[#111827] whitespace-nowrap"
         >
           <span className="text-base leading-none">{countryFlag(country.flag)}</span>
           <span className="text-[#374151]">{country.dial}</span>
           <svg className={`w-3.5 h-3.5 text-[#9CA3AF] transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
         </button>
         {open && (
-          <div className="absolute z-50 top-full mt-1 left-0 w-64 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden">
+          <div className="absolute z-50 top-full mt-1 left-0 w-64 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden">
             <div className="px-3 pt-2.5 pb-1.5 border-b border-[#F3F4F6]">
               <input
                 autoFocus
@@ -345,7 +345,7 @@ function PhoneInput({
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Search country..."
-                className="w-full text-sm border border-[#E5EAE8] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0D4C3C]"
+                className="w-full text-sm border border-[#E5E7EB] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#6C55E8]"
               />
             </div>
             <div className="max-h-52 overflow-y-auto py-1">
@@ -354,7 +354,7 @@ function PhoneInput({
                   key={c.code}
                   type="button"
                   onClick={() => { onCountryChange(c.code); setOpen(false); }}
-                  className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2.5 transition-colors ${c.code === countryIso ? 'bg-[#F0F7F5] text-[#0D4C3C] font-medium' : 'text-[#374151] hover:bg-[#F8FAF9]'}`}
+                  className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2.5 transition-colors ${c.code === countryIso ? 'bg-[#F3F4F6] text-[#6C55E8] font-medium' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
                 >
                   <span className="text-base leading-none">{countryFlag(c.flag)}</span>
                   <span className="flex-1 truncate">{c.name}</span>
@@ -374,7 +374,7 @@ function PhoneInput({
           onChange={e => onNationalChange(e.target.value.replace(/\D/g, ''))}
           placeholder={country.placeholder}
           className={`w-full text-sm text-[#111827] border rounded-lg px-4 py-3 focus:outline-none transition-colors bg-white ${
-            !isValid && national !== '' ? 'border-red-400 focus:border-red-500' : 'border-[#E5EAE8] focus:border-[#0D4C3C]'
+            !isValid && national !== '' ? 'border-red-400 focus:border-red-500' : 'border-[#E5E7EB] focus:border-[#6C55E8]'
           }`}
         />
         {!isValid && national !== '' && (
@@ -409,13 +409,13 @@ function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: stri
       <button
         type="button"
         onClick={() => { setOpen(o => !o); setQuery(''); }}
-        className="w-full flex items-center justify-between text-sm border border-[#E5EAE8] rounded-xl px-4 py-2.5 text-left focus:outline-none focus:border-[#0D4C3C] transition-colors bg-white text-[#111827]"
+        className="w-full flex items-center justify-between text-sm border border-[#E5E7EB] rounded-xl px-4 py-2.5 text-left focus:outline-none focus:border-[#6C55E8] transition-colors bg-white text-[#111827]"
       >
         <span className={value ? 'text-[#111827]' : 'text-[#9CA3AF]'}>{value || 'Select timezone...'}</span>
         <svg className={`w-4 h-4 text-[#9CA3AF] transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
       </button>
       {open && (
-        <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden">
+        <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden">
           <div className="px-3 pt-2.5 pb-1.5 border-b border-[#F3F4F6]">
             <input
               autoFocus
@@ -423,7 +423,7 @@ function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: stri
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search timezone..."
-              className="w-full text-sm border border-[#E5EAE8] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#0D4C3C]"
+              className="w-full text-sm border border-[#E5E7EB] rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#6C55E8]"
             />
           </div>
           <div className="max-h-52 overflow-y-auto py-1">
@@ -432,7 +432,7 @@ function TimezoneSelect({ value, onChange }: { value: string; onChange: (v: stri
                 key={tz}
                 type="button"
                 onClick={() => { onChange(tz); setOpen(false); }}
-                className={`w-full text-left px-4 py-2 text-sm transition-colors ${tz === value ? 'bg-[#F0F7F5] text-[#0D4C3C] font-medium' : 'text-[#374151] hover:bg-[#F8FAF9]'}`}
+                className={`w-full text-left px-4 py-2 text-sm transition-colors ${tz === value ? 'bg-[#F3F4F6] text-[#6C55E8] font-medium' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
               >
                 {tz}
               </button>
@@ -797,13 +797,13 @@ export function SettingsPage() {
 
   const isConnected = connection?.state === 'CONNECTED';
   const isAttentionRequired = connection?.state === 'ATTENTION_REQUIRED';
-  const inputCls = 'w-full text-sm text-[#111827] border border-[#E5EAE8] rounded-lg px-4 py-3 focus:outline-none focus:border-[#0D4C3C] transition-colors bg-white';
+  const inputCls = 'w-full text-sm text-[#111827] border border-[#E5E7EB] rounded-lg px-4 py-3 focus:outline-none focus:border-[#6C55E8] transition-colors bg-white';
 
   return (
     <div className="relative h-full flex flex-col overflow-hidden">
       {/* Ambient blobs */}
-      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
-      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#111827]/5 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#111827]/4 blur-3xl" aria-hidden="true"/>
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8">
@@ -817,14 +817,14 @@ export function SettingsPage() {
 
         {/* Account */}
         <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <div className="px-6 py-4 border-b border-[#F3F4F6] flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#111827]">Account</h2>
             {!accountEditOpen && (
               <button
                 type="button"
                 onClick={() => setAccountEditOpen(true)}
-                className="text-xs font-medium text-[#0D4C3C] hover:underline"
+                className="text-xs font-medium text-[#6C55E8] hover:underline"
               >
                 Edit
               </button>
@@ -864,7 +864,7 @@ export function SettingsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Email</label>
-                  <p className="text-sm text-[#111827] bg-[#F8FAF9] border border-[#E5EAE8] rounded-lg px-4 py-3">{user?.email ?? '—'}</p>
+                  <p className="text-sm text-[#111827] bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-4 py-3">{user?.email ?? '—'}</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Phone Number</label>
@@ -880,7 +880,7 @@ export function SettingsPage() {
                     type="button"
                     onClick={handleSaveAccount}
                     disabled={savingProfile || !displayName.trim()}
-                    className="text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
+                    className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
                   >
                     {savingProfile ? 'Saving...' : 'Save'}
                   </button>
@@ -892,7 +892,7 @@ export function SettingsPage() {
                       setPhoneNational(origPhoneNational);
                       setAccountEditOpen(false);
                     }}
-                    className="text-sm font-medium text-[#6B7280] hover:text-[#374151] px-5 py-2.5 rounded-lg border border-[#E5EAE8] transition-colors"
+                    className="text-sm font-medium text-[#6B7280] hover:text-[#374151] px-5 py-2.5 rounded-lg border border-[#E5E7EB] transition-colors"
                   >
                     Cancel
                   </button>
@@ -904,7 +904,7 @@ export function SettingsPage() {
 
         {/* Change Password */}
         <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <div className="px-6 py-4 border-b border-[#F3F4F6]">
             <h2 className="text-sm font-semibold text-[#111827]">Change Password</h2>
           </div>
@@ -944,7 +944,7 @@ export function SettingsPage() {
             <button
               onClick={handleChangePassword}
               disabled={savingPassword || !newPassword || !confirmPassword}
-              className="text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
+              className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
             >
               {savingPassword ? 'Saving...' : 'Change Password'}
             </button>
@@ -957,7 +957,7 @@ export function SettingsPage() {
 
         {/* Preferences */}
         <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <div className="px-6 py-4 border-b border-[#F3F4F6]">
             <h2 className="text-sm font-semibold text-[#111827]">Preferences</h2>
           </div>
@@ -970,7 +970,7 @@ export function SettingsPage() {
             <button
               onClick={handleSaveTimezone}
               disabled={savingTimezone || timezone === origTimezone}
-              className="text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
+              className="text-sm font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-5 py-2.5 rounded-lg disabled:opacity-40 transition-colors"
             >
               {savingTimezone ? 'Saving...' : 'Save timezone'}
             </button>
@@ -979,7 +979,7 @@ export function SettingsPage() {
 
         {/* Sessions */}
         <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <div className="px-6 py-4 border-b border-[#F3F4F6]">
             <h2 className="text-sm font-semibold text-[#111827]">Active Sessions</h2>
           </div>
@@ -998,7 +998,7 @@ export function SettingsPage() {
                   <button
                     onClick={handleSignOutDevice}
                     disabled={signingOutDevice}
-                    className="text-xs font-medium text-[#6B7280] hover:text-red-600 border border-[#E5EAE8] px-2.5 py-0.5 rounded-lg disabled:opacity-40 transition-colors"
+                    className="text-xs font-medium text-[#6B7280] hover:text-red-600 border border-[#E5E7EB] px-2.5 py-0.5 rounded-lg disabled:opacity-40 transition-colors"
                   >
                     {signingOutDevice ? 'Logging out...' : 'Logout'}
                   </button>
@@ -1021,7 +1021,7 @@ export function SettingsPage() {
 
       {/* Integrations */}
       <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 mb-5">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
         <div className="px-6 py-4 border-b border-[#F3F4F6]">
           <h2 className="text-sm font-semibold text-[#111827]">Integrations</h2>
         </div>
@@ -1038,7 +1038,7 @@ export function SettingsPage() {
             <div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg border border-[#E5EAE8] flex items-center justify-center bg-white">
+                  <div className="w-9 h-9 rounded-lg border border-[#E5E7EB] flex items-center justify-center bg-white">
                     <GoogleIcon />
                   </div>
                   <div>
@@ -1053,7 +1053,7 @@ export function SettingsPage() {
                   {isConnected ? (
                     <div className="flex items-center gap-2">
                       <button onClick={handleSync} disabled={syncing}
-                        className="text-xs font-medium text-[#0D4C3C] border border-[#D1D5DB] rounded-lg px-3 py-1.5 hover:bg-[#F3F8F6] transition-colors disabled:opacity-50">
+                        className="text-xs font-medium text-[#6C55E8] border border-[#D1D5DB] rounded-lg px-3 py-1.5 hover:bg-[#F3F8F6] transition-colors disabled:opacity-50">
                         {syncing ? 'Syncing...' : 'Sync now'}
                       </button>
                       <button onClick={handleDisconnect} disabled={disconnecting}
@@ -1064,7 +1064,7 @@ export function SettingsPage() {
                   ) : isAttentionRequired ? (
                     <div className="flex items-center gap-2">
                       <button onClick={handleFetchLocations} disabled={fetchingLocations}
-                        className="text-xs font-semibold text-white bg-[#0D4C3C] rounded-lg px-4 py-1.5 hover:bg-[#0a3d30] transition-colors disabled:opacity-50">
+                        className="text-xs font-semibold text-white bg-[#111827] rounded-lg px-4 py-1.5 hover:bg-[#1f2937] transition-colors disabled:opacity-50">
                         {fetchingLocations ? 'Fetching...' : 'Retry fetch locations'}
                       </button>
                       <button onClick={handleDisconnect} disabled={disconnecting}
@@ -1074,7 +1074,7 @@ export function SettingsPage() {
                     </div>
                   ) : (
                     <button onClick={handleConnect} disabled={connectingGoogle}
-                      className="text-xs font-semibold text-white bg-[#0D4C3C] rounded-lg px-4 py-1.5 hover:bg-[#0a3d30] transition-colors disabled:opacity-50">
+                      className="text-xs font-semibold text-white bg-[#111827] rounded-lg px-4 py-1.5 hover:bg-[#1f2937] transition-colors disabled:opacity-50">
                       {connectingGoogle ? 'Redirecting...' : 'Connect'}
                     </button>
                   )}
@@ -1103,7 +1103,7 @@ export function SettingsPage() {
                       const selectedCount = locations.filter(l => l.is_selected).length;
                       const wouldExceed = !loc.is_selected && locationLimit !== null && selectedCount >= locationLimit;
                       return (
-                        <div key={loc.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-[#F8FAF9] transition-colors">
+                        <div key={loc.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-[#F9FAFB] transition-colors">
                           <div>
                             <p className="text-sm font-medium text-[#111827]">{loc.display_name ?? loc.google_location_name}</p>
                             {loc.address && <p className="text-xs text-[#9CA3AF]">{loc.address}</p>}
@@ -1111,7 +1111,7 @@ export function SettingsPage() {
                           <button
                             onClick={() => handleToggleLocation(loc.id, loc.is_selected)}
                             title={wouldExceed ? 'Upgrade to enable more locations' : undefined}
-                            className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${loc.is_selected ? 'bg-[#0D4C3C]' : wouldExceed ? 'bg-[#E5E7EB]' : 'bg-[#D1D5DB]'}`}
+                            className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${loc.is_selected ? 'bg-[#111827]' : wouldExceed ? 'bg-[#E5E7EB]' : 'bg-[#D1D5DB]'}`}
                             role="switch" aria-checked={loc.is_selected}
                           >
                             <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${loc.is_selected ? 'translate-x-4' : ''}`} />
@@ -1139,13 +1139,13 @@ export function SettingsPage() {
                     <div className="flex gap-3">
                       <button
                         onClick={() => setShowLocationUpgrade(false)}
-                        className="flex-1 px-4 py-2.5 text-sm font-medium text-[#374151] border border-[#E5EAE8] rounded-xl hover:bg-[#F9FAFB] transition-colors"
+                        className="flex-1 px-4 py-2.5 text-sm font-medium text-[#374151] border border-[#E5E7EB] rounded-xl hover:bg-[#F9FAFB] transition-colors"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={() => { setShowLocationUpgrade(false); navigate('/billing'); }}
-                        className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] rounded-xl transition-colors"
+                        className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-[#111827] hover:bg-[#083F32] rounded-xl transition-colors"
                       >
                         View Plans
                       </button>
@@ -1166,22 +1166,22 @@ export function SettingsPage() {
                       onChange={e => setBizSearch(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleBizSearch()}
                       placeholder="e.g. Black Drivo DHA Lahore"
-                      className="flex-1 text-sm border border-[#E5EAE8] rounded-lg px-3 py-2 focus:outline-none focus:border-[#0D4C3C] bg-white text-[#111827]"
+                      className="flex-1 text-sm border border-[#E5E7EB] rounded-lg px-3 py-2 focus:outline-none focus:border-[#6C55E8] bg-white text-[#111827]"
                     />
                     <button
                       onClick={handleBizSearch}
                       disabled={bizSearching || !bizSearch.trim()}
-                      className="text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-4 py-2 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap"
+                      className="text-xs font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-4 py-2 rounded-lg disabled:opacity-40 transition-colors whitespace-nowrap"
                     >
                       {bizSearching ? 'Searching...' : 'Search'}
                     </button>
                   </div>
                   {bizResults.length > 0 && (
-                    <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
+                    <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
                       {bizResults.map((biz, i) => (
                         <div
                           key={biz.place_id}
-                          className={`flex items-center justify-between px-4 py-3 ${i > 0 ? 'border-t border-[#F3F4F6]' : ''} hover:bg-[#F8FAF9] transition-colors`}
+                          className={`flex items-center justify-between px-4 py-3 ${i > 0 ? 'border-t border-[#F3F4F6]' : ''} hover:bg-[#F9FAFB] transition-colors`}
                         >
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium text-[#111827] truncate">{biz.name}</p>
@@ -1193,7 +1193,7 @@ export function SettingsPage() {
                           <button
                             onClick={() => handleAddBiz(biz)}
                             disabled={addingBiz === biz.place_id}
-                            className="ml-3 text-xs font-semibold text-[#0D4C3C] border border-[#0D4C3C] px-3 py-1.5 rounded-lg hover:bg-[#E6F2EE] disabled:opacity-40 transition-colors whitespace-nowrap flex-shrink-0"
+                            className="ml-3 text-xs font-semibold text-[#6C55E8] border border-[#6C55E8] px-3 py-1.5 rounded-lg hover:bg-[#EDE9FE] disabled:opacity-40 transition-colors whitespace-nowrap flex-shrink-0"
                           >
                             {addingBiz === biz.place_id ? 'Adding...' : 'Add'}
                           </button>
@@ -1232,7 +1232,7 @@ export function SettingsPage() {
                         saveAutoSync(next, iv);
                       }}
                       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
-                        autoEnabled && !autoSyncLocked ? 'bg-[#0D4C3C]' : 'bg-[#E5E7EB]'
+                        autoEnabled && !autoSyncLocked ? 'bg-[#111827]' : 'bg-[#E5E7EB]'
                       } ${autoSyncLocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       <span
@@ -1254,8 +1254,8 @@ export function SettingsPage() {
                             onClick={() => setAutoInterval(opt)}
                             className={`text-xs px-3 py-1.5 rounded-xl border transition-colors ${
                               autoInterval === opt
-                                ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]'
-                                : 'text-[#374151] border-[#E5E7EB] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'
+                                ? 'bg-[#111827] text-white border-[#6C55E8]'
+                                : 'text-[#374151] border-[#E5E7EB] hover:border-[#6C55E8] hover:text-[#6C55E8]'
                             }`}
                           >
                             Every {opt}
@@ -1266,8 +1266,8 @@ export function SettingsPage() {
                           onClick={() => setAutoInterval('custom')}
                           className={`text-xs px-3 py-1.5 rounded-xl border transition-colors ${
                             autoInterval === 'custom'
-                              ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]'
-                              : 'text-[#374151] border-[#E5E7EB] hover:border-[#0D4C3C] hover:text-[#0D4C3C]'
+                              ? 'bg-[#111827] text-white border-[#6C55E8]'
+                              : 'text-[#374151] border-[#E5E7EB] hover:border-[#6C55E8] hover:text-[#6C55E8]'
                           }`}
                         >
                           Custom
@@ -1282,7 +1282,7 @@ export function SettingsPage() {
                             max={168}
                             value={customHours}
                             onChange={(e) => setCustomHours(e.target.value)}
-                            className="w-20 text-sm border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[#111827] focus:outline-none focus:ring-1 focus:ring-[#0D4C3C] focus:border-[#0D4C3C]"
+                            className="w-20 text-sm border border-[#E5E7EB] rounded-lg px-2.5 py-1.5 text-[#111827] focus:outline-none focus:ring-1 focus:ring-[#6C55E8] focus:border-[#6C55E8]"
                           />
                           <span className="text-xs text-[#6B7280]">hours</span>
                         </div>
@@ -1295,7 +1295,7 @@ export function SettingsPage() {
                           const iv = autoInterval === 'custom' ? `${customHours}h` : autoInterval;
                           saveAutoSync(autoEnabled, iv);
                         }}
-                        className="text-xs font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-40 px-3.5 py-1.5 rounded-lg transition-colors"
+                        className="text-xs font-semibold text-white bg-[#111827] hover:bg-[#083F32] disabled:opacity-40 px-3.5 py-1.5 rounded-lg transition-colors"
                       >
                         {savingSync ? 'Saving...' : 'Save interval'}
                       </button>
@@ -1317,7 +1317,7 @@ export function SettingsPage() {
 
       {/* Billing shortcut */}
       <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 mb-5">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
         <div className="px-6 py-4 border-b border-[#F3F4F6]">
           <h2 className="text-sm font-semibold text-[#111827]">Billing</h2>
         </div>
@@ -1328,7 +1328,7 @@ export function SettingsPage() {
               <p className="text-xs text-[#9CA3AF] mt-0.5">View your plan, usage and upgrade options.</p>
             </div>
             <Link to="/billing"
-              className="text-xs font-semibold text-[#0D4C3C] border border-[#0D4C3C] px-3.5 py-1.5 rounded-lg hover:bg-[#E6F2EE] transition-colors">
+              className="text-xs font-semibold text-[#6C55E8] border border-[#6C55E8] px-3.5 py-1.5 rounded-lg hover:bg-[#EDE9FE] transition-colors">
               Go to Billing &rarr;
             </Link>
           </div>
@@ -1337,7 +1337,7 @@ export function SettingsPage() {
 
       {/* Data & Privacy */}
       <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
         <div className="px-6 py-4 border-b border-[#F3F4F6]">
           <h2 className="text-sm font-semibold text-[#111827]">Data &amp; Privacy</h2>
         </div>
@@ -1352,7 +1352,7 @@ export function SettingsPage() {
             <button
               onClick={handleExport}
               disabled={exporting}
-              className="flex items-center gap-1.5 text-xs font-semibold text-[#0D4C3C] border border-[#0D4C3C] px-3.5 py-1.5 rounded-lg hover:bg-[#E6F2EE] disabled:opacity-40 transition-colors whitespace-nowrap"
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#6C55E8] border border-[#6C55E8] px-3.5 py-1.5 rounded-lg hover:bg-[#EDE9FE] disabled:opacity-40 transition-colors whitespace-nowrap"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
               {exporting ? 'Exporting...' : 'Export'}
@@ -1385,7 +1385,7 @@ export function SettingsPage() {
                     value={deleteConfirmText}
                     onChange={e => setDeleteConfirmText(e.target.value)}
                     placeholder="DELETE"
-                    className="w-full text-sm border border-[#E5EAE8] rounded-lg px-3 py-2 focus:outline-none focus:border-red-400 bg-white text-[#111827]"
+                    className="w-full text-sm border border-[#E5E7EB] rounded-lg px-3 py-2 focus:outline-none focus:border-red-400 bg-white text-[#111827]"
                   />
                 </div>
                 <div className="flex items-center gap-3">

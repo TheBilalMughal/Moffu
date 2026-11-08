@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+﻿import { useEffect, useMemo, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useLocationStore } from '@/features/location/location.store';
 import { DateRangePicker } from '@/components/DateRangePicker';
@@ -161,8 +161,8 @@ function ViewsChart({
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="vcg-total" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#0D4C3C" stopOpacity="0.15"/>
-          <stop offset="100%" stopColor="#0D4C3C" stopOpacity="0.02"/>
+          <stop offset="0%" stopColor="#6C55E8" stopOpacity="0.15"/>
+          <stop offset="100%" stopColor="#6C55E8" stopOpacity="0.02"/>
         </linearGradient>
         <linearGradient id="vcg-search" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#4FA882" stopOpacity="0.2"/>
@@ -177,7 +177,7 @@ function ViewsChart({
       ))}
       <path d={areaTotal} fill="url(#vcg-total)"/>
       <path d={areaSearch} fill="url(#vcg-search)"/>
-      <path d={buildPath(totalPts)} fill="none" stroke="#0D4C3C" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>
+      <path d={buildPath(totalPts)} fill="none" stroke="#6C55E8" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>
       <path d={buildPath(searchPts)} fill="none" stroke="#4FA882" strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" strokeDasharray="4 2"/>
       {reviewPts && (
         <>
@@ -232,7 +232,7 @@ function ActionsChart({ metrics }: { metrics: DailyMetric[] }) {
   const yS = (v: number) => PAD.top + (1 - v / maxVal) * (AH - PAD.top - PAD.bottom);
 
   const series = [
-    { key: 'calls'      as const, color: '#0D4C3C', label: 'Calls' },
+    { key: 'calls'      as const, color: '#6C55E8', label: 'Calls' },
     { key: 'website'    as const, color: '#4FA882', label: 'Website' },
     { key: 'directions' as const, color: '#94C4B0', label: 'Directions' },
   ];
@@ -294,7 +294,7 @@ function ViewsSplitRing({ search, maps }: { search: number; maps: number }) {
     <div className="flex flex-col items-center gap-3">
       <svg viewBox="0 0 128 128" className="w-32 h-32">
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#F3F4F6" strokeWidth={14}/>
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#0D4C3C" strokeWidth={14}
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#6C55E8" strokeWidth={14}
           strokeDasharray={`${sFrac * circumf} ${circumf}`}
           transform={`rotate(-90 ${cx} ${cy})`} strokeLinecap="round"/>
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#4FA882" strokeWidth={14}
@@ -306,7 +306,7 @@ function ViewsSplitRing({ search, maps }: { search: number; maps: number }) {
       </svg>
       <div className="flex gap-4">
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#0D4C3C]"/>
+          <div className="w-2.5 h-2.5 rounded-full bg-[#111827]"/>
           <span className="text-xs text-[#374151]">Search <span className="font-semibold">{searchPct}%</span></span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -340,7 +340,7 @@ function DayOfWeekHeatmap({ metrics }: { metrics: DailyMetric[] }) {
   }
 
   const rows: { label: string; key: keyof Omit<DowCell, 'count'>; color: string }[] = [
-    { label: 'Views',      key: 'views',      color: '#0D4C3C' },
+    { label: 'Views',      key: 'views',      color: '#6C55E8' },
     { label: 'Calls',      key: 'calls',      color: '#4FA882' },
     { label: 'Website',    key: 'website',    color: '#059669' },
     { label: 'Directions', key: 'directions', color: '#94C4B0' },
@@ -413,7 +413,7 @@ function StatCard({
 
   return (
     <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 px-5 py-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/4 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/4 via-transparent to-transparent pointer-events-none" />
       <div className="relative">
         <div className="flex items-start justify-between mb-1">
           <p className="text-xs text-[#6B7280]">{label}</p>
@@ -447,10 +447,10 @@ function StatCard({
 function NotConnectedState() {
   return (
     <div className="relative mx-6 my-6 overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 flex flex-col items-center justify-center py-24 text-center px-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/5 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/5 via-transparent to-transparent pointer-events-none" />
       <div className="relative">
-        <div className="w-14 h-14 rounded-2xl bg-[#0D4C3C]/10 flex items-center justify-center mb-4 mx-auto">
-          <svg className="w-7 h-7 text-[#0D4C3C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="w-14 h-14 rounded-2xl bg-[#111827]/10 flex items-center justify-center mb-4 mx-auto">
+          <svg className="w-7 h-7 text-[#6C55E8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
               d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
           </svg>
@@ -584,8 +584,8 @@ export function GoogleProfilePage() {
     <div className="relative w-full px-6 py-6 space-y-6">
       {/* Ambient blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#0D4C3C]/5 blur-3xl" />
-        <div className="absolute bottom-0 left-1/4 w-56 h-56 rounded-full bg-[#0D4C3C]/4 blur-3xl" />
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-[#111827]/5 blur-3xl" />
+        <div className="absolute bottom-0 left-1/4 w-56 h-56 rounded-full bg-[#111827]/4 blur-3xl" />
       </div>
 
       {/* ── Header ── */}
@@ -632,7 +632,7 @@ export function GoogleProfilePage() {
             <button key={p} onClick={() => setRange(p)}
               className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
                 range === p
-                  ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]'
+                  ? 'bg-[#111827] text-white border-[#6C55E8]'
                   : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#111827]'
               }`}>
               {p}
@@ -684,7 +684,7 @@ export function GoogleProfilePage() {
         <>
           {/* ── Stat cards ── */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            <StatCard label="Total Views"     rawValue={totals.total_views}        sub="Search + Maps"  color="text-[#0D4C3C]"
+            <StatCard label="Total Views"     rawValue={totals.total_views}        sub="Search + Maps"  color="text-[#6C55E8]"
               trend={hasTrend ? computeTrend(metrics, 'views_search') : null}
               baselineValue={showBaselineCompare ? (baseline?.total_views ?? null) : null}/>
             <StatCard label="Search Views"    rawValue={totals.views_search}                            color="text-[#4FA882]"
@@ -719,7 +719,7 @@ export function GoogleProfilePage() {
           {/* ── Views chart + donut ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="relative overflow-hidden lg:col-span-2 bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none" />
               <div className="relative">
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -728,7 +728,7 @@ export function GoogleProfilePage() {
                   </div>
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-0.5 rounded-full bg-[#0D4C3C]"/>
+                      <div className="w-3 h-0.5 rounded-full bg-[#111827]"/>
                       <span className="text-[11px] text-[#6B7280]">Total</span>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -751,7 +751,7 @@ export function GoogleProfilePage() {
               </div>
             </div>
             <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5 flex flex-col items-center justify-center">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none" />
               <div className="relative w-full">
                 <p className="text-sm font-semibold text-[#111827] mb-4">Views split</p>
                 <ViewsSplitRing search={totals.views_search} maps={totals.views_maps} />
@@ -761,7 +761,7 @@ export function GoogleProfilePage() {
 
           {/* ── Actions chart ── */}
           <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none" />
             <div className="relative">
               <p className="text-sm font-semibold text-[#111827] mb-1">Customer actions</p>
               <p className="text-xs text-[#9CA3AF] mb-4">{needsWeeks ? 'Grouped by week' : 'Daily'}</p>
@@ -771,7 +771,7 @@ export function GoogleProfilePage() {
 
           {/* ── Day-of-week heatmap ── */}
           <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none" />
             <div className="relative">
               <p className="text-sm font-semibold text-[#111827] mb-1">Day-of-week patterns</p>
               <p className="text-xs text-[#9CA3AF] mb-4">Which days drive the most activity</p>
@@ -784,7 +784,7 @@ export function GoogleProfilePage() {
             {/* Search queries */}
             {data.queries.length > 0 && (
               <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none" />
                 <div className="relative">
                   <p className="text-sm font-semibold text-[#111827] mb-4">Top search queries</p>
                   <div className="space-y-2">
@@ -800,7 +800,7 @@ export function GoogleProfilePage() {
                               <span className="text-[11px] text-[#9CA3AF] ml-2 flex-shrink-0">{fmt(q.count)}</span>
                             </div>
                             <div className="h-1 bg-[#F3F4F6] rounded-full overflow-hidden">
-                              <div className="h-1 bg-[#0D4C3C] rounded-full" style={{ width: `${pct}%` }}/>
+                              <div className="h-1 bg-[#111827] rounded-full" style={{ width: `${pct}%` }}/>
                             </div>
                           </div>
                         </div>
@@ -813,13 +813,13 @@ export function GoogleProfilePage() {
 
             {/* Actions breakdown */}
             <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none" />
               <div className="relative">
               <p className="text-sm font-semibold text-[#111827] mb-4">Actions breakdown</p>
               {(() => {
                 const actionTotal = totals.calls + totals.website_clicks + totals.direction_requests;
                 const items = [
-                  { label: 'Phone calls',        value: totals.calls,              color: '#0D4C3C' },
+                  { label: 'Phone calls',        value: totals.calls,              color: '#6C55E8' },
                   { label: 'Website visits',     value: totals.website_clicks,     color: '#4FA882' },
                   { label: 'Direction requests', value: totals.direction_requests, color: '#94C4B0' },
                 ];
@@ -858,7 +858,7 @@ export function GoogleProfilePage() {
           {/* Location breakdown */}
           {data.locations.length > 1 && (
             <div className="relative overflow-hidden bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-5">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none" />
               <div className="relative">
               <p className="text-sm font-semibold text-[#111827] mb-4">By location</p>
               <div className="space-y-2">
@@ -869,7 +869,7 @@ export function GoogleProfilePage() {
                     <div key={loc.id} className="flex items-center gap-3">
                       <span className="text-xs text-[#374151] flex-1 truncate">{loc.display_name ?? 'Location'}</span>
                       <div className="w-32 h-1.5 bg-[#F3F4F6] rounded-full overflow-hidden flex-shrink-0">
-                        <div className="h-1.5 bg-[#0D4C3C] rounded-full" style={{ width: `${pct}%` }}/>
+                        <div className="h-1.5 bg-[#111827] rounded-full" style={{ width: `${pct}%` }}/>
                       </div>
                       <span className="text-xs font-medium text-[#374151] w-12 text-right flex-shrink-0">{fmt(loc.total_views)}</span>
                     </div>

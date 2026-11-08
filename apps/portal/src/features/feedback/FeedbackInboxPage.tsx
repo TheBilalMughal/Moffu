@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/features/auth/auth.store';
@@ -132,8 +132,8 @@ export function FeedbackInboxPage() {
 
       {/* Ambient blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/6 blur-3xl" />
-        <div className="absolute top-1/2 right-0 w-56 h-56 rounded-full bg-[#0D4C3C]/4 blur-3xl" />
+        <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[#111827]/6 blur-3xl" />
+        <div className="absolute top-1/2 right-0 w-56 h-56 rounded-full bg-[#111827]/4 blur-3xl" />
       </div>
 
       {/* Header */}
@@ -144,7 +144,7 @@ export function FeedbackInboxPage() {
         </div>
         <Link
           to="/feedback/new"
-          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#0D4C3C] to-[#1a6b55] text-white text-sm font-semibold rounded-xl hover:shadow-lg transition-shadow shadow-md shadow-[#0D4C3C]/20 flex-shrink-0"
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#6C55E8] to-[#1a6b55] text-white text-sm font-semibold rounded-xl hover:shadow-lg transition-shadow shadow-md shadow-[#6C55E8]/20 flex-shrink-0"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.5v15m7.5-7.5h-15"/>
@@ -161,8 +161,8 @@ export function FeedbackInboxPage() {
           { label: 'Unhappy',         value: loading ? '—' : unhappy,                              sub: 'private feedback' },
           { label: 'Open issues',     value: loading ? '—' : open, sub: open > 0 ? 'Need follow-up' : 'All resolved', accent: open > 0 },
         ].map(card => (
-          <div key={card.label} className={`relative overflow-hidden rounded-2xl border bg-white/70 backdrop-blur-md shadow-lg shadow-black/5 px-5 py-5 ${card.accent ? 'border-[#0D4C3C]/20' : 'border-white/60'}`}>
-            {card.accent && <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/8 via-transparent to-[#0D4C3C]/3 pointer-events-none" />}
+          <div key={card.label} className={`relative overflow-hidden rounded-2xl border bg-white/70 backdrop-blur-md shadow-lg shadow-black/5 px-5 py-5 ${card.accent ? 'border-[#6C55E8]/20' : 'border-white/60'}`}>
+            {card.accent && <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/8 via-transparent to-[#6C55E8]/3 pointer-events-none" />}
             <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-1 relative">{card.label}</p>
             <p className="text-2xl font-bold text-[#111827] relative">{card.value}</p>
             {card.sub && <p className="text-[11px] text-[#9CA3AF] mt-0.5 relative">{card.sub}</p>}
@@ -177,7 +177,7 @@ export function FeedbackInboxPage() {
             <button key={v} onClick={() => setSentiment(v)}
               className={`text-xs px-3.5 py-2 transition-colors ${i > 0 ? 'border-l border-white/60' : ''} ${
                 sentiment === v
-                  ? 'bg-[#0D4C3C]/10 text-[#0D4C3C] font-semibold'
+                  ? 'bg-[#111827]/10 text-[#6C55E8] font-semibold'
                   : 'text-[#6B7280] hover:bg-white/60 hover:text-[#374151]'
               }`}>
               {v === 'all' ? 'All' : v === 'unhappy' ? 'Unhappy' : 'Happy'}
@@ -190,7 +190,7 @@ export function FeedbackInboxPage() {
             <button key={v} onClick={() => setResolved(v)}
               className={`text-xs px-3.5 py-2 transition-colors ${i > 0 ? 'border-l border-white/60' : ''} ${
                 resolved === v
-                  ? 'bg-[#0D4C3C]/10 text-[#0D4C3C] font-semibold'
+                  ? 'bg-[#111827]/10 text-[#6C55E8] font-semibold'
                   : 'text-[#6B7280] hover:bg-white/60 hover:text-[#374151]'
               }`}>
               {v === 'open' ? 'Open' : v === 'resolved' ? 'Resolved' : 'All'}
@@ -231,7 +231,7 @@ export function FeedbackInboxPage() {
             </p>
             {rows.length === 0 && (
               <Link to="/feedback/new"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0D4C3C] hover:underline">
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6C55E8] hover:underline">
                 Create first request →
               </Link>
             )}
@@ -239,7 +239,7 @@ export function FeedbackInboxPage() {
         ) : (
           <div className="divide-y divide-white/60">
             {/* Table header */}
-            <div className="grid grid-cols-[2.5rem_1fr_7rem_6rem_6rem] items-center gap-4 px-5 py-3 bg-[#0D4C3C]/[0.04] border-b border-white/60">
+            <div className="grid grid-cols-[2.5rem_1fr_7rem_6rem_6rem] items-center gap-4 px-5 py-3 bg-[#111827]/[0.04] border-b border-white/60">
               <div />
               <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Customer</p>
               <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide text-center">Sentiment</p>
@@ -292,7 +292,7 @@ export function FeedbackInboxPage() {
                         </span>
                       ) : null}
                       {r.open_count > 0 ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] text-[#0D4C3C] bg-[#F0F7F5] border border-[#D1EAE4] px-1.5 py-0.5 rounded-lg">
+                        <span className="inline-flex items-center gap-1 text-[10px] text-[#6C55E8] bg-[#F3F4F6] border border-[#D1EAE4] px-1.5 py-0.5 rounded-lg">
                           <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178z"/>
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -329,7 +329,7 @@ export function FeedbackInboxPage() {
                       <button
                         onClick={() => markResolved(r.id)}
                         disabled={resolving === r.id}
-                        className="text-[11px] font-semibold text-[#0D4C3C] hover:underline disabled:opacity-50 transition-opacity"
+                        className="text-[11px] font-semibold text-[#6C55E8] hover:underline disabled:opacity-50 transition-opacity"
                       >
                         {resolving === r.id ? 'Saving…' : 'Resolve'}
                       </button>

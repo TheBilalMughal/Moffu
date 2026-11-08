@@ -85,7 +85,7 @@ function GlassCard({ children, className = '', tint = 'default' }: {
   tint?: 'default' | 'green' | 'red' | 'amber';
 }) {
   const tintCls = {
-    default: 'from-[#0D4C3C]/3',
+    default: 'from-[#6C55E8]/3',
     green:   'from-emerald-500/4',
     red:     'from-red-500/4',
     amber:   'from-amber-500/4',
@@ -161,7 +161,7 @@ function WordCloud({ positive, negative }: { positive: [string, number][]; negat
           ? 'text-emerald-700 bg-emerald-50/70 border-emerald-200/60'
           : sentiment === 'neg'
           ? 'text-red-600 bg-red-50/70 border-red-200/60'
-          : 'text-[#0D4C3C] bg-[#E6F2EE]/70 border-[#0D4C3C]/20';
+          : 'text-[#6C55E8] bg-[#EDE9FE]/70 border-[#6C55E8]/20';
         return (
           <span key={word}
             className={`px-2.5 py-1 rounded-xl border backdrop-blur-sm transition-all cursor-default select-none ${size} ${cls}`}
@@ -270,7 +270,7 @@ function DayHeatmap({ reviews }: { reviews: Review[] }) {
     <div className="space-y-2">
       {data.map(({ day, count, avg }) => {
         const intensity = count / maxCount;
-        const bg = intensity > 0.7 ? 'bg-[#0D4C3C]' : intensity > 0.4 ? 'bg-[#0D4C3C]/60' : intensity > 0.1 ? 'bg-[#0D4C3C]/25' : 'bg-[#F3F4F6]/80';
+        const bg = intensity > 0.7 ? 'bg-[#111827]' : intensity > 0.4 ? 'bg-[#111827]/60' : intensity > 0.1 ? 'bg-[#111827]/25' : 'bg-[#F3F4F6]/80';
         const textCls = intensity > 0.7 ? 'text-white' : 'text-[#374151]';
         return (
           <div key={day} className="flex items-center gap-3">
@@ -336,15 +336,15 @@ function MonthlyCohort({ reviews }: { reviews: Review[] }) {
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 140 }} aria-hidden="true">
         <defs>
           <linearGradient id="monthGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#0D4C3C" stopOpacity="0.15"/>
-            <stop offset="100%" stopColor="#0D4C3C" stopOpacity="0"/>
+            <stop offset="0%" stopColor="#6C55E8" stopOpacity="0.15"/>
+            <stop offset="100%" stopColor="#6C55E8" stopOpacity="0"/>
           </linearGradient>
         </defs>
         <path d={areaPath} fill="url(#monthGrad)"/>
-        <path d={linePath} fill="none" stroke="#0D4C3C" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>
+        <path d={linePath} fill="none" stroke="#6C55E8" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>
         {pts.map((p, i) => (
           <g key={i}>
-            <circle cx={p.x} cy={p.y} r={3.5} fill="#0D4C3C" stroke="white" strokeWidth={1.5}/>
+            <circle cx={p.x} cy={p.y} r={3.5} fill="#6C55E8" stroke="white" strokeWidth={1.5}/>
             <text x={p.x} y={H - 6} textAnchor="middle" fontSize={9} fill="#9CA3AF">{p.m.label}</text>
           </g>
         ))}
@@ -414,7 +414,7 @@ function SentimentMomentum({ reviews }: { reviews: Review[] }) {
         </div>
         <div className="ml-auto flex items-center gap-3">
           <span className="flex items-center gap-1.5 text-[10px] text-[#6B7280]">
-            <span className="w-3 h-1.5 rounded-full bg-[#0D4C3C] inline-block"/>Positive %
+            <span className="w-3 h-1.5 rounded-full bg-[#111827] inline-block"/>Positive %
           </span>
           <span className="flex items-center gap-1.5 text-[10px] text-[#6B7280]">
             <svg width="16" height="6" viewBox="0 0 16 6"><line x1="0" y1="3" x2="16" y2="3" stroke="#9CA3AF" strokeWidth="1.5" strokeDasharray="4 2"/></svg>
@@ -425,15 +425,15 @@ function SentimentMomentum({ reviews }: { reviews: Review[] }) {
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 120 }} aria-hidden="true">
         <defs>
           <linearGradient id="sentGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#0D4C3C" stopOpacity="0.12"/>
-            <stop offset="100%" stopColor="#0D4C3C" stopOpacity="0"/>
+            <stop offset="0%" stopColor="#6C55E8" stopOpacity="0.12"/>
+            <stop offset="100%" stopColor="#6C55E8" stopOpacity="0"/>
           </linearGradient>
         </defs>
         <line x1={PL} y1={avgY} x2={W - PR} y2={avgY} stroke="#9CA3AF" strokeWidth={1} strokeDasharray="4 3" strokeOpacity={0.6}/>
         <path d={areaPath} fill="url(#sentGrad)"/>
-        <path d={linePath} fill="none" stroke="#0D4C3C" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>
+        <path d={linePath} fill="none" stroke="#6C55E8" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>
         {pts.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r={3} fill="#0D4C3C" stroke="white" strokeWidth={1.5}/>
+          <circle key={i} cx={p.x} cy={p.y} r={3} fill="#6C55E8" stroke="white" strokeWidth={1.5}/>
         ))}
         {weeks.map(([k], i) => {
           if (weeks.length > 8 && i % 2 !== 0) return null;
@@ -470,7 +470,7 @@ function WeeklyTable({ reviews }: { reviews: Review[] }) {
   return (
     <table className="w-full text-xs">
       <thead>
-        <tr className="border-b border-[#E5EAE8]/60">
+        <tr className="border-b border-[#E5E7EB]/60">
           <th className="text-left px-5 py-2.5 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Week of</th>
           <th className="text-right px-4 py-2.5 text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Total</th>
           <th className="text-right px-4 py-2.5 text-[10px] font-semibold text-emerald-600 uppercase tracking-wide">4–5★</th>
@@ -523,11 +523,11 @@ function ContextModal({ keyword, onConfirm, onClose }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/60 w-full max-w-md">
-        <div className="px-6 py-5 border-b border-[#E5EAE8]/60">
+        <div className="px-6 py-5 border-b border-[#E5E7EB]/60">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-bold text-[#111827]">Add to Brand Brain</p>
-              <p className="text-xs text-[#6B7280] mt-0.5">Instruction for "<span className="font-semibold text-[#0D4C3C]">{keyword}</span>"</p>
+              <p className="text-xs text-[#6B7280] mt-0.5">Instruction for "<span className="font-semibold text-[#6C55E8]">{keyword}</span>"</p>
             </div>
             <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[#F3F4F6] transition-colors">
               <svg className="w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
@@ -537,13 +537,13 @@ function ContextModal({ keyword, onConfirm, onClose }: {
         <div className="px-6 py-5">
           <label className="block text-xs font-semibold text-[#374151] mb-2">Agent instruction</label>
           <textarea value={context} onChange={e => setContext(e.target.value)} rows={4}
-            className="w-full text-sm text-[#111827] border border-[#D1D5DB] rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-[#0D4C3C] transition-colors resize-none"/>
+            className="w-full text-sm text-[#111827] border border-[#D1D5DB] rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-[#6C55E8] transition-colors resize-none"/>
           <p className="text-[10px] text-[#9CA3AF] mt-1.5">Added to Brand Brain keyword-triggered context rules.</p>
         </div>
         <div className="px-6 pb-5 flex items-center justify-end gap-3">
           <button onClick={onClose} className="text-sm font-medium text-[#6B7280] hover:text-[#374151] px-4 py-2 rounded-xl hover:bg-[#F3F4F6] transition-colors">Cancel</button>
           <button onClick={handleSave} disabled={saving || !context.trim()}
-            className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2 rounded-xl disabled:opacity-50 transition-colors">
+            className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2 rounded-xl disabled:opacity-50 transition-colors">
             {saving && <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>}
             {saving ? 'Saving…' : 'Add to Agent'}
           </button>
@@ -562,7 +562,7 @@ function ReviewDrawer({ keyword, reviews, onClose }: { keyword: string; reviews:
     <div className="fixed inset-0 z-40 flex justify-end" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="absolute inset-0 bg-black/20" onClick={onClose}/>
       <div className="relative bg-white/90 backdrop-blur-xl w-full max-w-md shadow-2xl flex flex-col border-l border-white/60 h-full">
-        <div className="px-6 py-4 border-b border-[#E5EAE8]/60 flex items-center justify-between flex-shrink-0">
+        <div className="px-6 py-4 border-b border-[#E5E7EB]/60 flex items-center justify-between flex-shrink-0">
           <div>
             <p className="text-sm font-bold text-[#111827]">Reviews mentioning "{keyword}"</p>
             <p className="text-xs text-[#9CA3AF] mt-0.5">{matched.length} result{matched.length !== 1 ? 's' : ''}</p>
@@ -580,7 +580,7 @@ function ReviewDrawer({ keyword, reviews, onClose }: { keyword: string; reviews:
             const escapedKw = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const parts = r.body.split(new RegExp(`(${escapedKw})`, 'gi'));
             return (
-              <div key={r.id} className="border border-[#E5EAE8]/60 rounded-2xl p-4 bg-white/70 backdrop-blur-sm">
+              <div key={r.id} className="border border-[#E5E7EB]/60 rounded-2xl p-4 bg-white/70 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg ${color}`}>
                     {'★'.repeat(stars)}{'☆'.repeat(5 - stars)} {stars}★
@@ -617,7 +617,7 @@ function KeywordRow({ word, count, max, color, addedToAgent, onAddToAgent, onDri
   return (
     <div className="flex items-center gap-3 group">
       <button onClick={() => onDrillDown(word)}
-        className="text-xs font-medium text-[#374151] w-36 truncate flex-shrink-0 text-left hover:text-[#0D4C3C] hover:underline transition-colors"
+        className="text-xs font-medium text-[#374151] w-36 truncate flex-shrink-0 text-left hover:text-[#6C55E8] hover:underline transition-colors"
         title={`See reviews mentioning "${word}"`}>
         {word}
       </button>
@@ -626,13 +626,13 @@ function KeywordRow({ word, count, max, color, addedToAgent, onAddToAgent, onDri
       </div>
       <span className="text-[10px] text-[#9CA3AF] w-5 text-right flex-shrink-0">{count}</span>
       {addedToAgent ? (
-        <span className="flex-shrink-0 flex items-center gap-1 text-[10px] font-medium text-[#0D4C3C] bg-[#E6F2EE] px-2 py-0.5 rounded-lg">
+        <span className="flex-shrink-0 flex items-center gap-1 text-[10px] font-medium text-[#6C55E8] bg-[#EDE9FE] px-2 py-0.5 rounded-lg">
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
           Added
         </span>
       ) : (
         <button onClick={() => onAddToAgent(word)}
-          className="flex-shrink-0 text-[10px] font-semibold text-[#0D4C3C] border border-[#0D4C3C] px-2.5 py-0.5 rounded-lg hover:bg-[#E6F2EE] transition-colors whitespace-nowrap opacity-0 group-hover:opacity-100 focus:opacity-100">
+          className="flex-shrink-0 text-[10px] font-semibold text-[#6C55E8] border border-[#6C55E8] px-2.5 py-0.5 rounded-lg hover:bg-[#EDE9FE] transition-colors whitespace-nowrap opacity-0 group-hover:opacity-100 focus:opacity-100">
           + Add to Agent
         </button>
       )}
@@ -666,7 +666,7 @@ function AgentKeywordsTab({ keywordContexts, onRemove, onUpdate }: {
 
   return (
     <GlassCard>
-      <div className="px-5 py-3.5 border-b border-[#E5EAE8]/60 flex items-center gap-2">
+      <div className="px-5 py-3.5 border-b border-[#E5E7EB]/60 flex items-center gap-2">
         <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Keyword Rules in Brand Brain</p>
         <span className="ml-auto text-[10px] text-[#9CA3AF]">{keywordContexts.length} rule{keywordContexts.length !== 1 ? 's' : ''}</span>
       </div>
@@ -675,10 +675,10 @@ function AgentKeywordsTab({ keywordContexts, onRemove, onUpdate }: {
           <div key={kc.id} className="px-5 py-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-[#0D4C3C] mb-1">{kc.keyword}</p>
+                <p className="text-xs font-bold text-[#6C55E8] mb-1">{kc.keyword}</p>
                 {editingId === kc.id ? (
                   <textarea value={editValue} onChange={e => setEditValue(e.target.value)} rows={3}
-                    className="w-full text-xs text-[#374151] border border-[#D1D5DB] rounded-xl px-3 py-2 focus:outline-none focus:border-[#0D4C3C] transition-colors resize-none"/>
+                    className="w-full text-xs text-[#374151] border border-[#D1D5DB] rounded-xl px-3 py-2 focus:outline-none focus:border-[#6C55E8] transition-colors resize-none"/>
                 ) : (
                   <p className="text-xs text-[#6B7280] leading-relaxed">{kc.context}</p>
                 )}
@@ -688,7 +688,7 @@ function AgentKeywordsTab({ keywordContexts, onRemove, onUpdate }: {
                   <>
                     <button onClick={async () => { setSavingId(kc.id); await onUpdate(kc.id, editValue); setSavingId(null); setEditingId(null); }}
                       disabled={savingId === kc.id}
-                      className="text-[10px] font-semibold text-white bg-[#0D4C3C] hover:bg-[#083F32] px-2.5 py-1 rounded-lg disabled:opacity-50 transition-colors">
+                      className="text-[10px] font-semibold text-white bg-[#111827] hover:bg-[#083F32] px-2.5 py-1 rounded-lg disabled:opacity-50 transition-colors">
                       {savingId === kc.id ? '…' : 'Save'}
                     </button>
                     <button onClick={() => setEditingId(null)} className="text-[10px] font-medium text-[#6B7280] hover:text-[#374151] px-2 py-1 rounded-lg hover:bg-[#F3F4F6] transition-colors">Cancel</button>
@@ -758,10 +758,10 @@ function FilterDropdown<T extends string>({ value, onChange, options }: {
         <svg className="w-3 h-3 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
       </button>
       {open && (
-        <div className="absolute top-full mt-1.5 left-0 z-[200] bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1 min-w-[130px]">
+        <div className="absolute top-full mt-1.5 left-0 z-[200] bg-white border border-[#E5E7EB] rounded-xl shadow-lg py-1 min-w-[130px]">
           {options.map(o => (
             <button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }}
-              className={`w-full text-left px-3.5 py-1.5 text-xs transition-colors ${value === o.value ? 'text-[#0D4C3C] font-semibold bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F3F4F6]'}`}>
+              className={`w-full text-left px-3.5 py-1.5 text-xs transition-colors ${value === o.value ? 'text-[#6C55E8] font-semibold bg-[#F3F4F6]' : 'text-[#374151] hover:bg-[#F3F4F6]'}`}>
               {o.label}
             </button>
           ))}
@@ -902,8 +902,8 @@ export function InsightsPage() {
   return (
     <div className="relative h-full flex flex-col overflow-hidden">
       {/* Ambient blobs */}
-      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
-      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#111827]/5 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#111827]/4 blur-3xl" aria-hidden="true"/>
 
       {/* Header */}
       <div className="relative z-10 px-4 md:px-8 py-4 flex-shrink-0 border-b border-white/60">
@@ -913,7 +913,7 @@ export function InsightsPage() {
             <p className="text-xs text-[#9CA3AF] mt-0.5">Analyse patterns and train your AI Agent</p>
           </div>
           <a href="/brand-brain"
-            className="flex items-center gap-1.5 text-xs font-semibold text-[#0D4C3C] border border-[#0D4C3C]/40 bg-white/60 backdrop-blur-sm px-3.5 py-2 rounded-xl hover:bg-[#E6F2EE] transition-colors flex-shrink-0">
+            className="flex items-center gap-1.5 text-xs font-semibold text-[#6C55E8] border border-[#6C55E8]/40 bg-white/60 backdrop-blur-sm px-3.5 py-2 rounded-xl hover:bg-[#EDE9FE] transition-colors flex-shrink-0">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/>
             </svg>
@@ -948,11 +948,11 @@ export function InsightsPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex items-center gap-0 mt-4 -mb-4 border-b border-[#E5EAE8]/60">
+        <div className="flex items-center gap-0 mt-4 -mb-4 border-b border-[#E5E7EB]/60">
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
-                tab === t.id ? 'border-[#0D4C3C] text-[#0D4C3C]' : 'border-transparent text-[#6B7280] hover:text-[#374151]'
+                tab === t.id ? 'border-[#6C55E8] text-[#6C55E8]' : 'border-transparent text-[#6B7280] hover:text-[#374151]'
               }`}>
               {t.icon}{t.label}
             </button>
@@ -962,21 +962,21 @@ export function InsightsPage() {
 
       {/* Filter bar */}
       {tab !== 'agent' && (
-        <div className="flex-shrink-0 border-b border-[#E5EAE8]/60 px-4 md:px-8 py-2.5 flex items-center gap-2.5 flex-wrap">
+        <div className="flex-shrink-0 border-b border-[#E5E7EB]/60 px-4 md:px-8 py-2.5 flex items-center gap-2.5 flex-wrap">
           <FilterDropdown value={dateRange} onChange={setDateRange} options={dateOptions}/>
           <FilterDropdown value={starFilter} onChange={setStarFilter} options={starOptions}/>
           {tab === 'keywords' && (
             <>
               <button onClick={() => setShowBigrams(b => !b)}
                 className={`flex items-center gap-1.5 text-xs font-medium border rounded-lg px-3 py-1.5 transition-colors ${
-                  showBigrams ? 'border-[#0D4C3C] text-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#111827]'
+                  showBigrams ? 'border-[#6C55E8] text-[#6C55E8] bg-[#EDE9FE]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#111827]'
                 }`}>
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
                 {showBigrams ? 'Phrases' : 'Single words'}
               </button>
               <button onClick={() => setShowWordCloud(s => !s)}
                 className={`flex items-center gap-1.5 text-xs font-medium border rounded-lg px-3 py-1.5 transition-colors ${
-                  showWordCloud ? 'border-[#0D4C3C] text-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#111827]'
+                  showWordCloud ? 'border-[#6C55E8] text-[#6C55E8] bg-[#EDE9FE]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#374151] hover:text-[#111827]'
                 }`}>
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
                 Word Cloud
@@ -1013,12 +1013,12 @@ export function InsightsPage() {
               {/* Word cloud */}
               {showWordCloud && (
                 <GlassCard>
-                  <div className="px-5 py-3 border-b border-[#E5EAE8]/60 flex items-center gap-2">
+                  <div className="px-5 py-3 border-b border-[#E5E7EB]/60 flex items-center gap-2">
                     <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Word Cloud</p>
                     <div className="flex items-center gap-3 ml-auto text-[10px] text-[#6B7280]">
                       <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"/>Positive</span>
                       <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block"/>Negative</span>
-                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#0D4C3C] inline-block"/>Both</span>
+                      <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#111827] inline-block"/>Both</span>
                     </div>
                   </div>
                   <WordCloud positive={positiveKw} negative={negativeKw}/>
@@ -1028,7 +1028,7 @@ export function InsightsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {/* Positive keywords */}
                 <GlassCard tint="green">
-                  <div className="px-5 py-3.5 border-b border-[#E5EAE8]/60 flex items-center gap-2">
+                  <div className="px-5 py-3.5 border-b border-[#E5E7EB]/60 flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"/>
                     <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">What customers love</p>
                     <span className="ml-auto text-[10px] text-[#9CA3AF]">{posCount} reviews</span>
@@ -1047,7 +1047,7 @@ export function InsightsPage() {
                     </div>
                   )}
                   {positiveKw.length > 0 && (
-                    <div className="px-5 py-3 border-t border-[#E5EAE8]/60">
+                    <div className="px-5 py-3 border-t border-[#E5E7EB]/60">
                       <p className="text-[10px] text-[#9CA3AF]">Click to drill down · Hover to add to Agent</p>
                     </div>
                   )}
@@ -1055,7 +1055,7 @@ export function InsightsPage() {
 
                 {/* Negative keywords */}
                 <GlassCard tint="red">
-                  <div className="px-5 py-3.5 border-b border-[#E5EAE8]/60 flex items-center gap-2">
+                  <div className="px-5 py-3.5 border-b border-[#E5E7EB]/60 flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0"/>
                     <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Common complaints</p>
                     <span className="ml-auto text-[10px] text-[#9CA3AF]">{negCount} reviews</span>
@@ -1074,7 +1074,7 @@ export function InsightsPage() {
                     </div>
                   )}
                   {negativeKw.length > 0 && (
-                    <div className="px-5 py-3 border-t border-[#E5EAE8]/60">
+                    <div className="px-5 py-3 border-t border-[#E5E7EB]/60">
                       <p className="text-[10px] text-[#9CA3AF]">Add complaint keywords so the Agent addresses them proactively.</p>
                     </div>
                   )}
@@ -1090,7 +1090,7 @@ export function InsightsPage() {
             <>
               {/* Sentiment momentum */}
               <GlassCard>
-                <div className="px-5 py-3.5 border-b border-[#E5EAE8]/60">
+                <div className="px-5 py-3.5 border-b border-[#E5E7EB]/60">
                   <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Sentiment Momentum</p>
                   <p className="text-[10px] text-[#9CA3AF] mt-0.5">Weekly positive % over time</p>
                 </div>
@@ -1101,7 +1101,7 @@ export function InsightsPage() {
 
               {/* Day of week */}
               <GlassCard>
-                <div className="px-5 py-3.5 border-b border-[#E5EAE8]/60">
+                <div className="px-5 py-3.5 border-b border-[#E5E7EB]/60">
                   <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Review Volume by Day</p>
                   <p className="text-[10px] text-[#9CA3AF] mt-0.5">Which days receive the most reviews</p>
                 </div>
@@ -1112,7 +1112,7 @@ export function InsightsPage() {
 
               {/* Weekly breakdown table */}
               <GlassCard>
-                <div className="px-5 py-3.5 border-b border-[#E5EAE8]/60">
+                <div className="px-5 py-3.5 border-b border-[#E5E7EB]/60">
                   <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Weekly Breakdown</p>
                 </div>
                 <WeeklyTable reviews={reviews}/>
@@ -1127,7 +1127,7 @@ export function InsightsPage() {
             <>
               {/* Rating distribution */}
               <GlassCard tint="amber">
-                <div className="px-5 py-3.5 border-b border-[#E5EAE8]/60">
+                <div className="px-5 py-3.5 border-b border-[#E5E7EB]/60">
                   <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Rating Distribution</p>
                   <p className="text-[10px] text-[#9CA3AF] mt-0.5">Breakdown by star rating</p>
                 </div>
@@ -1138,7 +1138,7 @@ export function InsightsPage() {
 
               {/* Monthly cohort */}
               <GlassCard>
-                <div className="px-5 py-3.5 border-b border-[#E5EAE8]/60 flex items-center justify-between">
+                <div className="px-5 py-3.5 border-b border-[#E5E7EB]/60 flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Monthly Volume</p>
                     <p className="text-[10px] text-[#9CA3AF] mt-0.5">Reviews per month + avg rating</p>

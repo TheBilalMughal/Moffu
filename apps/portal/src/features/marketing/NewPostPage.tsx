@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   marketingService, GeneratePostResult, Variant,
@@ -14,9 +14,9 @@ function CopyButton({ text }: { text: string }) {
     navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); });
   }
   return (
-    <button onClick={copy} title="Copy" className="p-1 rounded text-[#9CA3AF] hover:text-[#0D4C3C] transition-colors flex-shrink-0">
+    <button onClick={copy} title="Copy" className="p-1 rounded text-[#9CA3AF] hover:text-[#6C55E8] transition-colors flex-shrink-0">
       {copied
-        ? <svg className="w-3.5 h-3.5 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
+        ? <svg className="w-3.5 h-3.5 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
         : <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
       }
     </button>
@@ -47,13 +47,13 @@ function VariantCard({ index, variantData, platforms }: {
   }
 
   return (
-    <div className="bg-white border border-[#E5EAE8] rounded-xl overflow-hidden">
+    <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 bg-[#F8FAF9] border-b border-[#E5EAE8]">
+      <div className="flex items-center justify-between px-5 py-3 bg-[#F9FAFB] border-b border-[#E5E7EB]">
         <p className="text-sm font-bold text-[#111827]">Variant {index + 1}</p>
         <button
           onClick={downloadText}
-          className="flex items-center gap-1.5 text-xs font-medium text-[#0D4C3C] border border-[#0D4C3C]/30 px-3 py-1.5 rounded-lg hover:bg-[#E6F2EE] transition-colors"
+          className="flex items-center gap-1.5 text-xs font-medium text-[#6C55E8] border border-[#6C55E8]/30 px-3 py-1.5 rounded-lg hover:bg-[#EDE9FE] transition-colors"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -69,7 +69,7 @@ function VariantCard({ index, variantData, platforms }: {
             <button
               key={p}
               onClick={() => setActivePlatform(p)}
-              className={`flex-1 py-2 text-xs font-semibold transition-colors ${activePlatform === p ? 'text-[#0D4C3C] border-b-2 border-[#0D4C3C] -mb-px' : 'text-[#9CA3AF] hover:text-[#374151]'}`}
+              className={`flex-1 py-2 text-xs font-semibold transition-colors ${activePlatform === p ? 'text-[#6C55E8] border-b-2 border-[#6C55E8] -mb-px' : 'text-[#9CA3AF] hover:text-[#374151]'}`}
             >
               {PLATFORM_LABELS[p] ?? p}
             </button>
@@ -98,7 +98,7 @@ function VariantCard({ index, variantData, platforms }: {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {v.hashtags.map(h => (
-                  <span key={h} className="text-xs text-[#0D4C3C] bg-[#E6F2EE] px-2 py-0.5 rounded-lg font-medium">{h}</span>
+                  <span key={h} className="text-xs text-[#6C55E8] bg-[#EDE9FE] px-2 py-0.5 rounded-lg font-medium">{h}</span>
                 ))}
               </div>
             </div>
@@ -192,7 +192,7 @@ export function NewPostPage() {
                   <button
                     key={p.value}
                     onClick={() => setPlatform(p.value)}
-                    className={`py-2.5 px-3 rounded-xl border-2 text-sm font-medium transition-all ${platform === p.value ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] text-[#374151] hover:border-[#0D4C3C]/40'}`}
+                    className={`py-2.5 px-3 rounded-xl border-2 text-sm font-medium transition-all ${platform === p.value ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8]' : 'border-[#E5E7EB] text-[#374151] hover:border-[#6C55E8]/40'}`}
                   >
                     {p.label}
                   </button>
@@ -208,13 +208,13 @@ export function NewPostPage() {
                   <button
                     key={t.value}
                     onClick={() => setPostType(t.value)}
-                    className={`flex items-start gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${postType === t.value ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#E5EAE8] hover:border-[#0D4C3C]/40'}`}
+                    className={`flex items-start gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${postType === t.value ? 'border-[#6C55E8] bg-[#EDE9FE]' : 'border-[#E5E7EB] hover:border-[#6C55E8]/40'}`}
                   >
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${postType === t.value ? 'border-[#0D4C3C]' : 'border-[#D1D5DB]'}`}>
-                      {postType === t.value && <div className="w-2.5 h-2.5 rounded-full bg-[#0D4C3C]"/>}
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${postType === t.value ? 'border-[#6C55E8]' : 'border-[#D1D5DB]'}`}>
+                      {postType === t.value && <div className="w-2.5 h-2.5 rounded-full bg-[#111827]"/>}
                     </div>
                     <div>
-                      <p className={`text-sm font-semibold ${postType === t.value ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>{t.label}</p>
+                      <p className={`text-sm font-semibold ${postType === t.value ? 'text-[#6C55E8]' : 'text-[#111827]'}`}>{t.label}</p>
                       <p className="text-xs text-[#6B7280] mt-0.5">{t.desc}</p>
                     </div>
                   </button>
@@ -233,7 +233,7 @@ export function NewPostPage() {
                 placeholder="Describe what this post is about, a special offer, event, or any extra instructions…"
                 rows={3}
                 maxLength={500}
-                className="w-full text-sm text-[#111827] border border-[#D1D5DB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#0D4C3C] transition-colors placeholder:text-[#9CA3AF] bg-white resize-none"
+                className="w-full text-sm text-[#111827] border border-[#D1D5DB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#6C55E8] transition-colors placeholder:text-[#9CA3AF] bg-white resize-none"
               />
             </div>
 
@@ -245,7 +245,7 @@ export function NewPostPage() {
                   <button
                     key={n}
                     onClick={() => setVariantCount(n)}
-                    className={`w-14 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${variantCount === n ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] text-[#374151] hover:border-[#0D4C3C]/40'}`}
+                    className={`w-14 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all ${variantCount === n ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8]' : 'border-[#E5E7EB] text-[#374151] hover:border-[#6C55E8]/40'}`}
                   >
                     {n}
                   </button>
@@ -258,7 +258,7 @@ export function NewPostPage() {
             <button
               onClick={generate}
               disabled={!postType}
-              className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-bold px-7 py-3 rounded-xl transition-colors"
+              className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-bold px-7 py-3 rounded-xl transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
@@ -270,8 +270,8 @@ export function NewPostPage() {
 
         {step === 'generating' && (
           <div className="flex flex-col items-center justify-center h-72 gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-[#E6F2EE] flex items-center justify-center">
-              <svg className="w-7 h-7 text-[#0D4C3C] animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-14 h-14 rounded-2xl bg-[#EDE9FE] flex items-center justify-center">
+              <svg className="w-7 h-7 text-[#6C55E8] animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
             </div>
@@ -293,7 +293,7 @@ export function NewPostPage() {
               </div>
               <button
                 onClick={() => { setStep('configure'); setResult(null); }}
-                className="flex items-center gap-1.5 text-sm font-medium text-[#0D4C3C] border border-[#0D4C3C]/30 px-4 py-2 rounded-xl hover:bg-[#E6F2EE] transition-colors"
+                className="flex items-center gap-1.5 text-sm font-medium text-[#6C55E8] border border-[#6C55E8]/30 px-4 py-2 rounded-xl hover:bg-[#EDE9FE] transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>

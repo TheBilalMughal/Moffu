@@ -19,9 +19,9 @@ function StepIndicator({ current }: { current: number }) {
           <div key={n} className="flex items-center gap-2">
             <div
               className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-semibold transition-colors ${
-                done   ? 'bg-[#0D4C3C] text-white' :
-                active ? 'bg-[#0D4C3C] text-white' :
-                         'bg-[#E5EAE8] text-[#9CA3AF]'
+                done   ? 'bg-[#111827] text-white' :
+                active ? 'bg-[#111827] text-white' :
+                         'bg-[#E5E7EB] text-[#9CA3AF]'
               }`}
             >
               {done ? (
@@ -31,7 +31,7 @@ function StepIndicator({ current }: { current: number }) {
               ) : n}
             </div>
             {n < TOTAL_STEPS && (
-              <div className={`h-px w-8 ${done ? 'bg-[#0D4C3C]' : 'bg-[#E5EAE8]'}`} />
+              <div className={`h-px w-8 ${done ? 'bg-[#111827]' : 'bg-[#E5E7EB]'}`} />
             )}
           </div>
         );
@@ -50,7 +50,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className={`w-full px-3 py-2 rounded-xl border border-[#D1D5DB] bg-white text-sm text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-[#0D4C3C] focus:border-[#0D4C3C] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF] ${props.className ?? ''}`}
+      className={`w-full px-3 py-2 rounded-xl border border-[#D1D5DB] bg-white text-sm text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-1 focus:ring-[#6C55E8] focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF] ${props.className ?? ''}`}
     />
   );
 }
@@ -63,7 +63,7 @@ function PrimaryBtn({
       type="button"
       onClick={onClick}
       disabled={loading || disabled}
-      className="w-full py-2.5 px-4 bg-[#0D4C3C] text-white text-sm font-medium rounded-xl hover:bg-[#0a3d30] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="w-full py-2.5 px-4 bg-[#111827] text-white text-sm font-medium rounded-xl hover:bg-[#1f2937] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
       {loading ? (
         <span className="flex items-center justify-center gap-2">
@@ -143,7 +143,7 @@ function Step1({
 
         <div>
           <Label>URL slug</Label>
-          <div className="flex items-center border border-[#D1D5DB] rounded-xl focus-within:ring-1 focus-within:ring-[#0D4C3C] focus-within:border-[#0D4C3C] bg-white overflow-hidden">
+          <div className="flex items-center border border-[#D1D5DB] rounded-xl focus-within:ring-1 focus-within:ring-[#6C55E8] focus-within:border-[#6C55E8] bg-white overflow-hidden">
             <span className="px-3 py-2 text-xs text-[#9CA3AF] bg-[#F9FAFB] border-r border-[#D1D5DB] select-none whitespace-nowrap">
               moffu.app/
             </span>
@@ -221,7 +221,7 @@ function Step2({
               const c = countries.find((x) => x.id === e.target.value);
               if (c?.default_tz) setTimezone(c.default_tz);
             }}
-            className="w-full px-3 py-2 rounded-xl border border-[#D1D5DB] bg-white text-sm text-[#111827] focus:outline-none focus:ring-1 focus:ring-[#0D4C3C] focus:border-[#0D4C3C]"
+            className="w-full px-3 py-2 rounded-xl border border-[#D1D5DB] bg-white text-sm text-[#111827] focus:outline-none focus:ring-1 focus:ring-[#6C55E8] focus:border-[#6C55E8]"
           >
             <option value="">Select a countryâ€¦</option>
             {countries.map((c) => (
@@ -235,7 +235,7 @@ function Step2({
           <select
             value={timezone}
             onChange={(e) => setTimezone(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl border border-[#D1D5DB] bg-white text-sm text-[#111827] focus:outline-none focus:ring-1 focus:ring-[#0D4C3C] focus:border-[#0D4C3C]"
+            className="w-full px-3 py-2 rounded-xl border border-[#D1D5DB] bg-white text-sm text-[#111827] focus:outline-none focus:ring-1 focus:ring-[#6C55E8] focus:border-[#6C55E8]"
           >
             {allTz.map((tz) => (
               <option key={tz} value={tz}>{tz.replace(/_/g, ' ')}</option>
@@ -368,7 +368,7 @@ function Step4({
       <div className="space-y-3 mb-8">
         {items.map(({ label, done, note }) => (
           <div key={label} className="flex items-center gap-3">
-            <div className={`w-5 h-5 rounded-xl flex items-center justify-center flex-shrink-0 ${done ? 'bg-[#0D4C3C]' : 'bg-[#E5EAE8]'}`}>
+            <div className={`w-5 h-5 rounded-xl flex items-center justify-center flex-shrink-0 ${done ? 'bg-[#111827]' : 'bg-[#E5E7EB]'}`}>
               {done ? (
                 <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -431,13 +431,13 @@ export function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAF9] flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center px-4">
       {/* Logo */}
       <div className="mb-8">
-        <span className="text-xl font-bold text-[#0D4C3C] tracking-tight">moffu</span>
+        <span className="text-xl font-bold text-[#6C55E8] tracking-tight">moffu</span>
       </div>
 
-      <div className="w-full max-w-md bg-white border border-[#E5EAE8] rounded-xl p-8">
+      <div className="w-full max-w-md bg-white border border-[#E5E7EB] rounded-xl p-8">
         <StepIndicator current={step} />
 
         {step === 1 && (

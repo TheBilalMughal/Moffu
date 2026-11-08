@@ -46,7 +46,7 @@ const PLAN_DESCRIPTIONS: Record<string, string> = {
 const PLAN_COLORS: Record<string, { bg: string; text: string }> = {
   free:    { bg: 'bg-[#F3F4F6]', text: 'text-[#6B7280]' },
   starter: { bg: 'bg-[#EFF6FF]', text: 'text-blue-700' },
-  growth:  { bg: 'bg-[#E6F2EE]', text: 'text-[#0D4C3C]' },
+  growth:  { bg: 'bg-[#EDE9FE]', text: 'text-[#6C55E8]' },
   scale:   { bg: 'bg-[#1C1917]', text: 'text-stone-100' },
 };
 
@@ -68,10 +68,10 @@ function UsageMeter({ label, used, limit }: { label: string; used: number; limit
       </div>
       <div className="w-full bg-[#F3F4F6] rounded-full h-1.5 overflow-hidden">
         {unlimited ? (
-          <div className="h-full w-full bg-[#E6F2EE] rounded-full" />
+          <div className="h-full w-full bg-[#EDE9FE] rounded-full" />
         ) : (
           <div
-            className={`h-full rounded-full transition-all ${danger ? 'bg-red-500' : warn ? 'bg-amber-400' : 'bg-[#0D4C3C]'}`}
+            className={`h-full rounded-full transition-all ${danger ? 'bg-red-500' : warn ? 'bg-amber-400' : 'bg-[#111827]'}`}
             style={{ width: `${pct}%` }}
           />
         )}
@@ -109,7 +109,7 @@ function UsageHistoryChart({ days }: { days: UsageDay[] }) {
               {barH > 0 && (
                 <div className="w-full rounded-xl overflow-hidden" style={{ height: `${barH}px` }}>
                   <div className="w-full bg-[#6BAE9A]" style={{ height: `${draftsH}px` }} />
-                  <div className="w-full bg-[#0D4C3C]" style={{ height: `${repliesH}px` }} />
+                  <div className="w-full bg-[#111827]" style={{ height: `${repliesH}px` }} />
                 </div>
               )}
               {barH === 0 && <div className="w-full bg-[#F3F4F6] rounded-xl" style={{ height: '2px' }} />}
@@ -136,7 +136,7 @@ function UsageHistoryChart({ days }: { days: UsageDay[] }) {
           <span className="text-[10px] text-[#9CA3AF]">AI drafts</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-xl bg-[#0D4C3C]" />
+          <div className="w-2.5 h-2.5 rounded-xl bg-[#111827]" />
           <span className="text-[10px] text-[#9CA3AF]">Published replies</span>
         </div>
       </div>
@@ -172,7 +172,7 @@ function PlanComparisonModal({ plans, sub, billingInterval, currentPlan, onDowng
         onClick={e => e.stopPropagation()}
       >
         {/* Modal header */}
-        <div className="sticky top-0 bg-white border-b border-[#E5EAE8] px-6 py-4 flex items-center justify-between rounded-t-2xl">
+        <div className="sticky top-0 bg-white border-b border-[#E5E7EB] px-6 py-4 flex items-center justify-between rounded-t-2xl">
           <div>
             <h3 className="text-base font-bold text-[#111827]">Compare plans</h3>
             <p className="text-xs text-[#6B7280] mt-0.5">All prices in USD · {billingInterval === 'annual' ? 'billed annually' : 'billed monthly'}</p>
@@ -192,8 +192,8 @@ function PlanComparisonModal({ plans, sub, billingInterval, currentPlan, onDowng
               const isCurrent = plan.id === sub?.plan_id;
               const price = plan.prices.find(p => p.interval === billingInterval) ?? plan.prices.find(p => p.interval === 'monthly');
               return (
-                <div key={plan.id} className={`text-center p-4 rounded-xl border ${isCurrent ? 'border-[#0D4C3C] bg-[#F8FAF9]' : 'border-[#F3F4F6]'}`}>
-                  {isCurrent && <p className="text-[10px] font-bold text-[#0D4C3C] mb-1">Current</p>}
+                <div key={plan.id} className={`text-center p-4 rounded-xl border ${isCurrent ? 'border-[#6C55E8] bg-[#F9FAFB]' : 'border-[#F3F4F6]'}`}>
+                  {isCurrent && <p className="text-[10px] font-bold text-[#6C55E8] mb-1">Current</p>}
                   <p className="text-sm font-bold text-[#111827]">{plan.name}</p>
                   <p className="text-lg font-bold text-[#111827] mt-1">
                     {plan.contact_sales ? (
@@ -215,7 +215,7 @@ function PlanComparisonModal({ plans, sub, billingInterval, currentPlan, onDowng
               return (
                 <div key={row.key}>
                   {showSectionHeader && (
-                    <div className="grid grid-cols-5 gap-3 pt-4 pb-1 border-t border-[#E5EAE8] mt-1">
+                    <div className="grid grid-cols-5 gap-3 pt-4 pb-1 border-t border-[#E5E7EB] mt-1">
                       <div className="col-span-5">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">{row.section}</span>
                       </div>
@@ -236,7 +236,7 @@ function PlanComparisonModal({ plans, sub, billingInterval, currentPlan, onDowng
             })}
 
             {/* Location add-on row */}
-            <div className="grid grid-cols-5 gap-3 py-3 border-t border-[#E5EAE8] mt-1">
+            <div className="grid grid-cols-5 gap-3 py-3 border-t border-[#E5E7EB] mt-1">
               <div className="flex items-center">
                 <span className="text-xs font-medium text-[#374151]">Extra location</span>
               </div>
@@ -260,19 +260,19 @@ function PlanComparisonModal({ plans, sub, billingInterval, currentPlan, onDowng
               return (
                 <div key={plan.id}>
                   {isCurrent ? (
-                    <button disabled className="w-full py-2 text-xs font-semibold text-[#9CA3AF] border border-[#E5EAE8] rounded-xl cursor-default">
+                    <button disabled className="w-full py-2 text-xs font-semibold text-[#9CA3AF] border border-[#E5E7EB] rounded-xl cursor-default">
                       Current
                     </button>
                   ) : isDowngrade ? (
-                    <button onClick={() => { onClose(); onDowngrade(plan); }} className="w-full py-2 text-xs font-semibold text-[#374151] border border-[#E5EAE8] rounded-xl hover:bg-[#F3F4F6] transition-colors">
+                    <button onClick={() => { onClose(); onDowngrade(plan); }} className="w-full py-2 text-xs font-semibold text-[#374151] border border-[#E5E7EB] rounded-xl hover:bg-[#F3F4F6] transition-colors">
                       Downgrade
                     </button>
                   ) : plan.contact_sales ? (
-                    <a href="mailto:sales@moffu.com" className="w-full py-2 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl flex items-center justify-center hover:bg-[#0a3d30] transition-colors">
+                    <a href="mailto:sales@moffu.com" className="w-full py-2 text-xs font-semibold text-white bg-[#111827] rounded-xl flex items-center justify-center hover:bg-[#1f2937] transition-colors">
                       Contact Sales
                     </a>
                   ) : (
-                    <button disabled title="Coming soon" className="w-full py-2 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl opacity-50 cursor-not-allowed">
+                    <button disabled title="Coming soon" className="w-full py-2 text-xs font-semibold text-white bg-[#111827] rounded-xl opacity-50 cursor-not-allowed">
                       Upgrade
                     </button>
                   )}
@@ -295,7 +295,7 @@ function AddLocationDialog({ plan, onClose }: { plan: Plan; onClose: () => void 
         className="bg-white rounded-2xl shadow-2xl w-full max-w-sm"
         onClick={e => e.stopPropagation()}
       >
-        <div className="px-6 py-5 border-b border-[#E5EAE8] flex items-center justify-between">
+        <div className="px-6 py-5 border-b border-[#E5E7EB] flex items-center justify-between">
           <h3 className="text-sm font-bold text-[#111827]">Add extra location</h3>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[#F3F4F6] text-[#6B7280]">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -304,7 +304,7 @@ function AddLocationDialog({ plan, onClose }: { plan: Plan; onClose: () => void 
           </button>
         </div>
         <div className="px-6 py-5 space-y-4">
-          <div className="bg-[#F8FAF9] border border-[#E5EAE8] rounded-xl p-4 space-y-2">
+          <div className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-4 space-y-2">
             <div className="flex justify-between text-xs">
               <span className="text-[#374151]">Plan</span>
               <span className="font-semibold text-[#111827]">{plan.name}</span>
@@ -313,7 +313,7 @@ function AddLocationDialog({ plan, onClose }: { plan: Plan; onClose: () => void 
               <span className="text-[#374151]">Included locations</span>
               <span className="font-semibold text-[#111827]">{plan.entitlements['locations']?.limit_value ?? 1}</span>
             </div>
-            <div className="border-t border-[#E5EAE8] pt-2 flex justify-between text-xs">
+            <div className="border-t border-[#E5E7EB] pt-2 flex justify-between text-xs">
               <span className="text-[#374151]">Extra location cost</span>
               <span className="font-bold text-[#111827]">{cents(addonCents)}/mo per location</span>
             </div>
@@ -324,7 +324,7 @@ function AddLocationDialog({ plan, onClose }: { plan: Plan; onClose: () => void 
           <button
             disabled
             title="Stripe integration coming soon"
-            className="w-full py-2.5 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl opacity-50 cursor-not-allowed"
+            className="w-full py-2.5 text-xs font-semibold text-white bg-[#111827] rounded-xl opacity-50 cursor-not-allowed"
           >
             Confirm & Pay — coming soon
           </button>
@@ -468,8 +468,8 @@ export function BillingPage() {
   return (
     <div className="relative h-full flex flex-col overflow-hidden">
       {/* Ambient blobs */}
-      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
-      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#111827]/5 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#111827]/4 blur-3xl" aria-hidden="true"/>
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-8">
@@ -502,14 +502,14 @@ export function BillingPage() {
       {downgradeMsg && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
-            <div className="w-10 h-10 rounded-full bg-[#E6F2EE] flex items-center justify-center mx-auto mb-3">
-              <svg className="w-5 h-5 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-10 h-10 rounded-full bg-[#EDE9FE] flex items-center justify-center mx-auto mb-3">
+              <svg className="w-5 h-5 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
             <p className="text-sm font-semibold text-[#111827] mb-1">Locations updated</p>
             <p className="text-xs text-[#6B7280] mb-4">{downgradeMsg}</p>
-            <button onClick={() => setDowngradeMsg(null)} className="px-5 py-2 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl hover:bg-[#0a3d30]">
+            <button onClick={() => setDowngradeMsg(null)} className="px-5 py-2 text-xs font-semibold text-white bg-[#111827] rounded-xl hover:bg-[#1f2937]">
               Done
             </button>
           </div>
@@ -524,7 +524,7 @@ export function BillingPage() {
         </div>
         <button
           onClick={() => setShowCompare(true)}
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#374151] border border-[#E5EAE8] rounded-lg hover:border-[#0D4C3C]/30 hover:text-[#0D4C3C] transition-colors"
+          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#374151] border border-[#E5E7EB] rounded-lg hover:border-[#6C55E8]/30 hover:text-[#6C55E8] transition-colors"
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -535,19 +535,19 @@ export function BillingPage() {
 
       {/* Annual savings banner */}
       {annualSavings > 0 && (
-        <div className="flex items-center justify-between bg-[#E6F2EE] border border-[#0D4C3C]/20 rounded-xl px-5 py-3 mb-5">
+        <div className="flex items-center justify-between bg-[#EDE9FE] border border-[#6C55E8]/20 rounded-xl px-5 py-3 mb-5">
           <div className="flex items-center gap-2.5">
-            <svg className="w-4 h-4 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-xs text-[#0D4C3C]">
+            <p className="text-xs text-[#6C55E8]">
               <span className="font-bold">Switch to annual and save {cents(annualSavings)}/year</span>
               {' '}on your {currentPlan?.name} plan — that's {cents(annualSavings / 12)}/mo off.
             </p>
           </div>
           <button
             disabled
-            className="flex-shrink-0 text-[11px] font-bold text-white bg-[#0D4C3C] px-3 py-1.5 rounded-lg opacity-50 cursor-not-allowed"
+            className="flex-shrink-0 text-[11px] font-bold text-white bg-[#111827] px-3 py-1.5 rounded-lg opacity-50 cursor-not-allowed"
           >
             Switch — coming soon
           </button>
@@ -558,7 +558,7 @@ export function BillingPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
         {/* Current plan card */}
         <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Current Plan</p>
           <div className="flex items-start gap-4 mb-5">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${planColor.bg}`}>
@@ -569,7 +569,7 @@ export function BillingPage() {
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-base font-bold text-[#111827]">{sub?.plan_name ?? 'Free'}</span>
-                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${isFree ? 'bg-[#F3F4F6] text-[#6B7280]' : 'bg-[#E6F2EE] text-[#0D4C3C]'}`}>
+                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${isFree ? 'bg-[#F3F4F6] text-[#6B7280]' : 'bg-[#EDE9FE] text-[#6C55E8]'}`}>
                   {isFree ? 'Free' : sub?.billing_interval === 'annual' ? 'Annual' : 'Monthly'}
                 </span>
                 {hasOverride && (
@@ -605,7 +605,7 @@ export function BillingPage() {
               <span className="text-xs text-[#6B7280]">1 / {seatLimit}</span>
             </div>
             <div className="w-full bg-[#F3F4F6] rounded-full h-1.5 overflow-hidden">
-              <div className="h-full bg-[#0D4C3C] rounded-full" style={{ width: `${Math.min(100, Math.round((1 / (seatLimit || 1)) * 100))}%` }} />
+              <div className="h-full bg-[#111827] rounded-full" style={{ width: `${Math.min(100, Math.round((1 / (seatLimit || 1)) * 100))}%` }} />
             </div>
             <p className="text-[10px] text-[#9CA3AF] mt-1">You (owner) · {seatLimit - 1} seat{seatLimit - 1 !== 1 ? 's' : ''} available</p>
           </div>
@@ -613,11 +613,11 @@ export function BillingPage() {
 
         {/* Usage card */}
         <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <div className="flex items-center justify-between mb-4">
             <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Usage this period</p>
             {usage && (
-              <span className="text-[10px] text-[#9CA3AF] bg-[#F8FAF9] border border-[#E5EAE8] px-2 py-0.5 rounded-md">{usage.reset_label}</span>
+              <span className="text-[10px] text-[#9CA3AF] bg-[#F9FAFB] border border-[#E5E7EB] px-2 py-0.5 rounded-md">{usage.reset_label}</span>
             )}
           </div>
 
@@ -658,7 +658,7 @@ export function BillingPage() {
               <button
                 onClick={handleOverageToggle}
                 disabled={overageToggling || !sub}
-                className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ${overageToggling ? 'opacity-50 cursor-wait' : 'cursor-pointer'} ${overageProtection ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}
+                className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ${overageToggling ? 'opacity-50 cursor-wait' : 'cursor-pointer'} ${overageProtection ? 'bg-[#111827]' : 'bg-[#D1D5DB]'}`}
                 aria-label="Toggle overage protection"
               >
                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${overageProtection ? 'translate-x-4' : 'translate-x-0'}`} />
@@ -691,21 +691,21 @@ export function BillingPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
         {/* Usage history chart */}
         <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Usage history · last 14 days</p>
           <UsageHistoryChart days={history} />
         </div>
 
         {/* Add-ons card */}
         <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Add-ons</p>
 
           {/* Active addon line items */}
           {sub && sub.addon_items.length > 0 ? (
             <div className="space-y-3 mb-4">
               {sub.addon_items.map(item => (
-                <div key={item.id} className="flex items-center justify-between py-2.5 px-3 bg-[#F8FAF9] border border-[#E5EAE8] rounded-xl">
+                <div key={item.id} className="flex items-center justify-between py-2.5 px-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl">
                   <div>
                     <p className="text-xs font-medium text-[#111827]">
                       {item.addon_type === 'extra_location' ? 'Extra location' : item.addon_type}
@@ -718,7 +718,7 @@ export function BillingPage() {
                     <button
                       disabled
                       title="Cancellation available when Stripe is connected"
-                      className="text-[10px] text-[#9CA3AF] border border-[#E5EAE8] px-2 py-0.5 rounded-md cursor-not-allowed opacity-50"
+                      className="text-[10px] text-[#9CA3AF] border border-[#E5E7EB] px-2 py-0.5 rounded-md cursor-not-allowed opacity-50"
                     >
                       Cancel
                     </button>
@@ -734,20 +734,20 @@ export function BillingPage() {
           {!isFree && currentPlan?.location_addon_cents ? (
             <button
               onClick={() => setShowAddLocation(true)}
-              className="w-full flex items-center justify-between px-4 py-3 border border-dashed border-[#0D4C3C]/30 rounded-xl hover:bg-[#F8FAF9] transition-colors group"
+              className="w-full flex items-center justify-between px-4 py-3 border border-dashed border-[#6C55E8]/30 rounded-xl hover:bg-[#F9FAFB] transition-colors group"
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-lg bg-[#E6F2EE] flex items-center justify-center">
-                  <svg className="w-3.5 h-3.5 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-6 h-6 rounded-lg bg-[#EDE9FE] flex items-center justify-center">
+                  <svg className="w-3.5 h-3.5 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
                 </div>
                 <div className="text-left">
-                  <p className="text-xs font-semibold text-[#374151] group-hover:text-[#0D4C3C]">Add extra location</p>
+                  <p className="text-xs font-semibold text-[#374151] group-hover:text-[#6C55E8]">Add extra location</p>
                   <p className="text-[10px] text-[#9CA3AF]">{cents(currentPlan.location_addon_cents)}/mo per location</p>
                 </div>
               </div>
-              <svg className="w-4 h-4 text-[#9CA3AF] group-hover:text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-[#9CA3AF] group-hover:text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -792,15 +792,15 @@ export function BillingPage() {
               key={plan.id}
               className={`relative flex flex-col rounded-2xl border transition-shadow ${
                 isCurrent
-                  ? 'border-[#0D4C3C] ring-2 ring-[#0D4C3C] bg-white shadow-sm'
+                  ? 'border-[#6C55E8] ring-2 ring-[#6C55E8] bg-white shadow-sm'
                   : isScale
                   ? 'border-[#1C1917] bg-[#1C1917]'
-                  : 'border-[#E5EAE8] bg-white hover:shadow-sm'
+                  : 'border-[#E5E7EB] bg-white hover:shadow-sm'
               }`}
             >
               {isCurrent && (
                 <div className="absolute -top-3 inset-x-0 flex justify-center">
-                  <span className="text-[10px] font-bold text-white bg-[#0D4C3C] px-3 py-0.5 rounded whitespace-nowrap">Current plan</span>
+                  <span className="text-[10px] font-bold text-white bg-[#111827] px-3 py-0.5 rounded whitespace-nowrap">Current plan</span>
                 </div>
               )}
               {plan.is_featured && !isCurrent && (
@@ -845,7 +845,7 @@ export function BillingPage() {
                 <ul className="space-y-2.5 text-xs flex-1 mb-6">
                   {plan.features.map((feat, i) => (
                     <li key={i} className="flex items-start gap-2.5">
-                      <svg className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${isScale ? 'text-emerald-400' : 'text-[#0D4C3C]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${isScale ? 'text-emerald-400' : 'text-[#6C55E8]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                       </svg>
                       <span className={isScale ? 'text-stone-300' : 'text-[#374151]'}>{feat}</span>
@@ -863,22 +863,22 @@ export function BillingPage() {
                     </button>
                   );
                   if (isCurrent) return (
-                    <button disabled className="w-full py-2.5 text-xs font-semibold rounded-xl cursor-default border border-[#E5EAE8] text-[#9CA3AF]">
+                    <button disabled className="w-full py-2.5 text-xs font-semibold rounded-xl cursor-default border border-[#E5E7EB] text-[#9CA3AF]">
                       Current plan
                     </button>
                   );
                   if (isDowngrade) return (
-                    <button onClick={() => handleDowngradeClick(plan)} className="w-full py-2.5 text-xs font-semibold text-[#374151] border border-[#E5EAE8] rounded-xl hover:bg-[#F3F4F6] transition-colors">
+                    <button onClick={() => handleDowngradeClick(plan)} className="w-full py-2.5 text-xs font-semibold text-[#374151] border border-[#E5E7EB] rounded-xl hover:bg-[#F3F4F6] transition-colors">
                       Downgrade
                     </button>
                   );
                   if (plan.contact_sales) return (
-                    <a href="mailto:sales@moffu.com" className="w-full py-2.5 text-xs font-semibold rounded-xl flex items-center justify-center bg-[#0D4C3C] text-white hover:bg-[#0a3d30] transition-colors">
+                    <a href="mailto:sales@moffu.com" className="w-full py-2.5 text-xs font-semibold rounded-xl flex items-center justify-center bg-[#111827] text-white hover:bg-[#1f2937] transition-colors">
                       Contact Sales Team
                     </a>
                   );
                   if (isUpgrade) return (
-                    <button disabled title="Coming soon" className="w-full py-2.5 text-xs font-semibold rounded-xl cursor-not-allowed opacity-50 bg-[#0D4C3C] text-white">
+                    <button disabled title="Coming soon" className="w-full py-2.5 text-xs font-semibold rounded-xl cursor-not-allowed opacity-50 bg-[#111827] text-white">
                       Upgrade — coming soon
                     </button>
                   );

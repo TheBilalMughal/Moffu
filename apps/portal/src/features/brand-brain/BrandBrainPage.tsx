@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { Toast } from '@/components/Toast';
@@ -130,7 +130,7 @@ function Toggle({ checked, onChange, size = 'md' }: { checked: boolean; onChange
   const translate = size === 'sm' ? 'translate-x-4' : 'translate-x-4';
   return (
     <button role="switch" aria-checked={checked} onClick={onChange}
-      className={`relative ${w} rounded-full transition-colors flex-shrink-0 ${checked ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}>
+      className={`relative ${w} rounded-full transition-colors flex-shrink-0 ${checked ? 'bg-[#111827]' : 'bg-[#D1D5DB]'}`}>
       <span className={`absolute ${dot} bg-white rounded-full shadow transition-transform ${checked ? translate : ''}`}/>
     </button>
   );
@@ -139,8 +139,8 @@ function Toggle({ checked, onChange, size = 'md' }: { checked: boolean; onChange
 function Radio({ checked, onClick }: { checked: boolean; onClick: () => void }) {
   return (
     <div onClick={onClick}
-      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 cursor-pointer transition-colors ${checked ? 'border-[#0D4C3C]' : 'border-[#D1D5DB] hover:border-[#0D4C3C]/50'}`}>
-      {checked && <div className="w-2 h-2 rounded-full bg-[#0D4C3C]"/>}
+      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 cursor-pointer transition-colors ${checked ? 'border-[#6C55E8]' : 'border-[#D1D5DB] hover:border-[#6C55E8]/50'}`}>
+      {checked && <div className="w-2 h-2 rounded-full bg-[#111827]"/>}
     </div>
   );
 }
@@ -190,10 +190,10 @@ function SelectField({ value, onChange, options, placeholder, disabled }: {
     : options;
 
   const dropdown = open ? (
-    <div ref={dropRef} style={dropStyle} className="bg-white border border-[#E5EAE8] rounded-xl shadow-lg overflow-hidden flex flex-col">
+    <div ref={dropRef} style={dropStyle} className="bg-white border border-[#E5E7EB] rounded-xl shadow-lg overflow-hidden flex flex-col">
       {/* Search input */}
       <div className="px-2.5 pt-2 pb-1.5 border-b border-[#F3F4F6]">
-        <div className="flex items-center gap-2 bg-[#F8FAF9] border border-[#E5EAE8] rounded-lg px-2.5 py-1.5">
+        <div className="flex items-center gap-2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-2.5 py-1.5">
           <svg className="w-3.5 h-3.5 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
           </svg>
@@ -216,7 +216,7 @@ function SelectField({ value, onChange, options, placeholder, disabled }: {
       <div className="overflow-y-auto py-1" style={{ maxHeight: 220 }}>
         {placeholder && !search && (
           <button onClick={() => { onChange(''); setOpen(false); setSearch(''); }}
-            className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${!value ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#9CA3AF] hover:bg-[#F8F9FA]'}`}>
+            className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${!value ? 'text-[#6C55E8] font-medium bg-[#F3F4F6]' : 'text-[#9CA3AF] hover:bg-[#F8F9FA]'}`}>
             {placeholder}
           </button>
         )}
@@ -225,9 +225,9 @@ function SelectField({ value, onChange, options, placeholder, disabled }: {
         )}
         {filtered.map(opt => (
           <button key={opt} onClick={() => { onChange(opt); setOpen(false); setSearch(''); }}
-            className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${value === opt ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}>
+            className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${value === opt ? 'text-[#6C55E8] font-medium bg-[#F3F4F6]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}>
             <span>{opt}</span>
-            {value === opt && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
+            {value === opt && <svg className="w-3.5 h-3.5 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
           </button>
         ))}
       </div>
@@ -238,7 +238,7 @@ function SelectField({ value, onChange, options, placeholder, disabled }: {
     <div className="relative">
       <button ref={btnRef} onClick={handleOpen} disabled={disabled}
         className={`w-full flex items-center justify-between text-sm border rounded-lg px-3.5 py-2.5 text-left transition-colors
-          ${disabled ? 'bg-[#F9FAFB] text-[#9CA3AF] border-[#E5E7EB] cursor-default' : 'bg-white text-[#111827] border-[#D1D5DB] hover:border-[#0D4C3C] focus:outline-none'}`}>
+          ${disabled ? 'bg-[#F9FAFB] text-[#9CA3AF] border-[#E5E7EB] cursor-default' : 'bg-white text-[#111827] border-[#D1D5DB] hover:border-[#6C55E8] focus:outline-none'}`}>
         <span className={!value ? 'text-[#9CA3AF]' : ''}>{value || placeholder || 'Select…'}</span>
         <svg className="w-4 h-4 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
@@ -250,7 +250,7 @@ function SelectField({ value, onChange, options, placeholder, disabled }: {
 }
 
 
-const inputCls = 'w-full text-sm text-[#111827] border border-[#D1D5DB] rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[#0D4C3C] transition-colors placeholder:text-[#9CA3AF] bg-white';
+const inputCls = 'w-full text-sm text-[#111827] border border-[#D1D5DB] rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[#6C55E8] transition-colors placeholder:text-[#9CA3AF] bg-white';
 
 function PhrasesInput({ phrases, onChange }: { phrases: string[]; onChange: (p: string[]) => void }) {
   const [input, setInput] = useState('');
@@ -262,14 +262,14 @@ function PhrasesInput({ phrases, onChange }: { phrases: string[]; onChange: (p: 
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add(); } }}
           placeholder="Type a phrase and press Enter" className={inputCls}/>
         <button onClick={add} disabled={!input.trim()}
-          className="text-sm font-medium text-[#0D4C3C] border border-[#0D4C3C] px-4 py-2.5 rounded-lg hover:bg-[#E6F2EE] disabled:opacity-40 transition-colors whitespace-nowrap">
+          className="text-sm font-medium text-[#6C55E8] border border-[#6C55E8] px-4 py-2.5 rounded-lg hover:bg-[#EDE9FE] disabled:opacity-40 transition-colors whitespace-nowrap">
           Add
         </button>
       </div>
       {phrases.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-3">
           {phrases.map(p => (
-            <span key={p} className="inline-flex items-center gap-1.5 text-xs font-medium text-[#374151] bg-[#F3F4F6] border border-[#E5EAE8] px-2.5 py-1 rounded-lg">
+            <span key={p} className="inline-flex items-center gap-1.5 text-xs font-medium text-[#374151] bg-[#F3F4F6] border border-[#E5E7EB] px-2.5 py-1 rounded-lg">
               {p}
               <button onClick={() => onChange(phrases.filter(x => x !== p))} className="text-[#9CA3AF] hover:text-red-500 transition-colors">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
@@ -300,16 +300,16 @@ function StepIndicator({ current, steps, completed, stepMask, onJump }: {
               onClick={() => isLocked ? onJump(-step.id) : isReachable && onJump(step.id)}
               title={isLocked ? `Upgrade to unlock ${step.label}` : undefined}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
-                isActive ? 'text-[#0D4C3C]'
+                isActive ? 'text-[#6C55E8]'
                 : isLocked ? 'text-[#C4CAC8] hover:bg-[#F3F4F6] cursor-pointer'
-                : isDone ? 'text-[#0D4C3C] hover:bg-[#F0F7F5] cursor-pointer'
+                : isDone ? 'text-[#6C55E8] hover:bg-[#F3F4F6] cursor-pointer'
                 : 'text-[#9CA3AF] cursor-default'
               }`}
             >
               <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold transition-all ${
-                isActive ? 'bg-[#0D4C3C] text-white'
+                isActive ? 'bg-[#111827] text-white'
                 : isLocked ? 'bg-[#F3F4F6] text-[#C4CAC8]'
-                : isDone ? 'bg-[#E6F2EE] text-[#0D4C3C]'
+                : isDone ? 'bg-[#EDE9FE] text-[#6C55E8]'
                 : 'bg-[#F3F4F6] text-[#9CA3AF]'
               }`}>
                 {isLocked
@@ -318,10 +318,10 @@ function StepIndicator({ current, steps, completed, stepMask, onJump }: {
                   : step.id
                 }
               </div>
-              <span className={`text-xs font-medium whitespace-nowrap ${isActive ? 'text-[#0D4C3C]' : isLocked ? 'text-[#C4CAC8]' : isDone ? 'text-[#374151]' : 'text-[#9CA3AF]'}`}>{step.label}</span>
+              <span className={`text-xs font-medium whitespace-nowrap ${isActive ? 'text-[#6C55E8]' : isLocked ? 'text-[#C4CAC8]' : isDone ? 'text-[#374151]' : 'text-[#9CA3AF]'}`}>{step.label}</span>
             </button>
             {idx < steps.length - 1 && (
-              <div className={`w-6 h-px mx-0.5 ${isDone ? 'bg-[#0D4C3C]/30' : 'bg-[#E5EAE8]'}`}/>
+              <div className={`w-6 h-px mx-0.5 ${isDone ? 'bg-[#111827]/30' : 'bg-[#E5E7EB]'}`}/>
             )}
           </div>
         );
@@ -358,8 +358,8 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Left — Global defaults */}
-        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-          <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+        <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
+          <div className="px-5 py-3 bg-white border-b border-[#E5E7EB]">
             <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Global defaults</p>
             <p className="text-[11px] text-[#9CA3AF] mt-0.5">Applied to all locations unless overridden.</p>
           </div>
@@ -395,8 +395,8 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
         </div>
 
         {/* Right — Per-location identity */}
-        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-          <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+        <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
+          <div className="px-5 py-3 bg-white border-b border-[#E5E7EB]">
             <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Per-location overrides</p>
             <p className="text-[11px] text-[#9CA3AF] mt-0.5">Leave blank to inherit the global default.</p>
           </div>
@@ -406,7 +406,7 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
               <p className="text-xs text-[#9CA3AF]">No locations connected yet.</p>
             </div>
           ) : (
-            <div className="bg-[#FAFAFA] divide-y divide-[#E5EAE8]">
+            <div className="bg-[#FAFAFA] divide-y divide-[#E5E7EB]">
               {locations.map(loc => {
                 const ov = locOverrides[loc.id] ?? { business_name: null, business_type: null, business_desc: null, reply_signature: null };
                 const hasOverride = !!(ov.business_type || ov.business_desc || ov.reply_signature);
@@ -416,17 +416,17 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
                     {/* Clickable location header */}
                     <button
                       onClick={() => toggle(loc.id)}
-                      className="w-full flex items-center gap-2.5 px-5 py-3 bg-white hover:bg-[#F8FAF9] transition-colors text-left"
+                      className="w-full flex items-center gap-2.5 px-5 py-3 bg-white hover:bg-[#F9FAFB] transition-colors text-left"
                     >
-                      <div className="w-6 h-6 rounded-full bg-[#E6F2EE] flex items-center justify-center flex-shrink-0">
-                        <svg className="w-3 h-3 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                      <div className="w-6 h-6 rounded-full bg-[#EDE9FE] flex items-center justify-center flex-shrink-0">
+                        <svg className="w-3 h-3 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-bold text-[#374151] uppercase tracking-wide truncate">{loc.display_name ?? 'Location'}</p>
                         {loc.address && <p className="text-[10px] text-[#9CA3AF] truncate">{loc.address}</p>}
                       </div>
                       {hasOverride && (
-                        <span className="text-[10px] font-semibold text-[#0D4C3C] bg-[#E6F2EE] px-2 py-0.5 rounded-md flex-shrink-0">
+                        <span className="text-[10px] font-semibold text-[#6C55E8] bg-[#EDE9FE] px-2 py-0.5 rounded-md flex-shrink-0">
                           {[ov.business_type && 'type', ov.business_desc && 'desc', ov.reply_signature && 'signature'].filter(Boolean).join(' · ')} overridden
                         </span>
                       )}
@@ -439,7 +439,7 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
                     </button>
                     {/* Collapsible fields */}
                     {isOpen && (
-                      <div className="px-5 py-4 space-y-3 border-t border-[#E5EAE8]">
+                      <div className="px-5 py-4 space-y-3 border-t border-[#E5E7EB]">
                         <div>
                           <label className="block text-[10px] font-semibold text-[#6B7280] mb-1">Business type</label>
                           <div className="flex items-center gap-2">
@@ -460,7 +460,7 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
                             {!ov.business_desc && loc.description && (
                               <button
                                 onClick={() => onLocOverride(loc.id, 'business_desc', loc.description)}
-                                className="text-[10px] font-medium text-[#0D4C3C] hover:underline flex-shrink-0"
+                                className="text-[10px] font-medium text-[#6C55E8] hover:underline flex-shrink-0"
                               >
                                 Use Google description
                               </button>
@@ -494,7 +494,7 @@ function Step1({ data, onChange, locations, locOverrides, onLocOverride }: {
                             )}
                           </div>
                           {ov.reply_signature && (
-                            <p className="text-[10px] text-[#0D4C3C] mt-1 italic">…{ov.reply_signature}</p>
+                            <p className="text-[10px] text-[#6C55E8] mt-1 italic">…{ov.reply_signature}</p>
                           )}
                         </div>
                       </div>
@@ -520,7 +520,7 @@ function ImportRepliesModal({ onApply, onClose, analyzing }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5EAE8]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E7EB]">
           <div>
             <h2 className="text-base font-semibold text-[#111827]">Import from real replies</h2>
             <p className="text-xs text-[#9CA3AF] mt-0.5">AI will analyze your writing style and suggest settings.</p>
@@ -536,10 +536,10 @@ function ImportRepliesModal({ onApply, onClose, analyzing }: {
             className={`${inputCls} resize-none`}/>
           <p className="text-xs text-[#9CA3AF] mt-1">{count} reply{count !== 1 ? 'ies' : ''} detected · need at least 2</p>
         </div>
-        <div className="px-6 py-4 border-t border-[#E5EAE8] flex items-center justify-end gap-2">
+        <div className="px-6 py-4 border-t border-[#E5E7EB] flex items-center justify-end gap-2">
           <button onClick={onClose} className="text-sm text-[#6B7280] font-medium px-4 py-2 rounded-lg hover:bg-[#F3F4F6] transition-colors">Cancel</button>
           <button onClick={() => onApply(text)} disabled={count < 2 || analyzing}
-            className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors">
+            className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-colors">
             {analyzing
               ? <><svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Analyzing…</>
               : 'Analyze voice'
@@ -577,14 +577,14 @@ function Step2({ data, onChange, onAnalyzeVoice }: {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Left — Tone presets */}
-        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-          <div className="px-5 py-3 bg-white border-b border-[#E5EAE8] flex items-center justify-between">
+        <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
+          <div className="px-5 py-3 bg-white border-b border-[#E5E7EB] flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Tone preset</p>
               <p className="text-[11px] text-[#9CA3AF] mt-0.5">Choose the voice that fits your brand.</p>
             </div>
             <button onClick={() => setShowImport(true)}
-              className="flex items-center gap-1.5 text-xs text-[#0D4C3C] font-medium hover:underline flex-shrink-0 ml-3">
+              className="flex items-center gap-1.5 text-xs text-[#6C55E8] font-medium hover:underline flex-shrink-0 ml-3">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
               Import from replies
             </button>
@@ -592,9 +592,9 @@ function Step2({ data, onChange, onAnalyzeVoice }: {
           <div className="p-4 bg-[#FAFAFA] grid grid-cols-2 gap-2">
             {TONE_PRESETS.map(p => (
               <button key={p.key} onClick={() => onChange({ tone: p.key })}
-                className={`text-left p-4 rounded-xl border-2 transition-all ${data.tone === p.key ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#E5EAE8] bg-white hover:border-[#0D4C3C]/40 hover:bg-[#F8FAF9]'}`}>
+                className={`text-left p-4 rounded-xl border-2 transition-all ${data.tone === p.key ? 'border-[#6C55E8] bg-[#EDE9FE]' : 'border-[#E5E7EB] bg-white hover:border-[#6C55E8]/40 hover:bg-[#F9FAFB]'}`}>
                 <div className="flex items-center justify-between mb-1.5">
-                  <p className={`text-sm font-bold ${data.tone === p.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>{p.label}</p>
+                  <p className={`text-sm font-bold ${data.tone === p.key ? 'text-[#6C55E8]' : 'text-[#111827]'}`}>{p.label}</p>
                   <Radio checked={data.tone === p.key} onClick={() => onChange({ tone: p.key })}/>
                 </div>
                 <p className="text-xs text-[#6B7280] leading-relaxed">{p.desc}</p>
@@ -604,8 +604,8 @@ function Step2({ data, onChange, onAnalyzeVoice }: {
         </div>
 
         {/* Right — Custom instructions */}
-        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-          <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+        <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
+          <div className="px-5 py-3 bg-white border-b border-[#E5E7EB]">
             <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Custom tone instructions</p>
             <p className="text-[11px] text-[#9CA3AF] mt-0.5">Extra style notes injected into every AI prompt.</p>
           </div>
@@ -635,15 +635,15 @@ function Step3({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
       </div>
 
       <div className="space-y-5 max-w-2xl">
-        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-          <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+        <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
+          <div className="px-5 py-3 bg-white border-b border-[#E5E7EB]">
             <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Reply length</p>
           </div>
           <div className="px-5 py-4 bg-[#FAFAFA]">
             <div className="flex gap-2">
               {REPLY_LENGTHS.map(opt => (
                 <button key={opt.key} onClick={() => onChange({ reply_length: opt.key })}
-                  className={`flex-1 py-3 px-3 rounded-xl border-2 text-sm font-medium transition-all text-center ${data.reply_length === opt.key ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] bg-white text-[#6B7280] hover:border-[#0D4C3C]/40'}`}>
+                  className={`flex-1 py-3 px-3 rounded-xl border-2 text-sm font-medium transition-all text-center ${data.reply_length === opt.key ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8]' : 'border-[#E5E7EB] bg-white text-[#6B7280] hover:border-[#6C55E8]/40'}`}>
                   <span className="block font-bold">{opt.label}</span>
                   <span className="block text-xs font-normal mt-0.5 opacity-70">{opt.desc}</span>
                 </button>
@@ -652,8 +652,8 @@ function Step3({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
           </div>
         </div>
 
-        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-          <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+        <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
+          <div className="px-5 py-3 bg-white border-b border-[#E5E7EB]">
             <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Reply behaviour</p>
           </div>
           <div className="px-5 py-4 bg-[#FAFAFA] space-y-2.5">
@@ -661,7 +661,7 @@ function Step3({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
               { label: 'Address reviewer by name', sub: 'e.g. "Thank you, Sarah!" when name is available.', field: 'use_customer_name' as const },
               { label: 'Allow emoji in replies', sub: 'Adds occasional emoji when tone allows it.', field: 'use_emoji' as const },
             ].map(item => (
-              <div key={item.field} className="flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-[#E5EAE8]">
+              <div key={item.field} className="flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-[#E5E7EB]">
                 <div>
                   <p className="text-sm font-medium text-[#111827]">{item.label}</p>
                   <p className="text-xs text-[#9CA3AF] mt-0.5">{item.sub}</p>
@@ -709,8 +709,8 @@ function Step4({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
         <div className="space-y-5">
 
           {/* Language */}
-          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden bg-[#FAFAFA]">
-            <div className="px-4 py-3 bg-white border-b border-[#E5EAE8]">
+          <div className="border border-[#E5E7EB] rounded-xl overflow-hidden bg-[#FAFAFA]">
+            <div className="px-4 py-3 bg-white border-b border-[#E5E7EB]">
               <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide">Language</h3>
             </div>
             <div className="px-4 py-4 space-y-4">
@@ -736,17 +736,17 @@ function Step4({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
           </div>
 
           {/* Negative handling */}
-          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden bg-[#FAFAFA]">
-            <div className="px-4 py-3 bg-white border-b border-[#E5EAE8]">
+          <div className="border border-[#E5E7EB] rounded-xl overflow-hidden bg-[#FAFAFA]">
+            <div className="px-4 py-3 bg-white border-b border-[#E5E7EB]">
               <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide">Negative review handling (1–2 stars)</h3>
             </div>
             <div className="px-4 py-4 space-y-2.5">
               {NEGATIVE_OPTS.map(opt => (
                 <div key={opt.key} onClick={() => onChange({ negative_rule: opt.key })}
-                  className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${data.negative_rule === opt.key ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#E5EAE8] bg-white hover:border-[#0D4C3C]/40'}`}>
+                  className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${data.negative_rule === opt.key ? 'border-[#6C55E8] bg-[#EDE9FE]' : 'border-[#E5E7EB] bg-white hover:border-[#6C55E8]/40'}`}>
                   <div className="mt-0.5"><Radio checked={data.negative_rule === opt.key} onClick={() => onChange({ negative_rule: opt.key })}/></div>
                   <div>
-                    <p className={`text-sm font-bold ${data.negative_rule === opt.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>{opt.label}</p>
+                    <p className={`text-sm font-bold ${data.negative_rule === opt.key ? 'text-[#6C55E8]' : 'text-[#111827]'}`}>{opt.label}</p>
                     <p className="text-xs text-[#6B7280] mt-0.5">{opt.desc}</p>
                   </div>
                 </div>
@@ -757,12 +757,12 @@ function Step4({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
         </div>
 
         {/* Right column — Per-star overrides */}
-        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden bg-[#FAFAFA]">
-          <div className="px-4 py-3 bg-white border-b border-[#E5EAE8]">
+        <div className="border border-[#E5E7EB] rounded-xl overflow-hidden bg-[#FAFAFA]">
+          <div className="px-4 py-3 bg-white border-b border-[#E5E7EB]">
             <h3 className="text-xs font-bold text-[#374151] uppercase tracking-wide">Per-star tone & length</h3>
             <p className="text-[11px] text-[#9CA3AF] mt-0.5">Override tone or length per rating bucket. Leave blank to use defaults.</p>
           </div>
-          <div className="divide-y divide-[#E5EAE8]">
+          <div className="divide-y divide-[#E5E7EB]">
             {starBuckets.map(bucket => {
               const rule = data.star_rating_rules[bucket.key];
               return (
@@ -817,8 +817,8 @@ function Step5({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
         <div className="space-y-5">
 
           {/* Prohibited phrases */}
-          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-            <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+          <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
+            <div className="px-5 py-3 bg-white border-b border-[#E5E7EB]">
               <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Prohibited phrases</p>
               <p className="text-[11px] text-[#9CA3AF] mt-0.5">Words AI must never use — promises, legal terms, competitor names.</p>
             </div>
@@ -828,8 +828,8 @@ function Step5({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
           </div>
 
           {/* Keyword contexts */}
-          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-            <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+          <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
+            <div className="px-5 py-3 bg-white border-b border-[#E5E7EB]">
               <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Keyword-triggered context</p>
               <p className="text-[11px] text-[#9CA3AF] mt-0.5">Inject context when a review mentions a keyword.</p>
             </div>
@@ -837,9 +837,9 @@ function Step5({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
               {data.keyword_contexts.length > 0 && (
                 <div className="space-y-2">
                   {data.keyword_contexts.map(kc => (
-                    <div key={kc.id} className="flex items-start gap-2 p-3 bg-white rounded-lg border border-[#E5EAE8]">
+                    <div key={kc.id} className="flex items-start gap-2 p-3 bg-white rounded-lg border border-[#E5E7EB]">
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-[#0D4C3C] mb-0.5">"{kc.keyword}"</p>
+                        <p className="text-xs font-semibold text-[#6C55E8] mb-0.5">"{kc.keyword}"</p>
                         <p className="text-xs text-[#374151]">{kc.context}</p>
                       </div>
                       <button onClick={() => onChange({ keyword_contexts: data.keyword_contexts.filter(x => x.id !== kc.id) })}
@@ -850,7 +850,7 @@ function Step5({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
                   ))}
                 </div>
               )}
-              <div className="p-4 border border-[#E5EAE8] rounded-xl bg-white space-y-2.5">
+              <div className="p-4 border border-[#E5E7EB] rounded-xl bg-white space-y-2.5">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-[10px] text-[#9CA3AF] mb-1">Trigger keyword</label>
@@ -865,7 +865,7 @@ function Step5({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
                   </div>
                 </div>
                 <button onClick={addKeyword} disabled={!kwInput.keyword.trim() || !kwInput.context.trim()}
-                  className="text-sm font-medium text-[#0D4C3C] border border-[#0D4C3C] px-4 py-2 rounded-lg hover:bg-[#E6F2EE] disabled:opacity-40 transition-colors">
+                  className="text-sm font-medium text-[#6C55E8] border border-[#6C55E8] px-4 py-2 rounded-lg hover:bg-[#EDE9FE] disabled:opacity-40 transition-colors">
                   Add context rule
                 </button>
               </div>
@@ -878,8 +878,8 @@ function Step5({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
         <div className="space-y-5">
 
           {/* Approval queue */}
-          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-            <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+          <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
+            <div className="px-5 py-3 bg-white border-b border-[#E5E7EB]">
               <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Manual approval queue</p>
               <p className="text-[11px] text-[#9CA3AF] mt-0.5">Require a human to approve AI drafts before publishing.</p>
             </div>
@@ -892,7 +892,7 @@ function Step5({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
                   { val: 6, label: 'Always',   sub: 'All drafts need approval' },
                 ].map(opt => (
                   <button key={opt.val} onClick={() => onChange({ approval_rules: { require_approval_below: opt.val } })}
-                    className={`flex-1 py-2.5 px-2 rounded-xl border-2 text-xs font-medium transition-all text-center ${data.approval_rules.require_approval_below === opt.val ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] bg-white text-[#6B7280] hover:border-[#0D4C3C]/40'}`}>
+                    className={`flex-1 py-2.5 px-2 rounded-xl border-2 text-xs font-medium transition-all text-center ${data.approval_rules.require_approval_below === opt.val ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8]' : 'border-[#E5E7EB] bg-white text-[#6B7280] hover:border-[#6C55E8]/40'}`}>
                     <span className="block font-bold">{opt.label}</span>
                     <span className="block font-normal opacity-70 mt-0.5">{opt.sub}</span>
                   </button>
@@ -902,8 +902,8 @@ function Step5({ data, onChange }: { data: BrandBrainData; onChange: (p: Partial
           </div>
 
           {/* Example reply */}
-          <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-            <div className="px-5 py-3 bg-white border-b border-[#E5EAE8]">
+          <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
+            <div className="px-5 py-3 bg-white border-b border-[#E5E7EB]">
               <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Example reply</p>
               <p className="text-[11px] text-[#9CA3AF] mt-0.5">AI uses this as a style reference — paste one you're happy with.</p>
             </div>
@@ -929,7 +929,7 @@ function OverrideRow({ label, fieldKey, flags, onToggle, inheritedLabel, childre
 }) {
   const active = flags[fieldKey];
   return (
-    <div className={`rounded-xl border-2 transition-colors ${active ? 'border-[#0D4C3C]/30 bg-white' : 'border-[#E5EAE8] bg-[#FAFAFA]'}`}>
+    <div className={`rounded-xl border-2 transition-colors ${active ? 'border-[#6C55E8]/30 bg-white' : 'border-[#E5E7EB] bg-[#FAFAFA]'}`}>
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xs font-semibold text-[#374151]">{label}</span>
@@ -960,9 +960,9 @@ function LocationOverridePanel({ location, globalData, overrideData, flags, onDa
         <div className="grid grid-cols-2 gap-2">
           {TONE_PRESETS.map(p => (
             <button key={p.key} onClick={() => onDataChange({ tone: p.key })}
-              className={`text-left p-3 rounded-lg border-2 transition-all ${overrideData.tone === p.key ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#E5EAE8] hover:border-[#0D4C3C]/40'}`}>
+              className={`text-left p-3 rounded-lg border-2 transition-all ${overrideData.tone === p.key ? 'border-[#6C55E8] bg-[#EDE9FE]' : 'border-[#E5E7EB] hover:border-[#6C55E8]/40'}`}>
               <div className="flex items-center justify-between mb-0.5">
-                <p className={`text-xs font-bold ${overrideData.tone === p.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>{p.label}</p>
+                <p className={`text-xs font-bold ${overrideData.tone === p.key ? 'text-[#6C55E8]' : 'text-[#111827]'}`}>{p.label}</p>
                 <Radio checked={overrideData.tone === p.key} onClick={() => onDataChange({ tone: p.key })}/>
               </div>
               <p className="text-[10px] text-[#6B7280]">{p.desc}</p>
@@ -982,7 +982,7 @@ function LocationOverridePanel({ location, globalData, overrideData, flags, onDa
         <div className="flex gap-2">
           {REPLY_LENGTHS.map(opt => (
             <button key={opt.key} onClick={() => onDataChange({ reply_length: opt.key })}
-              className={`flex-1 py-2 px-2 rounded-lg border-2 text-xs font-medium transition-all text-center ${overrideData.reply_length === opt.key ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] text-[#6B7280] hover:border-[#0D4C3C]/40'}`}>
+              className={`flex-1 py-2 px-2 rounded-lg border-2 text-xs font-medium transition-all text-center ${overrideData.reply_length === opt.key ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8]' : 'border-[#E5E7EB] text-[#6B7280] hover:border-[#6C55E8]/40'}`}>
               <span className="block font-bold">{opt.label}</span>
               <span className="block font-normal opacity-70">{opt.desc}</span>
             </button>
@@ -1016,10 +1016,10 @@ function LocationOverridePanel({ location, globalData, overrideData, flags, onDa
         <div className="space-y-1.5">
           {NEGATIVE_OPTS.map(opt => (
             <div key={opt.key} onClick={() => onDataChange({ negative_rule: opt.key })}
-              className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${overrideData.negative_rule === opt.key ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#E5EAE8] hover:border-[#0D4C3C]/40'}`}>
+              className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${overrideData.negative_rule === opt.key ? 'border-[#6C55E8] bg-[#EDE9FE]' : 'border-[#E5E7EB] hover:border-[#6C55E8]/40'}`}>
               <Radio checked={overrideData.negative_rule === opt.key} onClick={() => onDataChange({ negative_rule: opt.key })}/>
               <div>
-                <p className={`text-xs font-bold ${overrideData.negative_rule === opt.key ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>{opt.label}</p>
+                <p className={`text-xs font-bold ${overrideData.negative_rule === opt.key ? 'text-[#6C55E8]' : 'text-[#111827]'}`}>{opt.label}</p>
                 <p className="text-[10px] text-[#6B7280]">{opt.desc}</p>
               </div>
             </div>
@@ -1048,7 +1048,7 @@ function Step6({ locations, locCache, globalData, onDataChange, onFlagToggle }: 
     return (
       <div>
         <h2 className="text-lg font-bold text-[#111827] mb-1">Location Overrides</h2>
-        <div className="mt-6 text-center py-12 border border-[#E5EAE8] rounded-xl bg-[#FAFAFA]">
+        <div className="mt-6 text-center py-12 border border-[#E5E7EB] rounded-xl bg-[#FAFAFA]">
           <svg className="w-10 h-10 text-[#D1D5DB] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           <p className="text-sm font-medium text-[#374151]">No locations connected yet</p>
           <p className="text-xs text-[#9CA3AF] mt-1">Connect Google Business Profile in Settings to add location-specific overrides.</p>
@@ -1075,9 +1075,9 @@ function Step6({ locations, locCache, globalData, onDataChange, onFlagToggle }: 
             const isActive = selectedLoc === l.id;
             return (
               <button key={l.id} onClick={() => setSelectedLoc(l.id)}
-                className={`w-full text-left px-3 py-2.5 rounded-xl border-2 transition-all ${isActive ? 'border-[#0D4C3C] bg-[#E6F2EE]' : 'border-[#E5EAE8] hover:border-[#0D4C3C]/40'}`}>
-                <p className={`text-xs font-semibold truncate ${isActive ? 'text-[#0D4C3C]' : 'text-[#374151]'}`}>{l.display_name ?? 'Location'}</p>
-                {overrides > 0 && <p className={`text-[10px] mt-0.5 ${isActive ? 'text-[#0D4C3C]' : 'text-[#9CA3AF]'}`}>{overrides} override{overrides !== 1 ? 's' : ''}</p>}
+                className={`w-full text-left px-3 py-2.5 rounded-xl border-2 transition-all ${isActive ? 'border-[#6C55E8] bg-[#EDE9FE]' : 'border-[#E5E7EB] hover:border-[#6C55E8]/40'}`}>
+                <p className={`text-xs font-semibold truncate ${isActive ? 'text-[#6C55E8]' : 'text-[#374151]'}`}>{l.display_name ?? 'Location'}</p>
+                {overrides > 0 && <p className={`text-[10px] mt-0.5 ${isActive ? 'text-[#6C55E8]' : 'text-[#9CA3AF]'}`}>{overrides} override{overrides !== 1 ? 's' : ''}</p>}
               </button>
             );
           })}
@@ -1136,13 +1136,13 @@ function Step7({ data, onGeneratePreview, onSave, saving }: {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Left — Test review config */}
-        <div className="border border-[#E5EAE8] rounded-xl overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-3 bg-white border-b border-[#E5EAE8]">
+        <div className="border border-[#E5E7EB] rounded-xl overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3 bg-white border-b border-[#E5E7EB]">
             <div>
               <p className="text-xs font-bold text-[#374151] uppercase tracking-wide">Test review</p>
               <p className="text-[11px] text-[#9CA3AF] mt-0.5">Review to test your Brand Brain voice against.</p>
             </div>
-            <button onClick={() => setShowCustom(s => !s)} className="text-xs text-[#0D4C3C] font-medium hover:underline flex-shrink-0 ml-3">
+            <button onClick={() => setShowCustom(s => !s)} className="text-xs text-[#6C55E8] font-medium hover:underline flex-shrink-0 ml-3">
               {showCustom ? 'Use default' : 'Customise'}
             </button>
           </div>
@@ -1158,7 +1158,7 @@ function Step7({ data, onGeneratePreview, onSave, saving }: {
                   <div className="flex gap-1.5">
                     {[1,2,3,4,5].map(n => (
                       <button key={n} onClick={() => setCustomReview(p => ({ ...p, rating: n }))}
-                        className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${customReview.rating === n ? 'bg-[#0D4C3C] text-white border-[#0D4C3C]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C]'}`}>
+                        className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${customReview.rating === n ? 'bg-[#111827] text-white border-[#6C55E8]' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#6C55E8]'}`}>
                         {n}★
                       </button>
                     ))}
@@ -1174,7 +1174,7 @@ function Step7({ data, onGeneratePreview, onSave, saving }: {
           ) : (
             <div className="px-5 py-4 bg-[#FAFAFA]">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-full bg-[#E6F2EE] text-[#0D4C3C] flex items-center justify-center text-xs font-bold flex-shrink-0">SJ</div>
+                <div className="w-8 h-8 rounded-full bg-[#EDE9FE] text-[#6C55E8] flex items-center justify-center text-xs font-bold flex-shrink-0">SJ</div>
                 <div>
                   <p className="text-sm font-semibold text-[#111827]">Sarah Johnson</p>
                   <p className="text-xs text-amber-500">★★★★★ 5 stars</p>
@@ -1187,10 +1187,10 @@ function Step7({ data, onGeneratePreview, onSave, saving }: {
 
         {/* Right — AI output + actions */}
         <div className="space-y-4">
-          <div className={`border rounded-xl overflow-hidden transition-all ${previewDraft ? 'border-[#0D4C3C]/30 bg-[#F0F7F5]' : 'border-[#E5EAE8] bg-[#FAFAFA]'}`}>
-            <div className={`px-5 py-3 border-b flex items-center gap-2 ${previewDraft ? 'border-[#0D4C3C]/20' : 'border-[#E5EAE8] bg-white'}`}>
-              <svg className={`w-4 h-4 ${previewDraft ? 'text-[#0D4C3C]' : 'text-[#9CA3AF]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-              <p className={`text-xs font-bold uppercase tracking-wide ${previewDraft ? 'text-[#0D4C3C]' : 'text-[#374151]'}`}>AI-generated sample reply</p>
+          <div className={`border rounded-xl overflow-hidden transition-all ${previewDraft ? 'border-[#6C55E8]/30 bg-[#F3F4F6]' : 'border-[#E5E7EB] bg-[#FAFAFA]'}`}>
+            <div className={`px-5 py-3 border-b flex items-center gap-2 ${previewDraft ? 'border-[#6C55E8]/20' : 'border-[#E5E7EB] bg-white'}`}>
+              <svg className={`w-4 h-4 ${previewDraft ? 'text-[#6C55E8]' : 'text-[#9CA3AF]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              <p className={`text-xs font-bold uppercase tracking-wide ${previewDraft ? 'text-[#6C55E8]' : 'text-[#374151]'}`}>AI-generated sample reply</p>
             </div>
             <div className="px-5 py-4 min-h-[140px] flex items-center">
               {previewDraft
@@ -1229,14 +1229,14 @@ function PreviewStepActions({ generating, previewDraft, saving, onGenerate, onSa
   return (
     <div className="flex items-center gap-3">
       <button onClick={onGenerate} disabled={generating}
-        className="flex items-center gap-2 border border-[#0D4C3C] text-[#0D4C3C] text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-[#E6F2EE] disabled:opacity-50 transition-colors">
+        className="flex items-center gap-2 border border-[#6C55E8] text-[#6C55E8] text-sm font-semibold px-5 py-2.5 rounded-xl hover:bg-[#EDE9FE] disabled:opacity-50 transition-colors">
         {generating
           ? <><svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Generating…</>
           : <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>Generate preview</>
         }
       </button>
       <button onClick={onSave} disabled={saving}
-        className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-colors">
+        className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-colors">
         {saving
           ? <><svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Saving…</>
           : <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>Save Brand Brain</>
@@ -1272,7 +1272,7 @@ function Step8({ settings, onChange, saving, onSave }: {
       <div>
         <h2 className="text-lg font-bold text-[#111827] mb-1">Marketing Settings</h2>
         <p className="text-sm text-[#6B7280]">Configure AI post generation for your social media channels. Go to{' '}
-          <button onClick={() => navigate('/marketing')} className="text-[#0D4C3C] underline">Marketing</button>
+          <button onClick={() => navigate('/marketing')} className="text-[#6C55E8] underline">Marketing</button>
           {' '}to create posts.
         </p>
       </div>
@@ -1284,7 +1284,7 @@ function Step8({ settings, onChange, saving, onSave }: {
           <select
             value={settings.business_category}
             onChange={e => onChange({ business_category: e.target.value })}
-            className="w-full text-sm text-[#111827] border border-[#D1D5DB] rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[#0D4C3C] transition-colors bg-white appearance-none"
+            className="w-full text-sm text-[#111827] border border-[#D1D5DB] rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[#6C55E8] transition-colors bg-white appearance-none"
           >
             {BUSINESS_CATEGORIES.map(c => (
               <option key={c.value} value={c.value}>{c.label}</option>
@@ -1302,7 +1302,7 @@ function Step8({ settings, onChange, saving, onSave }: {
             const active = (settings.post_styles ?? []).includes(s.value);
             return (
               <button key={s.value} onClick={() => toggleStyle(s.value)}
-                className={`px-3.5 py-1.5 text-sm font-medium rounded-xl border-2 transition-all ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] text-[#374151] hover:border-[#0D4C3C]/40'}`}>
+                className={`px-3.5 py-1.5 text-sm font-medium rounded-xl border-2 transition-all ${active ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8]' : 'border-[#E5E7EB] text-[#374151] hover:border-[#6C55E8]/40'}`}>
                 {s.label}
               </button>
             );
@@ -1318,7 +1318,7 @@ function Step8({ settings, onChange, saving, onSave }: {
             const active = (settings.target_platforms ?? []).includes(p.value);
             return (
               <button key={p.value} onClick={() => togglePlatform(p.value)}
-                className={`px-3.5 py-1.5 text-sm font-medium rounded-xl border-2 transition-all ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] text-[#374151] hover:border-[#0D4C3C]/40'}`}>
+                className={`px-3.5 py-1.5 text-sm font-medium rounded-xl border-2 transition-all ${active ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8]' : 'border-[#E5E7EB] text-[#374151] hover:border-[#6C55E8]/40'}`}>
                 {p.label}
               </button>
             );
@@ -1334,7 +1334,7 @@ function Step8({ settings, onChange, saving, onSave }: {
             const active = settings.post_frequency === f.value;
             return (
               <button key={f.value} onClick={() => onChange({ post_frequency: f.value })}
-                className={`py-2.5 px-3 rounded-xl border-2 text-sm font-medium transition-all ${active ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C]' : 'border-[#E5EAE8] text-[#374151] hover:border-[#0D4C3C]/40'}`}>
+                className={`py-2.5 px-3 rounded-xl border-2 text-sm font-medium transition-all ${active ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8]' : 'border-[#E5E7EB] text-[#374151] hover:border-[#6C55E8]/40'}`}>
                 {f.label}
               </button>
             );
@@ -1353,14 +1353,14 @@ function Step8({ settings, onChange, saving, onSave }: {
           placeholder="Any special instructions for the AI when generating posts (e.g. always mention our loyalty program, avoid competitor names)…"
           rows={3}
           maxLength={500}
-          className="w-full text-sm text-[#111827] border border-[#D1D5DB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#0D4C3C] transition-colors placeholder:text-[#9CA3AF] bg-white resize-none"
+          className="w-full text-sm text-[#111827] border border-[#D1D5DB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#6C55E8] transition-colors placeholder:text-[#9CA3AF] bg-white resize-none"
         />
       </div>
 
       {/* Auto-approve */}
-      <div className="flex items-start gap-4 p-4 border border-[#E5EAE8] rounded-xl">
+      <div className="flex items-start gap-4 p-4 border border-[#E5E7EB] rounded-xl">
         <button role="switch" aria-checked={settings.auto_approve} onClick={() => onChange({ auto_approve: !settings.auto_approve })}
-          className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 mt-0.5 ${settings.auto_approve ? 'bg-[#0D4C3C]' : 'bg-[#D1D5DB]'}`}>
+          className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 mt-0.5 ${settings.auto_approve ? 'bg-[#111827]' : 'bg-[#D1D5DB]'}`}>
           <span className={`absolute w-4 h-4 top-0.5 left-0.5 bg-white rounded-full shadow transition-transform ${settings.auto_approve ? 'translate-x-4' : ''}`}/>
         </button>
         <div>
@@ -1371,14 +1371,14 @@ function Step8({ settings, onChange, saving, onSave }: {
 
       <div className="flex items-center gap-3">
         <button onClick={onSave} disabled={saving}
-          className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-colors">
+          className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-colors">
           {saving
             ? <><svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Saving…</>
             : <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>Save Marketing Settings</>
           }
         </button>
         <button onClick={() => navigate('/marketing')}
-          className="text-sm font-medium text-[#0D4C3C] border border-[#0D4C3C]/30 px-5 py-2.5 rounded-xl hover:bg-[#E6F2EE] transition-colors">
+          className="text-sm font-medium text-[#6C55E8] border border-[#6C55E8]/30 px-5 py-2.5 rounded-xl hover:bg-[#EDE9FE] transition-colors">
           Go to Marketing
         </button>
       </div>
@@ -1612,7 +1612,7 @@ export function BrandBrainPage() {
       <div className="px-4 md:px-10 py-8">
         <div className="h-8 w-48 bg-[#F3F4F6] rounded-lg animate-pulse mb-2"/>
         <div className="flex gap-2 mb-8">{[1,2,3,4,5,6,7].map(i => <div key={i} className="h-8 w-24 bg-[#F3F4F6] rounded-full animate-pulse"/>)}</div>
-        {[1,2,3].map(i => <div key={i} className="bg-white rounded-xl border border-[#E5EAE8] h-32 mb-5 animate-pulse"/>)}
+        {[1,2,3].map(i => <div key={i} className="bg-white rounded-xl border border-[#E5E7EB] h-32 mb-5 animate-pulse"/>)}
       </div>
     );
   }
@@ -1620,8 +1620,8 @@ export function BrandBrainPage() {
   return (
     <div className="relative h-full flex flex-col overflow-hidden">
       {/* Ambient blobs */}
-      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
-      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#111827]/5 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#111827]/4 blur-3xl" aria-hidden="true"/>
 
       {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
 
@@ -1635,14 +1635,14 @@ export function BrandBrainPage() {
           {/* Step progress bar */}
           <div className="flex items-center gap-2">
             <div className="h-1.5 w-24 bg-[#F3F4F6] rounded-full overflow-hidden">
-              <div className="h-full bg-[#0D4C3C] rounded-full transition-all duration-500"
+              <div className="h-full bg-[#111827] rounded-full transition-all duration-500"
                 style={{ width: `${stepProgress}%` }}/>
             </div>
-            <span className="text-xs font-semibold text-[#0D4C3C]">{completed.size}/{visibleSteps.length}</span>
+            <span className="text-xs font-semibold text-[#6C55E8]">{completed.size}/{visibleSteps.length}</span>
           </div>
         </div>
         <button onClick={handleSave} disabled={saving}
-          className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-40 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors">
+          className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] disabled:opacity-40 text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors">
           {saving
             ? <><svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Saving…</>
             : <><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>Save</>
@@ -1667,7 +1667,7 @@ export function BrandBrainPage() {
               <p className="text-sm text-[#6B7280] mt-1">This step is not included in your current plan. Upgrade to unlock it.</p>
             </div>
             <button onClick={() => navigate('/billing')}
-              className="bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors">
+              className="bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors">
               View Plans
             </button>
           </div>
@@ -1695,18 +1695,18 @@ export function BrandBrainPage() {
         <div className="flex items-center gap-1.5">
           {visibleSteps.map(s => (
             <button key={s.id} onClick={() => jumpTo(s.id)}
-              className={`w-2 h-2 rounded-full transition-all ${s.id === step ? 'bg-[#0D4C3C] w-4' : completed.has(s.id) ? 'bg-[#0D4C3C]/40' : 'bg-[#E5E7EB]'}`}/>
+              className={`w-2 h-2 rounded-full transition-all ${s.id === step ? 'bg-[#111827] w-4' : completed.has(s.id) ? 'bg-[#111827]/40' : 'bg-[#E5E7EB]'}`}/>
           ))}
         </div>
         {!isLastStep ? (
           <button onClick={goNext}
-            className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors">
+            className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2 rounded-xl transition-colors">
             Next
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
           </button>
         ) : (
           <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-bold px-5 py-2 rounded-xl transition-colors">
+            className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] disabled:opacity-50 text-white text-sm font-bold px-5 py-2 rounded-xl transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
             {saving ? 'Saving…' : 'Save & Finish'}
           </button>

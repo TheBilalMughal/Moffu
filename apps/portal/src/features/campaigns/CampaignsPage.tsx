@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useOrgStore } from '@/features/onboarding/org.store';
@@ -51,8 +51,8 @@ function fmtDate(iso: string) {
 function StepDot({ n, active, done }: { n: number; active: boolean; done: boolean }) {
   return (
     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors flex-shrink-0 ${
-      done   ? 'bg-[#0D4C3C] text-white' :
-      active ? 'bg-[#0D4C3C] text-white ring-4 ring-[#E6F2EE]' :
+      done   ? 'bg-[#111827] text-white' :
+      active ? 'bg-[#111827] text-white ring-4 ring-[#EDE9FE]' :
                'bg-[#F3F4F6] text-[#9CA3AF]'
     }`}>
       {done ? <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg> : n}
@@ -240,9 +240,9 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
               <div key={label} className="flex items-center">
                 <div className="flex items-center gap-2">
                   <StepDot n={i + 1} active={step === i + 1} done={step > i + 1} />
-                  <span className={`text-xs font-medium ${step === i + 1 ? 'text-[#0D4C3C]' : step > i + 1 ? 'text-[#6B7280]' : 'text-[#D1D5DB]'}`}>{label}</span>
+                  <span className={`text-xs font-medium ${step === i + 1 ? 'text-[#6C55E8]' : step > i + 1 ? 'text-[#6B7280]' : 'text-[#D1D5DB]'}`}>{label}</span>
                 </div>
-                {i < STEPS.length - 1 && <div className={`mx-3 h-px w-8 ${step > i + 1 ? 'bg-[#0D4C3C]' : 'bg-[#E5EAE8]'}`} />}
+                {i < STEPS.length - 1 && <div className={`mx-3 h-px w-8 ${step > i + 1 ? 'bg-[#111827]' : 'bg-[#E5E7EB]'}`} />}
               </div>
             ))}
           </div>
@@ -258,17 +258,17 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
               <div>
                 <label className="block text-xs font-medium text-[#374151] mb-1.5">Campaign Name <span className="text-red-400">*</span></label>
                 <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Summer Feedback Drive"
-                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827]" />
+                  className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827]" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-[#374151] mb-1.5">Channel</label>
                 <div className="flex gap-2">
-                  <div className="flex items-center gap-2 px-4 py-2.5 border-2 border-[#0D4C3C] rounded-lg bg-[#F0F9F6] flex-1">
-                    <svg className="w-4 h-4 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                    <span className="text-sm font-medium text-[#0D4C3C]">Email</span>
+                  <div className="flex items-center gap-2 px-4 py-2.5 border-2 border-[#6C55E8] rounded-lg bg-[#F0F9F6] flex-1">
+                    <svg className="w-4 h-4 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    <span className="text-sm font-medium text-[#6C55E8]">Email</span>
                   </div>
                   {['SMS', 'WhatsApp'].map(ch => (
-                    <div key={ch} className="flex items-center gap-2 px-4 py-2.5 border border-[#E5EAE8] rounded-lg flex-1 opacity-50 cursor-not-allowed">
+                    <div key={ch} className="flex items-center gap-2 px-4 py-2.5 border border-[#E5E7EB] rounded-lg flex-1 opacity-50 cursor-not-allowed">
                       <span className="text-sm text-[#9CA3AF]">{ch}</span>
                       <span className="text-[10px] font-semibold bg-[#F3F4F6] text-[#9CA3AF] px-1.5 py-0.5 rounded ml-auto">Soon</span>
                     </div>
@@ -279,18 +279,18 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
                 <div>
                   <label className="block text-xs font-medium text-[#374151] mb-1.5">From Name</label>
                   <input value={fromName} onChange={e => setFromName(e.target.value)} placeholder={orgName}
-                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827]" />
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827]" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#374151] mb-1.5">Reply-To Email <span className="text-[#9CA3AF]">(optional)</span></label>
                   <input value={replyTo} onChange={e => setReplyTo(e.target.value)} placeholder="you@yourbusiness.com"
-                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827]" />
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827]" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-[#374151] mb-1.5">Google Review Link <span className="text-[#9CA3AF]">(optional — auto-detected if blank)</span></label>
                 <input value={reviewLink} onChange={e => setReviewLink(e.target.value)} placeholder="https://g.page/r/YOUR_PLACE_ID/review"
-                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827]" />
+                  className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827]" />
               </div>
             </div>
           )}
@@ -306,12 +306,12 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
                 <div className="flex items-center gap-2">
                   <input ref={fileRef} type="file" accept=".csv,.txt" className="hidden" onChange={handleCsvUpload} />
                   <button onClick={() => fileRef.current?.click()}
-                    className="flex items-center gap-1.5 text-xs font-medium text-[#0D4C3C] border border-[#0D4C3C] px-3 py-1.5 rounded-lg hover:bg-[#F0F9F6] transition-colors">
+                    className="flex items-center gap-1.5 text-xs font-medium text-[#6C55E8] border border-[#6C55E8] px-3 py-1.5 rounded-lg hover:bg-[#F0F9F6] transition-colors">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                     Upload CSV
                   </button>
                   <button onClick={addContactRow}
-                    className="flex items-center gap-1.5 text-xs font-medium text-white bg-[#0D4C3C] px-3 py-1.5 rounded-lg hover:bg-[#0a3d30] transition-colors">
+                    className="flex items-center gap-1.5 text-xs font-medium text-white bg-[#111827] px-3 py-1.5 rounded-lg hover:bg-[#1f2937] transition-colors">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
                     Add Row
                   </button>
@@ -320,7 +320,7 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
 
               {csvErr && <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">{csvErr}</p>}
 
-              <div className="text-[10px] text-[#9CA3AF] bg-[#F8FAF9] rounded-lg px-3 py-2">
+              <div className="text-[10px] text-[#9CA3AF] bg-[#F9FAFB] rounded-lg px-3 py-2">
                 CSV format: <span className="font-mono">name,email</span> per row, or just <span className="font-mono">email</span>. First row can be a header — it will be skipped if it contains "email".
               </div>
 
@@ -329,11 +329,11 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
                   <div key={i} className="flex items-center gap-2">
                     <input value={c.name} onChange={e => updateContact(i, 'name', e.target.value)}
                       placeholder="Name (optional)"
-                      className="flex-1 px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827]" />
+                      className="flex-1 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827]" />
                     <input value={c.email} onChange={e => updateContact(i, 'email', e.target.value)}
                       placeholder="email@example.com"
-                      className={`flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827] ${
-                        c.email && !c.email.includes('@') ? 'border-red-300' : 'border-[#E5EAE8]'
+                      className={`flex-1 px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827] ${
+                        c.email && !c.email.includes('@') ? 'border-red-300' : 'border-[#E5E7EB]'
                       }`} />
                     <button onClick={() => removeContact(i)}
                       className="text-[#9CA3AF] hover:text-red-500 transition-colors flex-shrink-0">
@@ -351,7 +351,7 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
               <div>
                 <label className="block text-xs font-medium text-[#374151] mb-1.5">Email Subject <span className="text-red-400">*</span></label>
                 <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="We'd love your feedback!"
-                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827]" />
+                  className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827]" />
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
@@ -367,11 +367,11 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
                   </div>
                 </div>
                 <textarea value={body} onChange={e => setBody(e.target.value)} rows={9}
-                  className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827] resize-none font-mono" />
+                  className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827] resize-none font-mono" />
               </div>
               {/* Preview */}
-              <div className="border border-[#E5EAE8] rounded-lg overflow-hidden">
-                <div className="px-3 py-2 bg-[#F8FAF9] border-b border-[#E5EAE8]">
+              <div className="border border-[#E5E7EB] rounded-lg overflow-hidden">
+                <div className="px-3 py-2 bg-[#F9FAFB] border-b border-[#E5E7EB]">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Preview</p>
                   <p className="text-xs font-medium text-[#374151] mt-0.5">Subject: {subject || '—'}</p>
                 </div>
@@ -395,8 +395,8 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
                   { val: 'later', label: 'Schedule',     sub: 'Pick a date and time' },
                 ].map(opt => (
                   <button key={opt.val} onClick={() => setScheduleType(opt.val as 'now' | 'later')}
-                    className={`text-left p-4 rounded-xl border-2 transition-colors ${scheduleType === opt.val ? 'border-[#0D4C3C] bg-[#F0F9F6]' : 'border-[#E5EAE8] hover:border-[#9CA3AF]'}`}>
-                    <p className={`text-sm font-semibold ${scheduleType === opt.val ? 'text-[#0D4C3C]' : 'text-[#111827]'}`}>{opt.label}</p>
+                    className={`text-left p-4 rounded-xl border-2 transition-colors ${scheduleType === opt.val ? 'border-[#6C55E8] bg-[#F0F9F6]' : 'border-[#E5E7EB] hover:border-[#9CA3AF]'}`}>
+                    <p className={`text-sm font-semibold ${scheduleType === opt.val ? 'text-[#6C55E8]' : 'text-[#111827]'}`}>{opt.label}</p>
                     <p className="text-xs text-[#6B7280] mt-0.5">{opt.sub}</p>
                   </button>
                 ))}
@@ -407,12 +407,12 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
                   <label className="block text-xs font-medium text-[#374151] mb-1.5">Schedule Date & Time</label>
                   <input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)}
                     min={new Date().toISOString().slice(0, 16)}
-                    className="w-full px-3 py-2 text-sm border border-[#E5EAE8] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D4C3C]/30 text-[#111827]" />
+                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 text-[#111827]" />
                 </div>
               )}
 
               {/* Summary */}
-              <div className="bg-[#F8FAF9] rounded-xl p-4 space-y-2.5">
+              <div className="bg-[#F9FAFB] rounded-xl p-4 space-y-2.5">
                 <p className="text-xs font-semibold text-[#374151] uppercase tracking-wide mb-2">Review Summary</p>
                 {[
                   ['Campaign', name],
@@ -434,30 +434,30 @@ function CreateCampaignModal({ orgId, orgName, onClose, onCreated }: CreateModal
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-[#F3F4F6] flex items-center justify-between flex-shrink-0 gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors">
+          <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors">
             Cancel
           </button>
           <div className="flex items-center gap-2">
             {step > 1 && (
               <button onClick={() => setStep(s => s - 1)}
-                className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors">
+                className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors">
                 Back
               </button>
             )}
             {step < 4 && (
               <button onClick={() => { setErr(''); setStep(s => s + 1); }} disabled={!canNext()}
-                className="px-4 py-2 text-sm font-medium text-white bg-[#0D4C3C] rounded-lg hover:bg-[#0a3d30] transition-colors disabled:opacity-40">
+                className="px-4 py-2 text-sm font-medium text-white bg-[#111827] rounded-lg hover:bg-[#1f2937] transition-colors disabled:opacity-40">
                 Next
               </button>
             )}
             {step === 4 && (
               <>
                 <button onClick={handleSaveDraft} disabled={saving || sending}
-                  className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5EAE8] rounded-lg hover:bg-[#F3F4F6] transition-colors disabled:opacity-50">
+                  className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors disabled:opacity-50">
                   {saving ? 'Saving…' : 'Save Draft'}
                 </button>
                 <button onClick={handleSend} disabled={saving || sending}
-                  className="px-5 py-2 text-sm font-semibold text-white bg-[#0D4C3C] rounded-lg hover:bg-[#0a3d30] transition-colors disabled:opacity-50 flex items-center gap-2">
+                  className="px-5 py-2 text-sm font-semibold text-white bg-[#111827] rounded-lg hover:bg-[#1f2937] transition-colors disabled:opacity-50 flex items-center gap-2">
                   {sending && <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>}
                   {sending ? 'Sending…' : scheduleType === 'later' ? 'Schedule' : 'Send Now'}
                 </button>
@@ -533,8 +533,8 @@ export function CampaignsPage() {
   return (
     <div className="relative h-full flex flex-col overflow-hidden">
       {/* Ambient blobs */}
-      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#0D4C3C]/5 blur-3xl" aria-hidden="true"/>
-      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/4 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-[#111827]/5 blur-3xl" aria-hidden="true"/>
+      <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-[#111827]/4 blur-3xl" aria-hidden="true"/>
 
       {showCreate && orgId && (
         <CreateCampaignModal
@@ -551,7 +551,7 @@ export function CampaignsPage() {
           <p className="text-sm text-[#6B7280] mt-0.5">Ask customers to leave a review via email</p>
         </div>
         <button onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#0D4C3C] rounded-lg hover:bg-[#0a3d30] transition-colors">
+          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#111827] rounded-lg hover:bg-[#1f2937] transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
           New Campaign
         </button>
@@ -563,7 +563,7 @@ export function CampaignsPage() {
       {/* Email quota bar */}
       {quota !== null && (
         <div className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 px-5 py-3.5 mb-4 flex items-center gap-4">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-medium text-[#374151]">Email quota this month</span>
@@ -577,18 +577,18 @@ export function CampaignsPage() {
             </div>
             <div className="w-full h-1.5 bg-[#F3F4F6] rounded-full overflow-hidden">
               {quota.limit === null ? (
-                <div className="h-full w-full bg-[#E6F2EE] rounded-full" />
+                <div className="h-full w-full bg-[#EDE9FE] rounded-full" />
               ) : (
                 <div className={`h-full rounded-full transition-all ${
                   quota.used >= quota.limit ? 'bg-red-500' :
                   quota.used / quota.limit >= 0.8 ? 'bg-amber-400' :
-                  'bg-[#0D4C3C]'
+                  'bg-[#111827]'
                 }`} style={{ width: `${Math.min((quota.used / quota.limit) * 100, 100)}%` }} />
               )}
             </div>
           </div>
           {quota.limit !== null && quota.used >= quota.limit && (
-            <Link to="/billing" className="text-xs font-semibold text-white bg-[#0D4C3C] px-3 py-1.5 rounded-lg hover:bg-[#0a3d30] transition-colors flex-shrink-0">
+            <Link to="/billing" className="text-xs font-semibold text-white bg-[#111827] px-3 py-1.5 rounded-lg hover:bg-[#1f2937] transition-colors flex-shrink-0">
               Upgrade
             </Link>
           )}
@@ -600,11 +600,11 @@ export function CampaignsPage() {
         {[
           { label: 'Campaigns',    value: campaigns.length,                  color: 'text-[#111827]' },
           { label: 'Emails Sent',  value: totalSent.toLocaleString(),         color: 'text-[#1D4ED8]' },
-          { label: 'Opened',       value: pct(totalOpened, totalSent),        color: 'text-[#0D4C3C]' },
+          { label: 'Opened',       value: pct(totalOpened, totalSent),        color: 'text-[#6C55E8]' },
           { label: 'Clicked',      value: pct(totalClicked, totalSent),       color: 'text-[#B45309]' },
         ].map(k => (
           <div key={k.label} className="relative bg-white/70 backdrop-blur-md rounded-2xl border border-white/60 shadow-lg shadow-black/5 p-4">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/3 via-transparent to-transparent pointer-events-none rounded-2xl" />
             <p className="text-[10px] uppercase tracking-wide text-[#9CA3AF]">{k.label}</p>
             <p className={`text-2xl font-bold mt-1 ${k.color}`}>{k.value}</p>
           </div>
@@ -612,7 +612,7 @@ export function CampaignsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-[#E5EAE8] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#F3F4F6]">
@@ -628,13 +628,13 @@ export function CampaignsPage() {
               <tr>
                 <td colSpan={9} className="px-5 py-16 text-center">
                   <div className="flex flex-col items-center gap-3">
-                    <div className="w-12 h-12 bg-[#E6F2EE] rounded-full flex items-center justify-center">
-                      <svg className="w-6 h-6 text-[#0D4C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    <div className="w-12 h-12 bg-[#EDE9FE] rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                     </div>
                     <p className="text-sm font-medium text-[#374151]">No campaigns yet</p>
                     <p className="text-xs text-[#9CA3AF]">Send review requests to your customers and grow your rating</p>
                     <button onClick={() => setShowCreate(true)}
-                      className="mt-1 px-4 py-2 text-sm font-medium text-white bg-[#0D4C3C] rounded-lg hover:bg-[#0a3d30] transition-colors">
+                      className="mt-1 px-4 py-2 text-sm font-medium text-white bg-[#111827] rounded-lg hover:bg-[#1f2937] transition-colors">
                       Create your first campaign
                     </button>
                   </div>
@@ -643,7 +643,7 @@ export function CampaignsPage() {
             ) : campaigns.map(c => (
               <tr key={c.id} className="hover:bg-[#FAFFFE] transition-colors">
                 <td className="px-5 py-3.5">
-                  <Link to={`/campaigns/${c.id}`} className="font-medium text-[#111827] hover:text-[#0D4C3C] hover:underline">
+                  <Link to={`/campaigns/${c.id}`} className="font-medium text-[#111827] hover:text-[#6C55E8] hover:underline">
                     {c.name}
                   </Link>
                   {c.subject && <p className="text-[10px] text-[#9CA3AF] mt-0.5 truncate max-w-[160px]">{c.subject}</p>}
@@ -659,7 +659,7 @@ export function CampaignsPage() {
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-1.5">
                     <div className="w-16 h-1.5 bg-[#F3F4F6] rounded-full overflow-hidden">
-                      <div className="h-1.5 bg-[#0D4C3C] rounded-full" style={{ width: c.sent_count ? `${Math.min((c.opened_count / c.sent_count) * 100, 100)}%` : '0%' }} />
+                      <div className="h-1.5 bg-[#111827] rounded-full" style={{ width: c.sent_count ? `${Math.min((c.opened_count / c.sent_count) * 100, 100)}%` : '0%' }} />
                     </div>
                     <span className="text-xs text-[#374151] tabular-nums">{pct(c.opened_count, c.sent_count)}</span>
                   </div>
@@ -674,7 +674,7 @@ export function CampaignsPage() {
                 </td>
                 <td className="px-5 py-3.5 text-xs text-[#6B7280] whitespace-nowrap">{fmtDate(c.created_at)}</td>
                 <td className="px-5 py-3.5">
-                  <Link to={`/campaigns/${c.id}`} className="text-xs font-medium text-[#0D4C3C] hover:underline">View</Link>
+                  <Link to={`/campaigns/${c.id}`} className="text-xs font-medium text-[#6C55E8] hover:underline">View</Link>
                 </td>
               </tr>
             ))}

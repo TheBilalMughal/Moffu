@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+﻿import { createContext, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type React from 'react';
 
@@ -67,7 +67,7 @@ function UpgradeWall({ feature }: { feature: string }) {
         <p className="text-sm text-[#6B7280] mb-6 leading-relaxed">{meta.description}</p>
         <button
           onClick={() => navigate('/billing')}
-          className="bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors"
+          className="bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors"
         >
           View Plans
         </button>
@@ -91,7 +91,7 @@ export function FeatureGatePage({
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <svg className="w-5 h-5 animate-spin text-[#0D4C3C]" fill="none" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 animate-spin text-[#6C55E8]" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
         </svg>

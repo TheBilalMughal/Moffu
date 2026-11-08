@@ -263,15 +263,15 @@ function SetupGuide({ status }: { status: SetupStatus }) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-[#0D4C3C]/15 bg-white/70 backdrop-blur-md shadow-lg shadow-[#0D4C3C]/5 mb-6">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/4 via-transparent to-transparent pointer-events-none" />
-      <div className="relative px-5 py-4 border-b border-[#E5EAE8]/60 flex items-center justify-between">
+    <div className="relative overflow-hidden rounded-2xl border border-[#6C55E8]/15 bg-white/70 backdrop-blur-md shadow-lg shadow-[#6C55E8]/5 mb-6">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/4 via-transparent to-transparent pointer-events-none" />
+      <div className="relative px-5 py-4 border-b border-[#E5E7EB]/60 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold text-[#111827]">Get started</span>
           <span className="text-xs text-[#6B7280]">{completed} of {STEPS.length} complete</span>
-          <div className="w-28 h-1.5 bg-[#E5EAE8] rounded-full overflow-hidden">
+          <div className="w-28 h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#0D4C3C] to-[#1a6b55] rounded-full transition-all duration-700"
+              className="h-full bg-gradient-to-r from-[#6C55E8] to-[#1a6b55] rounded-full transition-all duration-700"
               style={{ width: `${(completed / STEPS.length) * 100}%` }}
             />
           </div>
@@ -282,21 +282,21 @@ function SetupGuide({ status }: { status: SetupStatus }) {
           </svg>
         </button>
       </div>
-      <div className="relative grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#E5EAE8]/60">
+      <div className="relative grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#E5E7EB]/60">
         {STEPS.map((step, idx) => {
           const done = status[step.key];
           const isNext = !done && STEPS.slice(0, idx).every(s => status[s.key]);
           return (
             <div key={step.key} className={`px-5 py-4 ${done ? 'opacity-50' : ''}`}>
               <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-3 ${
-                done ? 'bg-[#0D4C3C]' : isNext ? 'bg-[#0D4C3C]/10 text-[#0D4C3C]' : 'bg-[#F3F4F6] text-[#9CA3AF]'
+                done ? 'bg-[#111827]' : isNext ? 'bg-[#111827]/10 text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'
               }`}>
                 {done ? (
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                 ) : (
-                  <span className={done ? 'text-white' : isNext ? 'text-[#0D4C3C]' : 'text-[#9CA3AF]'}>
+                  <span className={done ? 'text-white' : isNext ? 'text-[#6C55E8]' : 'text-[#9CA3AF]'}>
                     {step.icon}
                   </span>
                 )}
@@ -306,7 +306,7 @@ function SetupGuide({ status }: { status: SetupStatus }) {
               </p>
               {!done && <p className="text-[11px] text-[#9CA3AF] mb-2 leading-relaxed">{step.description}</p>}
               {!done && (
-                <Link to={step.href} className={`text-[11px] font-semibold ${isNext ? 'text-[#0D4C3C]' : 'text-[#9CA3AF]'} hover:underline`}>
+                <Link to={step.href} className={`text-[11px] font-semibold ${isNext ? 'text-[#6C55E8]' : 'text-[#9CA3AF]'} hover:underline`}>
                   {step.linkLabel} →
                 </Link>
               )}
@@ -336,7 +336,7 @@ function WeeklyHighlight({ dash }: { dash: DashboardData }) {
       label: 'Action needed',
       msg: `${dash.pending} review${dash.pending !== 1 ? 's' : ''} waiting for a reply`,
       sub: `Oldest is ${dash.oldestPendingDays} days old`,
-      cta: <Link to="/reviews" className="text-[11px] font-semibold text-[#0D4C3C] hover:underline whitespace-nowrap">Reply now →</Link>,
+      cta: <Link to="/reviews" className="text-[11px] font-semibold text-[#6C55E8] hover:underline whitespace-nowrap">Reply now →</Link>,
     };
   } else if (perfectWeek) {
     v = {
@@ -348,7 +348,7 @@ function WeeklyHighlight({ dash }: { dash: DashboardData }) {
   } else {
     const diff = dash.thisWeekCount - dash.lastWeekCount;
     v = {
-      dot: 'bg-[#0D4C3C]',
+      dot: 'bg-[#111827]',
       label: 'This week',
       msg: `${dash.thisWeekCount} reviews — ${diff} more than last week`,
       sub: 'Visibility is improving',
@@ -356,10 +356,10 @@ function WeeklyHighlight({ dash }: { dash: DashboardData }) {
   }
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[#F8FAF9] border border-[#E5EAE8] mb-5">
+    <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] mb-5">
       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${v.dot}`} />
       <span className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide flex-shrink-0">{v.label}</span>
-      <span className="w-px h-3 bg-[#E5EAE8] flex-shrink-0" />
+      <span className="w-px h-3 bg-[#E5E7EB] flex-shrink-0" />
       <span className="text-xs font-semibold text-[#111827]">{v.msg}</span>
       <span className="text-[11px] text-[#9CA3AF] hidden sm:inline">{v.sub}</span>
       {v.cta && <span className="ml-auto">{v.cta}</span>}
@@ -388,12 +388,12 @@ function StatCard({
 }) {
   return (
     <GlassCard>
-      {accent && <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/8 via-transparent to-[#0D4C3C]/3 pointer-events-none" />}
+      {accent && <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/8 via-transparent to-[#6C55E8]/3 pointer-events-none" />}
       {urgent && <div className="absolute inset-0 bg-gradient-to-br from-amber-500/8 via-transparent to-transparent pointer-events-none" />}
       <div className="relative px-5 py-5">
         <div className="flex items-start justify-between mb-3">
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-            accent ? 'bg-[#0D4C3C]/10 text-[#0D4C3C]' : urgent ? 'bg-amber-100 text-amber-600' : 'bg-[#F3F4F6] text-[#6B7280]'
+            accent ? 'bg-[#111827]/10 text-[#6C55E8]' : urgent ? 'bg-amber-100 text-amber-600' : 'bg-[#F3F4F6] text-[#6B7280]'
           }`}>{icon}</div>
           {trend != null && (
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${
@@ -456,7 +456,7 @@ function TrendChart({ trend }: { trend: { date: string; count: number }[] }) {
           return (
             <div key={day.date} className="flex-1 flex flex-col justify-end h-full" title={`${day.date}: ${day.count}`}>
               <div
-                className="w-full bg-gradient-to-t from-[#0D4C3C] to-[#1a6b55] rounded-t-md transition-all"
+                className="w-full bg-gradient-to-t from-[#6C55E8] to-[#1a6b55] rounded-t-md transition-all"
                 style={{ height: day.count > 0 ? `${Math.max(pct, 8)}%` : '2px', opacity: day.count > 0 ? 1 : 0.2 }}
               />
             </div>
@@ -517,15 +517,15 @@ function ResponseTimeCard({ dash }: { dash: DashboardData }) {
           {oldest3.length > 0 && (
             <div className="space-y-2">
               {oldest3.map(r => (
-                <div key={r.id} className="flex items-center gap-2 px-2.5 py-2 bg-[#F8FAF9]/60 rounded-xl">
-                  <div className="w-6 h-6 rounded-lg bg-[#0D4C3C]/10 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-[#0D4C3C]">
+                <div key={r.id} className="flex items-center gap-2 px-2.5 py-2 bg-[#F9FAFB]/60 rounded-xl">
+                  <div className="w-6 h-6 rounded-lg bg-[#111827]/10 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-[#6C55E8]">
                     {(r.reviewer_name ?? '?')[0]?.toUpperCase() ?? '?'}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[11px] font-semibold text-[#374151] truncate">{r.reviewer_name ?? 'Anonymous'}</p>
                     <p className="text-[10px] text-[#9CA3AF]">{r.rating != null ? `${r.rating}★` : '—'} · {daysSince(r.published_at)}d waiting</p>
                   </div>
-                  <Link to="/reviews" className="text-[10px] font-semibold text-[#0D4C3C] hover:underline flex-shrink-0">Reply →</Link>
+                  <Link to="/reviews" className="text-[10px] font-semibold text-[#6C55E8] hover:underline flex-shrink-0">Reply →</Link>
                 </div>
               ))}
             </div>
@@ -585,14 +585,14 @@ function CampaignSummaryCard({ stats, loading }: { stats: CampaignStats | null; 
     <div className="relative">
       <div className="flex items-center justify-between mb-4">
         <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Campaign Performance</p>
-        <Link to="/campaigns" className="text-[11px] font-semibold text-[#0D4C3C] hover:underline">View all →</Link>
+        <Link to="/campaigns" className="text-[11px] font-semibold text-[#6C55E8] hover:underline">View all →</Link>
       </div>
       {loading ? (
         <div className="space-y-2">{[1, 2, 3].map(i => <div key={i} className="h-8 rounded-xl bg-[#F3F4F6] animate-pulse" />)}</div>
       ) : !stats || stats.total === 0 ? (
         <div className="text-center py-6">
           <p className="text-xs text-[#9CA3AF] mb-3">No campaigns yet</p>
-          <Link to="/campaigns" className="text-[11px] font-semibold text-[#0D4C3C] hover:underline">Create your first campaign →</Link>
+          <Link to="/campaigns" className="text-[11px] font-semibold text-[#6C55E8] hover:underline">Create your first campaign →</Link>
         </div>
       ) : (
         <>
@@ -602,7 +602,7 @@ function CampaignSummaryCard({ stats, loading }: { stats: CampaignStats | null; 
               { label: 'Sent', value: stats.totalSent },
               { label: 'Open Rate', value: openRate != null ? `${openRate}%` : '—' },
             ].map(item => (
-              <div key={item.label} className="text-center px-2 py-2.5 bg-[#F8FAF9]/60 rounded-xl">
+              <div key={item.label} className="text-center px-2 py-2.5 bg-[#F9FAFB]/60 rounded-xl">
                 <p className="text-base font-bold text-[#111827]">{item.value}</p>
                 <p className="text-[10px] text-[#9CA3AF] mt-0.5">{item.label}</p>
               </div>
@@ -615,7 +615,7 @@ function CampaignSummaryCard({ stats, loading }: { stats: CampaignStats | null; 
                 <p className="text-[10px] font-semibold text-[#374151]">{stats.sent} of {stats.total}</p>
               </div>
               <div className="h-1.5 bg-[#F3F4F6] rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-[#0D4C3C] to-[#1a6b55] rounded-full"
+                <div className="h-full bg-gradient-to-r from-[#6C55E8] to-[#1a6b55] rounded-full"
                   style={{ width: `${Math.round((stats.sent / stats.total) * 100)}%` }} />
               </div>
             </div>
@@ -643,8 +643,8 @@ function RecentReviews({ reviews }: { reviews: ReviewRow[] }) {
   return (
     <div>
       {reviews.map((r, idx) => (
-        <div key={r.id} className={`flex items-start gap-3 px-5 py-3 hover:bg-[#F8FAF9]/60 transition-colors ${idx !== reviews.length - 1 ? 'border-b border-[#E5EAE8]/50' : ''}`}>
-          <div className="w-7 h-7 rounded-lg bg-[#0D4C3C]/10 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-[#0D4C3C] mt-0.5">
+        <div key={r.id} className={`flex items-start gap-3 px-5 py-3 hover:bg-[#F9FAFB]/60 transition-colors ${idx !== reviews.length - 1 ? 'border-b border-[#E5E7EB]/50' : ''}`}>
+          <div className="w-7 h-7 rounded-lg bg-[#111827]/10 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-[#6C55E8] mt-0.5">
             {(r.reviewer_name ?? '?')[0]?.toUpperCase() ?? '?'}
           </div>
           <div className="flex-1 min-w-0">
@@ -688,7 +688,7 @@ function InsightsChart({ trend }: { trend: { date: string; impressions: number }
           return (
             <div key={day.date} className="flex-1 flex flex-col justify-end h-full" title={`${day.date}: ${day.impressions}`}>
               <div
-                className="w-full bg-gradient-to-t from-[#0D4C3C] to-[#1a6b55] rounded-t-sm transition-all"
+                className="w-full bg-gradient-to-t from-[#6C55E8] to-[#1a6b55] rounded-t-sm transition-all"
                 style={{ height: day.impressions > 0 ? `${Math.max(pct, 6)}%` : '2px', opacity: day.impressions > 0 ? 1 : 0.15 }}
               />
             </div>
@@ -756,7 +756,7 @@ function InsightsSection({ insights, loading }: { insights: InsightsSummary | nu
     <div className="relative mt-5">
       <div className="flex items-center gap-3 mb-4">
         <p className="text-sm font-semibold text-[#111827]">Google Profile Performance</p>
-        <span className="text-[10px] text-[#9CA3AF] bg-[#F8FAF9] border border-[#E5EAE8] px-2 py-0.5 rounded-lg">Last 30 days</span>
+        <span className="text-[10px] text-[#9CA3AF] bg-[#F9FAFB] border border-[#E5E7EB] px-2 py-0.5 rounded-lg">Last 30 days</span>
       </div>
 
       {loading ? (
@@ -805,9 +805,9 @@ function InsightsSection({ insights, loading }: { insights: InsightsSummary | nu
 function EmptyState() {
   return (
     <GlassCard className="py-14 text-center">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0D4C3C]/5 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/5 via-transparent to-transparent pointer-events-none" />
       <div className="relative">
-        <div className="w-14 h-14 rounded-2xl bg-[#0D4C3C]/10 text-[#0D4C3C] flex items-center justify-center mx-auto mb-4">
+        <div className="w-14 h-14 rounded-2xl bg-[#111827]/10 text-[#6C55E8] flex items-center justify-center mx-auto mb-4">
           <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
               d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
@@ -817,7 +817,7 @@ function EmptyState() {
         <p className="text-sm text-[#6B7280] max-w-xs mx-auto mb-5">
           Connect your Google Business Profile to start seeing and responding to reviews.
         </p>
-        <Link to="/settings" className="inline-flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
+        <Link to="/settings" className="inline-flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors">
           Connect Google
         </Link>
       </div>
@@ -938,8 +938,8 @@ export function OverviewPage() {
     <div className="relative min-h-full px-4 md:px-6 py-5 md:py-6">
       {/* Ambient blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[#0D4C3C]/6 blur-3xl" />
-        <div className="absolute top-1/2 right-0 w-56 h-56 rounded-full bg-[#0D4C3C]/4 blur-3xl" />
+        <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-[#111827]/6 blur-3xl" />
+        <div className="absolute top-1/2 right-0 w-56 h-56 rounded-full bg-[#111827]/4 blur-3xl" />
       </div>
 
       {/* Header */}
@@ -955,7 +955,7 @@ export function OverviewPage() {
             {dash && dash.pending > 0 && (
               <Link
                 to="/reviews"
-                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-[#0D4C3C] to-[#1a6b55] rounded-xl shadow-md shadow-[#0D4C3C]/20 hover:shadow-lg transition-shadow"
+                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-[#6C55E8] to-[#1a6b55] rounded-xl shadow-md shadow-[#6C55E8]/20 hover:shadow-lg transition-shadow"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -1021,9 +1021,9 @@ export function OverviewPage() {
           <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Left — Recent Reviews */}
             <GlassCard className="overflow-hidden">
-              <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[#E5EAE8]/50">
+              <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[#E5E7EB]/50">
                 <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Recent Reviews</p>
-                <Link to="/reviews" className="text-[11px] font-semibold text-[#0D4C3C] hover:underline">View all →</Link>
+                <Link to="/reviews" className="text-[11px] font-semibold text-[#6C55E8] hover:underline">View all →</Link>
               </div>
               <RecentReviews reviews={dash.recent} />
             </GlassCard>

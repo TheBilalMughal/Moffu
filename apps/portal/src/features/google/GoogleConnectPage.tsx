@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { googleService, type GoogleLocation } from './google.service';
@@ -136,13 +136,13 @@ export function GoogleConnectPage() {
   const atLimit = !isUnlimited && selected.size >= locationLimit;
 
   return (
-    <div className="min-h-screen bg-[#F8FAF9] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl border border-[#E5EAE8] shadow-lg w-full max-w-md">
+    <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-lg w-full max-w-md">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-[#E5EAE8]">
+        <div className="px-6 py-5 border-b border-[#E5E7EB]">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-[#0D4C3C]/10 flex items-center justify-center flex-shrink-0">
-              <svg className="w-4 h-4 text-[#0D4C3C]" viewBox="0 0 24 24" fill="currentColor">
+            <div className="w-8 h-8 rounded-lg bg-[#111827]/10 flex items-center justify-center flex-shrink-0">
+              <svg className="w-4 h-4 text-[#6C55E8]" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
               </svg>
             </div>
@@ -169,7 +169,7 @@ export function GoogleConnectPage() {
 
           {loading ? (
             <div className="flex justify-center py-10">
-              <div className="w-6 h-6 border-2 border-[#0D4C3C] border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-[#6C55E8] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : locations.length === 0 ? (
             <div className="text-center py-8">
@@ -179,7 +179,7 @@ export function GoogleConnectPage() {
               <button
                 onClick={handleRetryFetch}
                 disabled={retrying}
-                className="text-xs font-medium text-[#0D4C3C] hover:underline disabled:opacity-50"
+                className="text-xs font-medium text-[#6C55E8] hover:underline disabled:opacity-50"
               >
                 {retrying ? 'Fetching…' : 'Retry fetch'}
               </button>
@@ -206,10 +206,10 @@ export function GoogleConnectPage() {
                       key={loc.id}
                       className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
                         isChecked
-                          ? 'bg-[#F0F7F4] border-[#0D4C3C]/30'
+                          ? 'bg-[#F0F7F4] border-[#6C55E8]/30'
                           : disabled
-                            ? 'bg-[#F9FAFB] border-[#E5EAE8] opacity-50 cursor-not-allowed'
-                            : 'bg-white border-[#E5EAE8] hover:bg-[#F8FAF9]'
+                            ? 'bg-[#F9FAFB] border-[#E5E7EB] opacity-50 cursor-not-allowed'
+                            : 'bg-white border-[#E5E7EB] hover:bg-[#F9FAFB]'
                       }`}
                     >
                       <input
@@ -217,7 +217,7 @@ export function GoogleConnectPage() {
                         checked={isChecked}
                         disabled={disabled}
                         onChange={() => !disabled && toggle(loc.id)}
-                        className="mt-0.5 w-4 h-4 rounded accent-[#0D4C3C]"
+                        className="mt-0.5 w-4 h-4 rounded accent-[#6C55E8]"
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-[#111827] truncate">
@@ -228,7 +228,7 @@ export function GoogleConnectPage() {
                         )}
                       </div>
                       {isChecked && (
-                        <svg className="w-4 h-4 text-[#0D4C3C] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-4 h-4 text-[#6C55E8] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/>
                         </svg>
                       )}
@@ -250,7 +250,7 @@ export function GoogleConnectPage() {
             <button
               onClick={handleConfirm}
               disabled={saving || loading || selected.size === 0}
-              className="w-full py-2.5 text-xs font-semibold text-white bg-[#0D4C3C] rounded-xl hover:bg-[#0a3d30] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-2.5 text-xs font-semibold text-white bg-[#111827] rounded-xl hover:bg-[#1f2937] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {saving
                 ? 'Saving…'

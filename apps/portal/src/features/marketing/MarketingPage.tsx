@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+﻿import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { marketingService, MarketingPost, PLATFORM_LABELS, POST_TYPES, STATUS_LABELS } from './marketingService';
 
@@ -29,7 +29,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="bg-white rounded-xl border border-[#E5EAE8] px-5 py-4 flex flex-col gap-1">
+    <div className="bg-white rounded-xl border border-[#E5E7EB] px-5 py-4 flex flex-col gap-1">
       <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide">{label}</p>
       <p className="text-2xl font-bold text-[#111827]">{value}</p>
       {sub && <p className="text-xs text-[#9CA3AF]">{sub}</p>}
@@ -57,7 +57,7 @@ function FilterSelect({ value, onChange, placeholder, options }: {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-2 text-sm px-3.5 py-2 rounded-xl border transition-colors ${value ? 'border-[#0D4C3C] bg-[#E6F2EE] text-[#0D4C3C] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#0D4C3C] bg-white'}`}
+        className={`flex items-center gap-2 text-sm px-3.5 py-2 rounded-xl border transition-colors ${value ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8] font-medium' : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#6C55E8] bg-white'}`}
       >
         {selected?.label ?? placeholder}
         {value
@@ -66,16 +66,16 @@ function FilterSelect({ value, onChange, placeholder, options }: {
         }
       </button>
       {open && (
-        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E5EAE8] rounded-xl shadow-lg py-1.5 min-w-[160px]">
+        <div className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-[#E5E7EB] rounded-xl shadow-lg py-1.5 min-w-[160px]">
           <button onClick={() => { onChange(''); setOpen(false); }}
-            className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${!value ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#6B7280] hover:bg-[#F8F9FA]'}`}>
+            className={`w-full text-left px-3.5 py-2 text-sm transition-colors ${!value ? 'text-[#6C55E8] font-medium bg-[#F3F4F6]' : 'text-[#6B7280] hover:bg-[#F8F9FA]'}`}>
             {placeholder}
           </button>
           {options.map(o => (
             <button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }}
-              className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${value === o.value ? 'text-[#0D4C3C] font-medium bg-[#F0F7F5]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}>
+              className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${value === o.value ? 'text-[#6C55E8] font-medium bg-[#F3F4F6]' : 'text-[#374151] hover:bg-[#F8F9FA]'}`}>
               <span>{o.label}</span>
-              {value === o.value && <svg className="w-3.5 h-3.5 text-[#0D4C3C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
+              {value === o.value && <svg className="w-3.5 h-3.5 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>}
             </button>
           ))}
         </div>
@@ -125,7 +125,7 @@ export function MarketingPage() {
         </div>
         <button
           onClick={() => navigate('/marketing/new')}
-          className="flex items-center gap-2 bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+          className="flex items-center gap-2 bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
@@ -173,7 +173,7 @@ export function MarketingPage() {
         <div className="h-full flex flex-col bg-white shadow-sm rounded-xl overflow-hidden">
           <div className="flex-1 overflow-auto">
             <table className="w-full text-sm">
-              <thead className="bg-[#F8FAF9] border-b border-[#E5EAE8] sticky top-0 z-10">
+              <thead className="bg-[#F9FAFB] border-b border-[#E5E7EB] sticky top-0 z-10">
                 <tr>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Caption Preview</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Platform</th>
@@ -189,7 +189,7 @@ export function MarketingPage() {
                     <tr key={i}>
                       {Array.from({ length: 6 }).map((_, j) => (
                         <td key={j} className="px-5 py-3">
-                          <div className="h-3.5 bg-[#E5EAE8] rounded animate-pulse w-20" />
+                          <div className="h-3.5 bg-[#E5E7EB] rounded animate-pulse w-20" />
                         </td>
                       ))}
                     </tr>
@@ -207,7 +207,7 @@ export function MarketingPage() {
                         </div>
                         <button
                           onClick={() => navigate('/marketing/new')}
-                          className="bg-[#0D4C3C] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+                          className="bg-[#111827] hover:bg-[#083F32] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
                         >
                           Create Post
                         </button>
@@ -216,7 +216,7 @@ export function MarketingPage() {
                   </tr>
                 ) : (
                   posts.map(p => (
-                    <tr key={p.id} className="hover:bg-[#F8FAF9] transition-colors">
+                    <tr key={p.id} className="hover:bg-[#F9FAFB] transition-colors">
                       <td className="px-5 py-3 max-w-xs">
                         <p className="text-sm text-[#374151] truncate">{p.caption ?? p.user_context ?? '—'}</p>
                       </td>
