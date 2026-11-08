@@ -959,7 +959,7 @@ export function AdminLayout() {
       </aside>
 
       {/* ── Main Content ── */}
-      <main className="flex-1 overflow-hidden flex flex-col min-w-0">
+      <main className="flex-1 overflow-hidden flex flex-col min-w-0 z-30">
         {/* Topbar */}
         <div className="flex-shrink-0 h-14 flex items-center justify-between px-6 gap-4">
           {/* Left: breadcrumb */}
