@@ -109,8 +109,8 @@ function UsageHistoryChart({ days }: { days: UsageDay[] }) {
             <div key={day.date} className="flex-1 flex flex-col justify-end" style={{ height: `${CHART_H}px` }}>
               {barH > 0 && (
                 <div className="w-full rounded-xl overflow-hidden" style={{ height: `${barH}px` }}>
-                  <div className="w-full bg-[#6BAE9A]" style={{ height: `${draftsH}px` }} />
-                  <div className="w-full bg-[#111827]" style={{ height: `${repliesH}px` }} />
+                  <div className="w-full bg-[#C4B5FD]" style={{ height: `${draftsH}px` }} />
+                  <div className="w-full bg-[#6C55E8]" style={{ height: `${repliesH}px` }} />
                 </div>
               )}
               {barH === 0 && <div className="w-full bg-[#F3F4F6] rounded-xl" style={{ height: '2px' }} />}
@@ -133,11 +133,11 @@ function UsageHistoryChart({ days }: { days: UsageDay[] }) {
       {/* Legend */}
       <div className="flex items-center gap-4 mt-2">
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-xl bg-[#6BAE9A]" />
+          <div className="w-2.5 h-2.5 rounded-xl bg-[#C4B5FD]" />
           <span className="text-[10px] text-[#9CA3AF]">AI drafts</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-xl bg-[#111827]" />
+          <div className="w-2.5 h-2.5 rounded-xl bg-[#6C55E8]" />
           <span className="text-[10px] text-[#9CA3AF]">Published replies</span>
         </div>
       </div>
