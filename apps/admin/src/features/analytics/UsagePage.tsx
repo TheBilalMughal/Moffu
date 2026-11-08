@@ -244,8 +244,8 @@ export function UsagePage() {
             <p className="text-sm text-[#6B7280] mt-0.5">{filtered.length} orgs · {activeOrgs} active in period</p>
           </div>
           <button onClick={() => exportCSV(filtered, dateFrom, dateTo)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-[#E5E7EB] rounded-lg text-[#374151] hover:bg-white transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg transition-colors">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             Export CSV
           </button>
         </div>

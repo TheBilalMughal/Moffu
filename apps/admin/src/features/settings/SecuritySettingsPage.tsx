@@ -124,7 +124,7 @@ export function SecuritySettingsPage() {
       <button
         onClick={handleSave}
         disabled={saving}
-        className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#0a3d30] rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
+        className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1.5"
       >
         {saving && (
           <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />

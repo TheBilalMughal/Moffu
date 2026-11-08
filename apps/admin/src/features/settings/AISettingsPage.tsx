@@ -187,13 +187,13 @@ export function AISettingsPage() {
           <>
             {/* Active provider banner */}
             {activeProvider && (
-              <div className="flex items-center gap-4 px-5 py-4 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl">
+              <div className="flex items-center gap-4 px-5 py-4 bg-[#E0F2FE] border border-[#BAE6FD] rounded-xl">
                 <ProviderInitial provider={activeProvider.provider} size="sm" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-[#111827]">{PROVIDER_META[activeProvider.provider].name}</span>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] inline-block" />
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#E0F2FE] text-[#0369A1]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9] inline-block" />
                       Active
                     </span>
                   </div>
@@ -201,7 +201,7 @@ export function AISettingsPage() {
                 </div>
                 <button
                   onClick={() => openEdit(activeProvider)}
-                  className="text-xs px-3 py-1.5 rounded-lg border border-[#D1FAE5] bg-white text-[#059669] hover:bg-[#F0FDF4] transition-colors font-medium"
+                  className="text-xs px-3 py-1.5 rounded-lg border border-[#BAE6FD] bg-white text-[#0369A1] hover:bg-[#E0F2FE] transition-colors font-medium"
                 >
                   Edit
                 </button>
@@ -219,15 +219,15 @@ export function AISettingsPage() {
                     const masked = s.api_key.slice(0, 10) + '••••••••••••••••••';
                     return (
                       <div key={s.id} className={`flex items-center gap-4 px-5 py-4 rounded-xl border transition-all ${
-                        isActive ? 'border-[#BBF7D0] bg-[#F0FDF4]/40' : 'border-[#E5E7EB] hover:border-[#D1D5DB]'
+                        isActive ? 'border-[#BAE6FD] bg-[#E0F2FE]/40' : 'border-[#E5E7EB] hover:border-[#D1D5DB]'
                       }`}>
                         <ProviderInitial provider={s.provider} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-semibold text-[#111827]">{meta.name}</span>
                             {isActive && (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D]">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] inline-block" />
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#E0F2FE] text-[#0369A1]">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9] inline-block" />
                                 Active
                               </span>
                             )}
@@ -254,7 +254,7 @@ export function AISettingsPage() {
                             <button
                               onClick={() => handleActivate(s.id)}
                               disabled={activating === s.id}
-                              className="text-xs px-3 py-1.5 rounded-lg border border-[#D1FAE5] bg-[#F0FDF4] text-[#059669] hover:bg-[#DCFCE7] disabled:opacity-50 transition-colors font-medium"
+                              className="text-xs px-3 py-1.5 rounded-lg border border-[#BAE6FD] bg-[#E0F2FE] text-[#0369A1] hover:bg-[#BAE6FD] disabled:opacity-50 transition-colors font-medium"
                             >
                               {activating === s.id ? 'Activating…' : 'Set Active'}
                             </button>
@@ -386,7 +386,7 @@ export function AISettingsPage() {
               <button
                 onClick={handleSave}
                 disabled={!form.apiKey.trim() || saving === form.provider}
-                className="flex-1 bg-[#111111] hover:bg-[#0a3d30] disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
+                className="flex-1 bg-[#111111] hover:bg-[#6C55E8] disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
               >
                 {saving === form.provider ? 'Saving…' : 'Save Provider'}
               </button>

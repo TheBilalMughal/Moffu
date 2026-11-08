@@ -230,7 +230,7 @@ function SavePreviewModal({
         <div className="px-6 py-4 max-h-72 overflow-y-auto space-y-1.5">
           {toAdd.map((k) => (
             <div key={k} className="flex items-center gap-2.5 text-sm">
-              <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">+</span>
+              <span className="w-4 h-4 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-[10px] font-bold flex-shrink-0">+</span>
               <span className="text-[#111827]">{permLabel(k)}</span>
               <span className="text-[10px] text-[#9CA3AF] ml-auto font-mono">{k}</span>
             </div>
@@ -305,7 +305,7 @@ function RoleDiffModal({
         <div className="px-6 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-[#111827]">Role Comparison</h2>
-            {!hasDiff && <p className="text-xs text-emerald-600 mt-0.5">No differences between these roles.</p>}
+            {!hasDiff && <p className="text-xs text-sky-600 mt-0.5">No differences between these roles.</p>}
             {hasDiff && <p className="text-xs text-amber-600 mt-0.5">Highlighted rows differ between roles.</p>}
           </div>
           <button onClick={onClose} className="text-[#9CA3AF] hover:text-[#374151] p-1">
@@ -359,11 +359,11 @@ function RoleDiffModal({
                       return (
                         <td key={a} className="px-3 py-1.5">
                           <div className={`flex items-center justify-center gap-1 ${diff ? 'font-semibold' : ''}`}>
-                            <span className={`text-xs ${bGrant ? 'text-emerald-600' : 'text-[#D1D5DB]'}`} title={baseLabel}>
+                            <span className={`text-xs ${bGrant ? 'text-sky-600' : 'text-[#D1D5DB]'}`} title={baseLabel}>
                               {bGrant ? '✓' : '✗'}
                             </span>
                             <span className="text-[10px] text-[#D1D5DB]">/</span>
-                            <span className={`text-xs ${cGrant ? 'text-emerald-600' : diff ? 'text-red-400' : 'text-[#D1D5DB]'}`} title={cmpLabel}>
+                            <span className={`text-xs ${cGrant ? 'text-sky-600' : diff ? 'text-red-400' : 'text-[#D1D5DB]'}`} title={cmpLabel}>
                               {cGrant ? '✓' : '✗'}
                             </span>
                           </div>
@@ -603,7 +603,7 @@ export function RolesPage() {
                     {r.label}
                   </p>
                   {isFullAccessRole(r.key) && (
-                    <span className="text-[9px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-px rounded">All</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wide text-sky-700 bg-sky-50 border border-sky-200 px-1 py-px rounded">All</span>
                   )}
                 </div>
                 <p className="text-[11px] text-[#9CA3AF] mt-0.5 leading-tight">{r.desc}</p>
@@ -661,7 +661,7 @@ export function RolesPage() {
               <>
                 {/* Full-access banner */}
                 {isFullAccess && (
-                  <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800">
+                  <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-sky-50 border border-sky-200 rounded-xl text-sm text-sky-800">
                     <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -693,7 +693,7 @@ export function RolesPage() {
 
                 {/* Success banner */}
                 {savedMsg && (
-                  <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-700">
+                  <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-sky-50 border border-sky-200 rounded-xl text-sm text-sky-700">
                     <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
@@ -870,7 +870,7 @@ export function RolesPage() {
                           <td className="px-5 py-1.5">
                             <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded ${
                               entry.action === 'grant'
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                ? 'bg-sky-50 text-sky-700 border border-sky-200'
                                 : 'bg-red-50 text-red-600 border border-red-200'
                             }`}>
                               {entry.action === 'grant' ? '+' : '−'} {entry.action}

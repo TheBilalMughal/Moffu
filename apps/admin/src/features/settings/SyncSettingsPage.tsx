@@ -144,7 +144,7 @@ export function SyncSettingsPage() {
                 <button
                   onClick={handleSaveInterval}
                   disabled={savingInterval}
-                  className="px-4 py-1.5 bg-[#111111] text-white text-sm font-medium rounded-lg hover:bg-[#0a3d30] disabled:opacity-50 transition-colors"
+                  className="px-4 py-1.5 bg-[#111111] text-white text-sm font-medium rounded-lg hover:bg-[#6C55E8] disabled:opacity-50 transition-colors"
                 >
                   {savingInterval ? 'Saving…' : 'Save'}
                 </button>
@@ -205,7 +205,7 @@ export function SyncSettingsPage() {
                 <button
                   onClick={handleSaveSecret}
                   disabled={savingSecret}
-                  className="px-4 py-1.5 bg-[#111111] text-white text-sm font-medium rounded-lg hover:bg-[#0a3d30] disabled:opacity-50 transition-colors"
+                  className="px-4 py-1.5 bg-[#111111] text-white text-sm font-medium rounded-lg hover:bg-[#6C55E8] disabled:opacity-50 transition-colors"
                 >
                   {savingSecret ? 'Saving…' : 'Save secret'}
                 </button>

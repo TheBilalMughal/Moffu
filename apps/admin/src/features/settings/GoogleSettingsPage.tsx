@@ -95,8 +95,8 @@ export function GoogleSettingsPage() {
               <GoogleLogo />
               <h1 className="text-lg font-semibold text-[#111827]">Google API</h1>
               {hasCreds && !editing && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] inline-block" />
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#E0F2FE] text-[#0369A1]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9] inline-block" />
                   Configured
                 </span>
               )}
@@ -189,7 +189,7 @@ export function GoogleSettingsPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-5 py-2 bg-[#111111] text-white text-sm font-medium rounded-lg hover:bg-[#0a3d30] disabled:opacity-50 transition-colors"
+                className="px-5 py-2 bg-[#111111] text-white text-sm font-medium rounded-lg hover:bg-[#6C55E8] disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Saving…' : 'Save credentials'}
               </button>

@@ -97,7 +97,7 @@ function CreateFlagModal({ onClose, onCreated }: { onClose: () => void; onCreate
         </div>
         <div className="px-6 py-4 border-t border-[#F3F4F6] flex justify-end gap-3">
           <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors">Cancel</button>
-          <button onClick={save} disabled={saving} className="px-4 py-2 text-sm font-medium text-white bg-[#111111] rounded-lg hover:bg-[#0a3d30] transition-colors disabled:opacity-50">
+          <button onClick={save} disabled={saving} className="px-4 py-2 text-sm font-medium text-white bg-[#111111] rounded-lg hover:bg-[#6C55E8] transition-colors disabled:opacity-50">
             {saving ? 'Creating…' : 'Create Flag'}
           </button>
         </div>
@@ -121,7 +121,7 @@ function OrgOverrideRow({ override, orgs, onRemove, canEdit }: {
         <p className="text-xs font-medium text-[#111827] truncate">{org?.name ?? override.org_id.slice(0, 8)}</p>
         <p className="text-[10px] text-[#9CA3AF]">Set {formatDate(override.set_at)}</p>
       </div>
-      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${override.enabled ? 'bg-[#F0FDF4] text-[#15803D]' : 'bg-[#FEF2F2] text-[#DC2626]'}`}>
+      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${override.enabled ? 'bg-[#E0F2FE] text-[#0369A1]' : 'bg-[#FEF2F2] text-[#DC2626]'}`}>
         {override.enabled ? 'Enabled' : 'Disabled'}
       </span>
       {canEdit && (
@@ -246,7 +246,7 @@ function FlagRow({ flag, orgs, overrides, canEdit, onUpdate, onDelete }: {
                 </button>
                 <span className="text-xs text-[#374151] w-14">{newEnabled ? 'Enable' : 'Disable'}</span>
                 <button onClick={addOrgOverride}
-                  className="px-3 py-1.5 text-xs font-medium text-white bg-[#111111] rounded-lg hover:bg-[#0a3d30] transition-colors">
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-[#111111] rounded-lg hover:bg-[#6C55E8] transition-colors">
                   Save
                 </button>
                 <button onClick={() => { setAddingOrg(false); setNewOrgId(''); }}
@@ -341,7 +341,7 @@ export function FeatureFlagsPage() {
           </div>
           {canManage(platformRole) && (
             <button onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#111111] rounded-lg hover:bg-[#0a3d30] transition-colors">
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#111111] rounded-lg hover:bg-[#6C55E8] transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
               New Flag
             </button>

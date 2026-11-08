@@ -231,7 +231,7 @@ function ClientPanel({ client, onClose, onSaved, onDeleted }: PanelProps) {
             <button
               onClick={handleSave}
               disabled={saving || !name.trim()}
-              className="flex-1 text-sm font-black text-white bg-[#111827] hover:bg-[#1f2937] px-4 py-2.5 rounded-lg disabled:opacity-50 transition-colors"
+              className="flex-1 text-sm font-black text-white bg-[#111111] hover:bg-[#6C55E8] px-4 py-2.5 rounded-lg disabled:opacity-50 transition-colors"
             >
               {saving ? 'Saving…' : isAdd ? 'Add client' : 'Save changes'}
             </button>
@@ -330,7 +330,7 @@ export function ClientLogoPage() {
         </div>
         <button
           onClick={() => setPanel({ client: null })}
-          className="flex items-center gap-2 text-sm font-black text-white bg-[#111827] hover:bg-[#1f2937] px-4 py-2 rounded-lg transition-colors"
+          className="flex items-center gap-2 text-sm font-black text-white bg-[#111111] hover:bg-[#6C55E8] px-4 py-2 rounded-lg transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -385,7 +385,7 @@ export function ClientLogoPage() {
                   <td className="px-5 py-3 text-[#6B7280] text-xs">{c.client_type ?? '—'}</td>
                   <td className="px-5 py-3">
                     {c.logo_url ? (
-                      <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded">Uploaded</span>
+                      <span className="text-xs font-medium text-[#0369A1] bg-[#E0F2FE] px-2 py-0.5 rounded">Uploaded</span>
                     ) : (
                       <span className="text-xs text-[#9CA3AF]">Initials only</span>
                     )}
@@ -443,7 +443,7 @@ export function ClientLogoPage() {
                 disabled={savingSpeed}
                 className={`text-sm font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 ${
                   active
-                    ? 'bg-[#111827] text-white'
+                    ? 'bg-[#111111] text-white'
                     : 'bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]'
                 }`}
               >
