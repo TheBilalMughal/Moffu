@@ -398,14 +398,34 @@ export function DashboardPage() {
     async function loadKpis() {
       setKpiLoading(true);
       const ms = monthStart(0);
-      const lms = monthStart(1);
       const td = todayStart();
       const ago30 = daysAgo(30);
 
+      // Phase 1: get internal user IDs + free plan ID to exclude from counts
+      const [internalRes, freePlanRes] = await Promise.all([
+        supabase.from('platform_members').select('user_id').eq('is_active', true),
+        supabase.from('plans').select('id').eq('slug', 'free').single(),
+      ]);
+      const internalIds = ((internalRes.data ?? []) as { user_id: string }[]).map(m => m.user_id);
+      const freePlanId = (freePlanRes.data as { id: string } | null)?.id ?? '';
+      const internalFilter = internalIds.length > 0 ? `(${internalIds.join(',')})` : null;
+
+      // Build filtered queries
+      let usersAllQ   = supabase.from('profiles').select('id', { count: 'exact', head: true });
+      let usersMonthQ = supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', ms);
+      let subsQ       = supabase.from('subscriptions').select('id, plan_id, billing_interval', { count: 'exact' }).eq('status', 'active');
+      if (internalFilter) {
+        usersAllQ   = usersAllQ.not('id', 'in', internalFilter);
+        usersMonthQ = usersMonthQ.not('id', 'in', internalFilter);
+        subsQ       = subsQ.not('user_id', 'in', internalFilter);
+      }
+      if (freePlanId) subsQ = subsQ.neq('plan_id', freePlanId);
+
+      // Phase 2: all KPI queries in parallel
       const [
         orgsAll, orgsThisMonth,
         usersAll, usersThisMonth,
-        activeSubsRes, lastMonthActiveSubsRes,
+        activeSubsRes,
         reviewsAll, reviewsToday,
         connectedRes,
         aiDraftsRes,
@@ -413,10 +433,9 @@ export function DashboardPage() {
       ] = await Promise.all([
         supabase.from('organizations').select('id', { count: 'exact', head: true }),
         supabase.from('organizations').select('id', { count: 'exact', head: true }).gte('created_at', ms),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }),
-        supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', ms),
-        supabase.from('subscriptions').select('id, plan_id, billing_interval', { count: 'exact' }).eq('status', 'active'),
-        supabase.from('subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active').lt('created_at', ms).gte('created_at', lms),
+        usersAllQ,
+        usersMonthQ,
+        subsQ,
         supabase.from('reviews').select('id', { count: 'exact', head: true }),
         supabase.from('reviews').select('id', { count: 'exact', head: true }).gte('created_at', td),
         supabase.from('google_connections').select('id', { count: 'exact', head: true }).eq('state', 'CONNECTED'),
@@ -424,7 +443,7 @@ export function DashboardPage() {
         supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('currency', 'USD'),
       ]);
 
-      // Calculate MRR
+      // Calculate MRR from paid subs (already filtered — no free, no internal)
       const activeSubs = (activeSubsRes.data ?? []) as { id: string; plan_id: string; billing_interval: string | null }[];
       const prices = (pricesRes.data ?? []) as { plan_id: string; billing_interval: string; amount_cents: number }[];
       const priceMap = new Map(prices.map(p => [`${p.plan_id}:${p.billing_interval}`, p.amount_cents]));
@@ -750,11 +769,12 @@ export function DashboardPage() {
           sub={kpi ? `+${kpi.newOrgsThisMonth} this month` : undefined}
           sparkData={sparkOrgs}
           icon={icon.orgs} />
-        <KpiCard loading={kpiLoading} label="Total Users" value={kpi?.totalUsers ?? 0}
+        <KpiCard loading={kpiLoading} label="Customer Users" value={kpi?.totalUsers ?? 0}
           trend={kpi ? pctChange(kpi.totalUsers, Math.max(1, kpi.totalUsers - kpi.newUsersThisMonth)) : undefined}
           sub={kpi ? `+${kpi.newUsersThisMonth} this month` : undefined}
           icon={icon.users} />
-        <KpiCard loading={kpiLoading} label="Active Subscriptions" value={kpi?.activeSubs ?? 0}
+        <KpiCard loading={kpiLoading} label="Paid Subscriptions" value={kpi?.activeSubs ?? 0}
+          sub="active, paid plans only"
           icon={icon.subs} />
         <KpiCard loading={kpiLoading} label="Est. MRR" value={kpi ? fmtMoney(kpi.mrrCents) : '—'}
           sub="active subs, monthly"
