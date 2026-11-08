@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
@@ -65,14 +65,15 @@ export function TeamMemberDetailPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // Edit state
+  // Info card edit state
+  const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editRole, setEditRole] = useState<PlatformRole>('viewer');
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
-  // Reset password state
+  // Password card state
   const [newPassword, setNewPassword] = useState('');
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -86,7 +87,6 @@ export function TeamMemberDetailPage() {
     setLoading(true);
     if (!id) { setNotFound(true); setLoading(false); return; }
 
-    // id param is the numeric part only (e.g. "00010"); reconstruct full ref_id
     const { data: profile } = await supabase
       .from('profiles')
       .select('id, ref_id, display_name, phone')
@@ -111,8 +111,8 @@ export function TeamMemberDetailPage() {
       memberId: pm.id,
       userId: profile.id,
       refId: profile.ref_id ?? '',
-      displayName: profile.display_name ?? '—',
-      email: authRow?.email ?? '—',
+      displayName: profile.display_name ?? '\u2014',
+      email: authRow?.email ?? '\u2014',
       phone: profile.phone ?? null,
       role: pm.role as PlatformRole,
       isActive: pm.is_active,
@@ -128,6 +128,20 @@ export function TeamMemberDetailPage() {
   }
 
   useEffect(() => { load(); }, [id]);
+
+  function handleEditToggle() {
+    if (!member) return;
+    setEditName(member.displayName);
+    setEditPhone(member.phone ?? '');
+    setEditRole(member.role);
+    setSaveMsg(null);
+    setEditing(true);
+  }
+
+  function handleCancel() {
+    setEditing(false);
+    setSaveMsg(null);
+  }
 
   async function handleSave() {
     if (!member) return;
@@ -151,7 +165,8 @@ export function TeamMemberDetailPage() {
       return;
     }
 
-    setSaveMsg('Saved successfully.');
+    setSaveMsg('Saved.');
+    setEditing(false);
     load();
   }
 
@@ -187,7 +202,7 @@ export function TeamMemberDetailPage() {
         return;
       }
 
-      setResetMsg('Password updated successfully.');
+      setResetMsg('Password updated.');
       setNewPassword('');
       setShowNewPassword(false);
     } catch (err) {
@@ -218,9 +233,13 @@ export function TeamMemberDetailPage() {
     return (
       <div className="h-full overflow-y-auto px-8 py-8">
         <div className="h-4 bg-[#E5E7EB] rounded animate-pulse w-48 mb-8" />
-        <div className="bg-white shadow-sm rounded-xl p-6 animate-pulse space-y-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-4 bg-[#E5E7EB] rounded w-64" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {[0, 1].map((i) => (
+            <div key={i} className="bg-white border border-[#E5E7EB] rounded-xl p-6 animate-pulse space-y-4">
+              {Array.from({ length: 4 }).map((_, j) => (
+                <div key={j} className="h-4 bg-[#E5E7EB] rounded w-full" />
+              ))}
+            </div>
           ))}
         </div>
       </div>
@@ -243,6 +262,8 @@ export function TeamMemberDetailPage() {
 
   if (!member) return null;
 
+  const manage = canManage(platformRole);
+
   return (
     <div className="h-full overflow-y-auto px-8 py-8">
       {/* Back */}
@@ -264,202 +285,211 @@ export function TeamMemberDetailPage() {
           </div>
           <p className="text-sm text-[#9CA3AF] font-mono">{formatId(member.refId)}</p>
         </div>
-        {canManage(platformRole) && member.role !== 'owner' && (
+        {manage && member.role !== 'owner' && (
           <button
             onClick={handleToggleActive}
             disabled={toggling}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 ${
-              member.isActive
-                ? 'bg-[#FEF2F2] text-red-700 hover:bg-red-100'
-                : 'bg-[#ECFDF5] text-[#065F46] hover:bg-green-100'
+              member.isActive ? 'bg-[#FEF2F2] text-red-700 hover:bg-red-100' : 'bg-[#ECFDF5] text-[#065F46] hover:bg-green-100'
             }`}
           >
-            {toggling ? '…' : member.isActive ? 'Deactivate' : 'Reactivate'}
+            {toggling ? '\u2026' : member.isActive ? 'Deactivate' : 'Reactivate'}
           </button>
         )}
         {member.role === 'owner' && (
-          <span className="px-3 py-1.5 text-xs font-semibold text-[#9CA3AF] bg-[#F3F4F6] rounded-lg" title="Owner accounts are protected">
-            Protected
-          </span>
+          <span className="px-3 py-1.5 text-xs font-semibold text-[#9CA3AF] bg-[#F3F4F6] rounded-lg">Protected</span>
         )}
       </div>
 
-      {/* Info card */}
-      <div className="bg-white shadow-sm rounded-xl overflow-hidden mb-5">
-        <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]">
-          <h2 className="text-sm font-semibold text-[#111827]">Member details</h2>
-        </div>
-        <dl className="divide-y divide-[#F3F4F6]">
-          <div className="px-6 py-3.5 flex items-center gap-4">
-            <dt className="w-32 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Email</dt>
-            <dd className="text-sm text-[#111827]">{member.email}</dd>
-          </div>
-          <div className="px-6 py-3.5 flex items-center gap-4">
-            <dt className="w-32 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Role</dt>
-            <dd>
-              <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${ROLE_COLOR[member.role]}`}>
-                {ROLE_LABEL[member.role]}
-              </span>
-            </dd>
-          </div>
-          <div className="px-6 py-3.5 flex items-center gap-4">
-            <dt className="w-32 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Phone</dt>
-            <dd className="text-sm text-[#111827]">{member.phone ?? '—'}</dd>
-          </div>
-          <div className="px-6 py-3.5 flex items-center gap-4">
-            <dt className="w-32 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Last login</dt>
-            <dd className="text-sm text-[#111827]">{formatDate(member.lastSignInAt)}</dd>
-          </div>
-          <div className="px-6 py-3.5 flex items-center gap-4">
-            <dt className="w-32 text-xs font-semibold text-[#6B7280] uppercase tracking-wide flex-shrink-0">Added</dt>
-            <dd className="text-sm text-[#111827]">{formatDate(member.createdAt)}</dd>
-          </div>
-        </dl>
-      </div>
+      {/* Two cards in one row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-      {/* Edit form */}
-      {canManage(platformRole) && (
-        <div className="bg-white shadow-sm rounded-xl overflow-hidden mb-5">
-          <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]">
-            <h2 className="text-sm font-semibold text-[#111827]">Edit member</h2>
+        {/* Card 1 � Member info */}
+        <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-[#111827]">Member info</h2>
+            {manage && !editing && (
+              <button
+                onClick={handleEditToggle}
+                className="text-xs font-medium text-[#6C55E8] hover:underline"
+              >
+                Edit
+              </button>
+            )}
           </div>
-          <div className="p-6 space-y-4">
+          <div className="p-5 space-y-4">
+            {/* Name */}
             <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">Full name</label>
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] focus:outline-none focus:border-[#6C55E8]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">Phone</label>
-              <input
-                type="tel"
-                value={editPhone}
-                onChange={(e) => setEditPhone(e.target.value)}
-                placeholder="+1 555 000 0000"
-                className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">Platform role</label>
-              {member.role === 'owner' ? (
-                <div className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-[#F9FAFB] text-[#9CA3AF] select-none">
-                  Owner — cannot be changed
-                </div>
+              <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">Full name</label>
+              {editing ? (
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] focus:outline-none focus:border-[#6C55E8]"
+                />
               ) : (
+                <p className="text-sm text-[#111827]">{member.displayName}</p>
+              )}
+            </div>
+
+            {/* Email � always read-only */}
+            <div>
+              <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">Email</label>
+              <p className="text-sm text-[#111827]">{member.email}</p>
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">
+                Phone <span className="font-normal text-[#9CA3AF]">(optional)</span>
+              </label>
+              {editing ? (
+                <input
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="+1 555 000 0000"
+                  className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"
+                />
+              ) : (
+                <p className="text-sm text-[#111827]">{member.phone ?? '\u2014'}</p>
+              )}
+            </div>
+
+            {/* Role */}
+            <div>
+              <label className="block text-xs font-semibold text-[#6B7280] mb-1.5">Role</label>
+              {editing && member.role !== 'owner' ? (
                 <Dropdown
                   fullWidth
                   value={editRole}
                   onChange={(v) => setEditRole(v as PlatformRole)}
                   options={ROLES.filter((r) => r !== 'owner').map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
                 />
+              ) : (
+                <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${ROLE_COLOR[member.role]}`}>
+                  {ROLE_LABEL[member.role]}
+                </span>
               )}
             </div>
 
+            {/* Meta � read-only always */}
+            <div className="pt-2 border-t border-[#F3F4F6] grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs font-semibold text-[#6B7280] mb-0.5">Last login</p>
+                <p className="text-xs text-[#374151]">{formatDate(member.lastSignInAt)}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-[#6B7280] mb-0.5">Added</p>
+                <p className="text-xs text-[#374151]">{formatDate(member.createdAt)}</p>
+              </div>
+            </div>
+
             {saveMsg && (
-              <p className={`text-sm px-3 py-2 rounded-lg ${saveMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#D8CCFF] border border-[#A7D7C5] text-[#6C55E8]'}`}>
+              <p className={`text-sm px-3 py-2 rounded-lg ${saveMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#ECFDF5] border border-[#A7D7C5] text-[#065F46]'}`}>
                 {saveMsg}
               </p>
             )}
 
-            <div className="flex justify-end">
-              <button
-                onClick={handleSave}
-                disabled={saving || !editName.trim()}
-                className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg disabled:opacity-50 transition-colors"
-              >
-                {saving ? 'Saving…' : 'Save changes'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reset password */}
-      {canManage(platformRole) && (
-        <div className="bg-white shadow-sm rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]">
-            <h2 className="text-sm font-semibold text-[#111827]">Set password</h2>
-          </div>
-          <div className="p-6">
-            <p className="text-sm text-[#6B7280] mb-4">
-              Set a new password for <span className="font-medium text-[#111827]">{member.displayName}</span>. Share it with them directly — they can change it after signing in.
-            </p>
-
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-semibold text-[#374151] uppercase tracking-wide">New password</label>
-              <button
-                type="button"
-                onClick={() => {
-                  const pw = generatePassword();
-                  setNewPassword(pw);
-                  setShowNewPassword(true);
-                  setResetMsg(null);
-                }}
-                className="text-xs font-medium text-[#6C55E8] hover:underline"
-              >
-                Auto-generate
-              </button>
-            </div>
-
-            <div className="relative mb-4">
-              <input
-                type={showNewPassword ? 'text' : 'password'}
-                value={newPassword}
-                onChange={(e) => { setNewPassword(e.target.value); setResetMsg(null); }}
-                placeholder="Min. 8 characters"
-                className="w-full px-3 py-2 pr-16 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8] font-mono"
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                {newPassword && (
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(newPassword)}
-                    className="text-xs font-medium text-[#6C55E8] hover:underline"
-                  >
-                    {passwordCopied ? 'Copied!' : 'Copy'}
-                  </button>
-                )}
+            {editing && (
+              <div className="flex items-center gap-2 justify-end pt-1">
                 <button
-                  type="button"
-                  onClick={() => setShowNewPassword((v) => !v)}
-                  className="text-[#9CA3AF] hover:text-[#374151] transition-colors"
-                  aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                  onClick={handleCancel}
+                  className="px-4 py-2 text-sm font-medium text-[#374151] bg-[#F3F4F6] hover:bg-[#E5E7EB] rounded-lg transition-colors"
                 >
-                  {showNewPassword ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    </svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  )}
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !editName.trim()}
+                  className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg disabled:opacity-50 transition-colors"
+                >
+                  {saving ? 'Saving\u2026' : 'Save'}
                 </button>
               </div>
-            </div>
-
-            {resetMsg && (
-              <p className={`text-sm px-3 py-2 rounded-lg mb-4 ${resetMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#D8CCFF] border border-[#A7D7C5] text-[#6C55E8]'}`}>
-                {resetMsg}
-              </p>
             )}
-
-            <button
-              onClick={handleSetPassword}
-              disabled={resetting || !newPassword.trim()}
-              className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg disabled:opacity-50 transition-colors"
-            >
-              {resetting ? 'Setting…' : 'Set password'}
-            </button>
           </div>
         </div>
-      )}
+
+        {/* Card 2 � Set password */}
+        {manage && (
+          <div className="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#E5E7EB]">
+              <h2 className="text-sm font-semibold text-[#111827]">Set password</h2>
+            </div>
+            <div className="p-5">
+              <p className="text-sm text-[#6B7280] mb-4">
+                Set a new password for <span className="font-medium text-[#111827]">{member.displayName}</span>. Share it with them directly.
+              </p>
+
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-[#6B7280]">New password</label>
+                <button
+                  type="button"
+                  onClick={() => { setNewPassword(generatePassword()); setShowNewPassword(true); setResetMsg(null); }}
+                  className="text-xs font-medium text-[#6C55E8] hover:underline"
+                >
+                  Auto-generate
+                </button>
+              </div>
+
+              <div className="relative mb-4">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => { setNewPassword(e.target.value); setResetMsg(null); }}
+                  placeholder="Min. 8 characters"
+                  className="w-full px-3 py-2 pr-16 text-sm border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8] font-mono"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  {newPassword && (
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(newPassword)}
+                      className="text-xs font-medium text-[#6C55E8] hover:underline"
+                    >
+                      {passwordCopied ? 'Copied!' : 'Copy'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((v) => !v)}
+                    className="text-[#9CA3AF] hover:text-[#374151] transition-colors"
+                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showNewPassword ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {resetMsg && (
+                <p className={`text-sm px-3 py-2 rounded-lg mb-4 ${resetMsg.startsWith('Error') ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-[#ECFDF5] border border-[#A7D7C5] text-[#065F46]'}`}>
+                  {resetMsg}
+                </p>
+              )}
+
+              <button
+                onClick={handleSetPassword}
+                disabled={resetting || !newPassword.trim()}
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#111111] hover:bg-[#6C55E8] rounded-lg disabled:opacity-50 transition-colors"
+              >
+                {resetting ? 'Setting\u2026' : 'Set password'}
+              </button>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
-
