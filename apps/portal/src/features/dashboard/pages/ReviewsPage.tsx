@@ -483,10 +483,10 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
             </linearGradient>
           </defs>
 
-          {yTicks.map(v => {
+          {yTicks.map((v, idx) => {
             const y = PAD.top + innerH - (v / maxVal) * innerH;
             return (
-              <g key={v}>
+              <g key={idx}>
                 <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#F3F4F6" strokeWidth={1}/>
                 <text x={PAD.left + 4} y={y - 3} fontSize={9} fill="#D1D5DB">{v}</text>
               </g>
