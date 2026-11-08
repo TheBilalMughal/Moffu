@@ -31,7 +31,6 @@ function calcDiscount(monthly_cents: number, annual_cents: number): number {
   return Math.round((1 - annual_cents / monthly_cents) * 100);
 }
 
-const SPRING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
 
 export function PricingToggle({
   plans,
@@ -64,23 +63,14 @@ export function PricingToggle({
 
         {/* Right: toggle */}
         <div className="flex-shrink-0 pb-1">
-          <div className="relative flex items-stretch bg-white border border-[#E5E7EB] rounded-xl p-1.5">
-            {/* Sliding bouncy pill — covers exactly one half */}
-            <div
-              aria-hidden="true"
-              className="absolute top-1.5 bottom-1.5 rounded-lg bg-[#6C55E8] pointer-events-none"
-              style={{
-                left:       annual ? '50%'  : '6px',
-                right:      annual ? '6px'  : '50%',
-                transition: `left 0.42s ${SPRING}, right 0.42s ${SPRING}`,
-              }}
-            />
-
+          <div className="inline-flex items-center bg-[#F3F4F6] rounded-xl p-1 gap-1">
             <button
               type="button"
               onClick={() => setAnnual(false)}
-              className={`relative z-10 flex-1 px-5 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 ${
-                !annual ? 'text-white' : 'text-[#111827]/55 hover:text-[#111827]'
+              className={`px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ${
+                !annual
+                  ? 'bg-white text-[#111827] shadow-sm'
+                  : 'text-[#111827]/45 hover:text-[#111827]'
               }`}
             >
               Monthly
@@ -89,15 +79,17 @@ export function PricingToggle({
             <button
               type="button"
               onClick={() => setAnnual(true)}
-              className={`relative z-10 flex-1 px-5 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 ${
-                annual ? 'text-white' : 'text-[#111827]/55 hover:text-[#111827]'
+              className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-200 whitespace-nowrap ${
+                annual
+                  ? 'bg-white text-[#111827] shadow-sm'
+                  : 'text-[#111827]/45 hover:text-[#111827]'
               }`}
             >
               Annual
               {toggleDiscount > 0 && (
                 <span
-                  className={`text-[11px] px-2 py-0.5 rounded-md font-bold transition-all duration-200 ${
-                    annual ? 'bg-white/25 text-white' : 'bg-[#EDE9FF] text-[#6C55E8]'
+                  className={`text-[11px] px-1.5 py-0.5 rounded font-bold transition-colors duration-200 ${
+                    annual ? 'bg-[#6C55E8] text-white' : 'bg-[#111827]/10 text-[#111827]/50'
                   }`}
                 >
                   -{toggleDiscount}%
