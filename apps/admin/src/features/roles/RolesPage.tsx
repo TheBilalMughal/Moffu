@@ -165,7 +165,7 @@ function CrudCell({
   const boxClass = localGranted
     ? isPending
       ? 'bg-amber-500 border-amber-500'
-      : 'bg-[#111111] border-[#6C55E8]'
+      : 'bg-[#6C55E8] border-[#6C55E8]'
     : isPending
     ? 'bg-white border-amber-400 ring-1 ring-amber-300'
     : canEdit
@@ -187,7 +187,7 @@ function CrudCell({
           ) : null}
         </button>
       ) : (
-        <span className={`inline-flex w-[18px] h-[18px] border-2 items-center justify-center mx-auto ${localGranted ? 'bg-[#111111] border-[#6C55E8]' : 'bg-white border-[#D1D5DB]'}`}>
+        <span className={`inline-flex w-[18px] h-[18px] border-2 items-center justify-center mx-auto ${localGranted ? 'bg-[#6C55E8] border-[#6C55E8]' : 'bg-white border-[#D1D5DB]'}`}>
           {localGranted && (
             <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
@@ -703,7 +703,7 @@ export function RolesPage() {
               <>
                 {/* Full-access banner */}
                 {isFullAccess && (
-                  <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-sky-50 border border-sky-200 rounded-xl text-sm text-sky-800">
+                  <div className="mb-4 flex items-center gap-2.5 px-4 py-2.5 bg-[#F0F9FF] border-l-4 border-[#0EA5E9] text-sm text-[#0369A1]">
                     <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
