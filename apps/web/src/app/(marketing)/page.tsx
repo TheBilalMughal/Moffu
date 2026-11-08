@@ -259,7 +259,7 @@ function ValuePropSection() {
               <p className="text-xs text-[#111827]/65 leading-relaxed mb-3">{r.text}</p>
               {/* Draft reply */}
               <div className="bg-[#F3F4F6] rounded-xl px-3 py-2.5 flex gap-2 items-start">
-                <span className="text-[9px] font-black text-[#111827]/40 uppercase tracking-widest mt-0.5 flex-shrink-0">Draft</span>
+                <span className="text-[9px] font-black text-[#0D4C3C] uppercase tracking-widest mt-0.5 flex-shrink-0">Moffu replied</span>
                 <p className="text-[11px] text-[#111827]/70 leading-relaxed">{r.reply}</p>
               </div>
             </div>
