@@ -23,6 +23,7 @@ const FOOTER_NAV = [
     links: [
       { label: 'Privacy Policy', href: '/privacy' },
       { label: 'Terms of Service', href: '/terms' },
+      { label: 'Refund Policy', href: '/refund' },
       { label: 'Cookie Policy', href: '/cookies' },
       { label: 'GDPR', href: '/gdpr' },
     ],
@@ -130,6 +131,7 @@ export function SiteFooter({ portalUrl = 'https://app.moffu.pro' }: { portalUrl?
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="text-[12px] text-[#6B7280] hover:text-white transition-colors duration-150">Privacy</Link>
             <Link href="/terms" className="text-[12px] text-[#6B7280] hover:text-white transition-colors duration-150">Terms</Link>
+            <Link href="/refund" className="text-[12px] text-[#6B7280] hover:text-white transition-colors duration-150">Refunds</Link>
             <Link href="/cookies" className="text-[12px] text-[#6B7280] hover:text-white transition-colors duration-150">Cookies</Link>
           </div>
         </div>

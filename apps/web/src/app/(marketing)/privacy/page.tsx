@@ -80,7 +80,7 @@ export default function PrivacyPage() {
                 <strong>Supabase</strong> — our database and authentication infrastructure provider
               </li>
               <li>
-                <strong>Stripe</strong> — our payment processor for billing and subscription management
+                <strong>Paddle</strong> — our payment processor and Merchant of Record for billing and subscription management
               </li>
               <li>
                 <strong>AI providers</strong> — review content may be sent to AI services (such as
