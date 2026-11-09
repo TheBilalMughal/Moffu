@@ -90,7 +90,7 @@ export function App() {
             {/* Security tab */}
             <Route path="security" element={<SecuritySettingsPage />} />
             {/* Legacy redirects */}
-            <Route path="packages" element={<Navigate to="/settings/general" replace />} />
+            <Route path="packages" element={<PackagesSettingsPage />} />
             <Route path="ai"       element={<Navigate to="/settings/api/ai"   replace />} />
             <Route path="google"   element={<Navigate to="/settings/api/google" replace />} />
             <Route path="sync"     element={<Navigate to="/settings/api/sync"   replace />} />
