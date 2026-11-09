@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { billingService, type Plan, type Subscription, type UsageSummary, type UsageDay } from './billing.service';
 import { LocationSelectionModal } from './LocationSelectionModal';
@@ -354,6 +354,48 @@ export function BillingPage() {
   const [overageToggling, setOverageToggling] = useState(false);
   const [downgradePlan, setDowngradePlan] = useState<Plan | null>(null);
   const [downgradeMsg, setDowngradeMsg] = useState<string | null>(null);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const paddleReadyRef = useRef(false);
+  const userIdRef = useRef<string | null>(null);
+
+  // Load Paddle.js once
+  useEffect(() => {
+    if (paddleReadyRef.current) return;
+    const script = document.createElement('script');
+    script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
+    script.async = true;
+    script.onload = () => {
+      const w = window as Window & { Paddle?: { Environment: { set: (e: string) => void }; Setup: (o: object) => void } };
+      if (!w.Paddle) return;
+      const env = import.meta.env.VITE_PADDLE_ENVIRONMENT ?? 'sandbox';
+      if (env === 'sandbox') w.Paddle.Environment.set('sandbox');
+      w.Paddle.Setup({ token: import.meta.env.VITE_PADDLE_CLIENT_TOKEN ?? '' });
+      paddleReadyRef.current = true;
+    };
+    document.head.appendChild(script);
+  }, []);
+
+  async function openPaddleCheckout(priceId: string, planSlug: string) {
+    const w = window as Window & { Paddle?: { Checkout: { open: (o: object) => void } } };
+    if (!w.Paddle?.Checkout) {
+      alert('Payment system loading, please try again in a moment.');
+      return;
+    }
+    if (!userIdRef.current) {
+      const { data: { user } } = await supabase.auth.getUser();
+      userIdRef.current = user?.id ?? null;
+    }
+    setCheckoutLoading(planSlug);
+    try {
+      w.Paddle.Checkout.open({
+        items: [{ priceId, quantity: 1 }],
+        customData: { user_id: userIdRef.current },
+        settings: { successUrl: `${window.location.origin}/billing?upgraded=1` },
+      });
+    } finally {
+      setCheckoutLoading(null);
+    }
+  }
 
   useEffect(() => {
     Promise.all([
@@ -373,6 +415,7 @@ export function BillingPage() {
       // Fetch org-level override (enterprise custom quota)
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        userIdRef.current = user.id;
         const { data: member } = await supabase
           .from('org_members')
           .select('org_id')
@@ -883,11 +926,24 @@ export function BillingPage() {
                       Contact Sales Team
                     </a>
                   );
-                  if (isUpgrade) return (
-                    <button disabled title="Coming soon" className="w-full py-2.5 text-xs font-semibold rounded-xl cursor-not-allowed opacity-50 bg-[#111827] text-white">
-                      Upgrade — coming soon
-                    </button>
-                  );
+                  if (isUpgrade) {
+                    const price = plan.prices.find(p => p.interval === billingInterval) ?? plan.prices.find(p => p.interval === 'monthly');
+                    const paddlePriceId = price?.paddle_price_id ?? null;
+                    if (!paddlePriceId) return (
+                      <button disabled className="w-full py-2.5 text-xs font-semibold rounded-xl cursor-not-allowed opacity-50 bg-[#111827] text-white">
+                        Upgrade
+                      </button>
+                    );
+                    return (
+                      <button
+                        onClick={() => openPaddleCheckout(paddlePriceId, plan.slug)}
+                        disabled={checkoutLoading === plan.slug}
+                        className="w-full py-2.5 text-xs font-semibold rounded-xl bg-[#6C55E8] text-white hover:bg-[#5A42D1] disabled:opacity-60 transition-colors"
+                      >
+                        {checkoutLoading === plan.slug ? 'Loading…' : 'Upgrade'}
+                      </button>
+                    );
+                  }
                   return null;
                 })()}
               </div>

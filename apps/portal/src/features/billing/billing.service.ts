@@ -12,7 +12,7 @@ export interface Plan {
   is_featured: boolean;
   contact_sales: boolean;
   sort_order: number;
-  prices: { interval: 'monthly' | 'annual'; amount_cents: number }[];
+  prices: { interval: 'monthly' | 'annual'; amount_cents: number; paddle_price_id: string | null }[];
   entitlements: Record<string, { value_type: string; limit_value: number | null; bool_value: boolean | null; enum_value: string | null; usage_reset: string | null }>;
   location_addon_cents: number | null;
 }
@@ -75,7 +75,7 @@ export const billingService = {
   async getPlans(): Promise<Plan[]> {
     const [plansRes, pricesRes, entRes, addonRes] = await Promise.all([
       supabase.from('plans').select('id, slug, name, description, features, badge_text, is_featured, contact_sales, sort_order').eq('is_active', true).order('sort_order'),
-      supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('is_active', true),
+      supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents, paddle_price_id').eq('is_active', true),
       supabase.from('plan_entitlements').select('plan_id, key, value_type, limit_value, bool_value, enum_value, usage_reset'),
       supabase.from('plan_location_addons').select('plan_id, unit_price_cents'),
     ]);
@@ -95,7 +95,7 @@ export const billingService = {
       is_featured: p.is_featured ?? false,
       contact_sales: p.contact_sales ?? false,
       sort_order: p.sort_order,
-      prices: prices.filter(pr => pr.plan_id === p.id).map(pr => ({ interval: pr.billing_interval as 'monthly' | 'annual', amount_cents: pr.amount_cents })),
+      prices: prices.filter(pr => pr.plan_id === p.id).map(pr => ({ interval: pr.billing_interval as 'monthly' | 'annual', amount_cents: pr.amount_cents, paddle_price_id: pr.paddle_price_id ?? null })),
       entitlements: Object.fromEntries(
         entitlements.filter(e => e.plan_id === p.id).map(e => [e.key, { value_type: e.value_type, limit_value: e.limit_value, bool_value: e.bool_value, enum_value: e.enum_value, usage_reset: e.usage_reset }])
       ),
