@@ -351,7 +351,7 @@ export function PackagesSettingsPage() {
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-[#111111] text-white text-sm font-medium rounded-lg hover:bg-[#1F2937] transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[#6C55E8] text-white text-sm font-medium rounded-lg hover:bg-[#5A42D1] transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -926,7 +926,7 @@ export function PackagesSettingsPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-4 py-2 text-sm font-medium bg-[#111111] text-white rounded-lg hover:bg-[#1F2937] disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-sm font-medium bg-[#6C55E8] text-white rounded-lg hover:bg-[#5A42D1] disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Create Package'}
               </button>
