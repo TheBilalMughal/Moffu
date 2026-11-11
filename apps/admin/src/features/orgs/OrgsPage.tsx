@@ -40,26 +40,20 @@ export function OrgsPage() {
 
       const orgIds = orgRows.map((o: { id: string }) => o.id);
 
-      const [subsRes, membersRes, internalRes] = await Promise.all([
+      const [subsRes, membersRes] = await Promise.all([
         supabase.from('subscriptions').select('org_id, plan, status').in('org_id', orgIds),
-        supabase.from('org_members').select('org_id, user_id, role').in('org_id', orgIds),
-        supabase.from('platform_members').select('user_id').eq('is_active', true),
+        supabase.from('org_external_members').select('org_id, user_id, role').in('org_id', orgIds),
       ]);
-
-      const internalIds = new Set<string>(
-        ((internalRes.data ?? []) as { user_id: string }[]).map(m => m.user_id)
-      );
 
       const subsByOrg = new Map<string, { plan: string; status: string }>();
       (subsRes.data ?? []).forEach((s: { org_id: string; plan: string; status: string }) => subsByOrg.set(s.org_id, s));
 
       const memberCountByOrg = new Map<string, number>();
-      (membersRes.data ?? []).forEach((m: { org_id: string; user_id: string }) => {
-        if (internalIds.has(m.user_id)) return;
+      (membersRes.data ?? []).forEach((m: { org_id: string }) => {
         memberCountByOrg.set(m.org_id, (memberCountByOrg.get(m.org_id) ?? 0) + 1);
       });
 
-      // Get owner emails — owner role in org_members → profile
+      // Get owner emails — owner role → profile
       const ownerPairs = (membersRes.data ?? [])
         .filter((m: { role: string }) => m.role === 'owner')
         .map((m: { org_id: string; user_id: string }) => ({ orgId: m.org_id, userId: m.user_id }));

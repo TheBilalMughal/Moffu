@@ -9,6 +9,13 @@ const PLAN_COLOR: Record<string, string> = {
   enterprise: 'bg-[#FFF7ED] text-[#C2410C]',
 };
 
+interface TeamMember {
+  userId: string;
+  role: string;
+  email: string;
+  name: string | null;
+}
+
 interface OrgDetail {
   id: string;
   displayId: number;
@@ -23,6 +30,7 @@ interface OrgDetail {
   ownerName: string | null;
   timezone: string | null;
   country: string | null;
+  teamMembers: TeamMember[];
 }
 
 export function OrgDetailPage() {
@@ -44,31 +52,29 @@ export function OrgDetailPage() {
 
       if (!orgRow) { setNotFound(true); setLoading(false); return; }
 
-      const [subsRes, membersRes, internalRes, countryRes] = await Promise.all([
+      const [subsRes, membersRes] = await Promise.all([
         supabase.from('subscriptions').select('plan, status').eq('org_id', orgRow.id).maybeSingle(),
-        supabase.from('org_members').select('user_id, role').eq('org_id', orgRow.id),
-        supabase.from('platform_members').select('user_id').eq('is_active', true),
-        Promise.resolve(null),
+        supabase.from('org_external_members').select('user_id, role').eq('org_id', orgRow.id),
       ]);
 
-      const internalIds = new Set<string>(
-        ((internalRes.data ?? []) as { user_id: string }[]).map(m => m.user_id)
-      );
-
       const allMembers = (membersRes.data ?? []) as { user_id: string; role: string }[];
-      const ownerRow = allMembers.find((m) => m.role === 'owner');
-      let ownerEmail: string | null = null;
-      let ownerName: string | null = null;
+      const memberUserIds = allMembers.map(m => m.user_id);
 
-      if (ownerRow) {
-        const { data: p } = await supabase
-          .from('profiles')
-          .select('email, display_name')
-          .eq('id', ownerRow.user_id)
-          .maybeSingle();
-        ownerEmail = p?.email ?? null;
-        ownerName = p?.display_name ?? null;
-      }
+      type Profile = { id: string; email: string; display_name: string | null };
+      const { data: profileRows } = memberUserIds.length > 0
+        ? await supabase.from('profiles').select('id, email, display_name').in('id', memberUserIds)
+        : { data: [] };
+
+      const profileById = new Map<string, Profile>((profileRows ?? []).map((p: Profile) => [p.id, p]));
+      const ownerRow = allMembers.find(m => m.role === 'owner');
+      const ownerProfile = ownerRow ? profileById.get(ownerRow.user_id) : null;
+
+      const teamMembers = allMembers.map(m => ({
+        userId: m.user_id,
+        role: m.role,
+        email: profileById.get(m.user_id)?.email ?? '—',
+        name: profileById.get(m.user_id)?.display_name ?? null,
+      }));
 
       setOrg({
         id: orgRow.id,
@@ -79,11 +85,12 @@ export function OrgDetailPage() {
         createdAt: orgRow.created_at,
         plan: subsRes.data?.plan ?? null,
         subStatus: subsRes.data?.status ?? null,
-        memberCount: allMembers.filter(m => !internalIds.has(m.user_id)).length,
-        ownerEmail,
-        ownerName,
+        memberCount: allMembers.length,
+        ownerEmail: ownerProfile?.email ?? null,
+        ownerName: ownerProfile?.display_name ?? null,
         timezone: orgRow.timezone ?? null,
         country: null,
+        teamMembers,
       });
       setLoading(false);
     }
@@ -136,6 +143,7 @@ export function OrgDetailPage() {
         </div>
       </div>
 
+      {/* Org details */}
       <div className="bg-white shadow-sm rounded-xl overflow-hidden mb-5">
         <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7]">
           <h2 className="text-sm font-semibold text-[#111827]">Organization details</h2>
@@ -151,7 +159,6 @@ export function OrgDetailPage() {
                   : '—'
               ),
             },
-            { label: 'Members', value: String(org.memberCount) },
             { label: 'Owner', value: org.ownerEmail ? `${org.ownerName ?? ''} (${org.ownerEmail})`.trim() : '—' },
             { label: 'Timezone', value: org.timezone ?? '—' },
             { label: 'Created', value: new Date(org.createdAt).toLocaleDateString() },
@@ -162,6 +169,36 @@ export function OrgDetailPage() {
             </div>
           ))}
         </dl>
+      </div>
+
+      {/* Team Members */}
+      <div className="bg-white shadow-sm rounded-xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7] flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-[#111827]">Team members</h2>
+          <span className="text-xs text-[#9CA3AF]">{org.teamMembers.length} {org.teamMembers.length === 1 ? 'member' : 'members'}</span>
+        </div>
+        {org.teamMembers.length === 0 ? (
+          <p className="px-6 py-5 text-sm text-[#9CA3AF]">No team members.</p>
+        ) : (
+          <ul className="divide-y divide-[#F3F4F6]">
+            {org.teamMembers.map(m => (
+              <li key={m.userId} className="px-6 py-3.5 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#6C55E8]/10 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-bold text-[#6C55E8]">
+                    {(m.name ?? m.email).charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  {m.name && <p className="text-sm font-medium text-[#111827] truncate">{m.name}</p>}
+                  <p className="text-xs text-[#6B7280] truncate">{m.email}</p>
+                </div>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded capitalize ${m.role === 'owner' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-[#F3F4F6] text-[#374151]'}`}>
+                  {m.role}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
