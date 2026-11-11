@@ -242,10 +242,6 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 
 **Owner role:** granted same permissions as `super_admin` across all Edge Functions (`admin-impersonate`, `admin-create-user`, `admin-delete-member`, `admin-broadcast`).
 
-**Dead code (not in routes, superseded):**
-- `OrgsPage.tsx`, `OrgDetailPage.tsx` — older versions before `ClientsPage`/`ClientDetailPage`; can be deleted
-- `WebsiteAutomationPage.tsx`, `WebsiteBrandingPage.tsx` — created but not routed
-
 **Pending:** none — all admin portal items implemented or removed from scope.
 
 ## External/configuration pending
