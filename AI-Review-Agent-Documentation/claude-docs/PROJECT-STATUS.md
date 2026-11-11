@@ -244,6 +244,31 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 
 **Pending:** none — all admin portal items implemented or removed from scope.
 
+## Tier 1 Automations
+**IMPLEMENTED** ✅ (2026-11-11)
+
+**DB migration applied (`kgttncfkzdrgswfkkdji`):**
+- `subscriptions` extended: `payment_failure_count` (int, default 0), `usage_80_notified_period` (text 'YYYY-MM'), `usage_100_notified_period` (text 'YYYY-MM')
+
+**paddle-webhook (`transaction.payment_failed`):**
+- Increments `payment_failure_count` on each failed transaction
+- Attempts 1-2: sends "Payment failed" warning email (attempt N of 3) via Resend
+- Attempt 3+: auto-suspends org, inserts `audit_events` (action: `auto_suspend_org_payment_failure`), sends "Account suspended" email
+- `transaction.completed`: resets `payment_failure_count` to 0
+
+**ai-generate-draft (usage notifications):**
+- After recording each usage event, fire-and-forget `sendUsageNotificationIfNeeded`
+- 80% warning email: sent once per billing period (tracked via `usage_80_notified_period`)
+- 100% blocked email: sent once per billing period (tracked via `usage_100_notified_period`)
+- Idempotent: updates period field BEFORE sending to prevent duplicate emails on race conditions
+
+**google-sync-reviews (token refresh failure):**
+- Token refresh block wrapped in try/catch
+- On failure: sets `google_connections.state = 'REFRESH_FAILED'`, sends "Reconnect your Google account" email
+- Returns 401 to caller
+
+**All emails:** from `Moffu <notifications@moffu.pro>` via Resend; branded HTML with purple (#6C55E8) CTA buttons; support link to `support@moffu.pro`
+
 ## External/configuration pending
 - `VITE_WEB_URL` → set to `https://moffu.vercel.app` in portalmoffu Vercel project (for "Back to website" link in prod)
 - Google OAuth credentials → needed for Phase 4

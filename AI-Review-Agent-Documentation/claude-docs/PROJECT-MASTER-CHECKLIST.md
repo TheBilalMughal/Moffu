@@ -100,10 +100,10 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | BILLING-005 | Add-on quantities | IMPLEMENTED | - | `subscription_addons` table with quantity column; UI shows line items + add location dialog |
 | BILLING-006 | Effective entitlement service | IMPLEMENTED | - | `billingService.checkLimit()` — period window + usage_events count vs plan entitlement; `recordUsage()` inserts events |
 | BILLING-007 | Checkout server validation | IMPLEMENTED | - | `_shared/billing.ts` — `checkAndRecordUsage()` checks entitlement before Gemini/Google calls; records usage after success; returns 429 on limit exceeded; client-side `recordUsage()` calls removed (server-side is authoritative); deployed v17/v13 |
-| BILLING-008 | Verified webhooks | PENDING | - | REQUIRES EXTERNAL SETUP: Stripe webhook endpoint |
-| BILLING-009 | Subscription lifecycle | PENDING | - | - |
+| BILLING-008 | Verified webhooks | IMPLEMENTED | - | `paddle-webhook` edge function — HMAC-SHA256 signature verification; handles `subscription.*`, `transaction.completed`, `transaction.payment_failed` |
+| BILLING-009 | Subscription lifecycle | PENDING | - | Upgrade/downgrade flows pending Paddle live approval |
 | BILLING-010 | Invoices/payments | PENDING | - | - |
-| BILLING-011 | Payment recovery | PENDING | - | - |
+| BILLING-011 | Payment recovery | IMPLEMENTED | - | `paddle-webhook` `transaction.payment_failed` handler: increments `payment_failure_count`; sends warning email (attempts 1-2); auto-suspends org + sends suspended email (attempt 3); resets count on `transaction.completed` |
 | BILLING-012 | Upgrade/downgrade | PENDING | - | - |
 | BILLING-013 | Cancellation/reactivation | PENDING | - | - |
 | BILLING-014 | Refund reconciliation | PENDING | - | - |
@@ -120,7 +120,7 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | JOB-009 | Cleanup jobs | PENDING | - | - |
 | JOB-010 | Usage aggregation | PENDING | - | - |
 | JOB-011 | Fair throttling | PENDING | - | - |
-| EMAIL-001 | Resend adapter | PENDING | - | REQUIRES EXTERNAL SETUP: Resend domain + SPF/DKIM |
+| EMAIL-001 | Resend adapter | IMPLEMENTED | - | Resend API used in `paddle-webhook`, `ai-generate-draft`, `google-sync-reviews`, `feedback-send-email` — all from `notifications@moffu.pro`; `RESEND_API_KEY` set in Supabase secrets |
 | EMAIL-002 | Template versions/locales | PENDING | - | - |
 | EMAIL-003 | Recipient permission recheck | PENDING | - | - |
 | EMAIL-004 | Delivery webhooks | PENDING | - | - |
