@@ -557,14 +557,14 @@ async function PricingSection({ waitlistEnabled, portalUrl }: { waitlistEnabled:
 // Instagram Section
 // ---------------------------------------------------------------------------
 
-interface InstagramPost { id: string; handle: string; post_url: string; thumbnail_url: string | null; title: string | null; }
+interface InstagramPost { id: string; handle: string; post_url: string; thumbnail_url: string | null; title: string | null; author_name: string | null; author_designation: string | null; author_avatar_url: string | null; }
 
 async function fetchInstagramPosts(): Promise<InstagramPost[]> {
   try {
     const supabase = createServerClient();
     const { data } = await supabase
       .from('instagram_posts')
-      .select('id, handle, post_url, thumbnail_url, title')
+      .select('id, handle, post_url, thumbnail_url, title, author_name, author_designation, author_avatar_url')
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false })

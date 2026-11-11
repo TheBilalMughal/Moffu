@@ -8,6 +8,9 @@ interface Post {
   post_url: string;
   thumbnail_url: string | null;
   title: string | null;
+  author_name: string | null;
+  author_designation: string | null;
+  author_avatar_url: string | null;
 }
 
 function getEmbedUrl(postUrl: string): string | null {
@@ -91,9 +94,25 @@ export function InstagramSectionClient({ posts, firstHandle }: { posts: Post[]; 
                   </div>
                   {/* Info */}
                   <div className="flex flex-col flex-1 p-4">
-                    <p className="font-black text-[#111827] text-sm leading-snug">@{cleanHandle}</p>
                     {post.title && (
-                      <p className="text-xs text-[#6B7280] mt-1 line-clamp-2">{post.title}</p>
+                      <p className="text-sm text-[#374151] mb-3 line-clamp-3 leading-snug">{post.title}</p>
+                    )}
+                    {post.author_name && (
+                      <div className="flex items-center gap-2.5 mt-auto pt-3 border-t border-[#F3F4F6]">
+                        {post.author_avatar_url ? (
+                          <img src={post.author_avatar_url} alt={post.author_name} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-[#6C55E8] flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-xs font-bold">{post.author_name.charAt(0).toUpperCase()}</span>
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="font-bold text-[#111827] text-xs leading-tight truncate">{post.author_name}</p>
+                          {post.author_designation && (
+                            <p className="text-[#6B7280] text-[11px] leading-tight truncate">{post.author_designation}</p>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>

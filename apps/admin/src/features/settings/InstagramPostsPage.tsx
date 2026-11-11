@@ -7,6 +7,9 @@ interface InstagramPost {
   handle: string;
   post_url: string;
   thumbnail_url: string | null;
+  author_name: string | null;
+  author_designation: string | null;
+  author_avatar_url: string | null;
   is_active: boolean;
   sort_order: number;
   created_at: string;
@@ -27,6 +30,9 @@ const EMPTY: Omit<InstagramPost, 'id' | 'created_at'> = {
   handle: '',
   post_url: '',
   thumbnail_url: null,
+  author_name: '',
+  author_designation: '',
+  author_avatar_url: null,
   is_active: true,
   sort_order: 0,
 };
@@ -41,6 +47,7 @@ export function InstagramPostsPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [uploadingThumb, setUploadingThumb] = useState(false);
   const thumbInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   async function load() {
     setLoading(true);
@@ -68,6 +75,9 @@ export function InstagramPostsPage() {
       handle: p.handle,
       post_url: p.post_url,
       thumbnail_url: p.thumbnail_url,
+      author_name: p.author_name ?? '',
+      author_designation: p.author_designation ?? '',
+      author_avatar_url: p.author_avatar_url,
       is_active: p.is_active,
       sort_order: p.sort_order,
     });
@@ -95,6 +105,19 @@ export function InstagramPostsPage() {
     }
   }
 
+  async function uploadAvatar(file: File) {
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `instagram/avatar-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path);
+      setForm(f => ({ ...f, author_avatar_url: urlData.publicUrl }));
+    } catch {
+      alert('Avatar upload failed');
+    }
+  }
+
   async function save() {
     if (!form.handle.trim() || !form.post_url.trim()) return;
     setSaving(true);
@@ -103,6 +126,9 @@ export function InstagramPostsPage() {
       handle: form.handle.trim(),
       post_url: form.post_url.trim(),
       thumbnail_url: form.thumbnail_url || null,
+      author_name: form.author_name?.trim() || null,
+      author_designation: form.author_designation?.trim() || null,
+      author_avatar_url: form.author_avatar_url || null,
       is_active: form.is_active,
       sort_order: Number(form.sort_order),
     };
@@ -282,6 +308,59 @@ export function InstagramPostsPage() {
                   onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                   className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 focus:border-[#6C55E8]"
                 />
+              </div>
+
+              {/* Author section */}
+              <div className="border-t border-[#E5E7EB] pt-5">
+                <p className="text-xs font-bold text-[#374151] mb-4 uppercase tracking-wide">Author</p>
+                {/* Avatar */}
+                <div className="flex items-center gap-4 mb-4">
+                  <div
+                    className="w-14 h-14 rounded-full bg-[#F3F4F6] border-2 border-dashed border-[#E5E7EB] flex items-center justify-center cursor-pointer hover:border-[#6C55E8] transition-colors overflow-hidden flex-shrink-0"
+                    onClick={() => avatarInputRef.current?.click()}
+                  >
+                    {form.author_avatar_url ? (
+                      <img src={form.author_avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <svg className="w-6 h-6 text-[#D1D5DB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-[#374151] mb-1">Avatar Photo</p>
+                    <button type="button" onClick={() => avatarInputRef.current?.click()} className="text-xs text-[#6C55E8] font-semibold hover:text-[#5A42D1]">
+                      {form.author_avatar_url ? 'Change photo' : 'Upload photo'}
+                    </button>
+                    {form.author_avatar_url && (
+                      <button type="button" onClick={() => setForm(f => ({ ...f, author_avatar_url: null }))} className="text-xs text-red-500 ml-3">Remove</button>
+                    )}
+                  </div>
+                </div>
+                <input ref={avatarInputRef} type="file" accept="image/*" className="hidden"
+                  onChange={e => { if (e.target.files?.[0]) uploadAvatar(e.target.files[0]); }} />
+                {/* Name */}
+                <div className="mb-3">
+                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Ahmed Khan"
+                    value={form.author_name ?? ''}
+                    onChange={e => setForm(f => ({ ...f, author_name: e.target.value }))}
+                    className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 focus:border-[#6C55E8]"
+                  />
+                </div>
+                {/* Designation */}
+                <div>
+                  <label className="block text-xs font-semibold text-[#374151] mb-1.5">Designation</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. CEO, Moffu"
+                    value={form.author_designation ?? ''}
+                    onChange={e => setForm(f => ({ ...f, author_designation: e.target.value }))}
+                    className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 focus:border-[#6C55E8]"
+                  />
+                </div>
               </div>
 
               {/* Sort order */}
