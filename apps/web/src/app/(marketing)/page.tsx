@@ -23,6 +23,7 @@ import { HeroEmailForm } from '../_components/HeroEmailForm';
 import { HeroHeadline } from '../_components/HeroHeadline';
 import { ReviewMockup } from '../_components/ReviewMockup';
 import { createServerClient } from '../../lib/supabase/server';
+import { TeamMemberCard } from '../_components/TeamMemberCard';
 
 // ---------------------------------------------------------------------------
 // Hero
@@ -555,35 +556,14 @@ async function PricingSection({ waitlistEnabled, portalUrl }: { waitlistEnabled:
 // Team Section
 // ---------------------------------------------------------------------------
 
-interface HomeTeamMember { id: string; name: string; designation: string; image_url: string | null; }
-
-function TeamCard({ member }: { member: HomeTeamMember }) {
-  const initials = member.name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
-  return (
-    <div className="flex flex-col items-center text-center">
-      {member.image_url ? (
-        <img
-          src={member.image_url}
-          alt={member.name}
-          className="w-16 h-16 rounded-2xl object-cover border border-[#E5E7EB] mb-3"
-        />
-      ) : (
-        <div className="w-16 h-16 rounded-2xl bg-[#6C55E8] text-white font-black flex items-center justify-center text-lg mb-3 select-none">
-          {initials}
-        </div>
-      )}
-      <p className="text-sm font-black text-[#111827] leading-snug">{member.name}</p>
-      <p className="text-xs text-[#9CA3AF] mt-0.5">{member.designation}</p>
-    </div>
-  );
-}
+interface HomeTeamMember { id: string; name: string; designation: string; image_url: string | null; linkedin_url: string | null; }
 
 async function fetchTeamMembers(): Promise<HomeTeamMember[]> {
   try {
     const supabase = createServerClient();
     const { data } = await supabase
       .from('team_members')
-      .select('id, name, designation, image_url')
+      .select('id, name, designation, image_url, linkedin_url')
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
       .order('created_at', { ascending: true })
@@ -598,29 +578,42 @@ async function TeamSection() {
   const members = await fetchTeamMembers();
   if (members.length === 0) return null;
   return (
-    <section className="bg-white px-6 lg:px-16 py-20 border-t border-[#E5E7EB]">
-      <div className="max-w-[1380px] mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12">
+    <section className="relative bg-white px-6 lg:px-16 pt-24 pb-32 min-h-screen overflow-hidden">
+
+      <div className="relative max-w-[1380px] mx-auto">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
           <div>
-            <p className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-2">The team</p>
-            <h2 className="text-[clamp(1.5rem,3vw,2rem)] font-black text-[#111827] leading-[1.1]">
-              The people behind Moffu.
+            <p className="text-xs font-semibold text-[#6C55E8] uppercase tracking-widest mb-4">The team</p>
+            <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black text-[#111827] leading-[1.05]">
+              Built by people who<br className="hidden sm:block" /> actually care.
             </h2>
+            <p className="text-[#111827]/60 text-base mt-4 max-w-md leading-relaxed">
+              A small, focused team obsessed with one thing: helping businesses sound human at scale.
+            </p>
           </div>
           <a
             href="/team"
-            className="text-sm font-semibold text-[#6C55E8] hover:text-[#5A42D1] transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-2 bg-[#111827] hover:bg-[#6C55E8] text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors whitespace-nowrap self-start lg:self-auto"
           >
             Meet the full team →
           </a>
         </div>
-        <div className={`grid gap-8 ${
+
+        {/* Grid */}
+        <div className={`grid gap-5 ${
           members.length <= 3
-            ? 'grid-cols-2 sm:grid-cols-3'
-            : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'
+            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+            : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
         }`}>
           {members.map((member) => (
-            <TeamCard key={member.id} member={member} />
+            <TeamMemberCard
+              key={member.id}
+              name={member.name}
+              designation={member.designation}
+              image_url={member.image_url}
+              linkedin_url={member.linkedin_url}
+            />
           ))}
         </div>
       </div>

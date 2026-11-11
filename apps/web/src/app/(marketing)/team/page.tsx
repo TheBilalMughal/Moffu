@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createServerClient } from '@/lib/supabase/server';
+import { TeamMemberCard } from '@/app/_components/TeamMemberCard';
 
 export const metadata: Metadata = {
   title: 'Team',
@@ -21,25 +22,6 @@ interface TeamMember {
   linkedin_url: string | null;
 }
 
-function MemberInitials({ name, size }: { name: string; size: number }) {
-  const initials = name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
-  return (
-    <div
-      className="rounded-2xl bg-[#6C55E8] text-white font-black flex items-center justify-center select-none"
-      style={{ width: size, height: size, fontSize: size * 0.32 }}
-    >
-      {initials}
-    </div>
-  );
-}
-
-function LinkedInIcon() {
-  return (
-    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-    </svg>
-  );
-}
 
 export default async function TeamPage() {
   const supabase = createServerClient();
@@ -73,52 +55,20 @@ export default async function TeamPage() {
       </section>
 
       {/* Team grid */}
-      <section className="px-6 lg:px-16 py-20">
+      <section className="px-6 lg:px-16 pt-10 pb-32">
         <div className="max-w-[1380px] mx-auto">
           {members.length === 0 ? (
             <p className="text-[#9CA3AF] text-center py-20">Team coming soon.</p>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {members.map((member) => (
-                <div
+                <TeamMemberCard
                   key={member.id}
-                  className="group bg-white rounded-2xl border border-[#E5E7EB] p-6 hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-0.5 flex flex-col"
-                >
-                  {/* Photo */}
-                  <div className="mb-5">
-                    {member.image_url ? (
-                      <img
-                        src={member.image_url}
-                        alt={member.name}
-                        className="w-20 h-20 rounded-2xl object-cover border border-[#E5E7EB]"
-                      />
-                    ) : (
-                      <MemberInitials name={member.name} size={80} />
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1">
-                    <p className="font-black text-[#111827] text-base leading-snug">{member.name}</p>
-                    <p className="text-sm text-[#6B7280] mt-1 leading-snug">{member.designation}</p>
-                  </div>
-
-                  {/* LinkedIn */}
-                  {member.linkedin_url && (
-                    <div className="mt-5 pt-4 border-t border-[#F3F4F6]">
-                      <a
-                        href={member.linkedin_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-xs font-semibold text-[#6B7280] hover:text-[#0A66C2] transition-colors group-hover:text-[#0A66C2]"
-                        aria-label={`${member.name} on LinkedIn`}
-                      >
-                        <LinkedInIcon />
-                        LinkedIn
-                      </a>
-                    </div>
-                  )}
-                </div>
+                  name={member.name}
+                  designation={member.designation}
+                  image_url={member.image_url}
+                  linkedin_url={member.linkedin_url}
+                />
               ))}
             </div>
           )}
