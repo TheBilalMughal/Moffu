@@ -91,7 +91,7 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | ADMIN-010 | System health | IMPLEMENTED | - | `IntegrationsHealthPage` covers Google/integration health; `ReportsPage` for broader analytics |
 | ADMIN-011 | Logs/audit | IMPLEMENTED | - | `AuditPage` — full audit_events table, actor/action/target columns, date + action filters, pagination |
 | ADMIN-012 | Refund workflow | IMPLEMENTED | - | `RefundsPage` — refund list with status badges; `PaymentsPage` — payment history; both wired to Paddle data |
-| ADMIN-013 | Regions/countries/currencies | DEFERRED | - | V1 is USD-only globally; Paddle handles currency conversion. Reference tables seeded but all inactive. Admin UI deferred to future multi-currency phase. |
+| ADMIN-013 | Regions/countries/currencies | REMOVED | - | USD-only globally for V1 and beyond. Paddle handles currency conversion. Reference tables in DB are unused and will remain so. No admin UI needed. |
 | ADMIN-014 | Feature/config controls | IMPLEMENTED | - | `FeatureFlagsPage` — create/toggle/delete feature flags per org or globally; owner/super_admin only |
 | BILLING-001 | Versioned plans | IMPLEMENTED | - | `plans` table seeded: Free/Starter/Growth/Scale; migration 008 applied to `kgttncfkzdrgswfkkdji` |
 | BILLING-002 | Versioned prices | IMPLEMENTED | - | `plan_prices`: monthly + annual per plan; USD only V1 |

@@ -246,8 +246,7 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 - `OrgsPage.tsx`, `OrgDetailPage.tsx` — older versions before `ClientsPage`/`ClientDetailPage`; can be deleted
 - `WebsiteAutomationPage.tsx`, `WebsiteBrandingPage.tsx` — created but not routed
 
-**Pending:**
-- ADMIN-013: Regions/countries/currencies management UI (DEFERRED — USD-only V1)
+**Pending:** none — all admin portal items implemented or removed from scope.
 
 ## External/configuration pending
 - `VITE_WEB_URL` → set to `https://moffu.vercel.app` in portalmoffu Vercel project (for "Back to website" link in prod)
