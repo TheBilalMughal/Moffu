@@ -33,6 +33,7 @@ interface SubRow {
   usagePct: number;
   isOverage: boolean;
   daysUntilRenewal: number | null;
+  hasDiscount: boolean;
 }
 
 interface TimelineEvent {
@@ -593,6 +594,7 @@ export function SubscriptionsPage() {
         isAtRisk, usageCount, usageLimit, usagePct,
         isOverage: usagePct >= 90,
         daysUntilRenewal,
+        hasDiscount: !ov?.custom_price_cents && applyPlanDiscount(plan, rawPlanPrice) < rawPlanPrice,
       };
     });
 
@@ -906,7 +908,12 @@ export function SubscriptionsPage() {
                     </div>
                   </td>
                   <td className="px-4 py-1.5">
-                    <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${PLAN_COLOR[s.planSlug] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>{s.planName}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${PLAN_COLOR[s.planSlug] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>{s.planName}</span>
+                      {s.hasDiscount && (
+                        <span className="inline-block px-1.5 py-0.5 text-[10px] font-bold rounded bg-emerald-50 text-emerald-700">Promo</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-1.5">
                     <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded capitalize ${STATUS_COLOR[s.status] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>{s.status.replace('_', ' ')}</span>
