@@ -88,6 +88,10 @@ serve(async (req) => {
         await handleTransactionCompleted(supabase, data);
         break;
       }
+      case 'transaction.payment_failed': {
+        await handlePaymentFailed(supabase, data);
+        break;
+      }
       default:
         console.log('Unhandled Paddle event:', event_type);
     }
@@ -185,8 +189,143 @@ async function handleTransactionCompleted(supabase: ReturnType<typeof createClie
 
   await supabase
     .from('subscriptions')
-    .update({ paddle_transaction_id: transactionId, paddle_customer_id: customerId })
+    .update({ paddle_transaction_id: transactionId, paddle_customer_id: customerId, payment_failure_count: 0 })
     .eq('user_id', userId);
+}
+
+async function handlePaymentFailed(supabase: ReturnType<typeof createClient>, data: Record<string, unknown>) {
+  const customData = (data.custom_data as Record<string, string> | null) ?? {};
+  const userId = customData.user_id;
+  if (!userId) {
+    console.error('No user_id in custom_data for payment_failed');
+    return;
+  }
+
+  // Increment failure count
+  const { data: sub } = await supabase
+    .from('subscriptions')
+    .select('id, payment_failure_count')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (!sub) return;
+
+  const newCount = (sub.payment_failure_count ?? 0) + 1;
+  await supabase.from('subscriptions')
+    .update({ payment_failure_count: newCount })
+    .eq('id', sub.id);
+
+  // Get owner email
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('display_name')
+    .eq('id', userId)
+    .maybeSingle();
+
+  const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
+  const email = authUser?.email;
+  const name = profile?.display_name ?? null;
+
+  if (!email) return;
+
+  const webUrl = Deno.env.get('WEB_URL') ?? 'https://moffu.pro';
+
+  if (newCount >= 3) {
+    // Suspend org
+    const { data: orgMember } = await supabase
+      .from('org_members')
+      .select('org_id')
+      .eq('user_id', userId)
+      .eq('role', 'owner')
+      .maybeSingle();
+
+    if (orgMember) {
+      await supabase.from('organizations')
+        .update({ status: 'suspended' })
+        .eq('id', orgMember.org_id);
+
+      await supabase.from('audit_events').insert({
+        actor_id: null,
+        action: 'auto_suspend_org_payment_failure',
+        target_type: 'organization',
+        target_id: orgMember.org_id,
+        meta: { reason: 'payment_failure', failure_count: newCount, user_id: userId },
+      });
+    }
+
+    await sendEmail(email, 'Your Moffu account has been suspended', suspendedEmailHtml(name, webUrl));
+  } else {
+    await sendEmail(email, 'Payment failed — please update your billing details', paymentFailedEmailHtml(name, newCount, webUrl));
+  }
+}
+
+async function sendEmail(to: string, subject: string, html: string) {
+  const resendKey = Deno.env.get('RESEND_API_KEY');
+  if (!resendKey) { console.error('RESEND_API_KEY not set'); return; }
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: 'Moffu <notifications@moffu.pro>', to: [to], subject, html }),
+  });
+  if (!res.ok) console.error('Resend error:', await res.text());
+}
+
+function emailWrapper(content: string) {
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#F9FAFB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+      <tr><td align="center" style="padding-bottom:28px;">
+        <div style="background:#6C55E8;border-radius:12px;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;">
+          <span style="color:#fff;font-size:20px;font-weight:800;line-height:40px;">M</span>
+        </div>
+      </td></tr>
+      <tr><td style="background:#ffffff;border-radius:20px;border:1px solid #E5E7EB;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+        ${content}
+      </td></tr>
+      <tr><td style="padding-top:24px;text-align:center;">
+        <p style="margin:0;font-size:11px;color:#D1D5DB;">Powered by <a href="https://moffu.pro" style="color:#9CA3AF;text-decoration:none;">Moffu</a></p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table></body></html>`;
+}
+
+function paymentFailedEmailHtml(name: string | null, attempt: number, webUrl: string) {
+  const greeting = name ? `Hi ${name.split(' ')[0]},` : 'Hi,';
+  return emailWrapper(`
+    <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;">Billing alert</p>
+    <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">Payment failed</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#374151;line-height:1.6;">
+      ${greeting}<br/>
+      We were unable to process your payment (attempt ${attempt} of 3). Please update your billing details to avoid service interruption.
+    </p>
+    <a href="${webUrl}/billing" style="display:inline-block;background:#6C55E8;color:#ffffff;font-size:14px;font-weight:600;padding:14px 28px;border-radius:12px;text-decoration:none;margin-bottom:24px;">
+      Update payment details
+    </a>
+    <p style="margin:0;font-size:12px;color:#9CA3AF;line-height:1.5;">
+      If we cannot process payment after 3 attempts, your account will be suspended. Contact <a href="mailto:support@moffu.pro" style="color:#6C55E8;">support@moffu.pro</a> if you need help.
+    </p>
+  `);
+}
+
+function suspendedEmailHtml(name: string | null, webUrl: string) {
+  const greeting = name ? `Hi ${name.split(' ')[0]},` : 'Hi,';
+  return emailWrapper(`
+    <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#DC2626;text-transform:uppercase;letter-spacing:0.08em;">Account suspended</p>
+    <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#111827;">Your account has been suspended</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#374151;line-height:1.6;">
+      ${greeting}<br/>
+      After 3 unsuccessful payment attempts, your Moffu account has been suspended. Update your billing details to restore access immediately.
+    </p>
+    <a href="${webUrl}/billing" style="display:inline-block;background:#DC2626;color:#ffffff;font-size:14px;font-weight:600;padding:14px 28px;border-radius:12px;text-decoration:none;margin-bottom:24px;">
+      Restore access
+    </a>
+    <p style="margin:0;font-size:12px;color:#9CA3AF;line-height:1.5;">
+      Your data is safe and will be retained. Reply to this email or contact <a href="mailto:support@moffu.pro" style="color:#6C55E8;">support@moffu.pro</a> if you need assistance.
+    </p>
+  `);
 }
 
 function mapStatus(paddleStatus: string): string {

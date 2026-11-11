@@ -454,6 +454,12 @@ Deno.serve(async (req) => {
         .insert({ user_id: user.id, event_type: 'ai_draft', review_id }),
     ]);
 
+    // ── Usage threshold notifications ─────────────────────────────────────
+    // Fire-and-forget: don't block the response
+    sendUsageNotificationIfNeeded(supabase, user.id, limitCheck.used + 1, limitCheck.limit).catch(e =>
+      console.error('Usage notification error:', e),
+    );
+
     return json({ draft, needs_approval: needsApproval });
   } catch (err) {
     console.error('ai-generate-draft error:', err);
@@ -461,3 +467,108 @@ Deno.serve(async (req) => {
     return json({ error: msg }, 500);
   }
 });
+
+// ── Usage notification helper ─────────────────────────────────────────────────
+
+async function sendUsageNotificationIfNeeded(
+  supabase: SupabaseClient,
+  userId: string,
+  used: number,
+  limit: number | null,
+) {
+  if (!limit || limit <= 0) return;
+  const pct = used / limit;
+  if (pct < 0.8) return;
+
+  const period = (() => {
+    const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  })();
+
+  const { data: sub } = await supabase
+    .from('subscriptions')
+    .select('id, usage_80_notified_period, usage_100_notified_period')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (!sub) return;
+
+  const is100 = used >= limit;
+  const notifiedField = is100 ? 'usage_100_notified_period' : 'usage_80_notified_period';
+  const alreadyNotified = is100 ? sub.usage_100_notified_period === period : sub.usage_80_notified_period === period;
+  if (alreadyNotified) return;
+
+  const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
+  const email = authUser?.email;
+  if (!email) return;
+
+  const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', userId).maybeSingle();
+  const name = profile?.display_name ?? null;
+  const webUrl = Deno.env.get('WEB_URL') ?? 'https://moffu.pro';
+
+  const subject = is100
+    ? "You've reached your monthly AI draft limit"
+    : `You've used ${Math.round(pct * 100)}% of your monthly AI drafts`;
+
+  await supabase.from('subscriptions').update({ [notifiedField]: period }).eq('id', sub.id);
+
+  const resendKey = Deno.env.get('RESEND_API_KEY');
+  if (!resendKey) return;
+
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: 'Moffu <notifications@moffu.pro>',
+      to: [email],
+      subject,
+      html: usageEmailHtml(name, used, limit, pct, is100, webUrl),
+    }),
+  });
+}
+
+function usageEmailHtml(
+  name: string | null, used: number, limit: number, pct: number,
+  isBlocked: boolean, webUrl: string,
+) {
+  const greeting = name ? `Hi ${name.split(' ')[0]},` : 'Hi,';
+  const pctLabel = Math.round(pct * 100);
+  const barColor = isBlocked ? '#DC2626' : '#F59E0B';
+  const badgeColor = isBlocked ? '#FEF2F2' : '#FFF7ED';
+  const badgeText = isBlocked ? '#DC2626' : '#B45309';
+  const headline = isBlocked
+    ? "You've reached your AI draft limit"
+    : `You've used ${pctLabel}% of your AI drafts`;
+  const body = isBlocked
+    ? `You've used all ${limit} AI drafts for this period. Upgrade your plan to continue generating replies.`
+    : `You've used ${used} of ${limit} AI drafts this month. Upgrade now to avoid any interruption to your workflow.`;
+
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/></head>
+<body style="margin:0;padding:0;background:#F9FAFB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+      <tr><td align="center" style="padding-bottom:28px;">
+        <div style="background:#6C55E8;border-radius:12px;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;">
+          <span style="color:#fff;font-size:20px;font-weight:800;line-height:40px;">M</span>
+        </div>
+      </td></tr>
+      <tr><td style="background:#ffffff;border-radius:20px;border:1px solid #E5E7EB;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:${badgeText};background:${badgeColor};display:inline-block;padding:3px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:0.08em;">Usage alert</p>
+        <h1 style="margin:16px 0;font-size:22px;font-weight:700;color:#111827;">${headline}</h1>
+        <p style="margin:0 0 24px;font-size:14px;color:#374151;line-height:1.6;">${greeting}<br/>${body}</p>
+        <!-- Progress bar -->
+        <div style="background:#F3F4F6;border-radius:8px;height:10px;margin-bottom:8px;overflow:hidden;">
+          <div style="background:${barColor};height:10px;width:${Math.min(pctLabel, 100)}%;border-radius:8px;"></div>
+        </div>
+        <p style="margin:0 0 28px;font-size:12px;color:#9CA3AF;">${used} / ${limit} AI drafts used this period</p>
+        <a href="${webUrl}/billing" style="display:inline-block;background:#6C55E8;color:#ffffff;font-size:14px;font-weight:600;padding:14px 28px;border-radius:12px;text-decoration:none;">
+          Upgrade plan
+        </a>
+      </td></tr>
+      <tr><td style="padding-top:24px;text-align:center;">
+        <p style="margin:0;font-size:11px;color:#D1D5DB;">Powered by <a href="https://moffu.pro" style="color:#9CA3AF;text-decoration:none;">Moffu</a></p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table></body></html>`;
+}

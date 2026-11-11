@@ -146,14 +146,24 @@ Deno.serve(async (req) => {
     let accessToken = tokenRow.access_token;
     const expiry = connection.token_expiry ? new Date(connection.token_expiry) : new Date(0);
     if (expiry <= new Date(Date.now() + 60_000)) {
-      const refreshed = await doRefreshToken(tokenRow.refresh_token, clientId, clientSecret);
-      accessToken = refreshed.access_token;
-      await supabase.from('google_connection_tokens')
-        .update({ access_token: accessToken })
-        .eq('connection_id', connection.id);
-      await supabase.from('google_connections')
-        .update({ token_expiry: new Date(Date.now() + refreshed.expires_in * 1000).toISOString() })
-        .eq('id', connection.id);
+      try {
+        const refreshed = await doRefreshToken(tokenRow.refresh_token, clientId, clientSecret);
+        accessToken = refreshed.access_token;
+        await supabase.from('google_connection_tokens')
+          .update({ access_token: accessToken })
+          .eq('connection_id', connection.id);
+        await supabase.from('google_connections')
+          .update({ token_expiry: new Date(Date.now() + refreshed.expires_in * 1000).toISOString() })
+          .eq('id', connection.id);
+      } catch (refreshErr) {
+        console.error('Token refresh failed — marking REFRESH_FAILED:', refreshErr);
+        await supabase.from('google_connections')
+          .update({ state: 'REFRESH_FAILED' })
+          .eq('id', connection.id);
+        // Notify the owner
+        await notifyGoogleRefreshFailed(supabase, user.id).catch(e => console.error('Notify error:', e));
+        return json({ error: 'Google token refresh failed. Please reconnect your Google account.' }, 401);
+      }
     }
 
     // Resolve account prefix (fixes old connections that didn't store it)
@@ -236,3 +246,64 @@ Deno.serve(async (req) => {
     return json({ error: String(err) }, 500);
   }
 });
+
+// ── Google reconnect notification ─────────────────────────────────────────────
+
+async function notifyGoogleRefreshFailed(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+) {
+  const resendKey = Deno.env.get('RESEND_API_KEY');
+  if (!resendKey) return;
+
+  const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
+  const email = authUser?.email;
+  if (!email) return;
+
+  const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', userId).maybeSingle();
+  const name = profile?.display_name ?? null;
+  const greeting = name ? `Hi ${name.split(' ')[0]},` : 'Hi,';
+  const webUrl = Deno.env.get('WEB_URL') ?? 'https://moffu.pro';
+
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/></head>
+<body style="margin:0;padding:0;background:#F9FAFB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+      <tr><td align="center" style="padding-bottom:28px;">
+        <div style="background:#6C55E8;border-radius:12px;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;">
+          <span style="color:#fff;font-size:20px;font-weight:800;line-height:40px;">M</span>
+        </div>
+      </td></tr>
+      <tr><td style="background:#ffffff;border-radius:20px;border:1px solid #E5E7EB;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#B45309;background:#FFF7ED;display:inline-block;padding:3px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:0.08em;">Action required</p>
+        <h1 style="margin:16px 0;font-size:22px;font-weight:700;color:#111827;">Reconnect your Google account</h1>
+        <p style="margin:0 0 24px;font-size:14px;color:#374151;line-height:1.6;">
+          ${greeting}<br/>
+          Your Google Business Profile connection has expired. We were unable to sync your latest reviews. Reconnect your account to restore automatic syncing.
+        </p>
+        <a href="${webUrl}/settings" style="display:inline-block;background:#6C55E8;color:#ffffff;font-size:14px;font-weight:600;padding:14px 28px;border-radius:12px;text-decoration:none;margin-bottom:24px;">
+          Reconnect Google account
+        </a>
+        <p style="margin:0;font-size:12px;color:#9CA3AF;line-height:1.5;">
+          If you need help, contact <a href="mailto:support@moffu.pro" style="color:#6C55E8;">support@moffu.pro</a>
+        </p>
+      </td></tr>
+      <tr><td style="padding-top:24px;text-align:center;">
+        <p style="margin:0;font-size:11px;color:#D1D5DB;">Powered by <a href="https://moffu.pro" style="color:#9CA3AF;text-decoration:none;">Moffu</a></p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table></body></html>`;
+
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: 'Moffu <notifications@moffu.pro>',
+      to: [email],
+      subject: 'Action required: Reconnect your Google account',
+      html,
+    }),
+  });
+}
