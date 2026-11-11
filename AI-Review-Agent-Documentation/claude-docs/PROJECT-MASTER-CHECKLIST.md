@@ -83,7 +83,7 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | ADMIN-002 | Global search | IMPLEMENTED | - | AdminLayout topbar search — debounced 280ms, queries `organizations` + `profiles`, navigates to `/clients/:id` or `/users/:id`; Cmd+K shortcut |
 | ADMIN-003 | Org 360 | IMPLEMENTED | - | `ClientDetailPage` — org info, subscription + plan badge + Promo badge, member list with roles, impersonate button per member, Google connection status, usage stats |
 | ADMIN-004 | User management | IMPLEMENTED | - | `PlatformMembersPage` (list + invite + bulk delete) + `TeamMemberDetailPage` (role, activity, permissions); `admin-create-user` + `admin-delete-member` Edge Functions; owner role has full super_admin permissions |
-| ADMIN-005 | Restrictions | PENDING | - | No org/user suspension or block UI yet |
+| ADMIN-005 | Restrictions | IMPLEMENTED | - | Org suspension: `ClientDetailPage` + `ClientsPage` — confirmation modal with reason dropdown (payment_issue/policy_violation/fraud_suspicion/spam_abuse/account_request/other) + optional note; inserts `audit_events` row on suspend and reactivate |
 | ADMIN-006 | Internal notes | REMOVED | - | Deliberately removed from product scope |
 | ADMIN-007 | Impersonation | IMPLEMENTED | - | `ClientDetailPage` "Impersonate" button per member → `admin-impersonate` Edge Function → magic link → opens portal in new tab; audit logged |
 | ADMIN-008 | Google troubleshooting | IMPLEMENTED | - | `IntegrationsHealthPage` — per-org Google connection status, error states, last sync timestamps |

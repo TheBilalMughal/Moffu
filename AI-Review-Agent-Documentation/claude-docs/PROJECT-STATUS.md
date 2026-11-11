@@ -247,8 +247,7 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 - `WebsiteAutomationPage.tsx`, `WebsiteBrandingPage.tsx` — created but not routed
 
 **Pending:**
-- ADMIN-005: Org/user suspension and restriction UI
-- ADMIN-013: Regions/countries/currencies management UI
+- ADMIN-013: Regions/countries/currencies management UI (DEFERRED — USD-only V1)
 
 ## External/configuration pending
 - `VITE_WEB_URL` → set to `https://moffu.vercel.app` in portalmoffu Vercel project (for "Back to website" link in prod)
