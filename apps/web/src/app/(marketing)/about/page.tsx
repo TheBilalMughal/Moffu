@@ -46,41 +46,23 @@ const VALUES = [
   },
 ];
 
-const STATS = [
-  { value: '10k+', label: 'reviews replied' },
-  { value: '500+', label: 'businesses onboarded' },
-  { value: '4.9★', label: 'average rating boost' },
-  { value: '< 2 min', label: 'average setup time' },
-];
-
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-white">
 
+      {/* White zone behind fixed navbar so dark text is visible */}
+      <div className="bg-white h-28" />
+
       {/* Hero */}
-      <section className="bg-[#111827] px-6 lg:px-16 pt-44 pb-24">
+      <section className="bg-[#111827] px-6 lg:px-16 pt-16 pb-24">
         <div className="max-w-[1380px] mx-auto">
           <p className="text-xs font-semibold text-[#D8CCFF] uppercase tracking-widest mb-6">About Moffu</p>
           <h1 className="text-[clamp(2.5rem,7vw,5.5rem)] font-black text-white leading-[1.0] tracking-tight mb-8 max-w-4xl">
             Built for the business that keeps getting left on read.
           </h1>
           <p className="text-lg text-white/60 max-w-2xl leading-relaxed">
-            Every review your business receives is a public conversation. Most businesses never reply. Not because they do not care — because replying well takes time they do not have.
+            Every review your business receives is a public conversation. Most businesses never reply. Not because they do not care. Not because they do not have something to say. Because replying well takes time they simply do not have.
           </p>
-        </div>
-      </section>
-
-      {/* Stats strip */}
-      <section className="bg-[#F9FAFB] border-b border-[#E5E7EB] px-6 lg:px-16 py-10">
-        <div className="max-w-[1380px] mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {STATS.map(({ value, label }) => (
-              <div key={label}>
-                <p className="text-[2.5rem] font-black text-[#111827] leading-none mb-1">{value}</p>
-                <p className="text-sm text-[#6B7280]">{label}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -180,7 +162,7 @@ export default function AboutPage() {
             </div>
 
             {/* Visual */}
-            <div className="bg-[#111827] rounded-2xl p-8 space-y-4">
+            <div className="bg-[#F9FAFB] rounded-xl border border-[#E5E7EB] p-8 space-y-4">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-8 bg-[#6C55E8] rounded-lg flex items-center justify-center">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -188,8 +170,8 @@ export default function AboutPage() {
                     <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/>
                   </svg>
                 </div>
-                <span className="text-white font-black text-sm">Brand Brain</span>
-                <span className="ml-auto text-[10px] font-bold text-[#6C55E8] bg-[#6C55E8]/10 px-2 py-0.5 rounded">Active</span>
+                <span className="text-[#111827] font-black text-sm">Brand Brain</span>
+                <span className="ml-auto text-[10px] font-bold text-[#6C55E8] bg-[#EDE9FF] px-2 py-0.5 rounded">Active</span>
               </div>
               {[
                 { label: 'Tone', value: 'Warm and professional' },
@@ -198,9 +180,9 @@ export default function AboutPage() {
                 { label: '5 star rule', value: 'Thank, invite back, mention team' },
                 { label: 'Never say', value: 'Competitor names, pricing details' },
               ].map(({ label, value }) => (
-                <div key={label} className="border border-white/8 rounded-lg px-4 py-3">
-                  <p className="text-[10px] font-semibold text-white/35 uppercase tracking-widest mb-0.5">{label}</p>
-                  <p className="text-sm text-white/80">{value}</p>
+                <div key={label} className="border border-[#E5E7EB] bg-white rounded-lg px-4 py-3">
+                  <p className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-widest mb-0.5">{label}</p>
+                  <p className="text-sm text-[#374151]">{value}</p>
                 </div>
               ))}
             </div>
