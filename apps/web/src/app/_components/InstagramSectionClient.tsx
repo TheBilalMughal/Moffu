@@ -11,21 +11,26 @@ interface Post {
 }
 
 function getEmbedUrl(postUrl: string): string | null {
-  const match = postUrl.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
-  if (!match) return null;
-  return `https://www.instagram.com/p/${match[1]}/embed/`;
+  // YouTube
+  const ytMatch = postUrl.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0`;
+  // Instagram
+  const igMatch = postUrl.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
+  if (igMatch) return `https://www.instagram.com/p/${igMatch[1]}/embed/`;
+  return null;
 }
 
-function InstagramIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-    </svg>
-  );
+function getProfileUrl(handle: string, postUrl: string): string {
+  if (postUrl.includes('youtube.com') || postUrl.includes('youtu.be')) {
+    return `https://www.youtube.com/@${handle.replace(/^@/, '')}`;
+  }
+  return `https://www.instagram.com/${handle.replace(/^@/, '')}`;
 }
 
 export function InstagramSectionClient({ posts, firstHandle }: { posts: Post[]; firstHandle: string }) {
   const [active, setActive] = useState<Post | null>(null);
+  const firstPost = posts[0];
+  const profileUrl = firstPost ? getProfileUrl(firstHandle, firstPost.post_url) : `https://www.instagram.com/${firstHandle.replace(/^@/, '')}`;
 
   return (
     <section className="bg-[#F9FAFB] border-t border-[#E5E7EB] px-6 lg:px-16 py-20 relative">
@@ -33,21 +38,18 @@ export function InstagramSectionClient({ posts, firstHandle }: { posts: Post[]; 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12">
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <InstagramIcon className="w-4 h-4 text-[#E1306C]" />
-              <p className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest">Instagram</p>
-            </div>
+            <p className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-3">Social</p>
             <h2 className="text-[clamp(1.5rem,3vw,2rem)] font-black text-[#111827] leading-[1.1]">
               See us in action.
             </h2>
           </div>
           <a
-            href={`https://www.instagram.com/${firstHandle.replace(/^@/, '')}`}
+            href={profileUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-sm font-semibold text-[#6C55E8] hover:text-[#5A42D1] transition-colors whitespace-nowrap"
           >
-            Follow on Instagram →
+            Follow us →
           </a>
         </div>
 
@@ -71,8 +73,10 @@ export function InstagramSectionClient({ posts, firstHandle }: { posts: Post[]; 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#FCB045]">
-                      <InstagramIcon className="w-10 h-10 text-white/60" />
+                    <div className="w-full h-full flex items-center justify-center bg-[#1F2937]">
+                      <svg className="w-10 h-10 text-white/40" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -82,9 +86,6 @@ export function InstagramSectionClient({ posts, firstHandle }: { posts: Post[]; 
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     </div>
-                  </div>
-                  <div className="absolute top-2 right-2 w-6 h-6 rounded-lg bg-black/30 backdrop-blur-sm flex items-center justify-center">
-                    <InstagramIcon className="w-3.5 h-3.5 text-white" />
                   </div>
                   {post.title && (
                     <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-1 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">

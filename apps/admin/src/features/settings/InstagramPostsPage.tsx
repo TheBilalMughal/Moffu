@@ -134,11 +134,10 @@ export function InstagramPostsPage() {
       <div className="flex items-start justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <InstagramIcon />
-            <h1 className="text-xl font-bold text-[#111827]">Instagram Posts</h1>
+            <h1 className="text-xl font-bold text-[#111827]">Social Posts</h1>
           </div>
           <p className="text-sm text-[#6B7280]">
-            Manage reels and posts shown on the marketing website.
+            Manage videos and posts shown on the marketing website. Supports YouTube and Instagram links.
           </p>
         </div>
         <button
@@ -157,9 +156,9 @@ export function InstagramPostsPage() {
         <div className="text-sm text-[#9CA3AF]">Loading...</div>
       ) : posts.length === 0 ? (
         <div className="border-2 border-dashed border-[#E5E7EB] rounded-xl p-16 text-center">
-          <InstagramIcon />
+          <svg className="w-8 h-8 text-[#D1D5DB] mx-auto" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
           <p className="mt-3 text-sm font-medium text-[#6B7280]">No posts yet</p>
-          <p className="text-xs text-[#9CA3AF] mt-1">Add a reel or post to show on the website.</p>
+          <p className="text-xs text-[#9CA3AF] mt-1">Add a YouTube or Instagram link to show on the website.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -170,8 +169,8 @@ export function InstagramPostsPage() {
                 {p.thumbnail_url ? (
                   <img src={p.thumbnail_url} alt={p.title ?? p.handle} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <InstagramIcon />
+                  <div className="w-full h-full flex items-center justify-center bg-[#F3F4F6]">
+                    <svg className="w-8 h-8 text-[#D1D5DB]" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                   </div>
                 )}
                 {/* Badge */}
@@ -251,7 +250,7 @@ export function InstagramPostsPage() {
 
               {/* Handle */}
               <div>
-                <label className="block text-xs font-semibold text-[#374151] mb-1.5">Instagram Handle <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-semibold text-[#374151] mb-1.5">Channel / Handle <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   placeholder="e.g. moffu.pro"
@@ -263,10 +262,10 @@ export function InstagramPostsPage() {
 
               {/* Post URL */}
               <div>
-                <label className="block text-xs font-semibold text-[#374151] mb-1.5">Post / Reel URL <span className="text-red-500">*</span></label>
+                <label className="block text-xs font-semibold text-[#374151] mb-1.5">Video / Post URL <span className="text-red-500">*</span></label>
                 <input
                   type="url"
-                  placeholder="https://www.instagram.com/reel/..."
+                  placeholder="https://www.youtube.com/watch?v=... or instagram.com/reel/..."
                   value={form.post_url}
                   onChange={e => setForm(f => ({ ...f, post_url: e.target.value }))}
                   className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 focus:border-[#6C55E8]"
