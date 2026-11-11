@@ -16,7 +16,15 @@ interface SubRaw {
 }
 
 interface PriceRaw { plan_id: string; billing_interval: string; amount_cents: number }
-interface PlanRaw  { id: string; slug: string; name: string }
+interface PlanRaw  { id: string; slug: string; name: string; discount_type: string | null; discount_value: number | null }
+
+function applyPlanDiscount(plan: PlanRaw | undefined, cents: number): number {
+  if (!plan?.discount_type || !plan.discount_value || plan.discount_value <= 0) return cents;
+  const v = Number(plan.discount_value);
+  if (plan.discount_type === 'percent') return Math.max(0, Math.round(cents * (1 - v / 100)));
+  if (plan.discount_type === 'fixed') return Math.max(0, cents - Math.round(v * 100));
+  return cents;
+}
 
 interface EnrichedSub {
   id: string;
@@ -195,7 +203,7 @@ export function MRRPage() {
       supabase.from('subscriptions').select(
         'id, user_id, plan_id, status, billing_interval, created_at, current_period_end, cancel_at_period_end'
       ).order('created_at', { ascending: false }),
-      supabase.from('plans').select('id, slug, name').order('sort_order'),
+      supabase.from('plans').select('id, slug, name, discount_type, discount_value').order('sort_order'),
       supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('currency', 'USD'),
       supabase.from('org_members').select('user_id, org_id').eq('role', 'owner'),
       supabase.from('platform_members').select('user_id').eq('is_active', true),
@@ -233,7 +241,8 @@ export function MRRPage() {
     const enriched: EnrichedSub[] = allSubs.map((s) => {
       const plan = planById.get(s.plan_id);
       const interval = s.billing_interval ?? 'monthly';
-      const planPrice = priceMap.get(`${s.plan_id}:${interval}`) ?? priceMap.get(`${s.plan_id}:monthly`) ?? 0;
+      const rawPlanPrice = priceMap.get(`${s.plan_id}:${interval}`) ?? priceMap.get(`${s.plan_id}:monthly`) ?? 0;
+      const planPrice = applyPlanDiscount(plan, rawPlanPrice);
       const orgId = orgByOwner.get(s.user_id);
       const ov = orgId ? overrideByOrg.get(orgId) : undefined;
       // Normalize custom price to monthly equivalent for MRR

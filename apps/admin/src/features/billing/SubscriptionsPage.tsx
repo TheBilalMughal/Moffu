@@ -464,15 +464,22 @@ export function SubscriptionsPage() {
 
     const [subsRes, plansRes, pricesRes, orgMembersOwnerRes, internalRes] = await Promise.all([
       supabase.from('subscriptions').select('id, user_id, plan_id, status, billing_interval, current_period_start, current_period_end, cancel_at_period_end, stripe_subscription_id, stripe_customer_id, created_at').order('created_at', { ascending: false }),
-      supabase.from('plans').select('id, slug, name').order('sort_order'),
+      supabase.from('plans').select('id, slug, name, discount_type, discount_value').order('sort_order'),
       supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('currency', 'USD'),
       supabase.from('org_members').select('user_id, org_id, role').eq('role', 'owner'),
       supabase.from('platform_members').select('user_id').eq('is_active', true),
     ]);
 
     type SubRaw = { id: string; user_id: string; plan_id: string; status: string; billing_interval: string | null; current_period_start: string; current_period_end: string; cancel_at_period_end: boolean; stripe_subscription_id: string | null; stripe_customer_id: string | null; created_at: string };
-    type PlanRaw = { id: string; slug: string; name: string };
+    type PlanRaw = { id: string; slug: string; name: string; discount_type: string | null; discount_value: number | null };
     type PriceRaw = { plan_id: string; billing_interval: string; amount_cents: number };
+    function applyPlanDiscount(plan: PlanRaw | undefined, cents: number): number {
+      if (!plan?.discount_type || !plan.discount_value || plan.discount_value <= 0) return cents;
+      const v = Number(plan.discount_value);
+      if (plan.discount_type === 'percent') return Math.max(0, Math.round(cents * (1 - v / 100)));
+      if (plan.discount_type === 'fixed') return Math.max(0, cents - Math.round(v * 100));
+      return cents;
+    }
     type OrgMemberRaw = { user_id: string; org_id: string; role: string };
 
     const allSubsRaw = (subsRes.data ?? []) as SubRaw[];
@@ -545,7 +552,8 @@ export function SubscriptionsPage() {
     const enriched: SubRow[] = subs.map((s) => {
       const plan = planById.get(s.plan_id);
       const interval = s.billing_interval ?? 'monthly';
-      const planPrice = priceMap.get(`${s.plan_id}:${interval}`) ?? priceMap.get(`${s.plan_id}:monthly`) ?? 0;
+      const rawPlanPrice = priceMap.get(`${s.plan_id}:${interval}`) ?? priceMap.get(`${s.plan_id}:monthly`) ?? 0;
+      const planPrice = applyPlanDiscount(plan, rawPlanPrice);
       const orgId = orgByOwner.get(s.user_id) ?? null;
       const org = orgId ? orgById.get(orgId) : null;
       const ov = orgId ? overrideByOrg.get(orgId) : undefined;
@@ -554,10 +562,11 @@ export function SubscriptionsPage() {
         : null;
       const amountCents = customMonthly ?? planPrice; // MRR-normalized monthly
       // contractCents = what client actually pays per billing cycle
+      const rawAnnualPrice = priceMap.get(`${s.plan_id}:annual`) ?? rawPlanPrice;
       const contractCents = ov?.custom_price_cents != null
         ? ov.custom_price_cents
         : interval === 'annual'
-          ? (priceMap.get(`${s.plan_id}:annual`) ?? planPrice)
+          ? applyPlanDiscount(plan, rawAnnualPrice)
           : planPrice;
       const contractInterval = ov?.billing_interval ?? s.billing_interval;
       const planSlug = plan?.slug ?? 'free';

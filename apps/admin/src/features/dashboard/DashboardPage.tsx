@@ -436,6 +436,21 @@ export function DashboardPage() {
         supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('currency', 'USD'),
       ]);
 
+      // Build discount map: plan_id → discounted price lookup
+      const discountPlansRes = await supabase.from('plans').select('id, discount_type, discount_value');
+      type DiscountRaw = { id: string; discount_type: string | null; discount_value: number | null };
+      const discountMap = new Map<string, DiscountRaw>(
+        ((discountPlansRes.data ?? []) as DiscountRaw[]).map((p) => [p.id, p])
+      );
+      function applyPlanDiscount(planId: string, cents: number): number {
+        const d = discountMap.get(planId);
+        if (!d?.discount_type || !d.discount_value || d.discount_value <= 0) return cents;
+        const v = Number(d.discount_value);
+        if (d.discount_type === 'percent') return Math.max(0, Math.round(cents * (1 - v / 100)));
+        if (d.discount_type === 'fixed') return Math.max(0, cents - Math.round(v * 100));
+        return cents;
+      }
+
       // Customer users = distinct org_members, excluding internal staff
       type OrgMemberRow = { user_id: string; created_at: string };
       const orgMembers = ((orgMembersRes.data ?? []) as OrgMemberRow[]).filter(m => !internalIds.includes(m.user_id));
@@ -448,7 +463,8 @@ export function DashboardPage() {
       const priceMap = new Map(prices.map(p => [`${p.plan_id}:${p.billing_interval}`, p.amount_cents]));
       const mrrCents = activeSubs.reduce((sum, s) => {
         const interval = s.billing_interval ?? 'monthly';
-        const cents = priceMap.get(`${s.plan_id}:${interval}`) ?? 0;
+        const rawCents = priceMap.get(`${s.plan_id}:${interval}`) ?? 0;
+        const cents = applyPlanDiscount(s.plan_id, rawCents);
         return sum + (interval === 'annual' ? Math.round(cents / 12) : cents);
       }, 0);
 
