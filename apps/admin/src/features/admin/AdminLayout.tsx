@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+ï»¿import { useState, useRef, useEffect, useCallback } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAdminAuthStore } from '@/features/auth/auth.store';
 import { adminAuthService } from '@/features/auth/auth.service';
@@ -213,6 +213,15 @@ const NAV_SETTINGS_GROUPS: SettingsSection[] = [
         icon: (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        ),
+      },
+      {
+        to: '/settings/website/team',
+        label: 'Team Members',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         ),
       },
@@ -457,7 +466,7 @@ function AdminSearch() {
           value={query}
           onChange={e => setQuery(e.target.value)}
           onFocus={() => setFocused(true)}
-          placeholder={focused ? 'Search anything…' : 'Search  ?K'}
+          placeholder={focused ? 'Search anythingï¿½' : 'Search  ?K'}
           className="flex-1 text-xs text-[#111827] placeholder-[#9CA3AF] focus:outline-none bg-transparent min-w-0"
         />
         {query && (
@@ -776,7 +785,7 @@ function AdminProfile() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
             </svg>
-            {signingOut ? 'Signing out…' : 'Sign out'}
+            {signingOut ? 'Signing outï¿½' : 'Sign out'}
           </button>
         </div>
       )}
@@ -952,7 +961,7 @@ export function AdminLayout() {
           <img src="/images/logo.png" alt="Moffu" className="h-8 w-auto" />
         </div>
 
-        {/* Nav — contextual: shows only the active group's items */}
+        {/* Nav ï¿½ contextual: shows only the active group's items */}
         <nav className="flex-1 overflow-y-auto px-2.5 py-4 flex flex-col">
           <div className="flex-1">
             {activeGroup.label === 'Settings' ? (
