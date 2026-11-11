@@ -73,11 +73,12 @@ function UsageBar({ value, max, color }: { value: number; max: number; color: st
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export function UsagePage() {
-  const [orgs, setOrgs]         = useState<OrgRow[]>([]);
-  const [members, setMembers]   = useState<OrgMemberRow[]>([]);
-  const [subs, setSubs]         = useState<SubRow[]>([]);
-  const [events, setEvents]     = useState<UsageRow[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [orgs, setOrgs]               = useState<OrgRow[]>([]);
+  const [members, setMembers]         = useState<OrgMemberRow[]>([]);
+  const [internalIds, setInternalIds] = useState<Set<string>>(new Set());
+  const [subs, setSubs]               = useState<SubRow[]>([]);
+  const [events, setEvents]           = useState<UsageRow[]>([]);
+  const [loading, setLoading]         = useState(true);
 
   const [dateFrom, setDateFrom] = useState(monthStart);
   const [dateTo,   setDateTo]   = useState(today);
@@ -94,9 +95,10 @@ export function UsagePage() {
     const from = dateFrom || '2000-01-01';
     const to   = dateTo   || today();
 
-    const [orgsRes, membersRes, subsRes, eventsRes] = await Promise.all([
+    const [orgsRes, membersRes, internalRes, subsRes, eventsRes] = await Promise.all([
       supabase.from('organizations').select('id, name, ref_id, status').order('name'),
       supabase.from('org_members').select('org_id, user_id, role'),
+      supabase.from('platform_members').select('user_id').eq('is_active', true),
       supabase.from('subscriptions')
         .select('user_id, plan_id, status, current_period_start, current_period_end, plans(slug, name)')
         .eq('status', 'active'),
@@ -108,6 +110,7 @@ export function UsagePage() {
 
     setOrgs((orgsRes.data ?? []) as OrgRow[]);
     setMembers((membersRes.data ?? []) as OrgMemberRow[]);
+    setInternalIds(new Set(((internalRes.data ?? []) as { user_id: string }[]).map(m => m.user_id)));
 
     const rawSubs = (subsRes.data ?? []) as any[];
     setSubs(rawSubs.map(s => ({
@@ -129,10 +132,11 @@ export function UsagePage() {
   // Build per-org usage
   const orgUsage = useMemo<OrgUsage[]>(() => {
     const subByUser = new Map<string, SubRow>(subs.map(s => [s.user_id, s]));
+    const externalMembers = members.filter(m => !internalIds.has(m.user_id));
 
     // Map user_id → org_id (primary: owner first, then any member)
     const userOrg = new Map<string, string>();
-    for (const m of members) userOrg.set(m.user_id, m.org_id);
+    for (const m of externalMembers) userOrg.set(m.user_id, m.org_id);
 
     // Count events per user
     const aiByUser    = new Map<string, number>();
@@ -142,15 +146,15 @@ export function UsagePage() {
       if (e.event_type === 'published_reply') pubByUser.set(e.user_id, (pubByUser.get(e.user_id) ?? 0) + 1);
     }
 
-    // Find owner per org (for plan lookup)
+    // Find owner per org (for plan lookup) — use all members (including internal) for ownership resolution only
     const ownerByOrg = new Map<string, string>();
     for (const m of members) {
       if (m.role === 'owner') ownerByOrg.set(m.org_id, m.user_id);
     }
 
-    // Count members per org
+    // Count members per org — exclude internal platform members
     const memberCountByOrg = new Map<string, number>();
-    for (const m of members) memberCountByOrg.set(m.org_id, (memberCountByOrg.get(m.org_id) ?? 0) + 1);
+    for (const m of externalMembers) memberCountByOrg.set(m.org_id, (memberCountByOrg.get(m.org_id) ?? 0) + 1);
 
     // Aggregate per org
     const orgMap = new Map<string, { ai: number; pub: number }>();
@@ -182,7 +186,7 @@ export function UsagePage() {
         periodEnd:   sub?.current_period_end   ?? dateTo,
       };
     });
-  }, [orgs, members, subs, events, dateFrom, dateTo]);
+  }, [orgs, members, internalIds, subs, events, dateFrom, dateTo]);
 
   const filtered = useMemo(() => {
     let rows = orgUsage;
