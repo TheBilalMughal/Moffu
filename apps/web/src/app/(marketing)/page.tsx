@@ -5,13 +5,13 @@ import React from 'react';
 
 export const metadata: Metadata = {
   title: 'AI Google Review Reply Software',
-  description: 'Reply to every Google Business Profile review in your brand voice. Moffu drafts on-brand replies you approve in one click. Start free, no credit card required.',
+  description: 'Auto-reply to Google reviews with AI. Moffu drafts on-brand responses for every star rating, you approve in one click. Free to start.',
   alternates: {
     canonical: 'https://www.moffu.pro',
   },
   openGraph: {
     title: 'AI Google Review Reply Software | Moffu',
-    description: 'Reply to every Google Business Profile review in your brand voice. Moffu drafts on-brand replies you approve in one click. Start free, no credit card required.',
+    description: 'Auto-reply to Google reviews with AI. Moffu drafts on-brand responses for every star rating, you approve in one click. Free to start.',
     url: 'https://www.moffu.pro',
     images: [{ url: '/images/og-home.png', width: 1200, height: 630, alt: 'Moffu AI Google Review Reply Software' }],
   },
