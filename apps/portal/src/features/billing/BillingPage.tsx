@@ -22,6 +22,13 @@ function cents(amount: number) {
   return `$${(amount / 100).toFixed(amount % 100 === 0 ? 0 : 2)}`;
 }
 
+function applyDiscount(amountCents: number, type: 'fixed' | 'percent' | null, value: number | null): number {
+  if (!type || !value || value <= 0) return amountCents;
+  if (type === 'percent') return Math.max(0, Math.round(amountCents * (1 - value / 100)));
+  if (type === 'fixed') return Math.max(0, amountCents - Math.round(value * 100));
+  return amountCents;
+}
+
 function formatEntitlement(ent: { value_type: string; limit_value: number | null; bool_value: boolean | null; enum_value: string | null; usage_reset: string | null } | undefined): string {
   if (!ent) return '—';
   if (ent.value_type === 'UNLIMITED') return 'Unlimited';
@@ -871,18 +878,38 @@ export function BillingPage() {
                     <span className={`text-sm font-semibold ${isScale ? 'text-stone-300' : 'text-[#374151]'}`}>Custom pricing</span>
                   ) : price && price.amount_cents > 0 ? (
                     <>
-                      <div className="flex items-end gap-1">
-                        <span className={`text-3xl font-bold ${isScale ? 'text-white' : 'text-[#111827]'}`}>{cents(price.amount_cents)}</span>
-                        <span className={`text-sm mb-1 ${isScale ? 'text-stone-400' : 'text-[#9CA3AF]'}`}>/mo</span>
-                      </div>
-                      {billingInterval === 'annual' && monthlyPrice && price && (
-                        <p className={`text-[11px] mt-1 ${isScale ? 'text-stone-400' : 'text-[#9CA3AF]'}`}>
-                          Billed {cents(price.amount_cents * 12)}/yr
-                          <span className="ml-1.5 text-emerald-500 font-semibold">
-                            Save {cents((monthlyPrice.amount_cents - price.amount_cents) * 12)}/yr
-                          </span>
-                        </p>
-                      )}
+                      {(() => {
+                        const discountedCents = applyDiscount(price.amount_cents, plan.discount_type, plan.discount_value);
+                        const hasDiscount = discountedCents < price.amount_cents;
+                        return (
+                          <>
+                            {hasDiscount && (
+                              <p className={`text-sm line-through mb-0.5 ${isScale ? 'text-stone-500' : 'text-[#9CA3AF]'}`}>
+                                {cents(price.amount_cents)}/mo
+                              </p>
+                            )}
+                            <div className="flex items-end gap-1">
+                              <span className={`text-3xl font-bold ${isScale ? 'text-white' : 'text-[#111827]'}`}>{cents(discountedCents)}</span>
+                              <span className={`text-sm mb-1 ${isScale ? 'text-stone-400' : 'text-[#9CA3AF]'}`}>/mo</span>
+                              {hasDiscount && (
+                                <span className="mb-1.5 ml-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                  {plan.discount_type === 'percent' ? `-${plan.discount_value}%` : `-${cents(Math.round((plan.discount_value ?? 0) * 100))}`}
+                                </span>
+                              )}
+                            </div>
+                            {billingInterval === 'annual' && monthlyPrice && price && (
+                              <p className={`text-[11px] mt-1 ${isScale ? 'text-stone-400' : 'text-[#9CA3AF]'}`}>
+                                Billed {cents(applyDiscount(price.amount_cents, plan.discount_type, plan.discount_value) * 12)}/yr
+                                {monthlyPrice.amount_cents !== price.amount_cents && (
+                                  <span className="ml-1.5 text-emerald-500 font-semibold">
+                                    Save {cents((applyDiscount(monthlyPrice.amount_cents, plan.discount_type, plan.discount_value) - applyDiscount(price.amount_cents, plan.discount_type, plan.discount_value)) * 12)}/yr
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                          </>
+                        );
+                      })()}
                     </>
                   ) : (
                     <span className={`text-3xl font-bold ${isScale ? 'text-white' : 'text-[#111827]'}`}>Free</span>

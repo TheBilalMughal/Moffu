@@ -30,6 +30,8 @@ interface Plan {
   contact_sales: boolean;
   sort_order: number;
   created_at: string;
+  discount_type: 'fixed' | 'percent' | null;
+  discount_value: number | null;
   prices: PlanPrice[];
   entitlements: Record<string, PlanEntitlement>;
 }
@@ -68,6 +70,8 @@ interface PlanForm {
   monthly_price: string;
   annual_discount: string;
   currency: string;
+  discount_type: 'fixed' | 'percent' | '';
+  discount_value: string;
   limits: LimitsForm;
 }
 
@@ -114,6 +118,8 @@ const EMPTY_FORM: PlanForm = {
   monthly_price: '0',
   annual_discount: '20',
   currency: 'USD',
+  discount_type: '',
+  discount_value: '',
   limits: { ...DEFAULT_LIMITS },
 };
 
@@ -167,7 +173,7 @@ export function PackagesSettingsPage() {
   async function fetchPlans() {
     setLoading(true);
     const [{ data: plansData }, { data: pricesData }, { data: entsData }] = await Promise.all([
-      supabase.from('plans').select('id, slug, name, description, features, badge_text, is_featured, is_active, contact_sales, sort_order, created_at').order('sort_order'),
+      supabase.from('plans').select('id, slug, name, description, features, badge_text, is_featured, is_active, contact_sales, sort_order, created_at, discount_type, discount_value').order('sort_order'),
       supabase.from('plan_prices').select('id, plan_id, billing_interval, amount_cents, currency'),
       supabase.from('plan_entitlements').select('plan_id, key, value_type, limit_value, bool_value, enum_value, usage_reset'),
     ]);
@@ -187,6 +193,8 @@ export function PackagesSettingsPage() {
     setPlans((plansData ?? []).map((p: any) => ({
       ...p,
       features: Array.isArray(p.features) ? p.features : [],
+      discount_type: (p.discount_type as 'fixed' | 'percent' | null) ?? null,
+      discount_value: p.discount_value ?? null,
       prices: priceMap[p.id] ?? [],
       entitlements: entMap[p.id] ?? {},
     })));
@@ -225,6 +233,8 @@ export function PackagesSettingsPage() {
       annual_discount: String(discount),
       currency: monthly?.currency ?? 'USD',
       contact_sales: plan.contact_sales ?? false,
+      discount_type: plan.discount_type ?? '',
+      discount_value: plan.discount_value != null ? String(plan.discount_value) : '',
       limits: entsToLimits(plan.entitlements),
     });
     setFeatureInput('');
@@ -261,6 +271,7 @@ export function PackagesSettingsPage() {
 
     setSaving(true);
 
+    const discountVal = parseFloat(form.discount_value || '0');
     const planPayload = {
       slug,
       name: form.name.trim(),
@@ -271,6 +282,8 @@ export function PackagesSettingsPage() {
       is_active: form.is_active,
       contact_sales: form.contact_sales,
       sort_order: form.sort_order,
+      discount_type: form.discount_type || null,
+      discount_value: form.discount_type && discountVal > 0 ? discountVal : null,
     };
 
     let planId: string;
@@ -420,6 +433,11 @@ export function PackagesSettingsPage() {
                         <p className="text-sm font-semibold text-[#111827]">
                           {monthly ? formatPrice(monthly.amount_cents, monthly.currency) : '—'}
                           <span className="text-xs font-normal text-[#9CA3AF]">/mo</span>
+                          {plan.discount_type && plan.discount_value && plan.discount_value > 0 && (
+                            <span className="ml-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                              {plan.discount_type === 'percent' ? `-${plan.discount_value}%` : `-$${plan.discount_value}`}
+                            </span>
+                          )}
                         </p>
                         {disc > 0 && (
                           <p className="text-[11px] text-[#9CA3AF]">
@@ -794,6 +812,65 @@ export function PackagesSettingsPage() {
                   </p>
                 );
               })()}
+
+              {/* Promotional Discount */}
+              <div>
+                <label className="block text-xs font-semibold text-[#374151] mb-1.5">Promotional Discount <span className="font-normal text-[#9CA3AF]">(optional)</span></label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] text-[#9CA3AF] mb-1">Type</label>
+                    <select
+                      value={form.discount_type}
+                      onChange={e => setForm(f => ({ ...f, discount_type: e.target.value as 'fixed' | 'percent' | '' }))}
+                      className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white"
+                    >
+                      <option value="">No discount</option>
+                      <option value="percent">Percentage (%)</option>
+                      <option value="fixed">Fixed amount ($)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-[#9CA3AF] mb-1">
+                      {form.discount_type === 'percent' ? 'Percentage off' : form.discount_type === 'fixed' ? 'Amount off (USD)' : 'Value'}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        step={form.discount_type === 'percent' ? '1' : '0.01'}
+                        max={form.discount_type === 'percent' ? '100' : undefined}
+                        value={form.discount_value}
+                        onChange={e => setForm(f => ({ ...f, discount_value: e.target.value }))}
+                        disabled={!form.discount_type}
+                        placeholder={form.discount_type === 'percent' ? 'e.g. 20' : form.discount_type === 'fixed' ? 'e.g. 5' : '—'}
+                        className="w-full px-3 py-2 pr-7 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]"
+                      />
+                      {form.discount_type && (
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#9CA3AF]">
+                          {form.discount_type === 'percent' ? '%' : '$'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {form.discount_type && form.discount_value && parseFloat(form.discount_value) > 0 && (() => {
+                  const mo = parseFloat(form.monthly_price || '0');
+                  const dv = parseFloat(form.discount_value);
+                  if (mo <= 0) return null;
+                  const discountedCents = form.discount_type === 'percent'
+                    ? Math.max(0, Math.round(mo * 100 * (1 - dv / 100)))
+                    : Math.max(0, Math.round(mo * 100) - Math.round(dv * 100));
+                  return (
+                    <p className="text-[11px] text-[#6B7280] mt-1.5">
+                      Shown as: <span className="line-through text-[#9CA3AF]">${mo.toFixed(2)}/mo</span>
+                      <span className="ml-1.5 font-semibold text-[#111827]">${(discountedCents / 100).toFixed(2)}/mo</span>
+                      <span className="ml-1.5 text-emerald-600 font-medium">
+                        {form.discount_type === 'percent' ? `-${dv}%` : `-$${dv.toFixed(2)}`}
+                      </span>
+                    </p>
+                  );
+                })()}
+              </div>
 
               {/* Features */}
               <div>

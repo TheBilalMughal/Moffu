@@ -15,6 +15,8 @@ export interface Plan {
   prices: { interval: 'monthly' | 'annual'; amount_cents: number; paddle_price_id: string | null }[];
   entitlements: Record<string, { value_type: string; limit_value: number | null; bool_value: boolean | null; enum_value: string | null; usage_reset: string | null }>;
   location_addon_cents: number | null;
+  discount_type: 'fixed' | 'percent' | null;
+  discount_value: number | null;
 }
 
 export interface AddonItem {
@@ -74,7 +76,7 @@ function periodWindow(sub: Subscription, resetCadence: 'weekly' | 'monthly'): { 
 export const billingService = {
   async getPlans(): Promise<Plan[]> {
     const [plansRes, pricesRes, entRes, addonRes] = await Promise.all([
-      supabase.from('plans').select('id, slug, name, description, features, badge_text, is_featured, contact_sales, sort_order').eq('is_active', true).order('sort_order'),
+      supabase.from('plans').select('id, slug, name, description, features, badge_text, is_featured, contact_sales, sort_order, discount_type, discount_value').eq('is_active', true).order('sort_order'),
       supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents, paddle_price_id').eq('is_active', true),
       supabase.from('plan_entitlements').select('plan_id, key, value_type, limit_value, bool_value, enum_value, usage_reset'),
       supabase.from('plan_location_addons').select('plan_id, unit_price_cents'),
@@ -100,6 +102,8 @@ export const billingService = {
         entitlements.filter(e => e.plan_id === p.id).map(e => [e.key, { value_type: e.value_type, limit_value: e.limit_value, bool_value: e.bool_value, enum_value: e.enum_value, usage_reset: e.usage_reset }])
       ),
       location_addon_cents: addons.find(a => a.plan_id === p.id)?.unit_price_cents ?? null,
+      discount_type: (p.discount_type as 'fixed' | 'percent' | null) ?? null,
+      discount_value: p.discount_value ?? null,
     }));
   },
 
