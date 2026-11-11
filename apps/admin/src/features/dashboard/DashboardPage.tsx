@@ -493,7 +493,7 @@ export function DashboardPage() {
         supabase.from('reviews').select('status'),
         supabase.from('plans').select('id, slug, name').order('sort_order'),
         supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('currency', 'USD'),
-        supabase.from('subscriptions').select('plan_id, billing_interval, status'),
+        supabase.from('subscriptions').select('plan_id, billing_interval, status, user_id'),
         supabase.from('google_connections').select('state'),
         supabase.from('subscriptions').select('status, plan_id, user_id'),
         supabase.from('organizations').select('id, name, created_at, ref_id').order('created_at', { ascending: false }).limit(8),
@@ -544,7 +544,9 @@ export function DashboardPage() {
       // Plan distribution
       const plans = (plansRes.data ?? []) as { id: string; slug: string; name: string }[];
       const prices = (pricesRes.data ?? []) as { plan_id: string; billing_interval: string; amount_cents: number }[];
-      const activeSubs = (activeSubsFullRes.data ?? []) as { plan_id: string; billing_interval: string | null; status: string }[];
+      const chartInternalIdsForPlan = ((internalChartRes.data ?? []) as { user_id: string }[]).map(m => m.user_id);
+      const activeSubs = ((activeSubsFullRes.data ?? []) as { plan_id: string; billing_interval: string | null; status: string; user_id: string }[])
+        .filter(s => !chartInternalIdsForPlan.includes(s.user_id));
       const pmap = new Map(prices.map(p => [`${p.plan_id}:${p.billing_interval}`, p.amount_cents]));
       const planCountMap = new Map<string, number>();
       activeSubs.filter(s => s.status === 'active').forEach(s => {
