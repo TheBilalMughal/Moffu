@@ -215,8 +215,40 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 - From: `feedback@moffu.co` (domain must be verified in Resend account)
 
 ## Phase 7 — Admin Portal
-- Internal platform management
-- Depends on core feature set being stable
+**LARGELY COMPLETE** ✅ (checklist updated 2026-11-11)
+
+**Pages built and routed in `apps/admin`:**
+- `DashboardPage` — real KPIs (orgs, users, MRR, active subs, reviews, AI drafts, Google connections), daily/monthly charts, plan distribution, top orgs, live audit feed
+- `ClientsPage` + `ClientDetailPage` — org list (search/filter/sort), org 360 view with sub + members + impersonate + Google status + usage
+- `PlatformMembersPage` + `TeamMemberDetailPage` — platform team management; invite/create via `admin-create-user` Edge Function; bulk delete via `admin-delete-member`
+- `RolesPage` — role/permission reference view
+- `AuditPage` — full audit_events log with filters
+- `SubscriptionsPage` — all subscriptions, Promo badge for discounted plans, plan override
+- `PaymentsPage` — payment history
+- `MRRPage` — MRR chart and breakdown
+- `CouponsPage` — create/manage discount coupons
+- `RefundsPage` — refund management
+- `UsagePage` — AI draft + reply usage per org
+- `ReportsPage` — analytics reports
+- `BroadcastPage` — send notifications to all/plan/org/user via `admin-broadcast` Edge Function
+- `WaitlistPage` — waitlist management
+- `FeatureFlagsPage` — create/toggle feature flags (owner/super_admin only)
+- `IntegrationsHealthPage` — Google connection health per org
+- `ProfilePage` — admin user profile
+- `AdminLayout` — global search (orgs + profiles, debounced, Cmd+K)
+- Settings: AI, Google, Sync, Email, Security, General, ClientLogo, WebsiteTeam, Instagram, Packages
+
+**Impersonation:** `admin-impersonate` Edge Function wired in `ClientDetailPage` per member row; opens portal magic link in new tab; audit logged.
+
+**Owner role:** granted same permissions as `super_admin` across all Edge Functions (`admin-impersonate`, `admin-create-user`, `admin-delete-member`, `admin-broadcast`).
+
+**Dead code (not in routes, superseded):**
+- `OrgsPage.tsx`, `OrgDetailPage.tsx` — older versions before `ClientsPage`/`ClientDetailPage`; can be deleted
+- `WebsiteAutomationPage.tsx`, `WebsiteBrandingPage.tsx` — created but not routed
+
+**Pending:**
+- ADMIN-005: Org/user suspension and restriction UI
+- ADMIN-013: Regions/countries/currencies management UI
 
 ## External/configuration pending
 - `VITE_WEB_URL` → set to `https://moffu.vercel.app` in portalmoffu Vercel project (for "Back to website" link in prod)

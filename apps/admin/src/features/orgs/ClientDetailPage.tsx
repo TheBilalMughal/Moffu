@@ -218,8 +218,13 @@ export function ClientDetailPage() {
   const [overrideMsg, setOverrideMsg] = useState<string | null>(null);
   const [overrideEditing, setOverrideEditing] = useState(false);
 
-  // Plan change
+  // Suspension modal
+  const [showSuspendModal, setShowSuspendModal] = useState(false);
+  const [suspendReason, setSuspendReason] = useState('');
+  const [suspendNote, setSuspendNote] = useState('');
   const [toggling, setToggling] = useState(false);
+
+  // Plan change
   const [changingPlan, setChangingPlan] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState('');
   const [planMsg, setPlanMsg] = useState<string | null>(null);
@@ -451,9 +456,40 @@ export function ClientDetailPage() {
 
   async function handleToggleStatus() {
     if (!org) return;
+    if (org.status !== 'suspended') {
+      // Open modal to collect reason before suspending
+      setSuspendReason('');
+      setSuspendNote('');
+      setShowSuspendModal(true);
+      return;
+    }
+    // Reactivate — no modal needed
     setToggling(true);
-    const newStatus = org.status === 'suspended' ? 'active' : 'suspended';
-    await supabase.from('organizations').update({ status: newStatus }).eq('id', org.id);
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from('organizations').update({ status: 'active' }).eq('id', org.id);
+    if (user) {
+      await supabase.from('audit_events').insert({
+        actor_id: user.id, action: 'admin_reactivate_org',
+        target_type: 'organization', target_id: org.id,
+        meta: { org_name: org.name },
+      });
+    }
+    setToggling(false); load();
+  }
+
+  async function handleConfirmSuspend() {
+    if (!org || !suspendReason) return;
+    setToggling(true);
+    setShowSuspendModal(false);
+    const { data: { user } } = await supabase.auth.getUser();
+    await supabase.from('organizations').update({ status: 'suspended' }).eq('id', org.id);
+    if (user) {
+      await supabase.from('audit_events').insert({
+        actor_id: user.id, action: 'admin_suspend_org',
+        target_type: 'organization', target_id: org.id,
+        meta: { org_name: org.name, reason: suspendReason, note: suspendNote || null },
+      });
+    }
     setToggling(false); load();
   }
 
@@ -1114,6 +1150,63 @@ export function ClientDetailPage() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Suspend Confirmation Modal ── */}
+      {showSuspendModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowSuspendModal(false)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6" onClick={e => e.stopPropagation()}>
+            <h2 className="text-base font-semibold text-[#111827] mb-1">Suspend {org.name}?</h2>
+            <p className="text-sm text-[#6B7280] mb-5">The organization will lose access to the portal. Select a reason before proceeding.</p>
+
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-[#374151] mb-1.5">Reason <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <select
+                  value={suspendReason}
+                  onChange={e => setSuspendReason(e.target.value)}
+                  className="w-full appearance-none border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 focus:border-[#6C55E8] bg-white pr-8"
+                >
+                  <option value="">Select a reason…</option>
+                  <option value="payment_issue">Payment issue</option>
+                  <option value="policy_violation">Policy violation</option>
+                  <option value="fraud_suspicion">Fraud suspicion</option>
+                  <option value="spam_abuse">Spam / abuse</option>
+                  <option value="account_request">Account request (customer asked)</option>
+                  <option value="other">Other</option>
+                </select>
+                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <label className="block text-xs font-medium text-[#374151] mb-1.5">Additional note <span className="text-[#9CA3AF] font-normal">(optional)</span></label>
+              <textarea
+                value={suspendNote}
+                onChange={e => setSuspendNote(e.target.value)}
+                placeholder="Add context visible in the audit log…"
+                rows={3}
+                className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/30 focus:border-[#6C55E8] resize-none"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowSuspendModal(false)}
+                className="px-4 py-2 text-sm font-medium text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSuspend}
+                disabled={!suspendReason || toggling}
+                className="px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {toggling ? 'Suspending…' : 'Suspend Organization'}
+              </button>
+            </div>
           </div>
         </div>
       )}

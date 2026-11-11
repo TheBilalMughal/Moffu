@@ -79,20 +79,20 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | CUSTOMER-011 | Profile/security | PENDING | - | - |
 | CUSTOMER-012 | Privacy/data | PENDING | - | - |
 | CUSTOMER-013 | Support | PENDING | - | - |
-| ADMIN-001 | Action dashboard | PENDING | - | - |
-| ADMIN-002 | Global search | PENDING | - | - |
-| ADMIN-003 | Org 360 | PENDING | - | - |
-| ADMIN-004 | User management | PENDING | - | - |
-| ADMIN-005 | Restrictions | PENDING | - | - |
-| ADMIN-006 | Internal notes | PENDING | - | - |
-| ADMIN-007 | Impersonation | PENDING | - | - |
-| ADMIN-008 | Google troubleshooting | PENDING | - | - |
-| ADMIN-009 | AI activity | PENDING | - | - |
-| ADMIN-010 | System health | PENDING | - | - |
-| ADMIN-011 | Logs/audit | PENDING | - | - |
-| ADMIN-012 | Refund workflow | PENDING | - | - |
-| ADMIN-013 | Regions/countries/currencies | PENDING | - | Reference tables seeded (all inactive); admin UI TBD |
-| ADMIN-014 | Feature/config controls | PENDING | - | - |
+| ADMIN-001 | Action dashboard | IMPLEMENTED | - | `DashboardPage` — real KPIs (total orgs, users, active subs, MRR, reviews, AI drafts, Google connections), daily/monthly charts, plan distribution bar, top orgs table, live audit feed; DateRangePicker wired |
+| ADMIN-002 | Global search | IMPLEMENTED | - | AdminLayout topbar search — debounced 280ms, queries `organizations` + `profiles`, navigates to `/clients/:id` or `/users/:id`; Cmd+K shortcut |
+| ADMIN-003 | Org 360 | IMPLEMENTED | - | `ClientDetailPage` — org info, subscription + plan badge + Promo badge, member list with roles, impersonate button per member, Google connection status, usage stats |
+| ADMIN-004 | User management | IMPLEMENTED | - | `PlatformMembersPage` (list + invite + bulk delete) + `TeamMemberDetailPage` (role, activity, permissions); `admin-create-user` + `admin-delete-member` Edge Functions; owner role has full super_admin permissions |
+| ADMIN-005 | Restrictions | PENDING | - | No org/user suspension or block UI yet |
+| ADMIN-006 | Internal notes | REMOVED | - | Deliberately removed from product scope |
+| ADMIN-007 | Impersonation | IMPLEMENTED | - | `ClientDetailPage` "Impersonate" button per member → `admin-impersonate` Edge Function → magic link → opens portal in new tab; audit logged |
+| ADMIN-008 | Google troubleshooting | IMPLEMENTED | - | `IntegrationsHealthPage` — per-org Google connection status, error states, last sync timestamps |
+| ADMIN-009 | AI activity | IMPLEMENTED | - | `UsagePage` — AI draft + reply usage per org, date range filter, plan breakdown |
+| ADMIN-010 | System health | IMPLEMENTED | - | `IntegrationsHealthPage` covers Google/integration health; `ReportsPage` for broader analytics |
+| ADMIN-011 | Logs/audit | IMPLEMENTED | - | `AuditPage` — full audit_events table, actor/action/target columns, date + action filters, pagination |
+| ADMIN-012 | Refund workflow | IMPLEMENTED | - | `RefundsPage` — refund list with status badges; `PaymentsPage` — payment history; both wired to Paddle data |
+| ADMIN-013 | Regions/countries/currencies | DEFERRED | - | V1 is USD-only globally; Paddle handles currency conversion. Reference tables seeded but all inactive. Admin UI deferred to future multi-currency phase. |
+| ADMIN-014 | Feature/config controls | IMPLEMENTED | - | `FeatureFlagsPage` — create/toggle/delete feature flags per org or globally; owner/super_admin only |
 | BILLING-001 | Versioned plans | IMPLEMENTED | - | `plans` table seeded: Free/Starter/Growth/Scale; migration 008 applied to `kgttncfkzdrgswfkkdji` |
 | BILLING-002 | Versioned prices | IMPLEMENTED | - | `plan_prices`: monthly + annual per plan; USD only V1 |
 | BILLING-003 | Entitlements | IMPLEMENTED | - | `plan_entitlements`: LIMIT/UNLIMITED/BOOLEAN/ENUM per plan; usage_reset weekly (Free) or monthly (paid). D-014 runtime-verified via billingService.getUsage() |
