@@ -884,7 +884,7 @@ export function BillingPage() {
                         return (
                           <>
                             {hasDiscount && (
-                              <p className={`text-sm line-through mb-0.5 ${isScale ? 'text-stone-500' : 'text-[#9CA3AF]'}`}>
+                              <p className={`text-lg line-through mb-0.5 ${isScale ? 'text-stone-500' : 'text-[#9CA3AF]'}`}>
                                 {cents(price.amount_cents)}/mo
                               </p>
                             )}

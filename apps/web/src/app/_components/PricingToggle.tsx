@@ -164,7 +164,7 @@ export function PricingToggle({
                 ) : (
                   <>
                     {hasPromoDiscount && (
-                      <p className={`text-sm line-through mb-0.5 ${featured ? 'text-white/35' : 'text-[#111827]/35'}`}>
+                      <p className={`text-lg line-through mb-0.5 ${featured ? 'text-white/35' : 'text-[#111827]/35'}`}>
                         ${originalPrice}/month
                       </p>
                     )}
