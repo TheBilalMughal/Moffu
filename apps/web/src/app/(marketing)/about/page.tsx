@@ -19,7 +19,7 @@ const VALUES = [
   },
   {
     title: 'You stay in control',
-    body: 'AI drafts, you approve. We will never auto-publish a reply without your sign-off. Your brand voice is yours — we just help you use it faster.',
+    body: 'AI drafts, you approve. We will never auto-publish a reply without your sign-off. Your brand voice is yours. We just help you use it faster.',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -28,7 +28,7 @@ const VALUES = [
   },
   {
     title: 'Honest by default',
-    body: 'No fake engagement, no auto-spam, no reply farms. Every response we help you write is genuine — it reflects your business, not a template.',
+    body: 'No fake engagement, no auto-spam, no reply farms. Every response we help you write is genuine: it reflects your business, not a template.',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
@@ -81,7 +81,7 @@ export default function AboutPage() {
                 Moffu started with a simple observation: businesses with the best products were losing to competitors who just replied faster. A 1-star review with no response looks worse than a 1-star review with a thoughtful, human reply.
               </p>
               <p>
-                The problem was never that owners did not care. It was that writing a good reply for every single review — across multiple locations, in the right tone, without sounding robotic — takes real time. Time that a restaurant manager, a clinic owner, or a shop floor supervisor simply does not have between shifts.
+                The problem was never that owners did not care. It was that writing a good reply for every single review, across multiple locations, in the right tone, without sounding robotic, takes real time. Time that a restaurant manager, a clinic owner, or a shop floor supervisor simply does not have between shifts.
               </p>
               <p>
                 So we built Moffu. Not an auto-responder that blasts generic text. A tool that learns your brand voice and drafts replies that actually sound like you wrote them. You stay in control. The AI does the heavy lifting.
@@ -125,7 +125,7 @@ export default function AboutPage() {
                 Brand Brain is the difference.
               </h2>
               <p className="text-[#6B7280] leading-relaxed mb-8">
-                Most AI tools give you generic output because they know nothing about your business. Brand Brain changes that. You configure it once with your tone, language, and reply rules per star rating. Every draft comes out sounding like you — not a chatbot.
+                Most AI tools give you generic output because they know nothing about your business. Brand Brain changes that. You configure it once with your tone, language, and reply rules per star rating. Every draft comes out sounding like you, not a chatbot.
               </p>
               <div className="space-y-3">
                 {[

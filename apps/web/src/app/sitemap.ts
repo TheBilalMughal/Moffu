@@ -1,11 +1,20 @@
 import type { MetadataRoute } from 'next';
+import { POSTS } from './(marketing)/blog/posts';
 
 const BASE = 'https://www.moffu.pro';
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const blogPosts: MetadataRoute.Sitemap = POSTS.map((p) => ({
+    url: `${BASE}/blog/${p.slug}`,
+    lastModified: new Date(p.dateISO),
+    changeFrequency: 'monthly',
+    priority: 0.7,
+  }));
+
   return [
     { url: BASE, lastModified: new Date(), changeFrequency: 'weekly', priority: 1.0 },
     { url: `${BASE}/feature`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${BASE}/blog`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.85 },
     { url: `${BASE}/about`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE}/help`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE}/contact`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.5 },
@@ -14,5 +23,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/refund`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
     { url: `${BASE}/cookies`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },
     { url: `${BASE}/gdpr`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },
+    ...blogPosts,
   ];
 }

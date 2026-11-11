@@ -42,13 +42,12 @@ function HeroSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean;
 
           <div className="flex flex-col items-center gap-4 w-full max-w-xl mx-auto">
             <HeroEmailForm portalUrl={portalUrl} />
-            <p className="text-sm text-[#111827]/60">no credit card needed &nbsp;·&nbsp; free forever, no cap.</p>
+            <p className="text-sm text-[#111827]/60">no credit card needed &nbsp;·&nbsp; free forever.</p>
           </div>
 
           {/* Social proof strip */}
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-10">
             {[
-              { stat: '10k+', label: 'reviews replied' },
               { stat: '4.9★', label: 'avg rating boost' },
               { stat: '2 min', label: 'setup, literally' },
             ].map(({ stat, label }) => (
@@ -607,7 +606,7 @@ function FAQSection() {
         <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-black text-[#111827] leading-[1.1] mb-10">
           Common questions.
         </h2>
-        <div className="grid md:grid-cols-2 gap-3">
+        <div className="grid gap-3">
           {FAQ_ITEMS.map((item) => (
             <details key={item.q} className="group border border-[#E5E7EB] rounded-xl overflow-hidden bg-white">
               <summary className="flex items-center justify-between px-6 py-5 cursor-pointer list-none select-none hover:bg-[#F3F4F6] transition-colors duration-150">
@@ -653,7 +652,7 @@ export default async function HomePage() {
       <ValuePropSection />
       <BrandsSection brands={brands} speed={marqueeSpeed} />
       <FeaturesSection />
-      <CaseStudySection />
+      {/* <CaseStudySection /> */}
       <PricingSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       <FAQSection />
     </main>
