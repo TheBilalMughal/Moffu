@@ -32,7 +32,7 @@ serve(async (req) => {
       .eq('is_active', true)
       .maybeSingle();
 
-    if (!callerMember || !['super_admin', 'admin'].includes(callerMember.role)) {
+    if (!callerMember || !['owner', 'super_admin', 'admin'].includes(callerMember.role)) {
       return json({ error: 'Forbidden — super_admin or admin role required' }, 403);
     }
 
@@ -42,8 +42,8 @@ serve(async (req) => {
     if (!password || password.length < 8) return json({ error: 'Password must be at least 8 characters' }, 400);
     if (!VALID_ROLES.includes(role)) return json({ error: `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}` }, 400);
 
-    // Non-super_admin cannot create super_admins
-    if (role === 'super_admin' && callerMember.role !== 'super_admin') {
+    // Only owner/super_admin can create super_admins
+    if (role === 'super_admin' && !['owner', 'super_admin'].includes(callerMember.role)) {
       return json({ error: 'Only super_admin can create other super_admins' }, 403);
     }
 

@@ -29,8 +29,8 @@ serve(async (req) => {
       .eq('is_active', true)
       .maybeSingle();
 
-    // Only super_admin can delete members
-    if (!callerMember || callerMember.role !== 'super_admin') {
+    // Only owner/super_admin can delete members
+    if (!callerMember || !['owner', 'super_admin'].includes(callerMember.role)) {
       return json({ error: 'Forbidden — super_admin role required to delete members' }, 403);
     }
 

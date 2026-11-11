@@ -30,7 +30,7 @@ serve(async (req) => {
       .eq('is_active', true)
       .maybeSingle();
 
-    if (!callerMember || !['super_admin', 'admin', 'support'].includes(callerMember.role)) {
+    if (!callerMember || !['owner', 'super_admin', 'admin', 'support'].includes(callerMember.role)) {
       return json({ error: 'Forbidden — admin, super_admin, or support role required' }, 403);
     }
 

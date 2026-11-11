@@ -32,7 +32,7 @@ serve(async (req) => {
       .eq('is_active', true)
       .single();
 
-    const allowed = ['super_admin', 'admin', 'support', 'operations'];
+    const allowed = ['owner', 'super_admin', 'admin', 'support', 'operations'];
     if (!pm || !allowed.includes(pm.role)) {
       return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { ...CORS, 'Content-Type': 'application/json' } });
     }
