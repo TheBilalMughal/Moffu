@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 const GHOSTING_LETTERS = ['l','e','f','t',' ','o','n',' ','r','e','a','d'];
-const ENDED_LETTERS    = ['R','E','P','L','I','E','D','.'];
+const ENDED_LETTERS    = ['R','E','P','L','I','E','D'];
 const CYCLE_MS = 4000;
 
 export function HeroHeadline() {
@@ -85,7 +85,7 @@ export function HeroHeadline() {
         {/* REPLIED. — bigger, bounce in then celebrate */}
         <span
           className={`block text-[clamp(4rem,12vw,10rem)] ${endedDone ? 'ended-celebrate' : ''}`}
-          aria-label="REPLIED."
+          aria-label="REPLIED"
         >
           {ENDED_LETTERS.map((letter, i) => {
             const isDot = letter === '.';
