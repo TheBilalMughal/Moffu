@@ -60,40 +60,43 @@ export function InstagramSectionClient({ posts, firstHandle }: { posts: Post[]; 
             {posts.map((post) => {
               const cleanHandle = post.handle.replace(/^@/, '');
               return (
-                <button
+                <div
                   key={post.id}
+                  className="group bg-white rounded-2xl border border-[#E5E7EB] overflow-hidden hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-0.5 flex flex-col cursor-pointer"
                   onClick={() => setActive(post)}
-                  className="group relative block w-full overflow-hidden rounded-2xl bg-[#111827] aspect-[9/16] shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
-                  aria-label={post.title ?? `Instagram post by @${cleanHandle}`}
                 >
-                  {post.thumbnail_url ? (
-                    <img
-                      src={post.thumbnail_url}
-                      alt={post.title ?? `Instagram post by @${cleanHandle}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-[#1F2937]">
-                      <svg className="w-10 h-10 text-white/40" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-                      <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
+                  {/* Thumbnail */}
+                  <div className="relative w-full aspect-[9/16] bg-[#111827] flex-shrink-0 overflow-hidden">
+                    {post.thumbnail_url ? (
+                      <img
+                        src={post.thumbnail_url}
+                        alt={post.title ?? `@${cleanHandle}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-[#1F2937]">
+                        <svg className="w-10 h-10 text-white/40" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    )}
+                    {/* Play overlay */}
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+                        <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
                     </div>
                   </div>
-                  {post.title && (
-                    <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-1 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                      <p className="text-white/60 text-[10px] font-medium">@{cleanHandle}</p>
-                      <p className="text-white text-xs font-semibold mt-0.5 line-clamp-2">{post.title}</p>
-                    </div>
-                  )}
-                </button>
+                  {/* Info */}
+                  <div className="flex flex-col flex-1 p-4">
+                    <p className="font-black text-[#111827] text-sm leading-snug">@{cleanHandle}</p>
+                    {post.title && (
+                      <p className="text-xs text-[#6B7280] mt-1 line-clamp-2">{post.title}</p>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
