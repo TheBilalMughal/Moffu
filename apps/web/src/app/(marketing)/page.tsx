@@ -626,7 +626,7 @@ async function TeamSection() {
           </div>
           <a
             href="/team"
-            className="inline-flex items-center gap-2 bg-[#111827] hover:bg-[#6C55E8] text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors whitespace-nowrap self-start lg:self-auto"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#6C55E8] hover:text-[#5A42D1] transition-colors whitespace-nowrap self-start lg:self-auto"
           >
             Meet the full team →
           </a>
