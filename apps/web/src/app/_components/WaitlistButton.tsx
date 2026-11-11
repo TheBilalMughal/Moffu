@@ -30,7 +30,7 @@ export function WaitlistButton({
 
   if (!enabled) {
     return (
-      <a href={`${portalUrl}/auth/login`} className={className}>
+      <a href={`${portalUrl}/auth/signup`} className={className}>
         {label}
         {arrow && (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

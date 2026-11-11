@@ -4,7 +4,7 @@ import { WaitlistButton } from '../../_components/WaitlistButton';
 import { createServerClient } from '../../../lib/supabase/server';
 
 export const metadata: Metadata = {
-  title: 'Features — Brand Brain AI Review Responses | Moffu',
+  title: 'Features — Brand Brain AI Review Responses',
   description:
     'Brand Brain is your AI\'s memory. Set your tone, response rules, and personality once — and every Google review reply sounds exactly like you, every time.',
   keywords: [
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     title: 'Features — Brand Brain AI Review Responses',
     description:
       'Set your tone, rules, and personality once. Moffu\'s Brand Brain ensures every review response sounds like you — not a generic bot.',
-    url: 'https://moffu.com/feature',
+    url: 'https://www.moffu.pro/feature',
     siteName: 'Moffu',
     type: 'website',
   },
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     description: 'Teach your AI your brand voice. Every review reply, on-brand.',
   },
   alternates: {
-    canonical: 'https://moffu.com/feature',
+    canonical: 'https://www.moffu.pro/feature',
   },
 };
 
@@ -144,8 +144,8 @@ const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://moffu.com' },
-    { '@type': 'ListItem', position: 2, name: 'Features', item: 'https://moffu.com/feature' },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.moffu.pro' },
+    { '@type': 'ListItem', position: 2, name: 'Features', item: 'https://www.moffu.pro/feature' },
   ],
 };
 

@@ -12,10 +12,9 @@ const FOOTER_NAV = [
   {
     heading: 'Company',
     links: [
-      { label: 'About', href: '#' },
-      { label: 'Blog', href: '#' },
-      { label: 'Careers', href: '#' },
-      { label: 'Press', href: '#' },
+      { label: 'About', href: '/about' },
+      { label: 'Blog', href: '/blog' },
+      { label: 'Changelog', href: '/changelog' },
     ],
   },
   {
@@ -31,10 +30,8 @@ const FOOTER_NAV = [
   {
     heading: 'Support',
     links: [
-      { label: 'Help Center', href: '#' },
-      { label: 'System Status', href: '#' },
-      { label: 'API Docs', href: '#' },
-      { label: 'Changelog', href: '#' },
+      { label: 'Help Center', href: '/help' },
+      { label: 'Contact Us', href: 'mailto:support@moffu.pro' },
     ],
   },
 ];

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Moffu',
+  title: 'Privacy Policy',
   description: 'How Moffu collects, uses, and protects your data.',
 };
 
@@ -98,7 +98,7 @@ export default function PrivacyPage() {
             <p>
               We retain your account data and review history for as long as your account is active.
               You may request deletion of your data by contacting us at{' '}
-              <a href="mailto:support@moffu.com" className="text-[#6C55E8] underline">support@moffu.com</a>.
+              <a href="mailto:support@moffu.pro" className="text-[#6C55E8] underline">support@moffu.pro</a>.
               Upon account deletion, we will delete or anonymize your personal data within 30 days,
               except where retention is required by law.
             </p>
@@ -127,7 +127,7 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3">
               To exercise these rights, contact us at{' '}
-              <a href="mailto:support@moffu.com" className="text-[#6C55E8] underline">support@moffu.com</a>.
+              <a href="mailto:support@moffu.pro" className="text-[#6C55E8] underline">support@moffu.pro</a>.
             </p>
           </section>
 
@@ -165,7 +165,7 @@ export default function PrivacyPage() {
             </p>
             <div className="mt-3 p-4 bg-gray-50 rounded-lg">
               <p><strong>Moffu</strong></p>
-              <p>Email: <a href="mailto:support@moffu.com" className="text-[#6C55E8] underline">support@moffu.com</a></p>
+              <p>Email: <a href="mailto:support@moffu.pro" className="text-[#6C55E8] underline">support@moffu.pro</a></p>
             </div>
           </section>
 

@@ -181,7 +181,7 @@ export function PricingToggle({
               {/* CTA */}
               {plan.contact_sales ? (
                 <a
-                  href="mailto:sales@moffu.com"
+                  href="mailto:sales@moffu.pro"
                   className={`block w-full text-center py-3 rounded-lg text-sm font-semibold transition-all duration-150 ${
                     featured
                       ? 'border-2 border-white text-white hover:bg-white hover:text-[#6C55E8] active:scale-95'

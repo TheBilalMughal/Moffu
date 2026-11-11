@@ -1,6 +1,21 @@
 export const dynamic = 'force-dynamic';
 
+import type { Metadata } from 'next';
 import React from 'react';
+
+export const metadata: Metadata = {
+  title: 'AI Google Review Reply Software',
+  description: 'Reply to every Google Business Profile review in your brand voice. Moffu drafts on-brand replies you approve in one click. Start free — no credit card required.',
+  alternates: {
+    canonical: 'https://www.moffu.pro',
+  },
+  openGraph: {
+    title: 'AI Google Review Reply Software | Moffu',
+    description: 'Reply to every Google Business Profile review in your brand voice. Moffu drafts on-brand replies you approve in one click. Start free — no credit card required.',
+    url: 'https://www.moffu.pro',
+    images: [{ url: '/images/og-home.png', width: 1200, height: 630, alt: 'Moffu — AI Google Review Reply Software' }],
+  },
+};
 import { unstable_noStore as noStore } from 'next/cache';
 import { PricingToggle, type PricingPlan } from '../_components/PricingToggle';
 import { WaitlistButton } from '../_components/WaitlistButton';
@@ -397,7 +412,7 @@ function FeaturesSection() {
                 <div className="w-10 h-10 rounded-lg bg-white text-[#111827] flex items-center justify-center mb-5">
                   {icon}
                 </div>
-                <h4 className="font-black text-[#111827] mb-2">{title}</h4>
+                <h3 className="font-black text-[#111827] mb-2">{title}</h3>
                 <p className="text-sm text-[#6B7280] leading-relaxed">{description}</p>
               </div>
             ))}

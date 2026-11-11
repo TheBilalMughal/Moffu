@@ -5,15 +5,26 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.moffu.pro'),
   title: {
-    default: 'Moffu — AI Review Agent',
+    default: 'AI Google Review Reply Software | Moffu',
     template: '%s | Moffu',
   },
-  description: 'Brand-trained AI reputation agent for Google Business Profile.',
+  description: 'Reply to every Google Business Profile review in your brand voice. Moffu drafts on-brand replies you approve in one click. Start free — no credit card required.',
   icons: { icon: '/images/fevicon.png', shortcut: '/images/fevicon.png' },
+  openGraph: {
+    siteName: 'Moffu',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@moffu',
+  },
   robots: {
-    index: false,
-    follow: false,
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
   },
 };
 

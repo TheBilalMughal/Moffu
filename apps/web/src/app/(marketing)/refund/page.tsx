@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Refund Policy — Moffu',
+  title: 'Refund Policy',
   description: 'Moffu refund and cancellation policy.',
 };
 

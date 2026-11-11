@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'GDPR — Moffu',
+  title: 'GDPR',
   description: 'Moffu\'s compliance with the General Data Protection Regulation.',
 };
 
@@ -58,7 +58,7 @@ export default function GdprPage() {
             </ul>
             <p className="mt-4">
               To exercise any of these rights, contact us at{' '}
-              <a href="mailto:privacy@moffu.com" className="text-[#6C55E8] underline">privacy@moffu.com</a>.
+              <a href="mailto:privacy@moffu.pro" className="text-[#6C55E8] underline">privacy@moffu.pro</a>.
               We will respond within 30 days.
             </p>
           </section>
@@ -97,7 +97,7 @@ export default function GdprPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">8. Contact</h2>
             <p>
               For GDPR-related enquiries, contact our data protection team at{' '}
-              <a href="mailto:privacy@moffu.com" className="text-[#6C55E8] underline">privacy@moffu.com</a>.
+              <a href="mailto:privacy@moffu.pro" className="text-[#6C55E8] underline">privacy@moffu.pro</a>.
             </p>
           </section>
 

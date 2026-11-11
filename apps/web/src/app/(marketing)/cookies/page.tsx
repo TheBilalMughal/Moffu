@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Cookie Policy — Moffu',
+  title: 'Cookie Policy',
   description: 'How Moffu uses cookies and similar tracking technologies.',
 };
 
@@ -81,7 +81,7 @@ export default function CookiesPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">6. Contact</h2>
             <p>
               If you have questions about our use of cookies, contact us at{' '}
-              <a href="mailto:privacy@moffu.com" className="text-[#6C55E8] underline">privacy@moffu.com</a>.
+              <a href="mailto:privacy@moffu.pro" className="text-[#6C55E8] underline">privacy@moffu.pro</a>.
             </p>
           </section>
 
