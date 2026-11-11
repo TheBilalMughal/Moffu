@@ -28,6 +28,7 @@ import { GeneralSettingsPage } from '@/features/settings/GeneralSettingsPage';
 import { EmailSettingsPage } from '@/features/settings/EmailSettingsPage';
 import { SecuritySettingsPage } from '@/features/settings/SecuritySettingsPage';
 import { ClientLogoPage } from '@/features/settings/ClientLogoPage';
+import { WebsiteTeamPage } from '@/features/settings/WebsiteTeamPage';
 import { RefundsPage } from '@/features/billing/RefundsPage';
 import { ReportsPage } from '@/features/analytics/ReportsPage';
 import { IntegrationsHealthPage } from '@/features/platform/IntegrationsHealthPage';
@@ -77,6 +78,7 @@ export function App() {
             {/* Website tab */}
             <Route path="website" element={<Navigate to="website/client-logo" replace />} />
             <Route path="website/client-logo" element={<ClientLogoPage />} />
+            <Route path="website/team" element={<WebsiteTeamPage />} />
             {/* General tab */}
             <Route path="general" element={<GeneralSettingsPage />} />
             {/* API tab */}

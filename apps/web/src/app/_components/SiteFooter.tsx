@@ -13,8 +13,8 @@ const FOOTER_NAV = [
     heading: 'Company',
     links: [
       { label: 'About', href: '/about' },
+      { label: 'Team', href: '/team' },
       { label: 'Blog', href: '/blog' },
-      { label: 'Changelog', href: '/changelog' },
     ],
   },
   {

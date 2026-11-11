@@ -91,6 +91,7 @@ const TABS: Tab[] = [
     defaultPath: '/settings/website/client-logo',
     sidebar: [
       { label: 'Client Logo', path: '/settings/website/client-logo', icon: Icon.branding },
+      { label: 'Team Members', path: '/settings/website/team', icon: Icon.packages },
     ],
   },
   {
