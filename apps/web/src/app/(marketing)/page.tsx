@@ -42,10 +42,10 @@ function HeroSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean;
             REPLY FAST. SOUND HUMAN. DO NOTHING.
           </p>
 
-          <div className="flex flex-col items-center gap-4 w-full max-w-xl mx-auto">
+          {/* <div className="flex flex-col items-center gap-4 w-full max-w-xl mx-auto">
             <HeroEmailForm portalUrl={portalUrl} />
             <p className="text-sm text-[#111827]/60">no credit card needed &nbsp;·&nbsp; free forever.</p>
-          </div>
+          </div> */}
 
           {/* Social proof strip */}
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-10">
