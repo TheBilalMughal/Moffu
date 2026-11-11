@@ -83,12 +83,12 @@ export function InstagramPostsPage() {
     setUploadingThumb(true);
     try {
       const ext = file.name.split('.').pop();
-      const path = `instagram/${Date.now()}.${ext}`;
+      const path = `instagram/thumb-${Date.now()}.${ext}`;
       const { error } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: true });
       if (error) throw error;
       const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path);
       setForm(f => ({ ...f, thumbnail_url: urlData.publicUrl }));
-    } catch (e) {
+    } catch {
       alert('Upload failed');
     } finally {
       setUploadingThumb(false);
