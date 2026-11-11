@@ -75,11 +75,11 @@ export function LoginPage() {
             </div>
             <span className="text-sm text-[#6B7280] leading-relaxed">
               I agree to Moffu's{' '}
-              <a href={`${env.webUrl}/terms`} target="_blank" rel="noopener noreferrer" className="text-[#6C55E8] hover:underline font-medium">
+              <a href="https://www.moffu.pro/terms" target="_blank" rel="noopener noreferrer" className="text-[#6C55E8] hover:underline font-medium">
                 Terms of Service
               </a>{' '}
               and{' '}
-              <a href={`${env.webUrl}/privacy`} target="_blank" rel="noopener noreferrer" className="text-[#6C55E8] hover:underline font-medium">
+              <a href="https://www.moffu.pro/privacy" target="_blank" rel="noopener noreferrer" className="text-[#6C55E8] hover:underline font-medium">
                 Privacy Policy
               </a>
             </span>
