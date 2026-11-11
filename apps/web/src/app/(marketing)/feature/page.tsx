@@ -6,7 +6,7 @@ import { createServerClient } from '../../../lib/supabase/server';
 export const metadata: Metadata = {
   title: 'Features — Brand Brain AI Review Responses',
   description:
-    'Brand Brain is your AI\'s memory. Set your tone, response rules, and personality once — and every Google review reply sounds exactly like you, every time.',
+    'Brand Brain is your AI\'s memory. Set your tone, response rules, and personality once. Every Google review reply sounds exactly like you, every time.',
   keywords: [
     'Brand Brain',
     'AI brand voice',
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Features — Brand Brain AI Review Responses',
     description:
-      'Set your tone, rules, and personality once. Moffu\'s Brand Brain ensures every review response sounds like you — not a generic bot.',
+      'Set your tone, rules, and personality once. Moffu\'s Brand Brain ensures every review response sounds like you, not a generic bot.',
     url: 'https://www.moffu.pro/feature',
     siteName: 'Moffu',
     type: 'website',
@@ -38,7 +38,7 @@ const FEATURES = [
   {
     title: 'Tone & Personality',
     description:
-      'Define how your brand speaks — formal, friendly, warm, or professional. Brand Brain applies it consistently across every response.',
+      'Define how your brand speaks: formal, friendly, warm, or professional. Brand Brain applies it consistently across every response.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
@@ -48,7 +48,7 @@ const FEATURES = [
   {
     title: 'Negative Review Handling',
     description:
-      'Set rules for how to respond to 1-star and 2-star reviews. Empathetic, solution-focused replies — without you writing each one.',
+      'Set rules for how to respond to 1-star and 2-star reviews. Empathetic, solution-focused replies without you writing each one.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -68,7 +68,7 @@ const FEATURES = [
   {
     title: 'Location-Specific Settings',
     description:
-      'Running multiple locations? Customise Brand Brain per location — different staff names, local offers, and neighbourhood context.',
+      'Running multiple locations? Customise Brand Brain per location with different staff names, local offers, and neighbourhood context.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -89,7 +89,7 @@ const FEATURES = [
   {
     title: 'Always Your Approval',
     description:
-      'Brand Brain drafts — you approve. Every AI response is a suggestion until you publish it. You stay in control at all times.',
+      'Brand Brain drafts, you approve. Every AI response is a suggestion until you publish it. You stay in control at all times.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -117,14 +117,14 @@ const HOW_IT_WORKS = [
   {
     step: '04',
     title: 'Edit, approve & publish',
-    body: 'Review the draft, make any tweaks, and publish directly to Google — in one click.',
+    body: 'Review the draft, make any tweaks, and publish directly to Google in one click.',
   },
 ];
 
 const FAQ = [
   {
     q: 'Can I change my Brand Brain settings after setup?',
-    a: 'Yes — you can update your tone, rules, and location settings at any time. Changes apply to all future drafts immediately.',
+    a: 'Yes. You can update your tone, rules, and location settings at any time. Changes apply to all future drafts immediately.',
   },
   {
     q: 'Does Brand Brain respond automatically without me reviewing?',
@@ -132,11 +132,11 @@ const FAQ = [
   },
   {
     q: 'Can I have different Brand Brain settings per location?',
-    a: 'Yes. Each location can have its own tone, rules, and context — useful for franchise groups or multi-brand operators.',
+    a: 'Yes. Each location can have its own tone, rules, and context. Useful for franchise groups or multi-brand operators.',
   },
   {
     q: 'What types of reviews does Brand Brain handle?',
-    a: 'All star ratings — from 5-star praise to 1-star complaints. You can set specific rules for how each rating range is handled.',
+    a: 'All star ratings, from 5-star praise to 1-star complaints. You can set specific rules for how each rating range is handled.',
   },
 ];
 
@@ -193,7 +193,7 @@ export default async function FeaturePage() {
             </h1>
             <p className="text-lg text-[#6B7280] leading-relaxed mb-10 max-w-2xl">
               Brand Brain is the layer between raw AI and your business. Configure it once with
-              your tone, rules, and preferences — and every Google review response sounds
+              your tone, rules, and preferences. Every Google review response sounds
               authentically like you.
             </p>
             <WaitlistButton
@@ -279,7 +279,7 @@ export default async function FeaturePage() {
             </h2>
             <p className="text-[#6B7280] mb-10 text-lg max-w-xl leading-relaxed">
               Connect your Google Business Profile and start responding to reviews
-              in your brand voice — today.
+              in your brand voice, starting today.
             </p>
             <div className="flex flex-wrap items-center gap-4">
               <WaitlistButton

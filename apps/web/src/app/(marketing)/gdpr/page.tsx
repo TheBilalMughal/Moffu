@@ -37,10 +37,10 @@ export default function GdprPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">3. Legal Basis for Processing</h2>
             <p>We process your personal data on the following legal bases:</p>
             <ul className="list-disc pl-5 mt-3 space-y-2">
-              <li><strong>Contract performance</strong> — to provide the Moffu service you have subscribed to</li>
-              <li><strong>Legitimate interests</strong> — to improve the platform, prevent fraud, and ensure security</li>
-              <li><strong>Legal obligation</strong> — to comply with applicable laws and regulations</li>
-              <li><strong>Consent</strong> — for optional communications such as marketing emails (you may withdraw at any time)</li>
+              <li><strong>Contract performance</strong>: to provide the Moffu service you have subscribed to</li>
+              <li><strong>Legitimate interests</strong>: to improve the platform, prevent fraud, and ensure security</li>
+              <li><strong>Legal obligation</strong>: to comply with applicable laws and regulations</li>
+              <li><strong>Consent</strong>: for optional communications such as marketing emails (you may withdraw at any time)</li>
             </ul>
           </section>
 
@@ -48,13 +48,13 @@ export default function GdprPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">4. Your Rights Under GDPR</h2>
             <p>If you are located in the EEA or UK, you have the following rights:</p>
             <ul className="list-disc pl-5 mt-3 space-y-2">
-              <li><strong>Right of access</strong> — request a copy of the personal data we hold about you</li>
-              <li><strong>Right to rectification</strong> — request correction of inaccurate or incomplete data</li>
-              <li><strong>Right to erasure</strong> — request deletion of your personal data (&quot;right to be forgotten&quot;)</li>
-              <li><strong>Right to restriction</strong> — request that we limit how we use your data</li>
-              <li><strong>Right to data portability</strong> — receive your data in a structured, machine-readable format</li>
-              <li><strong>Right to object</strong> — object to processing based on legitimate interests</li>
-              <li><strong>Rights related to automated decision-making</strong> — not to be subject to solely automated decisions that significantly affect you</li>
+              <li><strong>Right of access</strong>: request a copy of the personal data we hold about you</li>
+              <li><strong>Right to rectification</strong>: request correction of inaccurate or incomplete data</li>
+              <li><strong>Right to erasure</strong>: request deletion of your personal data (&quot;right to be forgotten&quot;)</li>
+              <li><strong>Right to restriction</strong>: request that we limit how we use your data</li>
+              <li><strong>Right to data portability</strong>: receive your data in a structured, machine-readable format</li>
+              <li><strong>Right to object</strong>: object to processing based on legitimate interests</li>
+              <li><strong>Rights related to automated decision-making</strong>: not to be subject to solely automated decisions that significantly affect you</li>
             </ul>
             <p className="mt-4">
               To exercise any of these rights, contact us at{' '}

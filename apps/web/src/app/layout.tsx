@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     default: 'AI Google Review Reply Software | Moffu',
     template: '%s | Moffu',
   },
-  description: 'Reply to every Google Business Profile review in your brand voice. Moffu drafts on-brand replies you approve in one click. Start free — no credit card required.',
+  description: 'Reply to every Google Business Profile review in your brand voice. Moffu drafts on-brand replies you approve in one click. Start free, no credit card required.',
   icons: { icon: '/images/fevicon.png', shortcut: '/images/fevicon.png' },
   openGraph: {
     siteName: 'Moffu',

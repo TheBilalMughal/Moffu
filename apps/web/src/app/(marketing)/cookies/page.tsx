@@ -32,8 +32,8 @@ export default function CookiesPage() {
               cookies while using Moffu.
             </p>
             <ul className="list-disc pl-5 mt-3 space-y-1">
-              <li><strong>sb-access-token</strong> — Supabase authentication session token</li>
-              <li><strong>sb-refresh-token</strong> — Used to refresh your session without re-login</li>
+              <li><strong>sb-access-token</strong>: Supabase authentication session token</li>
+              <li><strong>sb-refresh-token</strong>: Used to refresh your session without re-login</li>
             </ul>
 
             <h3 className="text-base font-semibold text-gray-900 mb-2 mt-5">Analytics Cookies</h3>

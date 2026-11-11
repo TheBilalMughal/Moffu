@@ -31,7 +31,7 @@ const FOOTER_NAV = [
     heading: 'Support',
     links: [
       { label: 'Help Center', href: '/help' },
-      { label: 'Contact Us', href: 'mailto:support@moffu.pro' },
+      { label: 'Contact Us', href: '/contact' },
     ],
   },
 ];

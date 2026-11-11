@@ -67,7 +67,7 @@ export default function TermsPage() {
                 You are solely responsible for the content of all replies published through the Service
               </li>
               <li>
-                AI-generated drafts are suggestions only — you must review and approve before publishing
+                AI-generated drafts are suggestions only. You must review and approve before publishing
               </li>
               <li>
                 Your use of Google data through Moffu is subject to{' '}

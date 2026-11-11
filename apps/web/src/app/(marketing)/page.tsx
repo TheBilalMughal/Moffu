@@ -5,15 +5,15 @@ import React from 'react';
 
 export const metadata: Metadata = {
   title: 'AI Google Review Reply Software',
-  description: 'Reply to every Google Business Profile review in your brand voice. Moffu drafts on-brand replies you approve in one click. Start free — no credit card required.',
+  description: 'Reply to every Google Business Profile review in your brand voice. Moffu drafts on-brand replies you approve in one click. Start free, no credit card required.',
   alternates: {
     canonical: 'https://www.moffu.pro',
   },
   openGraph: {
     title: 'AI Google Review Reply Software | Moffu',
-    description: 'Reply to every Google Business Profile review in your brand voice. Moffu drafts on-brand replies you approve in one click. Start free — no credit card required.',
+    description: 'Reply to every Google Business Profile review in your brand voice. Moffu drafts on-brand replies you approve in one click. Start free, no credit card required.',
     url: 'https://www.moffu.pro',
-    images: [{ url: '/images/og-home.png', width: 1200, height: 630, alt: 'Moffu — AI Google Review Reply Software' }],
+    images: [{ url: '/images/og-home.png', width: 1200, height: 630, alt: 'Moffu AI Google Review Reply Software' }],
   },
 };
 import { unstable_noStore as noStore } from 'next/cache';
@@ -207,12 +207,12 @@ function ValuePropSection() {
             Stop writing the same reply 40 times a month.
           </h2>
           <p className="text-[#111827]/65 text-base leading-relaxed mb-8">
-            Moffu handles every Google review in your voice — same day, every day. It sounds like you because you trained it to.
+            Moffu handles every Google review in your voice, same day, every day. It sounds like you because you trained it to.
           </p>
 
           <ul className="space-y-4 mb-10">
             {[
-              ['Connect in 2 minutes', 'Link your Google Business Profile — no technical setup.'],
+              ['Connect in 2 minutes', 'Link your Google Business Profile. No technical setup.'],
               ['Train your Brand Brain once', 'Set your tone, rules, and what your AI should never say.'],
               ['Approve before it posts', 'Every reply is a draft until you say go. You stay in control.'],
             ].map(([title, body]) => (
@@ -294,7 +294,7 @@ function ValuePropSection() {
 const FEATURES_GRID = [
   {
     title: 'Tone & Personality',
-    description: 'Define how your brand speaks — formal, friendly, warm, or professional. Brand Brain applies it consistently across every response.',
+    description: 'Define how your brand speaks: formal, friendly, warm, or professional. Brand Brain applies it consistently across every response.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
@@ -303,7 +303,7 @@ const FEATURES_GRID = [
   },
   {
     title: 'Negative Review Handling',
-    description: 'Set rules for how to respond to 1-star and 2-star reviews. Empathetic, solution-focused replies — without you writing each one.',
+    description: 'Set rules for how to respond to 1-star and 2-star reviews. Empathetic, solution-focused replies without you writing each one.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -321,7 +321,7 @@ const FEATURES_GRID = [
   },
   {
     title: 'Location-Specific Settings',
-    description: 'Running multiple locations? Customise Brand Brain per location — different staff names, local offers, and neighbourhood context.',
+    description: 'Running multiple locations? Customise Brand Brain per location with different staff names, local offers, and neighbourhood context.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -340,7 +340,7 @@ const FEATURES_GRID = [
   },
   {
     title: 'Always Your Approval',
-    description: 'Brand Brain drafts — you approve. Every AI response is a suggestion until you publish it. You stay in control at all times.',
+    description: 'Brand Brain drafts, you approve. Every AI response is a suggestion until you publish it. You stay in control at all times.',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -402,7 +402,7 @@ function FeaturesSection() {
         </h2>
         <p className="text-lg text-[#6B7280] leading-relaxed mb-14 max-w-2xl">
           Brand Brain is the layer between raw AI and your business. Configure it once with
-          your tone, rules, and preferences — and every Google review response sounds
+          your tone, rules, and preferences. Every Google review response sounds
           authentically like you.
         </p>
 
@@ -559,11 +559,11 @@ async function PricingSection({ waitlistEnabled, portalUrl }: { waitlistEnabled:
 const FAQ_ITEMS = [
   {
     q: 'Does Moffu work with Google Business Profile?',
-    a: 'Yes. Moffu connects directly to your Google Business Profile to pull in reviews and publish AI-generated replies — all without leaving the dashboard.',
+    a: 'Yes. Moffu connects directly to your Google Business Profile to pull in reviews and publish AI-generated replies, all without leaving the dashboard.',
   },
   {
     q: 'How does the AI generate replies?',
-    a: 'You set up your Brand Brain — your business identity, tone of voice, and reply rules per star rating. The AI uses that profile to craft replies that sound exactly like you, not a generic bot.',
+    a: 'You set up your Brand Brain: your business identity, tone of voice, and reply rules per star rating. The AI uses that profile to craft replies that sound exactly like you, not a generic bot.',
   },
   {
     q: 'Can I manage multiple locations?',
@@ -591,7 +591,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Is there a free plan?',
-    a: 'Yes — the Free plan lets you get started at no cost with one location and limited replies per month. No credit card required.',
+    a: 'Yes. The Free plan lets you get started at no cost with one location and limited replies per month. No credit card required.',
   },
   {
     q: 'Can I cancel anytime?',

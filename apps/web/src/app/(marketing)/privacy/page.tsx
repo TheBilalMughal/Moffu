@@ -73,22 +73,22 @@ export default function PrivacyPage() {
             <p>We do not sell your personal data. We may share your information with:</p>
             <ul className="list-disc pl-6 space-y-2 mt-3">
               <li>
-                <strong>Google LLC</strong> — to authenticate your account and interact with the Google
+                <strong>Google LLC</strong>: to authenticate your account and interact with the Google
                 Business Profile API on your behalf
               </li>
               <li>
-                <strong>Supabase</strong> — our database and authentication infrastructure provider
+                <strong>Supabase</strong>: our database and authentication infrastructure provider
               </li>
               <li>
-                <strong>Paddle</strong> — our payment processor and Merchant of Record for billing and subscription management
+                <strong>Paddle</strong>: our payment processor and Merchant of Record for billing and subscription management
               </li>
               <li>
-                <strong>AI providers</strong> — review content may be sent to AI services (such as
+                <strong>AI providers</strong>: review content may be sent to AI services (such as
                 Google Gemini) to generate draft replies; these providers process data under their own
                 privacy policies
               </li>
               <li>
-                <strong>Legal authorities</strong> — when required by law or to protect our legal rights
+                <strong>Legal authorities</strong>: when required by law or to protect our legal rights
               </li>
             </ul>
           </section>
@@ -123,7 +123,7 @@ export default function PrivacyPage() {
               <li>Request correction of inaccurate data</li>
               <li>Request deletion of your data</li>
               <li>Withdraw consent for processing (including Google account access)</li>
-              <li>Data portability — receive a copy of your data in a structured format</li>
+              <li>Data portability: receive a copy of your data in a structured format</li>
             </ul>
             <p className="mt-3">
               To exercise these rights, contact us at{' '}
