@@ -44,13 +44,19 @@ export function OrgDetailPage() {
 
       if (!orgRow) { setNotFound(true); setLoading(false); return; }
 
-      const [subsRes, membersRes, countryRes] = await Promise.all([
+      const [subsRes, membersRes, internalRes, countryRes] = await Promise.all([
         supabase.from('subscriptions').select('plan, status').eq('org_id', orgRow.id).maybeSingle(),
         supabase.from('org_members').select('user_id, role').eq('org_id', orgRow.id),
+        supabase.from('platform_members').select('user_id').eq('is_active', true),
         Promise.resolve(null),
       ]);
 
-      const ownerRow = (membersRes.data ?? []).find((m: { role: string }) => m.role === 'owner');
+      const internalIds = new Set<string>(
+        ((internalRes.data ?? []) as { user_id: string }[]).map(m => m.user_id)
+      );
+
+      const allMembers = (membersRes.data ?? []) as { user_id: string; role: string }[];
+      const ownerRow = allMembers.find((m) => m.role === 'owner');
       let ownerEmail: string | null = null;
       let ownerName: string | null = null;
 
@@ -73,7 +79,7 @@ export function OrgDetailPage() {
         createdAt: orgRow.created_at,
         plan: subsRes.data?.plan ?? null,
         subStatus: subsRes.data?.status ?? null,
-        memberCount: (membersRes.data ?? []).length,
+        memberCount: allMembers.filter(m => !internalIds.has(m.user_id)).length,
         ownerEmail,
         ownerName,
         timezone: orgRow.timezone ?? null,
