@@ -507,7 +507,7 @@ async function fetchPricingPlans(): Promise<PricingPlan[]> {
     const [plansRes, pricesRes] = await Promise.all([
       supabase
         .from('plans')
-        .select('id, slug, name, description, features, badge_text, is_featured, contact_sales')
+        .select('id, slug, name, description, features, badge_text, is_featured, contact_sales, discount_type, discount_value')
         .eq('is_active', true)
         .order('sort_order'),
       supabase
@@ -535,6 +535,8 @@ async function fetchPricingPlans(): Promise<PricingPlan[]> {
         monthly_cents: monthly?.amount_cents ?? 0,
         annual_cents: annual?.amount_cents ?? 0,
         currency: monthly?.currency ?? annual?.currency ?? 'USD',
+        discount_type: (p.discount_type as 'fixed' | 'percent' | null) ?? null,
+        discount_value: p.discount_value != null ? Number(p.discount_value) : null,
       };
     });
   } catch {

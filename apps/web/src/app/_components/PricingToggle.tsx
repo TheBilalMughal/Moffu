@@ -16,6 +16,15 @@ export interface PricingPlan {
   monthly_cents: number;
   annual_cents: number;
   currency: string;
+  discount_type: 'fixed' | 'percent' | null;
+  discount_value: number | null;
+}
+
+function applyDiscount(amountCents: number, type: 'fixed' | 'percent' | null, value: number | null): number {
+  if (!type || !value || value <= 0) return amountCents;
+  if (type === 'percent') return Math.max(0, Math.round(amountCents * (1 - value / 100)));
+  if (type === 'fixed') return Math.max(0, amountCents - Math.round(value * 100));
+  return amountCents;
 }
 
 function CheckSolid() {
@@ -105,11 +114,14 @@ export function PricingToggle({
         }`}
       >
         {visiblePlans.map((plan) => {
-          const isFree     = plan.monthly_cents === 0 && !plan.contact_sales;
-          const priceCents = annual && plan.annual_cents > 0 ? plan.annual_cents : plan.monthly_cents;
-          const price      = Math.round(priceCents / 100);
-          const discount   = calcDiscount(plan.monthly_cents, plan.annual_cents);
-          const featured   = plan.is_featured;
+          const isFree          = plan.monthly_cents === 0 && !plan.contact_sales;
+          const rawCents        = annual && plan.annual_cents > 0 ? plan.annual_cents : plan.monthly_cents;
+          const discountedCents = applyDiscount(rawCents, plan.discount_type, plan.discount_value);
+          const hasPromoDiscount = discountedCents < rawCents;
+          const price           = Math.round(discountedCents / 100);
+          const originalPrice   = Math.round(rawCents / 100);
+          const discount        = calcDiscount(plan.monthly_cents, plan.annual_cents);
+          const featured        = plan.is_featured;
 
           return (
             <div
@@ -151,11 +163,21 @@ export function PricingToggle({
                   </div>
                 ) : (
                   <>
-                    <div className="flex items-baseline gap-1">
+                    {hasPromoDiscount && (
+                      <p className={`text-sm line-through mb-0.5 ${featured ? 'text-white/35' : 'text-[#111827]/35'}`}>
+                        ${originalPrice}/month
+                      </p>
+                    )}
+                    <div className="flex items-baseline gap-1.5">
                       <span className={`text-[3.25rem] font-black leading-none ${featured ? 'text-white' : 'text-[#111827]'}`}>
                         ${price}
                       </span>
                       <span className={`text-sm ${featured ? 'text-white/50' : 'text-[#111827]/50'}`}>/month</span>
+                      {hasPromoDiscount && (
+                        <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded self-end mb-1">
+                          {plan.discount_type === 'percent' ? `-${plan.discount_value}%` : `-$${plan.discount_value}`}
+                        </span>
+                      )}
                     </div>
                     {annual && plan.annual_cents > 0 && (
                       <p className={`text-[12px] mt-1 ${featured ? 'text-white/45' : 'text-[#111827]/50'}`}>
