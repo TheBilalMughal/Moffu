@@ -672,7 +672,7 @@ export function BillingPage() {
           await new Promise(r => setTimeout(r, 1200));
           const txList = await billingService.getTransactions();
           if (txList.length > 0) {
-            matchTx = storedTid ? (txList.find(t => t.paddle_transaction_id === storedTid) ?? txList[0]) : txList[0];
+            matchTx = storedTid ? (txList.find(t => t.paddle_transaction_id === storedTid) ?? txList[0] ?? null) : (txList[0] ?? null);
             if (matchTx) break;
           }
         }
