@@ -39,10 +39,9 @@ function HeroSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean;
           <HeroHeadline />
 
           {/* New feature announcement */}
-          <div className="flex items-center gap-2.5 bg-[#6C55E8]/10 border border-[#6C55E8]/25 rounded-lg px-3.5 py-2 mt-6 mb-2">
-            <span className="text-[10px] font-black text-[#6C55E8] uppercase tracking-widest flex-shrink-0">New</span>
-            <span className="w-px h-3 bg-[#6C55E8]/30 flex-shrink-0" aria-hidden="true" />
-            <span className="text-xs font-semibold text-[#111827]/70">Turn your 5-star reviews into social media posts, automatically.</span>
+          <div className="inline-flex items-center gap-3 bg-[#111827] rounded-lg px-4 py-2.5 mt-6 mb-2 shadow-[0_4px_16px_rgba(17,24,39,0.18)]">
+            <span className="bg-[#6C55E8] text-white text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded flex-shrink-0">New</span>
+            <span className="text-sm font-semibold text-white leading-none">5★ reviews <span className="text-[#A78BFA]">→</span> posts that hit. zero extra work.</span>
           </div>
 
           <p className="text-sm font-bold text-[#111827]/50 uppercase tracking-[0.3em] mt-6 mb-12">
