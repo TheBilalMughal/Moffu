@@ -48,3 +48,27 @@ jobs:
 
       - name: Type check
         run: pnpm typecheck
+
+  deploy-functions:
+    name: Deploy Edge Functions
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy Edge Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          for dir in supabase/functions/*/; do
+            fn=$(basename "$dir")
+            # Skip shared/utility folders that don't have index.ts
+            if [ -f "$dir/index.ts" ]; then
+              echo "Deploying $fn..."
+              supabase functions deploy "$fn" --project-ref kgttncfkzdrgswfkkdji --no-verify-jwt
+            fi
+          done
