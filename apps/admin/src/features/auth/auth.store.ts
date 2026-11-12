@@ -32,8 +32,15 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
   initialize() {
     let realtimeChannel: ReturnType<typeof supabase.channel> | null = null;
 
+    let subscribedUserId: string | null = null;
+
     function subscribeRoleChanges(userId: string) {
-      if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+      if (subscribedUserId === userId) return; // already watching this user
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+        realtimeChannel = null;
+      }
+      subscribedUserId = userId;
       realtimeChannel = supabase
         .channel(`platform_member_role_${userId}`)
         .on(
@@ -41,7 +48,7 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
           { event: '*', schema: 'public', table: 'platform_members', filter: `user_id=eq.${userId}` },
           async () => {
             const role = await fetchRole(userId);
-            set((s) => ({
+            set(() => ({
               platformRole: role,
               status: role ? 'authenticated' : 'unauthorized',
             }));
@@ -69,6 +76,7 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
       if (!session) {
         if (realtimeChannel) supabase.removeChannel(realtimeChannel);
         realtimeChannel = null;
+        subscribedUserId = null;
         set({ status: 'unauthenticated', session: null, user: null, platformRole: null });
         return;
       }

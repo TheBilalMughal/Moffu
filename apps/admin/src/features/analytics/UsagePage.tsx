@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
@@ -318,8 +318,8 @@ export function UsagePage() {
               ) : filtered.length === 0 ? (
                 <tr><td colSpan={8} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">No usage data for this period.</td></tr>
               ) : filtered.map(row => (
-                <>
-                  <tr key={row.orgId}
+                <React.Fragment key={row.orgId}>
+                  <tr
                     className={`hover:bg-[#F9FAFB] transition-colors cursor-pointer ${expanded === row.orgId ? 'bg-[#F9FAFB]' : ''}`}
                     onClick={() => setExpanded(e => e === row.orgId ? null : row.orgId)}>
                     <td className="px-5 py-3.5">
@@ -386,7 +386,7 @@ export function UsagePage() {
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>
