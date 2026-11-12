@@ -18,32 +18,34 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#D8CCFF] flex flex-col" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-      {/* Top bar */}
-      <header className="flex items-center justify-between px-6 lg:px-12 py-5 max-w-[1200px] w-full mx-auto box-border">
-        <a href={env.webUrl} className="flex items-center">
-          <img src="/images/logo.png" alt="Moffu" className="h-7 w-auto" />
-        </a>
+      {/* Nav — matches PortalLanding */}
+      <nav className="flex items-center justify-between px-6 lg:px-12 py-5 max-w-[1200px] mx-auto w-full" style={{ boxSizing: 'border-box' }}>
+        <span className="text-[22px] font-black text-[#111827]" style={{ letterSpacing: '-0.03em' }}>Moffu</span>
         <a
           href={env.webUrl}
-          className="text-sm font-semibold text-[#111827] hover:text-[#6C55E8] transition-colors flex items-center gap-1.5"
+          className="text-sm font-semibold text-[rgba(17,24,39,0.5)] hover:text-[#111827] transition-colors"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
-          </svg>
-          Back to Moffu
+          ← moffu.pro
         </a>
-      </header>
+      </nav>
 
-      {/* Content */}
-      <main className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-[420px] bg-white rounded-xl shadow-sm px-8 py-10">
-          <h1 className="text-[2rem] font-black text-[#111827] leading-tight mb-2 tracking-tight">
-            Sign in
-          </h1>
-          <p className="text-[#6B7280] text-sm mb-8">
-            Sign in or create your Moffu account.
-          </p>
+      {/* Content — same centered layout as PortalLanding */}
+      <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-12">
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 bg-[#111827] rounded-lg px-3.5 py-1.5 mb-8">
+          <span className="bg-[#6C55E8] text-white font-black uppercase rounded flex-shrink-0" style={{ fontSize: 9, letterSpacing: '0.08em', padding: '2px 6px' }}>New</span>
+          <span className="text-xs font-semibold text-white">AI Google Review Management</span>
+        </div>
 
+        <h1 className="text-[clamp(2rem,6vw,3rem)] font-black text-[#111827] leading-[1.08] mb-4" style={{ letterSpacing: '-0.03em' }}>
+          Sign in to Moffu
+        </h1>
+        <p className="text-base text-[rgba(17,24,39,0.6)] leading-relaxed mb-10" style={{ maxWidth: 400 }}>
+          Continue with Google to access your account and manage your reviews.
+        </p>
+
+        {/* Form — inline on purple, no card */}
+        <div className="w-full" style={{ maxWidth: 360, textAlign: 'left' }}>
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700 mb-4">
               {error}
@@ -51,7 +53,7 @@ export function LoginPage() {
           )}
 
           {/* T&C checkbox */}
-          <label className="flex items-start gap-3 cursor-pointer mb-6 group">
+          <label className="flex items-start gap-3 cursor-pointer mb-5 group">
             <div className="relative mt-0.5 flex-shrink-0">
               <input
                 type="checkbox"
@@ -63,7 +65,7 @@ export function LoginPage() {
                 className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${
                   agreed
                     ? 'bg-[#6C55E8] border-[#6C55E8]'
-                    : 'bg-white border-[#D1D5DB] group-hover:border-[#6C55E8]'
+                    : 'bg-white border-[#C4B5F4] group-hover:border-[#6C55E8]'
                 }`}
               >
                 {agreed && (
@@ -73,7 +75,7 @@ export function LoginPage() {
                 )}
               </div>
             </div>
-            <span className="text-sm text-[#6B7280] leading-relaxed">
+            <span className="text-sm text-[rgba(17,24,39,0.65)] leading-relaxed">
               I agree to Moffu's{' '}
               <a href="https://www.moffu.pro/terms" target="_blank" rel="noopener noreferrer" className="text-[#6C55E8] hover:underline font-medium">
                 Terms of Service
@@ -90,7 +92,7 @@ export function LoginPage() {
             type="button"
             onClick={handleGoogle}
             disabled={loading || !agreed}
-            className="w-full flex items-center justify-center gap-3 bg-white border border-[#D1D5DB] rounded-lg px-4 py-3.5 text-sm font-medium text-[#374151] hover:bg-[#F9FAFB] disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
+            className="w-full flex items-center justify-center gap-3 bg-white border border-[rgba(17,24,39,0.12)] rounded-lg px-4 py-3.5 text-sm font-semibold text-[#111827] hover:bg-[#F5F3FF] disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
           >
             {loading ? (
               <div className="w-5 h-5 border-2 border-[#9CA3AF] border-t-transparent rounded-full animate-spin flex-shrink-0" />
@@ -106,6 +108,12 @@ export function LoginPage() {
           </button>
         </div>
       </main>
+
+      {/* Footer — same as PortalLanding */}
+      <footer className="text-center py-6 text-xs" style={{ color: 'rgba(17,24,39,0.4)' }}>
+        © {new Date().getFullYear()} Moffu ·{' '}
+        <a href={env.webUrl} style={{ color: 'rgba(17,24,39,0.4)', textDecoration: 'none' }}>moffu.pro</a>
+      </footer>
     </div>
   );
 }
