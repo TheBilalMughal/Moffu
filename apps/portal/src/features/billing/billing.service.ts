@@ -57,6 +57,17 @@ export interface UsageDay {
   published_replies: number;
 }
 
+export interface PaddleTransaction {
+  id: string;
+  paddle_transaction_id: string;
+  plan_name: string | null;
+  billing_interval: string | null;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  created_at: string;
+}
+
 function periodWindow(sub: Subscription, resetCadence: 'weekly' | 'monthly'): { start: Date; end: Date } {
   if (resetCadence === 'weekly') {
     const anchor = new Date(sub.current_period_start);
@@ -261,6 +272,18 @@ export const billingService = {
     const used = count ?? 0;
     const limit = ent.limit_value ?? 0;
     return { allowed: used < limit, used, limit };
+  },
+
+  async getTransactions(): Promise<PaddleTransaction[]> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+    const { data } = await supabase
+      .from('paddle_transactions')
+      .select('id, paddle_transaction_id, plan_name, billing_interval, amount_cents, currency, status, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    return (data ?? []) as PaddleTransaction[];
   },
 
   async recordUsage(eventType: 'ai_draft' | 'published_reply', reviewId?: string): Promise<void> {

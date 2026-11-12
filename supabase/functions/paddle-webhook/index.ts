@@ -187,10 +187,36 @@ async function handleTransactionCompleted(supabase: ReturnType<typeof createClie
   const userId = customData.user_id;
   if (!userId) return;
 
+  // Update subscription
   await supabase
     .from('subscriptions')
     .update({ paddle_transaction_id: transactionId, paddle_customer_id: customerId, payment_failure_count: 0 })
     .eq('user_id', userId);
+
+  // Parse amount from details.totals (Paddle sends cents as integer string)
+  const details = (data.details as Record<string, unknown> | null) ?? {};
+  const totals = (details.totals as Record<string, unknown> | null) ?? {};
+  const grandTotalRaw = totals.grand_total as string ?? '0';
+  const amountCents = parseInt(grandTotalRaw, 10) || 0;
+  const currency = (data.currency_code as string) ?? 'USD';
+
+  // Get plan name and billing interval from items
+  const items = (data.items as Array<{ price?: { id?: string }; product?: { name?: string } }>) ?? [];
+  const priceId = items[0]?.price?.id;
+  const productName = items[0]?.product?.name ?? null;
+  const priceInfo = priceId ? await getPaddlePriceInfo(priceId) : null;
+
+  // Store transaction record
+  await supabase.from('paddle_transactions').upsert({
+    user_id: userId,
+    paddle_transaction_id: transactionId,
+    paddle_subscription_id: (data.subscription_id as string) ?? null,
+    plan_name: productName,
+    billing_interval: priceInfo?.billing_interval ?? null,
+    amount_cents: amountCents,
+    currency,
+    status: 'completed',
+  }, { onConflict: 'paddle_transaction_id' });
 }
 
 async function handlePaymentFailed(supabase: ReturnType<typeof createClient>, data: Record<string, unknown>) {

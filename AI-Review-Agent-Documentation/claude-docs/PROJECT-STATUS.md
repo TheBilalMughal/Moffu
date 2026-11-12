@@ -115,17 +115,26 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 
 **Usage tracking:** Server-side in edge function (`usage_events` insert after successful draft generation)
 
-## Phase 6 — Billing & Subscription (Stripe)
-**PARTIAL** — schema + UI + client-side usage tracking COMPLETE; Stripe + server-side enforcement PENDING
+## Phase 6 — Billing & Subscription (Paddle LIVE)
+**COMPLETE (Paddle live)** ✅
 
 **DB migration 008 applied (`kgttncfkzdrgswfkkdji`):**
 - `plans` — Free / Starter / Growth / Scale (seeded)
-- `plan_prices` — monthly + annual prices per plan (USD)
+- `plan_prices` — monthly + annual prices per plan (USD) with `paddle_price_id`
 - `plan_entitlements` — LIMIT / UNLIMITED / BOOLEAN / ENUM values with usage_reset cadence
 - `plan_location_addons` — $5/$10/$15 per extra location (Starter/Growth/Scale)
 - `subscriptions` — one active row per user; trigger auto-assigns Free on signup; existing users backfilled
 - `subscription_addons` — extra location add-ons per subscription
 - `usage_events` — ai_draft + published_reply events; user-scoped RLS
+
+**DB migration 20261113000001 applied (`kgttncfkzdrgswfkkdji`):**
+- `paddle_transactions` — per-user payment history; unique index on `paddle_transaction_id`; RLS (users read own rows only)
+
+**Paddle integration:**
+- `paddle-webhook` Edge Function — verifies HMAC-SHA256 signature; handles subscription.created/updated/activated/canceled/paused + transaction.completed + transaction.payment_failed
+- `transaction.completed`: stores row in `paddle_transactions` (plan_name, billing_interval, amount_cents, currency)
+- `PADDLE_WEBHOOK_SECRET` configured in Supabase Edge Function secrets
+- Portal loads Paddle.js v2; `openPaddleCheckout()` with `custom_data.user_id` + `successUrl=/billing?upgraded=1` + `eventCallback` → localStorage
 
 **Service layer:** `billing.service.ts`
 - `getPlans()` — catalog from DB
@@ -134,23 +143,26 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 - `getUsageHistory()` — last 30 days grouped by date for chart
 - `checkLimit()` — entitlement lookup + usage count
 - `recordUsage()` — inserts usage_events row (client-side only)
+- `getTransactions()` — fetches `paddle_transactions` for current user (most recent first)
 
 **Portal BillingPage** (`/billing`):
 - Current plan card with team seats meter (1/N)
 - Usage meters (AI drafts + replies) with alert banners at ≥80% / ≥90%
-- Overage protection toggle (disabled, Stripe pending)
+- Overage protection toggle
 - 14-day usage history bar chart
-- Add extra location button → dialog with cost breakdown (disabled confirm)
-- Active add-on line items with cancel (disabled)
+- Add extra location button → dialog with cost breakdown
+- Active add-on line items with cancel
 - Annual savings banner (shown when on monthly paid plan)
 - Compare all plans modal — full feature matrix
 - Monthly/annual toggle with –20% label
-- 4-column plan cards (Scale card dark); upgrade buttons disabled with truthful "coming soon"
-- Nav item in DashboardLayout
+- 4-column plan cards (Scale card dark); upgrade buttons wired to Paddle live checkout
+- **Payment success modal** — shown after `?upgraded=1` redirect; polls webhook (5× 1.2s); shows plan name, Moffu logo, amount, transaction ID, date, status; Download Receipt (print-to-PDF); Go to Billing close
+- **Transaction history** — real `paddle_transactions` data; Description/Amount/Status/Receipt columns; Receipt button opens printable HTML invoice
+- Billing view loads transactions on mount
 
-**Pending (needs Stripe or further work):**
+**Pending (further work):**
 - Server-side limit enforcement in `google-publish-reply` edge function (ai-generate-draft is ✅ done)
-- Stripe Checkout, webhooks, subscription lifecycle, invoices, upgrade/downgrade flow
+- Upgrade/downgrade/cancel subscription lifecycle (Paddle portal link)
 
 ## Phase 8 — Onboarding Flow
 **COMPLETE** ✅

@@ -1,6 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { billingService, type Plan, type Subscription, type UsageSummary, type UsageDay } from './billing.service';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { billingService, type Plan, type Subscription, type UsageSummary, type UsageDay, type PaddleTransaction } from './billing.service';
 import { LocationSelectionModal } from './LocationSelectionModal';
 import { supabase } from '@/lib/supabase';
 
@@ -343,15 +343,206 @@ function AddLocationDialog({ plan, onClose }: { plan: Plan; onClose: () => void 
   );
 }
 
+// --- Receipt download ---
+
+function downloadReceipt(tx: { paddle_transaction_id: string; plan_name: string | null; billing_interval: string | null; amount_cents: number; currency: string; created_at: string }) {
+  const date = new Date(tx.created_at);
+  const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const amount = `$${(tx.amount_cents / 100).toFixed(2)}`;
+  const interval = tx.billing_interval === 'annual' ? 'Annual' : 'Monthly';
+  const shortId = tx.paddle_transaction_id.replace('txn_', '').slice(0, 12).toUpperCase();
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Moffu Receipt ${shortId}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;background:#F9FAFB;padding:40px 16px;color:#111827}
+  .wrap{max-width:520px;margin:0 auto;background:#fff;border-radius:16px;border:1px solid #E5E7EB;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,.06)}
+  .logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
+  .logo-mark{width:36px;height:36px;background:#6C55E8;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:900;line-height:1}
+  .logo-name{font-size:20px;font-weight:900;letter-spacing:-.03em}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid #F3F4F6}
+  .receipt-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#9CA3AF;margin-bottom:4px}
+  .receipt-id{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .receipt-date{font-size:13px;color:#6B7280;margin-top:4px}
+  .badge{background:#EDE9FE;color:#6C55E8;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px}
+  table{width:100%;border-collapse:collapse;margin-bottom:20px}
+  th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#9CA3AF;text-align:left;padding:0 0 10px}
+  th:last-child{text-align:right}
+  td{font-size:14px;color:#374151;padding:12px 0;border-top:1px solid #F3F4F6}
+  td:last-child{text-align:right;font-weight:600;color:#111827}
+  .total-row td{border-top:2px solid #E5E7EB;padding-top:16px;font-size:16px;font-weight:700;color:#111827}
+  .footer{margin-top:28px;padding-top:20px;border-top:1px solid #F3F4F6;font-size:12px;color:#9CA3AF;line-height:1.6}
+  .status{display:inline-flex;align-items:center;gap:5px;background:#ECFDF5;color:#059669;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px}
+  .dot{width:5px;height:5px;background:#059669;border-radius:50%}
+  @media print{body{background:#fff;padding:0}.wrap{box-shadow:none;border:none;border-radius:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">
+    <div class="logo-mark">M</div>
+    <span class="logo-name">Moffu</span>
+  </div>
+  <div class="header">
+    <div>
+      <div class="receipt-label">Receipt</div>
+      <div class="receipt-id">#${shortId}</div>
+      <div class="receipt-date">${dateStr}</div>
+    </div>
+    <span class="status"><span class="dot"></span>Paid</span>
+  </div>
+  <table>
+    <thead><tr><th>Description</th><th>Amount</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>
+          <div style="font-weight:600;color:#111827">${tx.plan_name ?? 'Moffu Plan'}</div>
+          <div style="font-size:12px;color:#9CA3AF;margin-top:2px">${interval} subscription</div>
+        </td>
+        <td>${amount}</td>
+      </tr>
+      <tr class="total-row">
+        <td>Total</td>
+        <td>${amount} ${tx.currency}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="footer">
+    <div style="margin-bottom:4px"><strong style="color:#374151">Transaction ID:</strong> ${tx.paddle_transaction_id}</div>
+    <div>Thank you for using Moffu. For billing questions, contact <a href="mailto:support@moffu.pro" style="color:#6C55E8">support@moffu.pro</a></div>
+    <div style="margin-top:12px;font-size:11px">© ${date.getFullYear()} Moffu · moffu.pro</div>
+  </div>
+</div>
+<script>window.onload=()=>{window.print();}</script>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  }
+}
+
+// --- Payment Success Modal ---
+
+function PaymentSuccessModal({ tx, planName, onClose }: {
+  tx: { paddle_transaction_id: string; amount_cents: number; currency: string; created_at: string; billing_interval: string | null; plan_name: string | null } | null;
+  planName: string;
+  onClose: () => void;
+}) {
+  const displayPlan = tx?.plan_name ?? planName;
+  const amount = tx ? `$${(tx.amount_cents / 100).toFixed(2)}` : null;
+  const shortId = tx?.paddle_transaction_id?.replace('txn_', '').slice(0, 12).toUpperCase() ?? null;
+  const dateStr = tx ? new Date(tx.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        {/* Purple header */}
+        <div className="bg-[#6C55E8] px-8 pt-8 pb-6 text-center">
+          <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p className="text-white/80 text-sm font-semibold mb-1">Payment successful</p>
+          <h2 className="text-white text-2xl font-black tracking-tight">Welcome to {displayPlan}!</h2>
+        </div>
+
+        {/* Receipt body */}
+        <div className="px-8 py-6">
+          {/* Moffu logo row */}
+          <div className="flex items-center gap-2.5 mb-6">
+            <div className="w-8 h-8 bg-[#6C55E8] rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-black text-sm">M</span>
+            </div>
+            <span className="font-black text-[#111827] text-base tracking-tight">Moffu</span>
+          </div>
+
+          {/* Transaction details */}
+          <div className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-4 space-y-3 mb-5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-[#6B7280]">Plan</span>
+              <span className="text-xs font-semibold text-[#111827]">{displayPlan}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-[#6B7280]">Billing</span>
+              <span className="text-xs font-semibold text-[#111827] capitalize">{tx?.billing_interval ?? 'Monthly'}</span>
+            </div>
+            {amount && (
+              <div className="flex items-center justify-between pt-3 border-t border-[#E5E7EB]">
+                <span className="text-sm font-bold text-[#111827]">Total charged</span>
+                <span className="text-sm font-black text-[#111827]">{amount}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Transaction ID + date */}
+          {shortId && (
+            <div className="space-y-1 mb-6">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#9CA3AF]">Transaction ID</span>
+                <span className="text-xs font-mono font-semibold text-[#374151]">{shortId}</span>
+              </div>
+              {dateStr && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[#9CA3AF]">Date</span>
+                  <span className="text-xs text-[#374151]">{dateStr}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-[#9CA3AF]">Status</span>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                  Paid
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-col gap-2">
+            {tx && (
+              <button
+                onClick={() => downloadReceipt(tx)}
+                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-[#111827] border border-[#E5E7EB] rounded-xl hover:bg-[#F9FAFB] transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download Receipt
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="w-full py-2.5 text-sm font-semibold text-white bg-[#111827] rounded-xl hover:bg-[#6C55E8] transition-colors"
+            >
+              Go to Billing
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- Main page ---
 
 export function BillingPage() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const navigate = useNavigate();
   const billingSubView = pathname === '/plan' ? 'plan' : 'billing';
   const [plans, setPlans] = useState<Plan[]>([]);
   const [sub, setSub] = useState<Subscription | null>(null);
   const [usage, setUsage] = useState<UsageSummary | null>(null);
   const [history, setHistory] = useState<UsageDay[]>([]);
+  const [transactions, setTransactions] = useState<PaddleTransaction[]>([]);
+  const [txLoading, setTxLoading] = useState(false);
   const [orgOverride, setOrgOverride] = useState<OrgOverride | null>(null);
   const [loading, setLoading] = useState(true);
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'annual'>('monthly');
@@ -362,6 +553,7 @@ export function BillingPage() {
   const [downgradePlan, setDowngradePlan] = useState<Plan | null>(null);
   const [downgradeMsg, setDowngradeMsg] = useState<string | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [successModal, setSuccessModal] = useState<{ planName: string; tx: PaddleTransaction | null } | null>(null);
   const paddleReadyRef = useRef(false);
   const userIdRef = useRef<string | null>(null);
 
@@ -382,7 +574,7 @@ export function BillingPage() {
     document.head.appendChild(script);
   }, []);
 
-  async function openPaddleCheckout(priceId: string, planSlug: string) {
+  async function openPaddleCheckout(priceId: string, planSlug: string, planName: string) {
     const w = window as Window & { Paddle?: { Checkout: { open: (o: object) => void } } };
     if (!w.Paddle?.Checkout) {
       alert('Payment system loading, please try again in a moment.');
@@ -398,6 +590,14 @@ export function BillingPage() {
         items: [{ priceId, quantity: 1 }],
         customData: { user_id: userIdRef.current },
         settings: { successUrl: `${window.location.origin}/billing?upgraded=1` },
+        eventCallback: (ev: { name: string; data?: { transaction_id?: string } }) => {
+          if (ev.name === 'checkout.completed') {
+            const tid = ev.data?.transaction_id ?? null;
+            try {
+              localStorage.setItem('moffu_checkout_success', JSON.stringify({ planName, tid }));
+            } catch { /* ignore */ }
+          }
+        },
       });
     } finally {
       setCheckoutLoading(null);
@@ -405,6 +605,9 @@ export function BillingPage() {
   }
 
   useEffect(() => {
+    const params = new URLSearchParams(search);
+    const isUpgraded = params.get('upgraded') === '1';
+
     Promise.all([
       billingService.getPlans(),
       billingService.getSubscription(),
@@ -438,8 +641,48 @@ export function BillingPage() {
         }
       }
       setLoading(false);
+
+      // Always load transaction history on billing view
+      if (billingSubView === 'billing') {
+        setTxLoading(true);
+        billingService.getTransactions().then(txList => {
+          setTransactions(txList);
+          setTxLoading(false);
+        });
+      }
+
+      // Show success modal if redirected from Paddle checkout
+      if (isUpgraded) {
+        navigate('/billing', { replace: true });
+        let storedPlanName = s?.plan_name ?? 'Your plan';
+        let storedTid: string | null = null;
+        try {
+          const raw = localStorage.getItem('moffu_checkout_success');
+          if (raw) {
+            const parsed = JSON.parse(raw) as { planName?: string; tid?: string };
+            if (parsed.planName) storedPlanName = parsed.planName;
+            if (parsed.tid) storedTid = parsed.tid;
+            localStorage.removeItem('moffu_checkout_success');
+          }
+        } catch { /* ignore */ }
+
+        // Try to fetch the matching transaction (webhook may need a moment)
+        let matchTx: PaddleTransaction | null = null;
+        for (let attempt = 0; attempt < 5; attempt++) {
+          await new Promise(r => setTimeout(r, 1200));
+          const txList = await billingService.getTransactions();
+          if (txList.length > 0) {
+            matchTx = storedTid ? (txList.find(t => t.paddle_transaction_id === storedTid) ?? txList[0]) : txList[0];
+            if (matchTx) break;
+          }
+        }
+        setSuccessModal({ planName: storedPlanName, tx: matchTx });
+        // Also refresh transaction list
+        const txList = await billingService.getTransactions();
+        setTransactions(txList);
+      }
     });
-  }, []);
+  }, [search, navigate, billingSubView]);
 
   async function handleDowngradeClick(plan: Plan) {
     if (!currentPlan) return;
@@ -567,6 +810,13 @@ export function BillingPage() {
             </button>
           </div>
         </div>
+      )}
+      {successModal && (
+        <PaymentSuccessModal
+          planName={successModal.planName}
+          tx={successModal.tx}
+          onClose={() => setSuccessModal(null)}
+        />
       )}
 
       {/* Header */}
@@ -963,7 +1213,7 @@ export function BillingPage() {
                     );
                     return (
                       <button
-                        onClick={() => openPaddleCheckout(paddlePriceId, plan.slug)}
+                        onClick={() => openPaddleCheckout(paddlePriceId, plan.slug, plan.name)}
                         disabled={checkoutLoading === plan.slug}
                         className="w-full py-2.5 text-xs font-semibold rounded-xl bg-[#6C55E8] text-white hover:bg-[#5A42D1] disabled:opacity-60 transition-colors"
                       >
@@ -1000,8 +1250,8 @@ export function BillingPage() {
                     <p className="text-sm font-semibold text-[#111827]">
                       {isFree ? 'Free plan' : (
                         sub?.billing_interval === 'annual'
-                          ? `${((currentPlan?.prices.find(p => p.interval === "annual")?.amount_cents ?? 0) / 100).toFixed(0)}/mo (billed annually)`
-                          : `${((currentPlan?.prices.find(p => p.interval === "monthly")?.amount_cents ?? 0) / 100).toFixed(0)}/mo`
+                          ? `$${((currentPlan?.prices.find(p => p.interval === "annual")?.amount_cents ?? 0) / 100).toFixed(0)}/mo (billed annually)`
+                          : `$${((currentPlan?.prices.find(p => p.interval === "monthly")?.amount_cents ?? 0) / 100).toFixed(0)}/mo`
                       )}
                     </p>
                     {!isFree && sub?.current_period_end && (
@@ -1025,35 +1275,64 @@ export function BillingPage() {
                 <p className="text-sm font-semibold text-[#111827]">Transaction History</p>
                 <p className="text-xs text-[#9CA3AF] mt-0.5">Your past payments and invoices</p>
               </div>
+              {txLoading && <div className="w-4 h-4 border-2 border-[#E5E7EB] border-t-[#6C55E8] rounded-full animate-spin" />}
             </div>
 
-            {/* Table header */}
-            <div className="hidden md:grid grid-cols-[1fr_auto_auto_auto] gap-4 px-5 py-2.5 bg-[#F9FAFB] border-b border-[#F3F4F6]">
-              <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide">Description</p>
-              <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide text-right">Amount</p>
-              <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide text-right">Status</p>
-              <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide text-right">Invoice</p>
-            </div>
-
-            {/* Empty state */}
-            <div className="px-5 py-12 text-center">
-              <svg className="w-9 h-9 mx-auto mb-3 text-[#E5E7EB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
-              </svg>
-              <p className="text-sm font-semibold text-[#374151] mb-1">No transactions yet</p>
-              <p className="text-xs text-[#9CA3AF]">Payment history will appear here once Stripe billing is active.</p>
-            </div>
-          </div>
-
-          {/* Payment method */}
-          <div className="bg-white rounded-xl border border-[#E5E7EB] p-5">
-            <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-3">Payment Method</p>
-            <div className="flex items-center gap-3 text-sm text-[#9CA3AF]">
-              <svg className="w-5 h-5 text-[#D1D5DB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-              </svg>
-              <span>Payment method management coming soon (Stripe integration in progress).</span>
-            </div>
+            {transactions.length > 0 ? (
+              <>
+                {/* Table header */}
+                <div className="hidden md:grid grid-cols-[1fr_auto_auto_auto] gap-4 px-5 py-2.5 bg-[#F9FAFB] border-b border-[#F3F4F6]">
+                  <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide">Description</p>
+                  <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide text-right">Amount</p>
+                  <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide text-right">Status</p>
+                  <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide text-right">Receipt</p>
+                </div>
+                {transactions.map(tx => (
+                  <div key={tx.id} className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto_auto] gap-2 md:gap-4 px-5 py-4 border-b border-[#F9FAFB] last:border-0 hover:bg-[#FAFAFA]">
+                    <div>
+                      <p className="text-sm font-semibold text-[#111827]">{tx.plan_name ?? 'Moffu Plan'}</p>
+                      <p className="text-xs text-[#9CA3AF] mt-0.5">
+                        {new Date(tx.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {tx.billing_interval && <span className="ml-2 capitalize">{tx.billing_interval}</span>}
+                      </p>
+                      <p className="text-[10px] font-mono text-[#D1D5DB] mt-0.5">{tx.paddle_transaction_id.slice(0, 20)}…</p>
+                    </div>
+                    <div className="text-sm font-semibold text-[#111827] md:text-right self-center">
+                      ${(tx.amount_cents / 100).toFixed(2)}
+                    </div>
+                    <div className="self-center md:justify-self-end">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                        Paid
+                      </span>
+                    </div>
+                    <div className="self-center md:justify-self-end">
+                      <button
+                        onClick={() => downloadReceipt(tx)}
+                        className="flex items-center gap-1 text-xs font-semibold text-[#6C55E8] hover:text-[#5A42D1]"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Receipt
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : !loading && !txLoading ? (
+              <div className="px-5 py-12 text-center">
+                <svg className="w-9 h-9 mx-auto mb-3 text-[#E5E7EB]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+                </svg>
+                <p className="text-sm font-semibold text-[#374151] mb-1">No transactions yet</p>
+                <p className="text-xs text-[#9CA3AF]">Your payment history will appear here after your first payment.</p>
+              </div>
+            ) : (
+              <div className="px-5 py-8 flex justify-center">
+                <div className="w-5 h-5 border-2 border-[#E5E7EB] border-t-[#6C55E8] rounded-full animate-spin" />
+              </div>
+            )}
           </div>
 
         </div>
