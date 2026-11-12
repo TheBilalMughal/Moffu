@@ -296,6 +296,25 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 - `NewPostPage` — reads `?highlight=&location_id=&post_type=` URL params; pre-fills Review Highlight post type, context textarea, and passes `source_review` to `ai-generate-post`; shows purple banner when highlight is pre-loaded
 - `marketingService` — added `loadHighlights(locationId)` and `extractHighlights(locationId?)` methods
 
+## Transactional Emails
+**IMPLEMENTED** ✅ (2026-11-12)
+
+**Receipt email (`paddle-webhook` → `transaction.completed`):**
+- Sent via Resend from `notifications@moffu.pro`; reply-to `billing@moffu.pro`
+- Flat purple-header HTML; discount breakdown row (strikethrough original + green promo row) when `discountCents > 0`
+- Parses `details.totals.subtotal/discount/grand_total` and `data.discount.code` from Paddle payload
+
+**Welcome email (`welcome-email` Edge Function):**
+- New Edge Function: `supabase/functions/welcome-email/index.ts`
+- Called by DB trigger `on_auth_user_created_welcome_email` on `auth.users` INSERT via `pg_net`
+- Migration `20261113000002_welcome_email_trigger.sql` applies the trigger
+- Auth: `x-webhook-secret` header validated against `WELCOME_WEBHOOK_SECRET` Edge Function secret; secret value must also be set as a Postgres DB setting: `ALTER DATABASE postgres SET app.welcome_webhook_secret = '<value>';`
+- Content: Gen Z flat design, features list, Free Plan callout, dashboard CTA, upgrade link to `/pricing`
+- From `notifications@moffu.pro`, reply-to `support@moffu.pro`
+
+**Required secrets (not yet set):**
+- `WELCOME_WEBHOOK_SECRET` — set via `supabase secrets set WELCOME_WEBHOOK_SECRET=<value>` AND `ALTER DATABASE postgres SET app.welcome_webhook_secret = '<same-value>';`
+
 ## Marketing Website — Review-to-Post Feature Announcement
 **COMPLETE** ✅ (shipped 2026-11-12)
 
