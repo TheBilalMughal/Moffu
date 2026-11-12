@@ -217,6 +217,25 @@ async function handleTransactionCompleted(supabase: ReturnType<typeof createClie
     currency,
     status: 'completed',
   }, { onConflict: 'paddle_transaction_id' });
+
+  // Send receipt email
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('display_name')
+    .eq('id', userId)
+    .maybeSingle();
+  const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
+  const email = authUser?.email;
+  if (email) {
+    const name = profile?.display_name ?? null;
+    const webUrl = Deno.env.get('WEB_URL') ?? 'https://moffu.pro';
+    const billingInterval = priceInfo?.billing_interval ?? null;
+    await sendEmail(
+      email,
+      `Your Moffu receipt — ${productName ?? 'Subscription'}`,
+      receiptEmailHtml({ name, transactionId, planName: productName, billingInterval, amountCents, currency, webUrl }),
+    );
+  }
 }
 
 async function handlePaymentFailed(supabase: ReturnType<typeof createClient>, data: Record<string, unknown>) {
@@ -352,6 +371,125 @@ function suspendedEmailHtml(name: string | null, webUrl: string) {
       Your data is safe and will be retained. Reply to this email or contact <a href="mailto:support@moffu.pro" style="color:#6C55E8;">support@moffu.pro</a> if you need assistance.
     </p>
   `);
+}
+
+function receiptEmailHtml({ name, transactionId, planName, billingInterval, amountCents, currency, webUrl }: {
+  name: string | null;
+  transactionId: string;
+  planName: string | null;
+  billingInterval: string | null;
+  amountCents: number;
+  currency: string;
+  webUrl: string;
+}) {
+  const greeting = name ? `Hi ${name.split(' ')[0]},` : 'Hi,';
+  const amount = `$${(amountCents / 100).toFixed(2)}`;
+  const shortId = transactionId.replace('txn_', '').slice(0, 12).toUpperCase();
+  const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const intervalLabel = billingInterval === 'annual' ? 'Annual' : 'Monthly';
+  const plan = planName ?? 'Moffu Plan';
+
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#F4F1FF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F1FF;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+
+      <!-- Logo -->
+      <tr><td align="center" style="padding-bottom:24px;">
+        <table cellpadding="0" cellspacing="0"><tr>
+          <td style="background:#6C55E8;border-radius:10px;width:36px;height:36px;text-align:center;vertical-align:middle;">
+            <span style="color:#fff;font-size:18px;font-weight:900;line-height:36px;">M</span>
+          </td>
+          <td style="padding-left:10px;font-size:20px;font-weight:900;color:#111827;letter-spacing:-0.03em;vertical-align:middle;">Moffu</td>
+        </tr></table>
+      </td></tr>
+
+      <!-- Card -->
+      <tr><td style="background:#ffffff;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;">
+
+        <!-- Purple header -->
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr><td style="background:#6C55E8;padding:28px 36px 24px;">
+            <p style="margin:0 0 2px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:0.08em;">Payment confirmed</p>
+            <h1 style="margin:0;font-size:24px;font-weight:800;color:#ffffff;letter-spacing:-0.02em;">Thank you!</h1>
+            <p style="margin:6px 0 0;font-size:14px;color:rgba(255,255,255,0.75);">${greeting.replace(',', '')} Your ${plan} subscription is now active.</p>
+          </td></tr>
+        </table>
+
+        <!-- Body -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="padding:28px 36px;">
+
+          <!-- Greeting -->
+          <tr><td style="padding-bottom:20px;">
+            <p style="margin:0;font-size:14px;color:#374151;line-height:1.6;">${greeting}<br/>
+            We've received your payment. Here's a summary of your purchase.</p>
+          </td></tr>
+
+          <!-- Receipt table -->
+          <tr><td style="padding-bottom:20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;border-radius:10px;border:1px solid #E5E7EB;overflow:hidden;">
+              <tr>
+                <td style="padding:10px 16px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #E5E7EB;">Description</td>
+                <td style="padding:10px 16px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;text-align:right;border-bottom:1px solid #E5E7EB;">Amount</td>
+              </tr>
+              <tr>
+                <td style="padding:14px 16px;font-size:14px;color:#111827;font-weight:600;border-bottom:1px solid #F3F4F6;">${plan}<br/><span style="font-size:12px;font-weight:400;color:#9CA3AF;">${intervalLabel} subscription</span></td>
+                <td style="padding:14px 16px;font-size:14px;color:#111827;font-weight:600;text-align:right;border-bottom:1px solid #F3F4F6;">${amount}</td>
+              </tr>
+              <tr>
+                <td style="padding:14px 16px;font-size:15px;font-weight:700;color:#111827;">Total</td>
+                <td style="padding:14px 16px;font-size:15px;font-weight:700;color:#111827;text-align:right;">${amount} ${currency}</td>
+              </tr>
+            </table>
+          </td></tr>
+
+          <!-- Meta row -->
+          <tr><td style="padding-bottom:24px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding:6px 0;font-size:12px;color:#9CA3AF;border-bottom:1px solid #F3F4F6;">Transaction ID</td>
+                <td style="padding:6px 0;font-size:12px;color:#374151;font-weight:600;text-align:right;font-family:monospace;border-bottom:1px solid #F3F4F6;">${shortId}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-size:12px;color:#9CA3AF;border-bottom:1px solid #F3F4F6;">Date</td>
+                <td style="padding:6px 0;font-size:12px;color:#374151;text-align:right;border-bottom:1px solid #F3F4F6;">${dateStr}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-size:12px;color:#9CA3AF;">Status</td>
+                <td style="padding:6px 0;text-align:right;">
+                  <span style="display:inline-block;background:#ECFDF5;color:#059669;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;">Paid</span>
+                </td>
+              </tr>
+            </table>
+          </td></tr>
+
+          <!-- CTA -->
+          <tr><td style="padding-bottom:24px;">
+            <a href="${webUrl.replace('https://moffu.pro', 'https://app.moffu.pro')}/billing" style="display:block;background:#6C55E8;color:#ffffff;font-size:14px;font-weight:600;padding:14px;border-radius:10px;text-decoration:none;text-align:center;">
+              View billing &amp; receipts
+            </a>
+          </td></tr>
+
+          <!-- Footer note -->
+          <tr><td>
+            <p style="margin:0;font-size:12px;color:#9CA3AF;line-height:1.6;">
+              Questions about your bill? Reply to this email or contact <a href="mailto:support@moffu.pro" style="color:#6C55E8;text-decoration:none;">support@moffu.pro</a>
+            </p>
+          </td></tr>
+
+        </table>
+      </td></tr>
+
+      <!-- Bottom -->
+      <tr><td style="padding-top:20px;text-align:center;">
+        <p style="margin:0;font-size:11px;color:#9CA3AF;">© ${new Date().getFullYear()} Moffu · <a href="https://moffu.pro" style="color:#9CA3AF;text-decoration:none;">moffu.pro</a></p>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body></html>`;
 }
 
 function mapStatus(paddleStatus: string): string {

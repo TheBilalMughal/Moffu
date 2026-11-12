@@ -1247,13 +1247,28 @@ export function BillingPage() {
                     {(currentPlan?.name ?? 'Free').toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-[#111827]">
-                      {isFree ? 'Free plan' : (
-                        sub?.billing_interval === 'annual'
-                          ? `$${((currentPlan?.prices.find(p => p.interval === "annual")?.amount_cents ?? 0) / 100).toFixed(0)}/mo (billed annually)`
-                          : `$${((currentPlan?.prices.find(p => p.interval === "monthly")?.amount_cents ?? 0) / 100).toFixed(0)}/mo`
-                      )}
-                    </p>
+                    {isFree ? (
+                      <p className="text-sm font-semibold text-[#111827]">Free plan</p>
+                    ) : (() => {
+                      const interval = sub?.billing_interval === 'annual' ? 'annual' : 'monthly';
+                      const rawCents = currentPlan?.prices.find(p => p.interval === interval)?.amount_cents ?? 0;
+                      const discCents = applyDiscount(rawCents, currentPlan?.discount_type ?? null, currentPlan?.discount_value ?? null);
+                      const hasDiscount = discCents < rawCents;
+                      const suffix = interval === 'annual' ? '/mo (billed annually)' : '/mo';
+                      return (
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          {hasDiscount && (
+                            <span className="text-sm text-[#9CA3AF] line-through">${(rawCents / 100).toFixed(rawCents % 100 === 0 ? 0 : 2)}{suffix}</span>
+                          )}
+                          <span className="text-sm font-semibold text-[#111827]">${(discCents / 100).toFixed(discCents % 100 === 0 ? 0 : 2)}{suffix}</span>
+                          {hasDiscount && (
+                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                              {currentPlan?.discount_type === 'percent' ? `${currentPlan.discount_value}% off` : `$${((rawCents - discCents) / 100).toFixed(0)} off`}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {!isFree && sub?.current_period_end && (
                       <p className="text-xs text-[#9CA3AF] mt-0.5">
                         Next billing: {new Date(sub.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
