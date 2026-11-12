@@ -1,4 +1,7 @@
 {
+  "redirects": [
+    { "source": "/", "destination": "https://moffu.pro", "permanent": false }
+  ],
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
     {
