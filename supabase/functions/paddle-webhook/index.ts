@@ -193,18 +193,20 @@ async function handleTransactionCompleted(supabase: ReturnType<typeof createClie
     .update({ paddle_transaction_id: transactionId, paddle_customer_id: customerId, payment_failure_count: 0 })
     .eq('user_id', userId);
 
-  // Parse amount from details.totals (Paddle sends cents as integer string)
+  // Parse amounts from details.totals (Paddle sends cents as integer strings)
   const details = (data.details as Record<string, unknown> | null) ?? {};
   const totals = (details.totals as Record<string, unknown> | null) ?? {};
-  const grandTotalRaw = totals.grand_total as string ?? '0';
-  const amountCents = parseInt(grandTotalRaw, 10) || 0;
+  const subtotalCents = parseInt((totals.subtotal as string) ?? '0', 10) || 0;
+  const discountCents = parseInt((totals.discount as string) ?? '0', 10) || 0;
+  const amountCents = parseInt((totals.grand_total as string) ?? '0', 10) || 0;
   const currency = (data.currency_code as string) ?? 'USD';
 
-  // Get plan name and billing interval from items
+  // Get plan name, billing interval, and discount code from items/discount
   const items = (data.items as Array<{ price?: { id?: string }; product?: { name?: string } }>) ?? [];
   const priceId = items[0]?.price?.id;
   const productName = items[0]?.product?.name ?? null;
   const priceInfo = priceId ? await getPaddlePriceInfo(priceId) : null;
+  const discountCode = (data.discount as { code?: string } | null)?.code ?? null;
 
   // Store transaction record
   await supabase.from('paddle_transactions').upsert({
@@ -233,7 +235,7 @@ async function handleTransactionCompleted(supabase: ReturnType<typeof createClie
     await sendEmail(
       email,
       `Your Moffu receipt — ${productName ?? 'Subscription'}`,
-      receiptEmailHtml({ name, transactionId, planName: productName, billingInterval, amountCents, currency, webUrl }),
+      receiptEmailHtml({ name, transactionId, planName: productName, billingInterval, subtotalCents, discountCents, amountCents, discountCode, currency, webUrl }),
     );
   }
 }
@@ -373,21 +375,48 @@ function suspendedEmailHtml(name: string | null, webUrl: string) {
   `);
 }
 
-function receiptEmailHtml({ name, transactionId, planName, billingInterval, amountCents, currency, webUrl }: {
+function receiptEmailHtml({ name, transactionId, planName, billingInterval, subtotalCents, discountCents, amountCents, discountCode, currency, webUrl }: {
   name: string | null;
   transactionId: string;
   planName: string | null;
   billingInterval: string | null;
+  subtotalCents: number;
+  discountCents: number;
   amountCents: number;
+  discountCode: string | null;
   currency: string;
   webUrl: string;
 }) {
   const greeting = name ? `Hi ${name.split(' ')[0]},` : 'Hi,';
-  const amount = `$${(amountCents / 100).toFixed(2)}`;
+  const fmtCents = (c: number) => `$${(c / 100).toFixed(2)}`;
   const shortId = transactionId.replace('txn_', '').slice(0, 12).toUpperCase();
   const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const intervalLabel = billingInterval === 'annual' ? 'Annual' : 'Monthly';
   const plan = planName ?? 'Moffu Plan';
+  const hasDiscount = discountCents > 0;
+  const billingPortalUrl = `${webUrl.replace('https://moffu.pro', 'https://app.moffu.pro')}/billing`;
+
+  const discountRow = hasDiscount ? `
+              <tr>
+                <td style="padding:12px 16px;font-size:14px;color:#059669;font-weight:600;background:#ECFDF5;border-bottom:1px solid #D1FAE5;">
+                  ${discountCode ? `Promo code: ${discountCode}` : 'Discount applied'}
+                </td>
+                <td style="padding:12px 16px;font-size:14px;color:#059669;font-weight:700;text-align:right;background:#ECFDF5;border-bottom:1px solid #D1FAE5;">-${fmtCents(discountCents)}</td>
+              </tr>` : '';
+
+  const subtotalRow = hasDiscount ? `
+              <tr>
+                <td style="padding:14px 16px;font-size:14px;color:#111827;font-weight:600;border-bottom:1px solid #F3F4F6;">
+                  ${plan}<br/><span style="font-size:12px;font-weight:400;color:#9CA3AF;">${intervalLabel} subscription</span>
+                </td>
+                <td style="padding:14px 16px;font-size:14px;color:#9CA3AF;font-weight:600;text-align:right;text-decoration:line-through;border-bottom:1px solid #F3F4F6;">${fmtCents(subtotalCents)}</td>
+              </tr>` : `
+              <tr>
+                <td style="padding:14px 16px;font-size:14px;color:#111827;font-weight:600;border-bottom:1px solid #F3F4F6;">
+                  ${plan}<br/><span style="font-size:12px;font-weight:400;color:#9CA3AF;">${intervalLabel} subscription</span>
+                </td>
+                <td style="padding:14px 16px;font-size:14px;color:#111827;font-weight:600;text-align:right;border-bottom:1px solid #F3F4F6;">${fmtCents(amountCents)}</td>
+              </tr>`;
 
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
 <body style="margin:0;padding:0;background:#F4F1FF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
@@ -433,13 +462,11 @@ function receiptEmailHtml({ name, transactionId, planName, billingInterval, amou
                 <td style="padding:10px 16px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid #E5E7EB;">Description</td>
                 <td style="padding:10px 16px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;text-align:right;border-bottom:1px solid #E5E7EB;">Amount</td>
               </tr>
+              ${subtotalRow}
+              ${discountRow}
               <tr>
-                <td style="padding:14px 16px;font-size:14px;color:#111827;font-weight:600;border-bottom:1px solid #F3F4F6;">${plan}<br/><span style="font-size:12px;font-weight:400;color:#9CA3AF;">${intervalLabel} subscription</span></td>
-                <td style="padding:14px 16px;font-size:14px;color:#111827;font-weight:600;text-align:right;border-bottom:1px solid #F3F4F6;">${amount}</td>
-              </tr>
-              <tr>
-                <td style="padding:14px 16px;font-size:15px;font-weight:700;color:#111827;">Total</td>
-                <td style="padding:14px 16px;font-size:15px;font-weight:700;color:#111827;text-align:right;">${amount} ${currency}</td>
+                <td style="padding:14px 16px;font-size:15px;font-weight:700;color:#111827;background:#F9FAFB;">Total</td>
+                <td style="padding:14px 16px;font-size:15px;font-weight:800;color:#111827;text-align:right;background:#F9FAFB;">${fmtCents(amountCents)} ${currency}</td>
               </tr>
             </table>
           </td></tr>
@@ -466,7 +493,7 @@ function receiptEmailHtml({ name, transactionId, planName, billingInterval, amou
 
           <!-- CTA -->
           <tr><td style="padding-bottom:24px;">
-            <a href="${webUrl.replace('https://moffu.pro', 'https://app.moffu.pro')}/billing" style="display:block;background:#6C55E8;color:#ffffff;font-size:14px;font-weight:600;padding:14px;border-radius:10px;text-decoration:none;text-align:center;">
+            <a href="${billingPortalUrl}" style="display:block;background:#6C55E8;color:#ffffff;font-size:14px;font-weight:600;padding:14px;border-radius:10px;text-decoration:none;text-align:center;">
               View billing &amp; receipts
             </a>
           </td></tr>
@@ -474,7 +501,7 @@ function receiptEmailHtml({ name, transactionId, planName, billingInterval, amou
           <!-- Footer note -->
           <tr><td>
             <p style="margin:0;font-size:12px;color:#9CA3AF;line-height:1.6;">
-              Questions about your bill? Reply to this email or contact <a href="mailto:support@moffu.pro" style="color:#6C55E8;text-decoration:none;">support@moffu.pro</a>
+              Questions about your bill? Contact us at <a href="mailto:billing@moffu.pro" style="color:#6C55E8;text-decoration:none;">billing@moffu.pro</a>
             </p>
           </td></tr>
 
