@@ -28,6 +28,19 @@ import { NewFeedbackRequestPage } from '@/features/feedback/NewFeedbackRequestPa
 import { MarketingPage } from '@/features/marketing/MarketingPage';
 import { NewPostPage } from '@/features/marketing/NewPostPage';
 
+function PortalLanding() {
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fff', fontFamily: 'sans-serif' }}>
+      <img src="/moffu-logo.svg" alt="Moffu" width={120} style={{ marginBottom: 24 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+      <h1 style={{ fontSize: 24, fontWeight: 700, color: '#111827', marginBottom: 8 }}>Moffu Customer Portal</h1>
+      <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 32 }}>Manage your Google reviews and AI replies.</p>
+      <a href="/auth/login" style={{ padding: '10px 24px', background: '#6C55E8', color: '#fff', borderRadius: 8, textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+        Sign In
+      </a>
+    </div>
+  );
+}
+
 export function App() {
   const initialize  = useAuthStore((s) => s.initialize);
   const authStatus  = useAuthStore((s) => s.status);
@@ -92,9 +105,12 @@ export function App() {
         {/* Invite acceptance — no auth required to view */}
         <Route path="/invite/:token" element={<AcceptInvitePage />} />
 
+        {/* Public landing — required so Paddle domain review can reach the
+            root without hitting the AuthGuard login redirect */}
+        <Route path="/" element={<PortalLanding />} />
+
         {/* Default redirects */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/auth/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
