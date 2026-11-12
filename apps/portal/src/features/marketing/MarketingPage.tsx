@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { marketingService, MarketingPost, PLATFORM_LABELS, POST_TYPES, STATUS_LABELS } from './marketingService';
+import { marketingService, MarketingPost, ReviewHighlight, PLATFORM_LABELS, POST_TYPES, STATUS_LABELS } from './marketingService';
+import { supabase } from '@/lib/supabase';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -84,6 +85,8 @@ function FilterSelect({ value, onChange, placeholder, options }: {
   );
 }
 
+interface Location { id: string; display_name: string | null; }
+
 export function MarketingPage() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<MarketingPost[]>([]);
@@ -94,6 +97,14 @@ export function MarketingPage() {
   const [platformFilter, setPlatformFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+
+  // Post Ideas from Reviews
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [ideasLocationId, setIdeasLocationId] = useState('');
+  const [highlights, setHighlights] = useState<ReviewHighlight[]>([]);
+  const [highlightsLoading, setHighlightsLoading] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [extractMsg, setExtractMsg] = useState('');
 
   async function load() {
     setLoading(true);
@@ -106,7 +117,41 @@ export function MarketingPage() {
     setLoading(false);
   }
 
+  async function loadLocations() {
+    const { data } = await supabase
+      .from('google_locations')
+      .select('id, display_name')
+      .eq('is_selected', true)
+      .order('display_name');
+    setLocations((data ?? []) as Location[]);
+  }
+
+  async function loadHighlights(locId: string) {
+    if (!locId) { setHighlights([]); return; }
+    setHighlightsLoading(true);
+    const res = await marketingService.loadHighlights(locId);
+    setHighlights(res.data);
+    setHighlightsLoading(false);
+  }
+
+  async function handleExtract() {
+    if (!ideasLocationId) return;
+    setExtracting(true);
+    setExtractMsg('');
+    const res = await marketingService.extractHighlights(ideasLocationId);
+    if (res.error) {
+      setExtractMsg(res.error);
+    } else {
+      setExtractMsg(`${res.extracted ?? 0} highlight${(res.extracted ?? 0) !== 1 ? 's' : ''} extracted.`);
+      await loadHighlights(ideasLocationId);
+    }
+    setExtracting(false);
+    setTimeout(() => setExtractMsg(''), 4000);
+  }
+
   useEffect(() => { load(); }, [platformFilter, typeFilter, statusFilter]);
+  useEffect(() => { loadLocations(); }, []);
+  useEffect(() => { loadHighlights(ideasLocationId); }, [ideasLocationId]);
 
   async function handleDelete(id: string) {
     setDeleting(id);
@@ -140,6 +185,89 @@ export function MarketingPage() {
         <StatCard label="This Month" value={stats.thisMonth} />
         <StatCard label="Instagram" value={stats.byPlatform['instagram'] ?? 0} />
         <StatCard label="Facebook" value={stats.byPlatform['facebook'] ?? 0} />
+      </div>
+
+      {/* Post Ideas from Reviews */}
+      <div className="flex-shrink-0 px-8 pb-4">
+        <div className="bg-white border border-[#E5E7EB] rounded-xl px-5 py-4">
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <div>
+              <p className="text-sm font-bold text-[#111827]">Post Ideas from Reviews</p>
+              <p className="text-xs text-[#9CA3AF] mt-0.5">AI-extracted highlights from your best reviews. Click a chip to create a post.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Location picker */}
+              <FilterSelect
+                value={ideasLocationId}
+                onChange={v => { setIdeasLocationId(v); setExtractMsg(''); }}
+                placeholder="Select location"
+                options={locations.map(l => ({ value: l.id, label: l.display_name ?? l.id }))}
+              />
+              {ideasLocationId && (
+                <button
+                  onClick={handleExtract}
+                  disabled={extracting}
+                  title="Extract highlights using AI"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-[#6C55E8] border border-[#6C55E8]/30 px-3 py-2 rounded-xl hover:bg-[#EDE9FE] disabled:opacity-50 transition-colors"
+                >
+                  {extracting ? (
+                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                  )}
+                  {extracting ? 'Extracting…' : 'Refresh'}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {!ideasLocationId ? (
+            <p className="text-xs text-[#9CA3AF] py-2">Select a location to see post ideas from its reviews.</p>
+          ) : highlightsLoading ? (
+            <div className="flex gap-2 flex-wrap">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-8 w-32 rounded-xl bg-[#E5E7EB] animate-pulse" />
+              ))}
+            </div>
+          ) : highlights.length === 0 ? (
+            <div className="flex items-center gap-3 py-2">
+              <p className="text-xs text-[#9CA3AF]">No highlights yet.</p>
+              <button
+                onClick={handleExtract}
+                disabled={extracting}
+                className="text-xs font-semibold text-[#6C55E8] hover:underline disabled:opacity-50"
+              >
+                Extract now
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2 flex-wrap">
+              {highlights.map(h => (
+                <button
+                  key={h.id}
+                  onClick={() => navigate(`/marketing/new?highlight=${encodeURIComponent(h.highlight_text)}&location_id=${ideasLocationId}&post_type=review_highlight`)}
+                  className="group flex items-center gap-1.5 bg-[#F3F4F6] hover:bg-[#EDE9FE] border border-transparent hover:border-[#6C55E8]/30 text-[#374151] hover:text-[#6C55E8] text-xs font-medium px-3 py-2 rounded-xl transition-all"
+                  title={h.highlight_text}
+                >
+                  <svg className="w-3 h-3 text-[#9CA3AF] group-hover:text-[#6C55E8] flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                  </svg>
+                  <span className="max-w-[200px] truncate">{h.highlight_text}</span>
+                  <svg className="w-3 h-3 opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
+              ))}
+            </div>
+          )}
+          {extractMsg && (
+            <p className="text-xs text-[#6C55E8] mt-2 font-medium">{extractMsg}</p>
+          )}
+        </div>
       </div>
 
       {/* Filters */}

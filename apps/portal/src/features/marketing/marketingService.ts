@@ -117,6 +117,14 @@ export const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   downloaded:       { label: 'Downloaded', color: 'bg-[#EFF6FF] text-[#1D4ED8]' },
 };
 
+export interface ReviewHighlight {
+  id: string;
+  highlight_text: string;
+  keywords: string[];
+  generated_at: string;
+  location_id: string;
+}
+
 export const marketingService = {
   async getOrgId(): Promise<string | null> {
     const { data: { user } } = await supabase.auth.getUser();
@@ -185,5 +193,33 @@ export const marketingService = {
 
   async deletePost(id: string): Promise<void> {
     await supabase.from('marketing_posts').delete().eq('id', id);
+  },
+
+  async loadHighlights(locationId: string): Promise<{ data: ReviewHighlight[]; error: string | null }> {
+    const { data, error } = await supabase
+      .from('review_highlights')
+      .select('id, highlight_text, keywords, generated_at, location_id')
+      .eq('location_id', locationId)
+      .order('generated_at', { ascending: false })
+      .limit(10);
+    if (error) return { data: [], error: error.message };
+    return { data: (data ?? []) as ReviewHighlight[], error: null };
+  },
+
+  async extractHighlights(locationId?: string): Promise<{ error: string | null; extracted?: number }> {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return { error: 'Not authenticated' };
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-review-highlights`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(locationId ? { location_id: locationId } : {}),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) return { error: body.error ?? 'Extraction failed' };
+    return { error: null, extracted: body.extracted ?? 0 };
   },
 };

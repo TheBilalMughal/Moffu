@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   marketingService, GeneratePostResult, Variant,
   POST_TYPES, TARGET_PLATFORMS, PLATFORM_LABELS,
@@ -128,16 +128,24 @@ type Step = 'configure' | 'generating' | 'results';
 
 export function NewPostPage() {
   const navigate = useNavigate();
-  const { selectedId: locationId } = useLocationStore();
+  const [searchParams] = useSearchParams();
+  const { selectedId: globalLocationId } = useLocationStore();
+
+  // URL-injected values from "Post Ideas" chips
+  const prefilledHighlight = searchParams.get('highlight') ?? '';
+  const prefilledLocationId = searchParams.get('location_id') ?? '';
+  const prefilledPostType   = searchParams.get('post_type') ?? '';
+
+  const locationId = prefilledLocationId || globalLocationId;
 
   const [step, setStep] = useState<Step>('configure');
   const [result, setResult] = useState<GeneratePostResult | null>(null);
   const [error, setError] = useState('');
 
-  // Configure form state
+  // Configure form state — pre-fill from URL params when present
   const [platform, setPlatform] = useState('all');
-  const [postType, setPostType] = useState('');
-  const [userContext, setUserContext] = useState('');
+  const [postType, setPostType] = useState(prefilledPostType || '');
+  const [userContext, setUserContext] = useState(prefilledHighlight ? `Review highlight: "${prefilledHighlight}"` : '');
   const [variantCount, setVariantCount] = useState(3);
 
   async function generate() {
@@ -148,6 +156,7 @@ export function NewPostPage() {
     const params: Parameters<typeof marketingService.generatePost>[0] = { platform, post_type: postType, variant_count: variantCount };
     if (userContext.trim()) params.user_context = userContext.trim();
     if (locationId) params.location_id = locationId;
+    if (prefilledHighlight) params.source_review = prefilledHighlight;
     const res = await marketingService.generatePost(params);
 
     if (res.error) {
@@ -181,6 +190,18 @@ export function NewPostPage() {
       <div className="flex-1 overflow-y-auto px-8 pb-8">
         {step === 'configure' && (
           <div className="max-w-2xl space-y-6">
+            {/* Review highlight banner */}
+            {prefilledHighlight && (
+              <div className="flex items-start gap-3 bg-[#EDE9FE] border border-[#6C55E8]/20 rounded-xl px-4 py-3">
+                <svg className="w-4 h-4 text-[#6C55E8] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                </svg>
+                <div>
+                  <p className="text-xs font-semibold text-[#6C55E8]">Review Highlight pre-loaded</p>
+                  <p className="text-xs text-[#5A42D1] mt-0.5 line-clamp-2">{prefilledHighlight}</p>
+                </div>
+              </div>
+            )}
             {/* Platform */}
             <div>
               <p className="text-sm font-semibold text-[#111827] mb-3">Platform</p>
