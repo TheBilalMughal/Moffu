@@ -109,6 +109,16 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | BILLING-014 | Refund reconciliation | PENDING | - | - |
 | BILLING-015 | Tax adapter | PENDING | - | TBD: tax/GST treatment not decided |
 | BILLING-016 | Historical price/FX snapshots | PENDING | - | - |
+| SEO-001 | H1 keyword optimisation | IMPLEMENTED | - | `HeroHeadline.tsx` — `aria-label` with keyword-rich text added to `<h1>` (no visual change) |
+| SEO-002 | Semantic heading hierarchy | IMPLEMENTED | - | `page.tsx` — section labels as `<h2>`, FAQ questions as `<h3>`; correct h1→h2→h3 nesting throughout homepage |
+| SEO-003 | Open Graph metadata | IMPLEMENTED | - | `og:type`, `siteName`, `locale` added to homepage and all marketing pages |
+| SEO-004 | JSON-LD structured data | IMPLEMENTED | - | Organization + WebSite in `layout.tsx`; SoftwareApplication + FAQPage in homepage; BreadcrumbList in `/feature` and `/pricing` |
+| SEO-005 | robots.txt | IMPLEMENTED | - | `public/robots.txt` — `Disallow: /f/` added; `Sitemap:` directive added |
+| SEO-006 | XML sitemap | IMPLEMENTED | - | `apps/web/src/app/sitemap.ts` — Next.js dynamic sitemap with 14 marketing pages, correct priorities and change frequencies |
+| SEO-007 | Dedicated /pricing page | IMPLEMENTED | - | `apps/web/src/app/(marketing)/pricing/page.tsx` — canonical URL, BreadcrumbList JSON-LD, H1, Supabase plan fetch |
+| SEO-008 | Dedicated /faq page | IMPLEMENTED | - | `apps/web/src/app/(marketing)/faq/page.tsx` — canonical URL, FAQPage JSON-LD (10 Q&As, Google rich result eligible), BreadcrumbList JSON-LD |
+| SEO-009 | Footer social + email casing | IMPLEMENTED | - | `SiteFooter.tsx` — email addresses lowercased; X/Twitter link added |
+| SEO-010 | Features page completeness | IMPLEMENTED | - | "Reviews to Social Posts" card added to `feature/page.tsx` FEATURES array |
 | JOB-001 | Durable queue | PENDING | - | - |
 | JOB-002 | Leases/idempotency | PENDING | - | - |
 | JOB-003 | Retry/backoff | PENDING | - | - |

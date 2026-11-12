@@ -56,7 +56,7 @@ export function HeroHeadline() {
         bro your reviews are going unanswered,
       </p>
 
-      <h1 key={cycle} className="font-extrabold leading-[0.90] tracking-tight text-[#111827] mb-0">
+      <h1 key={cycle} className="font-extrabold leading-[0.90] tracking-tight text-[#111827] mb-0" aria-label="AI-powered Google review reply software for businesses. Auto-draft on-brand responses to every review in seconds.">
 
         {/* left on read — smaller, ghostly drift */}
         <span

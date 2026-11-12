@@ -3,5 +3,6 @@ Allow: /
 
 Disallow: /api/
 Disallow: /auth/
+Disallow: /f/
 
 Sitemap: https://www.moffu.pro/sitemap.xml

@@ -28,9 +28,43 @@ export const metadata: Metadata = {
   },
 };
 
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Moffu',
+  url: 'https://www.moffu.pro',
+  logo: 'https://www.moffu.pro/images/logo-transparent.png',
+  sameAs: [
+    'https://linkedin.com/company/moffu',
+    'https://x.com/moffu',
+  ],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    email: 'support@moffu.pro',
+    contactType: 'customer support',
+  },
+};
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Moffu',
+  url: 'https://www.moffu.pro',
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+      </head>
       <body className="min-h-screen">
         {children}
       </body>

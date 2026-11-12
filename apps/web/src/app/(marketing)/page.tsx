@@ -13,6 +13,9 @@ export const metadata: Metadata = {
     title: 'AI Google Review Reply Software | Moffu',
     description: 'Auto-reply to Google reviews with AI. Moffu drafts on-brand responses for every star rating, you approve in one click. Free to start.',
     url: 'https://www.moffu.pro',
+    type: 'website',
+    siteName: 'Moffu',
+    locale: 'en_US',
     images: [{ url: '/images/og-home.png', width: 1200, height: 630, alt: 'Moffu AI Google Review Reply Software' }],
   },
 };
@@ -209,10 +212,10 @@ function ValuePropSection() {
 
         {/* Left: copy */}
         <div>
-          <p className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-4">how it works</p>
-          <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-black leading-[1.1] text-[#111827] mb-6">
+          <h2 className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-4">how it works</h2>
+          <h3 className="text-[clamp(1.75rem,4vw,2.5rem)] font-black leading-[1.1] text-[#111827] mb-6">
             Stop writing the same reply 40 times a month.
-          </h2>
+          </h3>
           <p className="text-[#111827]/65 text-base leading-relaxed mb-8">
             Moffu handles every Google review in your voice, same day, every day. It sounds like you because you trained it to.
           </p>
@@ -410,12 +413,12 @@ function FeaturesSection() {
   return (
     <section id="features" className="bg-[#F3F4F6] px-6 lg:px-16 py-24">
       <div className="max-w-[1380px] mx-auto">
-        <p className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-6">
+        <h2 className="text-sm font-semibold text-[#111827]/50 uppercase tracking-widest mb-6">
           Features
-        </p>
-        <h2 className="text-[clamp(1.5rem,3vw,2.25rem)] font-black leading-[1.05] tracking-tight text-[#111827] mb-6 max-w-3xl">
-          Teach your AI how your brand communicates.
         </h2>
+        <h3 className="text-[clamp(1.5rem,3vw,2.25rem)] font-black leading-[1.05] tracking-tight text-[#111827] mb-6 max-w-3xl">
+          Teach your AI how your brand communicates.
+        </h3>
         <p className="text-lg text-[#6B7280] leading-relaxed mb-14 max-w-2xl">
           Brand Brain is the layer between raw AI and your business. Configure it once with
           your tone, rules, and preferences. Every Google review response sounds
@@ -432,6 +435,15 @@ function FeaturesSection() {
                 <p className="text-sm text-[#6B7280] leading-relaxed">{description}</p>
               </div>
             ))}
+        </div>
+
+        <div className="mt-10">
+          <a
+            href="/feature"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#6C55E8] hover:text-[#5A42D1] transition-colors duration-150"
+          >
+            See all features in detail →
+          </a>
         </div>
       </div>
     </section>
@@ -721,15 +733,15 @@ function FAQSection() {
   return (
     <section id="faq" className="bg-white px-6 lg:px-16 min-h-screen flex items-center py-20">
       <div className="max-w-[1380px] mx-auto w-full">
-        <p className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-3">faq</p>
-        <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-black text-[#111827] leading-[1.1] mb-10">
+        <h2 className="text-xs font-semibold text-[#111827]/50 uppercase tracking-widest mb-3">faq</h2>
+        <p className="text-[clamp(1.75rem,4vw,2.5rem)] font-black text-[#111827] leading-[1.1] mb-10">
           Common questions.
-        </h2>
+        </p>
         <div className="grid gap-3">
           {FAQ_ITEMS.map((item) => (
             <details key={item.q} className="group border border-[#E5E7EB] rounded-xl overflow-hidden bg-white">
               <summary className="flex items-center justify-between px-6 py-5 cursor-pointer list-none select-none hover:bg-[#F3F4F6] transition-colors duration-150">
-                <span className="text-sm font-black text-[#111827] pr-4 leading-snug">{item.q}</span>
+                <h3 className="text-sm font-black text-[#111827] pr-4 leading-snug m-0">{item.q}</h3>
                 <span className="w-6 h-6 rounded-full bg-[#111827] flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-open:rotate-45">
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 5v14M5 12h14"/>
@@ -752,6 +764,22 @@ function FAQSection() {
 // Page
 // ---------------------------------------------------------------------------
 
+const softwareAppSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Moffu',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  url: 'https://www.moffu.pro',
+  description: 'AI-powered Google review reply software. Auto-draft on-brand responses to every Google Business Profile review in seconds.',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+    description: 'Free plan available. No credit card required.',
+  },
+};
+
 export default async function HomePage() {
   const supabase = await createServerClient();
   const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? 'https://app.moffu.pro';
@@ -767,6 +795,10 @@ export default async function HomePage() {
 
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema) }}
+      />
       <HeroSection waitlistEnabled={waitlistEnabled} portalUrl={portalUrl} />
       <ValuePropSection />
       <BrandsSection brands={brands} speed={marqueeSpeed} />

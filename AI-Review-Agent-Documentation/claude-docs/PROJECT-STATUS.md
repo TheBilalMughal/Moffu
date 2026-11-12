@@ -333,6 +333,37 @@ Also hardened `handle_new_user` with `ON CONFLICT (id) DO NOTHING` to guard agai
 - Hero section: added "New" announcement badge between HeroHeadline and tagline: "Turn your 5-star reviews into social media posts, automatically."
 - Features grid: added "Reviews to Social Posts" card with share icon: "Your best 5-star reviews become ready-to-post marketing content. Moffu extracts the highlights, drafts the copy, and surfaces it for one-click approval, every week."
 
+## Marketing Website — SEO Audit V2 Fixes
+**COMPLETE** ✅ (shipped 2026-11-12)
+
+**F1 — H1 keyword optimisation:** `HeroHeadline.tsx` — `aria-label` added to `<h1>` with keyword-rich text ("AI-powered Google review reply software for businesses. Auto-draft on-brand responses to every review in seconds.") without changing visual content.
+
+**F2 — Semantic heading hierarchy:** `apps/web/src/app/(marketing)/page.tsx` — section labels ("how it works", "Features", "faq") promoted to `<h2>`; FAQ questions promoted to `<h3>`; decorative headlines kept as `<p>`.
+
+**F3 — FAQ question headings:** FAQ `<span>` elements changed to `<h3>` throughout the homepage FAQ accordion.
+
+**F4 — Open Graph tags:** Added `og:type: 'website'`, `siteName: 'Moffu'`, `locale: 'en_US'` to homepage + all marketing pages.
+
+**F5 — Features URL:** Navbar "Features" link kept at `/#features` (smooth-scroll to section); a "See all features in detail →" link added at the bottom of the features section pointing to `/feature`.
+
+**F6 — Email address casing:** `SiteFooter.tsx` — `hello@`, `sales@`, `support@` lowercased (were mixed-case).
+
+**F7 — Social links:** X/Twitter link added to footer alongside LinkedIn.
+
+**F8 — JSON-LD structured data:** Organization + WebSite schemas added in `layout.tsx`; SoftwareApplication schema in `page.tsx`; FAQPage schema in `/feature/page.tsx`; BreadcrumbList schema in `/feature/page.tsx` and `/pricing/page.tsx`.
+
+**F9 — `lang="en"`:** Already present on `<html>` in root layout (no action needed).
+
+**robots.txt:** Added `Disallow: /f/` to block feedback token pages from search indexing.
+
+**sitemap.ts:** New dynamic Next.js sitemap at `apps/web/src/app/sitemap.ts` — includes all 14 marketing pages with correct priorities and change frequencies; registered in `robots.txt`.
+
+**`/pricing` dedicated page:** `apps/web/src/app/(marketing)/pricing/page.tsx` — standalone pricing page with canonical URL, BreadcrumbList JSON-LD, H1, full plan fetch from Supabase, `PricingToggle` component.
+
+**`/faq` dedicated page:** `apps/web/src/app/(marketing)/faq/page.tsx` — standalone FAQ page with canonical URL, FAQPage JSON-LD (10 Q&A pairs → Google rich results eligible), BreadcrumbList JSON-LD, H1, `<details>` accordion.
+
+**Feature page missing card:** "Reviews to Social Posts" card added to `feature/page.tsx` FEATURES array (was in home page grid but missing from feature page).
+
 ## External/configuration pending
 - `VITE_WEB_URL` → set to `https://moffu.vercel.app` in portalmoffu Vercel project (for "Back to website" link in prod)
 - Google OAuth credentials → needed for Phase 4
