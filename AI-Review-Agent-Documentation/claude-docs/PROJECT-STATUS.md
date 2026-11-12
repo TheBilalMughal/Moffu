@@ -269,6 +269,21 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 
 **All emails:** from `Moffu <notifications@moffu.pro>` via Resend; branded HTML with purple (#6C55E8) CTA buttons; support link to `support@moffu.pro`
 
+## Marketing — Post Ideas from Reviews
+**COMPLETE** ✅ (shipped 2026-11-12)
+
+**DB migration applied (`kgttncfkzdrgswfkkdji`):**
+- `review_highlights` table (org_id, location_id, highlight_text, keywords[], source_review_ids[], generated_at) with RLS (org members can select)
+- Weekly pg_cron job `weekly-review-highlights` (Sat 23:00 UTC) calls `extract-review-highlights` edge function
+
+**Edge Function:**
+- `extract-review-highlights` — takes `{ location_id? }` or processes all selected locations in cron mode; queries 4-5 star reviews (last 100); uses Gemini to extract 5 highlight phrases + keywords; upserts to `review_highlights`; returns `{ extracted, location_count }`
+
+**Portal UI:**
+- `MarketingPage` — "Post Ideas from Reviews" section: location selector (custom FilterDropdown, only `is_selected` locations), highlight chips, manual "Refresh" button, "Extract now" link when no highlights; each chip navigates to NewPostPage with pre-filled params
+- `NewPostPage` — reads `?highlight=&location_id=&post_type=` URL params; pre-fills Review Highlight post type, context textarea, and passes `source_review` to `ai-generate-post`; shows purple banner when highlight is pre-loaded
+- `marketingService` — added `loadHighlights(locationId)` and `extractHighlights(locationId?)` methods
+
 ## External/configuration pending
 - `VITE_WEB_URL` → set to `https://moffu.vercel.app` in portalmoffu Vercel project (for "Back to website" link in prod)
 - Google OAuth credentials → needed for Phase 4
