@@ -28,55 +28,6 @@ import { NewFeedbackRequestPage } from '@/features/feedback/NewFeedbackRequestPa
 import { MarketingPage } from '@/features/marketing/MarketingPage';
 import { NewPostPage } from '@/features/marketing/NewPostPage';
 
-function PortalLanding() {
-  return (
-    <div style={{ minHeight: '100vh', background: '#D8CCFF', fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}>
-      {/* Nav */}
-      <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 48px', maxWidth: 1200, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-        <span style={{ fontSize: 22, fontWeight: 900, color: '#111827', letterSpacing: '-0.03em' }}>Moffu</span>
-        <a href="/auth/login" style={{ padding: '9px 20px', background: '#111827', color: '#fff', borderRadius: 8, textDecoration: 'none', fontSize: 13, fontWeight: 700 }}>
-          Sign In →
-        </a>
-      </nav>
-
-      {/* Hero */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '48px 24px', maxWidth: 720, margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#111827', borderRadius: 8, padding: '6px 14px', marginBottom: 32 }}>
-          <span style={{ background: '#6C55E8', color: '#fff', fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '2px 6px', borderRadius: 4 }}>New</span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#fff' }}>AI Google Review Management</span>
-        </div>
-
-        <h1 style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)', fontWeight: 900, lineHeight: 1.08, color: '#111827', marginBottom: 20, letterSpacing: '-0.03em' }}>
-          Reply to every review.<br />Sound human. Do nothing.
-        </h1>
-        <p style={{ fontSize: 16, color: 'rgba(17,24,39,0.6)', lineHeight: 1.65, marginBottom: 40, maxWidth: 480 }}>
-          Moffu connects to your Google Business Profile and drafts AI replies in your brand voice — approved by you before anything goes live.
-        </p>
-
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <a href="/auth/login" style={{ padding: '12px 28px', background: '#6C55E8', color: '#fff', borderRadius: 8, textDecoration: 'none', fontSize: 14, fontWeight: 700 }}>
-            Sign in to your account
-          </a>
-          <a href="https://moffu.pro" style={{ padding: '12px 28px', background: 'rgba(17,24,39,0.08)', color: '#111827', borderRadius: 8, textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
-            Learn more
-          </a>
-        </div>
-
-        {/* Feature chips */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center', marginTop: 48 }}>
-          {['AI-drafted replies', 'Brand Brain tone control', 'Multi-location support', 'One-click approval', 'Review campaigns', 'Response analytics'].map(f => (
-            <span key={f} style={{ background: 'rgba(17,24,39,0.07)', color: '#111827', fontSize: 12, fontWeight: 600, padding: '6px 14px', borderRadius: 8 }}>{f}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* Footer */}
-      <footer style={{ textAlign: 'center', padding: '24px', fontSize: 12, color: 'rgba(17,24,39,0.4)' }}>
-        © {new Date().getFullYear()} Moffu · <a href="https://moffu.pro" style={{ color: 'rgba(17,24,39,0.4)', textDecoration: 'none' }}>moffu.pro</a>
-      </footer>
-    </div>
-  );
-}
 
 export function App() {
   const initialize  = useAuthStore((s) => s.initialize);
@@ -142,9 +93,8 @@ export function App() {
         {/* Invite acceptance — no auth required to view */}
         <Route path="/invite/:token" element={<AcceptInvitePage />} />
 
-        {/* Public landing — required so Paddle domain review can reach the
-            root without hitting the AuthGuard login redirect */}
-        <Route path="/" element={<PortalLanding />} />
+        {/* Root → login */}
+        <Route path="/" element={<Navigate to="/auth/login" replace />} />
 
         {/* Default redirects */}
         <Route path="*" element={<Navigate to="/auth/login" replace />} />
