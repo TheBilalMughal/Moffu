@@ -17,15 +17,15 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] flex flex-col">
+    <div className="min-h-screen bg-[#D8CCFF] flex flex-col" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
       {/* Top bar */}
-      <header className="flex items-center justify-between px-6 lg:px-10 py-5">
+      <header className="flex items-center justify-between px-6 lg:px-12 py-5 max-w-[1200px] w-full mx-auto box-border">
         <a href={env.webUrl} className="flex items-center">
           <img src="/images/logo.png" alt="Moffu" className="h-7 w-auto" />
         </a>
         <a
           href={env.webUrl}
-          className="text-sm text-[#6B7280] hover:text-[#111827] transition-colors flex items-center gap-1.5"
+          className="text-sm font-semibold text-[#111827] hover:text-[#6C55E8] transition-colors flex items-center gap-1.5"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
@@ -36,11 +36,11 @@ export function LoginPage() {
 
       {/* Content */}
       <main className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-[420px]">
-          <h1 className="text-[2.5rem] font-black text-[#111827] leading-tight mb-2">
+        <div className="w-full max-w-[420px] bg-white rounded-xl shadow-sm px-8 py-10">
+          <h1 className="text-[2rem] font-black text-[#111827] leading-tight mb-2 tracking-tight">
             Sign in
           </h1>
-          <p className="text-[#6B7280] text-[0.9375rem] mb-8">
+          <p className="text-[#6B7280] text-sm mb-8">
             Sign in or create your Moffu account.
           </p>
 
