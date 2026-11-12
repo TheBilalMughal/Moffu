@@ -115,6 +115,17 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 
 **Usage tracking:** Server-side in edge function (`usage_events` insert after successful draft generation)
 
+## Bug fix — new user signup (2026-11-12)
+**COMPLETE** ✅
+
+`trigger_welcome_email` called `extensions.net.http_post(...)` but pg_net lives in schema `net`, not `extensions.net`. This threw on every new user signup, rolling back the `auth.users` INSERT and preventing account creation. Old users were unaffected (trigger only fires on INSERT).
+
+Also hardened `handle_new_user` with `ON CONFLICT (id) DO NOTHING` to guard against duplicate-key failures on the `profiles` insert.
+
+**Migration applied:** `20261113000003_fix_new_user_triggers.sql` — both functions updated live.
+
+`ensureOrg` race condition fixed: when PKCE re-renders trigger a concurrent second call to `create_organization`, the duplicate raises a DB error. `org.store.ts` now re-runs `check()` on any error so the org created by the first call is loaded instead of leaving state empty.
+
 ## Phase 6 — Billing & Subscription (Paddle LIVE)
 **COMPLETE (Paddle live)** ✅
 

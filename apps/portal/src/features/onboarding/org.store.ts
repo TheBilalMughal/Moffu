@@ -56,7 +56,7 @@ export const useOrgStore = create<OrgState>((set, get) => ({
         user.email?.split('@')[0] ||
         'My Business';
 
-      const { data } = await supabase.rpc('create_organization', {
+      const { data, error } = await supabase.rpc('create_organization', {
         p_name:       name,
         p_slug:       autoSlug(name),
         p_country_id: null,
@@ -65,6 +65,10 @@ export const useOrgStore = create<OrgState>((set, get) => ({
 
       if (data) {
         set({ orgId: data as string, orgStatus: 'onboarding', checked: true });
+      } else if (error) {
+        // A concurrent call may have already created the org (race condition during
+        // PKCE exchange re-renders). Re-check to pick it up instead of leaving state empty.
+        await get().check();
       }
     }
   },

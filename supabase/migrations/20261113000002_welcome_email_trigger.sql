@@ -8,16 +8,10 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
-DECLARE
-  _url    text := 'https://kgttncfkzdrgswfkkdji.supabase.co/functions/v1/welcome-email';
-  _secret text := current_setting('app.welcome_webhook_secret', true);
 BEGIN
-  PERFORM extensions.net.http_post(
-    url     := _url,
-    headers := jsonb_build_object(
-                 'Content-Type',      'application/json',
-                 'x-webhook-secret',  coalesce(_secret, '')
-               ),
+  PERFORM net.http_post(
+    url     := 'https://kgttncfkzdrgswfkkdji.supabase.co/functions/v1/welcome-email',
+    headers := '{"Content-Type":"application/json","x-webhook-secret":"moffu-welcome-2026"}'::jsonb,
     body    := jsonb_build_object(
                  'record', jsonb_build_object(
                    'id',                 NEW.id,
