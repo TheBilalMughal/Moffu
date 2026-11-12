@@ -284,6 +284,13 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Strip
 - `NewPostPage` — reads `?highlight=&location_id=&post_type=` URL params; pre-fills Review Highlight post type, context textarea, and passes `source_review` to `ai-generate-post`; shows purple banner when highlight is pre-loaded
 - `marketingService` — added `loadHighlights(locationId)` and `extractHighlights(locationId?)` methods
 
+## Marketing Website — Review-to-Post Feature Announcement
+**COMPLETE** ✅ (shipped 2026-11-12)
+
+**`apps/web` homepage (`page.tsx`):**
+- Hero section: added "New" announcement badge between HeroHeadline and tagline: "Turn your 5-star reviews into social media posts, automatically."
+- Features grid: added "Reviews to Social Posts" card with share icon: "Your best 5-star reviews become ready-to-post marketing content. Moffu extracts the highlights, drafts the copy, and surfaces it for one-click approval, every week."
+
 ## External/configuration pending
 - `VITE_WEB_URL` → set to `https://moffu.vercel.app` in portalmoffu Vercel project (for "Back to website" link in prod)
 - Google OAuth credentials → needed for Phase 4

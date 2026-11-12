@@ -38,7 +38,14 @@ function HeroSection({ waitlistEnabled, portalUrl }: { waitlistEnabled: boolean;
         <div className="flex-1 flex flex-col items-center justify-center text-center py-16">
           <HeroHeadline />
 
-          <p className="text-sm font-bold text-[#111827]/50 uppercase tracking-[0.3em] mt-8 mb-12">
+          {/* New feature announcement */}
+          <div className="flex items-center gap-2.5 bg-[#6C55E8]/10 border border-[#6C55E8]/25 rounded-lg px-3.5 py-2 mt-6 mb-2">
+            <span className="text-[10px] font-black text-[#6C55E8] uppercase tracking-widest flex-shrink-0">New</span>
+            <span className="w-px h-3 bg-[#6C55E8]/30 flex-shrink-0" aria-hidden="true" />
+            <span className="text-xs font-semibold text-[#111827]/70">Turn your 5-star reviews into social media posts, automatically.</span>
+          </div>
+
+          <p className="text-sm font-bold text-[#111827]/50 uppercase tracking-[0.3em] mt-6 mb-12">
             REPLY FAST. SOUND HUMAN. DO NOTHING.
           </p>
 
@@ -345,6 +352,15 @@ const FEATURES_GRID = [
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Reviews to Social Posts',
+    description: 'Your best 5-star reviews become ready-to-post marketing content. Moffu extracts the highlights, drafts the copy, and surfaces it for one-click approval, every week.',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
       </svg>
     ),
   },
