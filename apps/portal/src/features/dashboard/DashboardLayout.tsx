@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { useLocationStore } from '@/features/location/location.store';
 import { FeatureAccessContext } from '@/components/FeatureGate';
 import { LocationSelectionModal } from '@/features/billing/LocationSelectionModal';
+import { usePageTracking } from '@/hooks/usePageTracking';
 
 function StarIcon() {
   return (
@@ -908,6 +909,7 @@ function RailGroupButton({
 // -----------------------------------------------------------------------------
 
 export function DashboardLayout() {
+  usePageTracking();
   const { setLocations, setSelectedId } = useLocationStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -1069,7 +1071,7 @@ export function DashboardLayout() {
           />
         )}
 
-        {/* Icon Rail — desktop only */}
+        {/* Icon Rail ï¿½ desktop only */}
         <aside className="hidden md:flex w-14 flex-shrink-0 bg-[#111111] flex-col items-center py-4 gap-1 z-20">
           <a href="/dashboard" className="w-10 h-10 flex items-center justify-center mb-2" aria-label="Moffu home">
             <img src="/images/fevicon.png" alt="" className="w-8 h-8 rounded-lg object-contain" aria-hidden="true" />

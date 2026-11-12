@@ -31,13 +31,14 @@ interface OverrideForm {
   custom_price: string; billing_interval: string; contract_start: string; contract_end: string; notes: string;
 }
 interface AuditEvent { id: string; action: string; actor_id: string | null; metadata: Record<string, unknown> | null; created_at: string; }
+interface PageView { id: string; user_id: string; ip: string; path: string; user_agent: string | null; created_at: string; }
 interface RefundRow {
   id: string; amount_cents: number | null; reason: string; status: string; admin_note: string | null;
   reviewed_at: string | null; processed_at: string | null; created_at: string;
 }
 interface SupportNote { id: string; author_id: string; body: string; created_at: string; }
 
-type OrgTab = 'overview' | 'subscription' | 'members' | 'google' | 'ai-activity' | 'refunds' | 'activity' | 'support';
+type OrgTab = 'overview' | 'subscription' | 'members' | 'google' | 'ai-activity' | 'refunds' | 'activity' | 'ip-activity' | 'support';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -251,6 +252,10 @@ export function ClientDetailPage() {
   const [savingNote, setSavingNote] = useState(false);
   const [noteMsg, setNoteMsg] = useState<string | null>(null);
 
+  // IP Activity tab
+  const [pageViews, setPageViews] = useState<PageView[]>([]);
+  const [pageViewsLoading, setPageViewsLoading] = useState(false);
+
   useEffect(() => { load(); }, [id]);
 
   // Lazy-load tab data on first visit
@@ -259,6 +264,7 @@ export function ClientDetailPage() {
     if (activeTab === 'activity' && auditEvents.length === 0 && !auditLoading) loadAudit();
     if (activeTab === 'refunds' && refunds.length === 0 && !refundsLoading) loadRefunds();
     if (activeTab === 'support' && supportNotes.length === 0 && !supportLoading) loadSupport();
+    if (activeTab === 'ip-activity' && pageViews.length === 0 && !pageViewsLoading) loadPageViews();
   }, [activeTab, org]);
 
   async function load() {
@@ -418,6 +424,24 @@ export function ClientDetailPage() {
     setSupportLoading(false);
   }
 
+  async function loadPageViews() {
+    if (!org) return;
+    setPageViewsLoading(true);
+    // Get all user_ids for this org
+    const { data: memberRows } = await supabase
+      .from('org_members').select('user_id').eq('org_id', org.id);
+    const userIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id);
+    if (userIds.length === 0) { setPageViewsLoading(false); return; }
+    const { data } = await supabase
+      .from('page_views')
+      .select('id, user_id, ip, path, user_agent, created_at')
+      .in('user_id', userIds)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    setPageViews((data ?? []) as PageView[]);
+    setPageViewsLoading(false);
+  }
+
   function overrideFieldVal(unlim: boolean, val: string): number | null {
     if (unlim) return -1;
     const n = parseInt(val);
@@ -573,6 +597,7 @@ export function ClientDetailPage() {
     { id: 'ai-activity', label: 'AI Activity' },
     { id: 'refunds', label: 'Refunds' },
     { id: 'activity', label: 'Activity' },
+    { id: 'ip-activity', label: 'IP Activity' },
     { id: 'support', label: 'Support' },
   ];
 
@@ -1109,6 +1134,47 @@ export function ClientDetailPage() {
                   <span className="text-[10px] text-[#9CA3AF] flex-shrink-0">{formatDate(ev.created_at)}</span>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── IP Activity Tab ── */}
+      {activeTab === 'ip-activity' && (
+        <div className="bg-white shadow-sm rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-[#E5E7EB] bg-[#FAFAF7] flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-[#111827]">IP Activity</h2>
+              <p className="text-xs text-[#9CA3AF] mt-0.5">Last 500 page views across all org members (90-day retention)</p>
+            </div>
+            <button onClick={() => { setPageViews([]); loadPageViews(); }} className="px-3 py-1.5 text-xs font-medium border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors">Refresh</button>
+          </div>
+          {pageViewsLoading ? (
+            <p className="px-6 py-8 text-sm text-[#9CA3AF] text-center">Loading…</p>
+          ) : pageViews.length === 0 ? (
+            <p className="px-6 py-8 text-sm text-[#9CA3AF] text-center">No page views recorded yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-[#E5E7EB] bg-[#F9FAFB]">
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B7280] uppercase tracking-wide text-[10px]">IP</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B7280] uppercase tracking-wide text-[10px]">Path</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B7280] uppercase tracking-wide text-[10px]">User Agent</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-[#6B7280] uppercase tracking-wide text-[10px]">Time</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F3F4F6]">
+                  {pageViews.map(pv => (
+                    <tr key={pv.id} className="hover:bg-[#FAFAF7]">
+                      <td className="px-4 py-2.5 font-mono text-[#374151]">{pv.ip}</td>
+                      <td className="px-4 py-2.5 text-[#374151] max-w-[260px] truncate">{pv.path}</td>
+                      <td className="px-4 py-2.5 text-[#9CA3AF] max-w-[220px] truncate">{pv.user_agent ?? '—'}</td>
+                      <td className="px-4 py-2.5 text-[#9CA3AF] whitespace-nowrap">{formatDate(pv.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
