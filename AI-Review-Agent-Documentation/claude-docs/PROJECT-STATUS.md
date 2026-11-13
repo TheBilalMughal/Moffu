@@ -206,6 +206,7 @@ Also hardened `handle_new_user` with `ON CONFLICT (id) DO NOTHING` to guard agai
 - OverviewPage — location filter wired to global `useLocationStore` (topbar); all metrics filter client-side on selectedId change
 - OverviewPage — 3-column layout updated: Left = SentimentCard (Positive/Neutral/Negative %), Middle = Trend chart + Rating Breakdown, Right = UpgradeCard (current plan → next plan, discounted pricing with strikethrough original, annual rate shown)
 - UpgradeCard: shows discounted price (applyPlanDiscount matches BillingPage formula), annual/monthly both shown, contact_sales plans show "Custom pricing"
+- UpgradeCard added to ReviewsPage and ComplaintsPage (matches OverviewPage design; shown between chart/header and filter bar)
 - ReviewsPage — glassmorphic filter bar, custom FilterDropdown popovers (no native select), full-width layout
 - Review Insights — filters and chart background fixed
 - Brand Brain — glassmorphic design
