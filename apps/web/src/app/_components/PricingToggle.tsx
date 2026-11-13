@@ -114,7 +114,6 @@ export function PricingToggle({
         }`}
       >
         {visiblePlans.map((plan) => {
-          const isFree          = plan.monthly_cents === 0 && !plan.contact_sales;
           const rawCents        = annual && plan.annual_cents > 0 ? plan.annual_cents : plan.monthly_cents;
           const discountedCents = applyDiscount(rawCents, plan.discount_type, plan.discount_value);
           const hasPromoDiscount = discountedCents < rawCents;
@@ -153,12 +152,6 @@ export function PricingToggle({
                   <div className="flex items-baseline gap-1">
                     <span className={`text-[1.75rem] font-bold leading-none ${featured ? 'text-white' : 'text-[#111827]'}`}>
                       Contact Sales
-                    </span>
-                  </div>
-                ) : isFree ? (
-                  <div className="flex items-baseline gap-1">
-                    <span className={`text-[3.25rem] font-black leading-none ${featured ? 'text-white' : 'text-[#111827]'}`}>
-                      Free
                     </span>
                   </div>
                 ) : (
