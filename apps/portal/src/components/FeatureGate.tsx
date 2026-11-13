@@ -66,7 +66,7 @@ function UpgradeWall({ feature }: { feature: string }) {
         </h2>
         <p className="text-sm text-[#6B7280] mb-6 leading-relaxed">{meta.description}</p>
         <button
-          onClick={() => navigate('/billing')}
+          onClick={() => navigate('/plan')}
           className="bg-[#111827] hover:bg-[#6C55E8] text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors"
         >
           View Plans

@@ -1598,7 +1598,7 @@ export function BrandBrainPage() {
 
   const navigate = useNavigate();
   function jumpTo(n: number) {
-    if (n < 0) { navigate('/billing'); return; } // negative = locked step
+    if (n < 0) { navigate('/plan'); return; } // negative = locked step
     setStep(n);
   }
 
@@ -1691,7 +1691,7 @@ export function BrandBrainPage() {
               <p className="text-base font-semibold text-[#111827]">This step requires an upgrade</p>
               <p className="text-sm text-[#6B7280] mt-1">This step is not included in your current plan. Upgrade to unlock it.</p>
             </div>
-            <button onClick={() => navigate('/billing')}
+            <button onClick={() => navigate('/plan')}
               className="bg-[#111827] hover:bg-[#6C55E8] text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors">
               View Plans
             </button>

@@ -1156,7 +1156,7 @@ export function SettingsPage() {
                         Cancel
                       </button>
                       <button
-                        onClick={() => { setShowLocationUpgrade(false); navigate('/billing'); }}
+                        onClick={() => { setShowLocationUpgrade(false); navigate('/plan'); }}
                         className="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-[#111827] hover:bg-[#6C55E8] rounded-xl transition-colors"
                       >
                         View Plans
@@ -1337,7 +1337,7 @@ export function SettingsPage() {
               <p className="text-sm font-medium text-[#111827]">Plan &amp; Usage</p>
               <p className="text-xs text-[#9CA3AF] mt-0.5">View your plan, usage and upgrade options.</p>
             </div>
-            <Link to="/billing"
+            <Link to="/plan"
               className="text-xs font-semibold text-[#6C55E8] border border-[#6C55E8] px-3.5 py-1.5 rounded-lg hover:bg-[#EDE9FE] transition-colors">
               Go to Billing &rarr;
             </Link>

@@ -588,7 +588,7 @@ export function CampaignsPage() {
             </div>
           </div>
           {quota.limit !== null && quota.used >= quota.limit && (
-            <Link to="/billing" className="text-xs font-semibold text-white bg-[#111827] px-3 py-1.5 rounded-lg hover:bg-[#6C55E8] transition-colors flex-shrink-0">
+            <Link to="/plan" className="text-xs font-semibold text-white bg-[#111827] px-3 py-1.5 rounded-lg hover:bg-[#6C55E8] transition-colors flex-shrink-0">
               Upgrade
             </Link>
           )}

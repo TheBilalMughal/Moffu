@@ -741,7 +741,7 @@ function SidebarUpgradeCard({ sub, plans }: { sub: Subscription | null; plans: P
   const highlights  = getSidebarHighlights(nextPlan);
 
   return (
-    <Link to="/billing" className="block relative overflow-hidden rounded-xl bg-[#111827] hover:bg-[#1a2235] transition-colors group">
+    <Link to="/plan" className="block relative overflow-hidden rounded-xl bg-[#111827] hover:bg-[#1a2235] transition-colors group">
       <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/25 via-transparent to-[#6C55E8]/5 pointer-events-none" />
       <div className="relative p-3">
         <div className="flex items-center gap-1.5 mb-2">

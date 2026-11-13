@@ -103,7 +103,7 @@ function InviteModal({ orgId, seatsLeft, onClose, onSuccess }: InviteModalProps)
           {atLimit && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-xs text-amber-800 flex items-center justify-between gap-4">
               <span>Your plan has no remaining seats.</span>
-              <Link to="/billing" onClick={onClose} className="font-semibold underline whitespace-nowrap">
+              <Link to="/plan" onClick={onClose} className="font-semibold underline whitespace-nowrap">
                 Upgrade plan
               </Link>
             </div>
