@@ -516,7 +516,7 @@ export function SettingsPage() {
   const [isOwner, setIsOwner] = useState(false);
   const [signingOutAll, setSigningOutAll] = useState(false);
   const [signingOutDevice, setSigningOutDevice] = useState(false);
-  const sessionSince = user?.created_at ? new Date(user.created_at).toLocaleDateString() : '—';
+  const sessionSince = user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'ï¿½';
 
   // Export
   const [exporting, setExporting] = useState(false);
@@ -738,7 +738,7 @@ export function SettingsPage() {
       if (error || !auth_url) { showToast(error ?? 'Could not start Google connection.', 'error'); setConnectingGoogle(false); return; }
       window.location.href = auth_url;
     } catch {
-      showToast('Network error — could not reach server.', 'error');
+      showToast('Network error ï¿½ could not reach server.', 'error');
       setConnectingGoogle(false);
     }
   }
@@ -813,6 +813,10 @@ export function SettingsPage() {
     }
     await googleService.toggleLocationSelected(id, !current);
     setLocations(prev => prev.map(l => l.id === id ? { ...l, is_selected: !current } : l));
+    if (!current) {
+      showToast('Location enabled. Syncing latest data...', 'success');
+      googleService.syncReviews().catch(() => {});
+    }
   }
 
   const isConnected = connection?.state === 'CONNECTED';
@@ -868,17 +872,17 @@ export function SettingsPage() {
                     </div>
                   )}
                   <div>
-                    <p className="text-sm font-semibold text-[#111827]">{(user?.user_metadata?.display_name ?? user?.user_metadata?.full_name) || user?.email || '—'}</p>
+                    <p className="text-sm font-semibold text-[#111827]">{(user?.user_metadata?.display_name ?? user?.user_metadata?.full_name) || user?.email || 'ï¿½'}</p>
                     <p className="text-xs text-[#9CA3AF]">{user?.email ?? ''}</p>
                   </div>
                 </div>
                 <div>
                   <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1">Display Name</p>
-                  <p className="text-sm text-[#111827]">{savedDisplayName || '—'}</p>
+                  <p className="text-sm text-[#111827]">{savedDisplayName || 'ï¿½'}</p>
                 </div>
                 <div>
                   <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1">Email</p>
-                  <p className="text-sm text-[#111827]">{user?.email ?? '—'}</p>
+                  <p className="text-sm text-[#111827]">{user?.email ?? 'ï¿½'}</p>
                 </div>
                 <div>
                   <p className="text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1">Phone Number</p>
@@ -927,7 +931,7 @@ export function SettingsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Email</label>
-                  <p className="text-sm text-[#111827] bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-4 py-3">{user?.email ?? '—'}</p>
+                  <p className="text-sm text-[#111827] bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg px-4 py-3">{user?.email ?? 'ï¿½'}</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#6B7280] uppercase tracking-wide mb-1.5">Phone Number</label>
@@ -968,7 +972,7 @@ export function SettingsPage() {
       </>)}
 
       {section === 'preferences' && (<>
-      {/* Row 2 — Preferences + Sessions */}
+      {/* Row 2 ï¿½ Preferences + Sessions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
 
         {/* Preferences */}
@@ -1097,7 +1101,7 @@ export function SettingsPage() {
                   <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                     <strong>Action required:</strong> {connection.error_message.replace(/ensure.*Console\./i, 'Make sure "My Business Account Management API" and "My Business Business Information API" are enabled in Google Cloud Console.')}
                   </p>
-                  <p className="text-xs text-[#9CA3AF] mt-2">Once APIs are enabled, click <strong>Retry fetch locations</strong> above — no need to reconnect.</p>
+                  <p className="text-xs text-[#9CA3AF] mt-2">Once APIs are enabled, click <strong>Retry fetch locations</strong> above ï¿½ no need to reconnect.</p>
                 </div>
               )}
               {isConnected && locations.length > 0 && (
@@ -1199,7 +1203,7 @@ export function SettingsPage() {
                             <p className="text-sm font-medium text-[#111827] truncate">{biz.name}</p>
                             {biz.address && <p className="text-xs text-[#9CA3AF] truncate">{biz.address}</p>}
                             {biz.rating != null && (
-                              <p className="text-xs text-[#6B7280] mt-0.5">? {biz.rating} · {biz.reviews_count ?? 0} reviews</p>
+                              <p className="text-xs text-[#6B7280] mt-0.5">? {biz.rating} ï¿½ {biz.reviews_count ?? 0} reviews</p>
                             )}
                           </div>
                           <button
@@ -1387,7 +1391,7 @@ export function SettingsPage() {
             ) : (
               <div className="space-y-3">
                 <p className="text-sm font-semibold text-red-600">Are you absolutely sure?</p>
-                <p className="text-xs text-[#6B7280]">All your data — reviews, replies, Brand Brain profiles and team memberships — will be permanently deleted. This action <strong>cannot be undone</strong>.</p>
+                <p className="text-xs text-[#6B7280]">All your data ï¿½ reviews, replies, Brand Brain profiles and team memberships ï¿½ will be permanently deleted. This action <strong>cannot be undone</strong>.</p>
                 <div>
                   <label className="block text-xs font-medium text-[#6B7280] mb-1.5">Type <strong>DELETE</strong> to confirm</label>
                   <input

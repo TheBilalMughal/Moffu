@@ -421,3 +421,9 @@ IMPLEMENTED: 6 advanced features added to GoogleProfilePage.tsx in the client po
 - Global date filter: single DateRangePicker in page header controls both reviews and insights sections; no pre-selection (empty default = all reviews / last 30 days for insights).
 - UI changes: fetch timestamp format changed to `13-Nov-2026, 6:40 PM`; connection status line removed; breadcrumb label removed.
 - Admin GoogleSettingsPage: `google_maps_api_key` field added (show/hide toggle) for Places API key management.
+
+## Integrations: auto-sync on location enable — 2026-11-13
+IMPLEMENTED: SettingsPage.tsx handleToggleLocation now triggers a background sync when a location is enabled.
+- When a location is toggled ON, showToast displays "Location enabled. Syncing latest data..." and googleService.syncReviews() fires fire-and-forget in the background.
+- No change when disabling a location (no data loss concern).
+- Uses existing syncReviews Edge Function (google-sync-reviews); no new backend changes needed.
