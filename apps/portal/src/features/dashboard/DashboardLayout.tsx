@@ -1151,6 +1151,11 @@ export function DashboardLayout() {
                   isLocked={isLocked(item.featureKey)}
                 />
               ))}
+              {isFreePlan && !featureLoading && (
+                <div className="mt-3">
+                  <UpgradeWidget />
+                </div>
+              )}
             </div>
             {/* Mobile: show all items */}
             <div className="md:hidden flex flex-col gap-0.5">
@@ -1165,11 +1170,6 @@ export function DashboardLayout() {
                 />
               ))}
             </div>
-            {isFreePlan && (
-              <div className="mt-auto pt-2">
-                <UpgradeWidget />
-              </div>
-            )}
           </nav>
         </aside>
 
