@@ -1617,6 +1617,31 @@ export function BrandBrainPage() {
     );
   }
 
+  if (locations.length === 0) {
+    return (
+      <div className="px-4 md:px-10 py-16 flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] flex items-center justify-center mb-5">
+          <svg className="w-7 h-7 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-[#111827] mb-2">Connect a location first</h2>
+        <p className="text-sm text-[#6B7280] max-w-sm mb-6">
+          Brand Brain needs at least one Google Business location before you can set up your AI reply settings.
+        </p>
+        <button
+          onClick={() => navigate('/settings/google')}
+          className="inline-flex items-center gap-2 bg-[#111827] hover:bg-[#6C55E8] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+          </svg>
+          Connect Google Business
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-full flex flex-col overflow-hidden bg-[#F3F4F6]">
       {/* Ambient blobs */}
