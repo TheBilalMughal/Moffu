@@ -182,7 +182,6 @@ export function PackagesSettingsPage() {
   const toast = useToastStore();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'details' | 'limits'>('details');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PlanForm>(EMPTY_FORM);
   const [featureInput, setFeatureInput] = useState('');
@@ -231,7 +230,6 @@ export function PackagesSettingsPage() {
     setEditingId(null);
     setForm({ ...EMPTY_FORM, sort_order: plans.length });
     setFeatureInput('');
-    setActiveTab('details');
     setModalOpen(true);
   }
 
@@ -262,7 +260,6 @@ export function PackagesSettingsPage() {
       limits: entsToLimits(plan.entitlements),
     });
     setFeatureInput('');
-    setActiveTab('details');
     setModalOpen(true);
   }
 
@@ -322,7 +319,7 @@ export function PackagesSettingsPage() {
       planId = newPlan.id;
     }
 
-    // annual stores per-month equivalent, not total/yr: $19/mo at 20% off → 1520 cents/mo
+    // annual stores per-month equivalent, not total/yr
     const monthly_cents = Math.round(parseFloat(form.monthly_price || '0') * 100);
     const discount = Math.min(100, Math.max(0, parseFloat(form.annual_discount || '0')));
     const annual_cents = Math.round(monthly_cents * (1 - discount / 100));
@@ -338,7 +335,6 @@ export function PackagesSettingsPage() {
 
     if (pe) { toast.error(pe.message); setSaving(false); return; }
 
-    // Upsert entitlements
     const L = form.limits;
     const entUpserts = [
       { plan_id: planId, key: 'locations',           value_type: 'LIMIT',     limit_value: parseInt(L.locations) || 1,           bool_value: null, enum_value: null,            usage_reset: null },
@@ -384,17 +380,18 @@ export function PackagesSettingsPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto px-8 py-8">
+    <div className="h-full overflow-y-auto bg-[#F9FAFB]">
+      <div className="max-w-5xl mx-auto px-8 py-8">
+
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-lg font-semibold text-[#111827]">Packages</h1>
-            <p className="text-sm text-[#6B7280] mt-0.5">Manage subscription plans shown on the website</p>
+            <h1 className="text-xl font-semibold text-[#111827]">Packages</h1>
+            <p className="text-sm text-[#6B7280] mt-1">Manage subscription plans and feature entitlements</p>
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-[#6C55E8] text-white text-sm font-medium rounded-lg hover:bg-[#5A42D1] transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 bg-[#6C55E8] text-white text-sm font-semibold rounded-xl hover:bg-[#5A42D1] transition-colors shadow-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -403,119 +400,134 @@ export function PackagesSettingsPage() {
           </button>
         </div>
 
-        {/* Plans list */}
+        {/* Summary row */}
+        {!loading && plans.length > 0 && (
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            {[
+              { label: 'Total Plans', value: String(plans.length) },
+              { label: 'Active', value: String(plans.filter(p => p.is_active).length) },
+              { label: 'Featured', value: plans.find(p => p.is_featured)?.name ?? '—' },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-white border border-[#E5E7EB] rounded-xl px-5 py-4">
+                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider">{label}</p>
+                <p className="text-xl font-semibold text-[#111827] mt-1">{value}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Plans */}
         {loading ? (
           <div className="flex items-center justify-center py-20 text-sm text-[#9CA3AF]">Loading packages…</div>
         ) : plans.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-2">
-            <p className="text-sm text-[#9CA3AF]">No packages yet. Create your first package.</p>
+          <div className="bg-white border-2 border-dashed border-[#E5E7EB] rounded-2xl flex flex-col items-center justify-center py-20 gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#F3F4F6] flex items-center justify-center">
+              <svg className="w-7 h-7 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-semibold text-[#374151]">No packages yet</p>
+              <p className="text-xs text-[#9CA3AF] mt-1">Create your first subscription plan to get started</p>
+            </div>
+            <button onClick={openCreate} className="text-sm font-semibold text-[#6C55E8] hover:text-[#5A42D1] transition-colors">
+              Create a package
+            </button>
           </div>
         ) : (
-          <div className="shadow-sm rounded-xl overflow-hidden">
-            {/* Table header */}
-            <div className="grid grid-cols-[1fr_160px_80px_auto] items-center px-5 py-2.5 bg-[#FAFAF7] border-b border-[#E5E7EB]">
-              <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Plan</span>
-              <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Pricing</span>
-              <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Status</span>
-              <span className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Actions</span>
-            </div>
-
-            {plans.map((plan, idx) => {
+          <div className="space-y-3">
+            {plans.map(plan => {
               const monthly = plan.prices.find(p => p.billing_interval === 'monthly');
               const annual  = plan.prices.find(p => p.billing_interval === 'annual');
               const annualPerMo = annual && annual.amount_cents > 0 ? annual.amount_cents : 0;
               const disc = monthly && monthly.amount_cents > 0 && annualPerMo > 0
-                ? Math.round((1 - annualPerMo / monthly.amount_cents) * 100)
-                : 0;
+                ? Math.round((1 - annualPerMo / monthly.amount_cents) * 100) : 0;
               return (
-                <div key={plan.id} className={`grid grid-cols-[1fr_160px_80px_auto] items-center px-5 py-3.5 bg-white hover:bg-[#FAFBFB] transition-colors ${idx < plans.length - 1 ? 'border-b border-[#F3F4F6]' : ''}`}>
-                  {/* Plan info */}
-                  <div className="min-w-0 pr-4">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-[#111827]">{plan.name}</span>
-                      <span className="text-[10px] text-[#C4CAC8] font-mono">{plan.slug}</span>
-                      {plan.is_featured && (
-                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[#FEF3C7] text-[#92400E]">
-                          {plan.badge_text || 'Featured'}
+                <div key={plan.id} className="bg-white border border-[#E5E7EB] rounded-2xl px-6 py-5 hover:shadow-sm transition-shadow group">
+                  <div className="flex items-start gap-4">
+                    {/* Accent bar */}
+                    <div className={`w-1 self-stretch rounded-full flex-shrink-0 ${plan.is_active ? 'bg-[#6C55E8]' : 'bg-[#E5E7EB]'}`} />
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-[#111827]">{plan.name}</span>
+                        <span className="text-[10px] font-mono text-[#C4CAC8]">/{plan.slug}</span>
+                        {plan.is_featured && (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#FEF9C3] text-[#854D0E]">
+                            {plan.badge_text || 'Most Popular'}
+                          </span>
+                        )}
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${plan.is_active ? 'bg-[#DCFCE7] text-[#166534]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+                          {plan.is_active ? 'Active' : 'Draft'}
                         </span>
+                        {plan.contact_sales && (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#EFF6FF] text-[#1D4ED8]">Custom</span>
+                        )}
+                      </div>
+                      {plan.description && <p className="text-xs text-[#6B7280] mt-0.5">{plan.description}</p>}
+                      {plan.features.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {plan.features.slice(0, 4).map((f, i) => (
+                            <span key={i} className="text-[10px] px-2 py-0.5 bg-[#F3F4F6] text-[#6B7280] rounded-md">{f}</span>
+                          ))}
+                          {plan.features.length > 4 && (
+                            <span className="text-[10px] px-2 py-0.5 bg-[#F3F4F6] text-[#9CA3AF] rounded-md">+{plan.features.length - 4} more</span>
+                          )}
+                        </div>
                       )}
                     </div>
-                    {plan.description && (
-                      <p className="text-xs text-[#9CA3AF] mt-0.5 truncate">{plan.description}</p>
-                    )}
-                    {plan.features.length > 0 && (
-                      <div className="mt-1.5 flex flex-wrap gap-1">
-                        {plan.features.map((f, i) => (
-                          <span key={i} className="text-[10px] px-1.5 py-0.5 bg-[#F3F4F6] text-[#6B7280] rounded">
-                            {f}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Pricing */}
-                  <div>
-                    {plan.contact_sales ? (
-                      <span className="text-xs font-medium text-[#1D4ED8]">Contact Sales</span>
-                    ) : (
-                      <>
-                        <p className="text-sm font-semibold text-[#111827]">
-                          {monthly ? formatPrice(monthly.amount_cents, monthly.currency) : '—'}
-                          <span className="text-xs font-normal text-[#9CA3AF]">/mo</span>
+                    {/* Pricing */}
+                    <div className="flex-shrink-0 text-right min-w-[150px]">
+                      {plan.contact_sales ? (
+                        <span className="text-sm font-semibold text-[#1D4ED8]">Custom Pricing</span>
+                      ) : (
+                        <>
+                          <div className="flex items-baseline gap-1 justify-end">
+                            <span className="text-2xl font-bold text-[#111827]">
+                              {monthly ? formatPrice(monthly.amount_cents, monthly.currency) : 'Free'}
+                            </span>
+                            {monthly && monthly.amount_cents > 0 && <span className="text-xs text-[#9CA3AF]">/mo</span>}
+                          </div>
+                          {disc > 0 && (
+                            <p className="text-[11px] text-[#9CA3AF] mt-0.5">
+                              {formatPrice(Math.round(annualPerMo), annual!.currency)}/mo annual
+                              <span className="ml-1 text-[#6C55E8] font-semibold">-{disc}%</span>
+                            </p>
+                          )}
                           {plan.discount_type && plan.discount_value && plan.discount_value > 0 && (
-                            <span className="ml-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-                              {plan.discount_type === 'percent' ? `-${plan.discount_value}%` : `-$${plan.discount_value}`}
+                            <span className="inline-block mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                              {plan.discount_type === 'percent' ? `-${plan.discount_value}%` : `-$${plan.discount_value}`} promo
                             </span>
                           )}
-                        </p>
-                        {disc > 0 && (
-                          <p className="text-[11px] text-[#9CA3AF]">
-                            {formatPrice(Math.round(annualPerMo), annual!.currency)}/mo annual
-                            <span className="ml-1 text-[#6C55E8] font-medium">· -{disc}%</span>
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </div>
+                        </>
+                      )}
+                    </div>
 
-                  {/* Status badge */}
-                  <div>
-                    <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-md ${plan.is_active ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
-                      {plan.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-0.5">
-                    <button
-                      onClick={() => toggleActive(plan)}
-                      title={plan.is_active ? 'Deactivate' : 'Activate'}
-                      className="p-1.5 text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d={plan.is_active
-                          ? 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636'
-                          : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
-                        } />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => openEdit(plan)}
-                      className="p-1.5 text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => setDeleteId(plan.id)}
-                      className="p-1.5 text-[#9CA3AF] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => toggleActive(plan)} title={plan.is_active ? 'Deactivate' : 'Activate'}
+                        className="p-2 text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d={plan.is_active
+                            ? 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636'
+                            : 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'} />
+                        </svg>
+                      </button>
+                      <button onClick={() => openEdit(plan)}
+                        className="p-2 text-[#9CA3AF] hover:text-[#6C55E8] hover:bg-[#F5F3FF] rounded-lg transition-colors">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button onClick={() => setDeleteId(plan.id)}
+                        className="p-2 text-[#9CA3AF] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -524,660 +536,525 @@ export function PackagesSettingsPage() {
         )}
       </div>
 
-      {/* Create / Edit Modal */}
+      {/* ── Create / Edit Modal ── */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh]">
-            <div className="px-6 pt-4 border-b border-[#E5E7EB] flex-shrink-0">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-semibold text-[#111827]">
-                  {editingId ? 'Edit Package' : 'New Package'}
-                </h2>
-                <button onClick={() => setModalOpen(false)} className="text-[#9CA3AF] hover:text-[#374151] transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[980px] flex flex-col max-h-[90vh]">
+
+            {/* Modal header */}
+            <div className="px-7 py-5 border-b border-[#F3F4F6] flex items-center justify-between flex-shrink-0">
+              <div>
+                <h2 className="text-base font-semibold text-[#111827]">{editingId ? 'Edit Package' : 'New Package'}</h2>
+                <p className="text-xs text-[#9CA3AF] mt-0.5">Configure plan details and feature entitlements</p>
               </div>
-              <div className="flex gap-1">
-                {(['details', 'limits'] as const).map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px capitalize ${
-                      activeTab === tab
-                        ? 'border-[#6C55E8] text-[#6C55E8]'
-                        : 'border-transparent text-[#6B7280] hover:text-[#111827]'
-                    }`}
-                  >
-                    {tab === 'details' ? 'Details' : 'Limits & Features'}
-                  </button>
-                ))}
-              </div>
+              <button onClick={() => setModalOpen(false)}
+                className="p-1.5 text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-            {activeTab === 'limits' ? (
-              <div className="space-y-5">
+            {/* Two-column body */}
+            <div className="flex-1 overflow-hidden flex min-h-0">
 
-                {/* Feature Access */}
-                <div>
-                  <p className="text-xs font-semibold text-[#374151] mb-2">Feature Access</p>
-                  <div className="border border-[#E5E7EB] rounded-lg divide-y divide-[#F3F4F6]">
-                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#FAFAF7] transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={form.limits.feature_brand_brain}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_brand_brain: e.target.checked } }))}
-                        className="w-4 h-4 accent-[#6C55E8] rounded flex-shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-[#111827]">Brand Brain</p>
-                        <p className="text-[11px] text-[#9CA3AF] mt-0.5">AI tone, language, per-star rules, guardrails, location overrides</p>
-                      </div>
-                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_brand_brain ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
-                        {form.limits.feature_brand_brain ? 'On' : 'Off'}
-                      </span>
-                    </label>
-                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#FAFAF7] transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={form.limits.feature_google_profile}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_google_profile: e.target.checked } }))}
-                        className="w-4 h-4 accent-[#6C55E8] rounded flex-shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-[#111827]">Google Profile</p>
-                        <p className="text-[11px] text-[#9CA3AF] mt-0.5">Profile views, search queries, calls, direction requests</p>
-                      </div>
-                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_google_profile ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
-                        {form.limits.feature_google_profile ? 'On' : 'Off'}
-                      </span>
-                    </label>
-                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#FAFAF7] transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={form.limits.feature_insights}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_insights: e.target.checked } }))}
-                        className="w-4 h-4 accent-[#6C55E8] rounded flex-shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-[#111827]">Insights & Analytics</p>
-                        <p className="text-[11px] text-[#9CA3AF] mt-0.5">Charts, rating trends, reply-rate metrics</p>
-                      </div>
-                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_insights ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
-                        {form.limits.feature_insights ? 'On' : 'Off'}
-                      </span>
-                    </label>
-                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#FAFAF7] transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={form.limits.feature_campaigns}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_campaigns: e.target.checked } }))}
-                        className="w-4 h-4 accent-[#6C55E8] rounded flex-shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-[#111827]">Campaigns</p>
-                        <p className="text-[11px] text-[#9CA3AF] mt-0.5">Email, SMS and WhatsApp campaign sending</p>
-                      </div>
-                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_campaigns ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
-                        {form.limits.feature_campaigns ? 'On' : 'Off'}
-                      </span>
-                    </label>
-                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#FAFAF7] transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={form.limits.feature_marketing}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_marketing: e.target.checked } }))}
-                        className="w-4 h-4 accent-[#6C55E8] rounded flex-shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-[#111827]">Marketing</p>
-                        <p className="text-[11px] text-[#9CA3AF] mt-0.5">Marketing post creation and scheduling</p>
-                      </div>
-                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_marketing ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
-                        {form.limits.feature_marketing ? 'On' : 'Off'}
-                      </span>
-                    </label>
-                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#FAFAF7] transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={form.limits.feature_feedback}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_feedback: e.target.checked } }))}
-                        className="w-4 h-4 accent-[#6C55E8] rounded flex-shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-[#111827]">Feedback</p>
-                        <p className="text-[11px] text-[#9CA3AF] mt-0.5">Customer feedback requests and surveys</p>
-                      </div>
-                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_feedback ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
-                        {form.limits.feature_feedback ? 'On' : 'Off'}
-                      </span>
-                    </label>
+              {/* ── Left: Plan Details ── */}
+              <div className="w-[420px] flex-shrink-0 overflow-y-auto border-r border-[#F3F4F6]">
+                <div className="px-7 py-6 space-y-6">
+
+                  <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider">Plan Details</p>
+
+                  {/* Name + Slug */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-[#374151] mb-1.5">Plan Name <span className="text-red-400">*</span></label>
+                      <input value={form.name}
+                        onChange={e => setForm(f => ({ ...f, name: e.target.value, slug: f.slug || slugify(e.target.value) }))}
+                        placeholder="e.g. Growth"
+                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-[#374151] mb-1.5">Slug</label>
+                      <input value={form.slug}
+                        onChange={e => setForm(f => ({ ...f, slug: slugify(e.target.value) }))}
+                        placeholder="auto"
+                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] font-mono bg-white" />
+                    </div>
                   </div>
-                </div>
 
-                {/* Campaign Limits */}
-                <div>
-                  <p className="text-xs font-semibold text-[#374151] mb-2">Campaign Limits <span className="font-normal text-[#9CA3AF]">(per month)</span></p>
-                  <div className="space-y-3">
-                    {([
-                      { label: 'Email',     unlimitedKey: 'campaign_emails_unlimited',   limitKey: 'campaign_emails_limit',    active: true  },
-                      { label: 'SMS',       unlimitedKey: 'campaign_sms_unlimited',      limitKey: 'campaign_sms_limit',       active: false },
-                      { label: 'WhatsApp',  unlimitedKey: 'campaign_whatsapp_unlimited', limitKey: 'campaign_whatsapp_limit',  active: false },
-                    ] as { label: string; unlimitedKey: keyof LimitsForm; limitKey: keyof LimitsForm; active: boolean }[]).map(ch => {
-                      const isUnlimited = form.limits[ch.unlimitedKey] as boolean;
-                      return (
-                        <div key={ch.label} className={`border border-[#E5E7EB] rounded-lg px-3.5 py-3 ${!ch.active ? 'opacity-50' : ''}`}>
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-medium text-[#374151]">{ch.label}</span>
-                              {!ch.active && <span className="text-[10px] font-semibold bg-[#F3F4F6] text-[#9CA3AF] px-1.5 py-0.5 rounded">Coming soon</span>}
-                            </div>
-                            <label className="flex items-center gap-1.5 cursor-pointer">
-                              <input type="checkbox" disabled={!ch.active}
-                                checked={isUnlimited}
-                                onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, [ch.unlimitedKey]: e.target.checked } }))}
-                                className="w-3.5 h-3.5 accent-[#6C55E8]" />
-                              <span className="text-xs text-[#6B7280]">Unlimited</span>
-                            </label>
-                          </div>
-                          {!isUnlimited && (
-                            <div className="flex items-center gap-2">
-                              <input type="number" min="0" disabled={!ch.active}
-                                value={form.limits[ch.limitKey] as string}
-                                onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, [ch.limitKey]: e.target.value } }))}
-                                placeholder="0 = no access"
-                                className="flex-1 px-3 py-1.5 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
-                              <span className="text-xs text-[#9CA3AF]">{ch.label === 'Email' ? 'emails' : 'messages'}/mo</span>
-                            </div>
-                          )}
-                          {isUnlimited && <p className="text-[11px] text-[#6C55E8] font-medium">Unlimited {ch.label === 'Email' ? 'emails' : 'messages'} per month</p>}
+                  {/* Description */}
+                  <div>
+                    <label className="block text-xs font-medium text-[#374151] mb-1.5">Description</label>
+                    <input value={form.description}
+                      onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                      placeholder="Short tagline shown under plan name"
+                      className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white" />
+                  </div>
+
+                  {/* Pricing */}
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider mb-3">Pricing</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-[#374151] mb-1.5">Currency</label>
+                        <select value={form.currency} onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}
+                          className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white">
+                          <option value="USD">USD</option>
+                          <option value="PKR">PKR</option>
+                          <option value="GBP">GBP</option>
+                          <option value="EUR">EUR</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-[#374151] mb-1.5">Monthly</label>
+                        <input type="number" min="0" step="1" value={form.monthly_price}
+                          onChange={e => setForm(f => ({ ...f, monthly_price: e.target.value }))}
+                          className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-[#374151] mb-1.5">Annual Disc.</label>
+                        <div className="relative">
+                          <input type="number" min="0" max="100" step="1" value={form.annual_discount}
+                            onChange={e => setForm(f => ({ ...f, annual_discount: e.target.value }))}
+                            className="w-full px-3 py-2 pr-7 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white" />
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#9CA3AF]">%</span>
                         </div>
+                      </div>
+                    </div>
+                    {(() => {
+                      const mo = parseFloat(form.monthly_price || '0');
+                      const d = Math.min(100, Math.max(0, parseFloat(form.annual_discount || '0')));
+                      if (mo <= 0 || d <= 0) return null;
+                      const perMo = +(mo * (1 - d / 100)).toFixed(2);
+                      return (
+                        <p className="text-[11px] text-[#6B7280] mt-2 bg-[#F9FAFB] border border-[#F3F4F6] px-3 py-2 rounded-lg">
+                          Annual billing: <span className="font-semibold text-[#374151]">${perMo}/mo</span> · billed ${+(perMo * 12).toFixed(2)}/yr · saves {d}%
+                        </p>
                       );
-                    })}
+                    })()}
                   </div>
-                  <p className="text-[11px] text-[#9CA3AF] mt-1.5">Set to <span className="font-medium">0</span> to block campaigns on this plan. SMS &amp; WhatsApp limits are saved but inactive until channels are enabled.</p>
-                </div>
 
-                {/* Marketing Limits */}
-                <div>
-                  <p className="text-xs font-semibold text-[#374151] mb-2">Marketing Limits <span className="font-normal text-[#9CA3AF]">(per month)</span></p>
-                  <div className="border border-[#E5E7EB] rounded-lg px-3.5 py-3 opacity-50">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-[#374151]">Marketing Posts</span>
-                        <span className="text-[10px] font-semibold bg-[#F3F4F6] text-[#9CA3AF] px-1.5 py-0.5 rounded">Coming soon</span>
+                  {/* Promo Discount */}
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider mb-3">Promo Discount <span className="normal-case font-normal">(optional)</span></p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-[#374151] mb-1.5">Type</label>
+                        <select value={form.discount_type}
+                          onChange={e => setForm(f => ({ ...f, discount_type: e.target.value as 'fixed' | 'percent' | '' }))}
+                          className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white">
+                          <option value="">None</option>
+                          <option value="percent">Percentage (%)</option>
+                          <option value="fixed">Fixed ($)</option>
+                        </select>
                       </div>
-                      <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input type="checkbox" disabled
-                          checked={form.limits.marketing_posts_unlimited}
-                          onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, marketing_posts_unlimited: e.target.checked } }))}
-                          className="w-3.5 h-3.5 accent-[#6C55E8]" />
-                        <span className="text-xs text-[#6B7280]">Unlimited</span>
-                      </label>
+                      <div>
+                        <label className="block text-xs font-medium text-[#374151] mb-1.5">
+                          {form.discount_type === 'percent' ? '% off' : form.discount_type === 'fixed' ? 'Amount off' : 'Value'}
+                        </label>
+                        <div className="relative">
+                          <input type="number" min="0"
+                            step={form.discount_type === 'percent' ? '1' : '0.01'}
+                            max={form.discount_type === 'percent' ? '100' : undefined}
+                            value={form.discount_value}
+                            onChange={e => setForm(f => ({ ...f, discount_value: e.target.value }))}
+                            disabled={!form.discount_type}
+                            placeholder={form.discount_type === 'percent' ? '20' : form.discount_type === 'fixed' ? '5' : '—'}
+                            className="w-full px-3 py-2 pr-7 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF] bg-white" />
+                          {form.discount_type && (
+                            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#9CA3AF]">
+                              {form.discount_type === 'percent' ? '%' : '$'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    {!form.limits.marketing_posts_unlimited && (
-                      <div className="flex items-center gap-2">
-                        <input type="number" min="0" disabled
-                          value={form.limits.marketing_posts_limit}
-                          onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, marketing_posts_limit: e.target.value } }))}
-                          placeholder="0 = no access"
-                          className="flex-1 px-3 py-1.5 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
-                        <span className="text-xs text-[#9CA3AF]">posts/mo</span>
+                    {form.discount_type && form.discount_value && parseFloat(form.discount_value) > 0 && (() => {
+                      const mo = parseFloat(form.monthly_price || '0');
+                      const dv = parseFloat(form.discount_value);
+                      if (mo <= 0) return null;
+                      const dc = form.discount_type === 'percent'
+                        ? Math.max(0, Math.round(mo * 100 * (1 - dv / 100)))
+                        : Math.max(0, Math.round(mo * 100) - Math.round(dv * 100));
+                      return (
+                        <p className="text-[11px] text-[#6B7280] mt-2 bg-[#F9FAFB] border border-[#F3F4F6] px-3 py-2 rounded-lg">
+                          Shown as: <span className="line-through text-[#9CA3AF]">${mo.toFixed(2)}</span>
+                          <span className="ml-1.5 font-semibold text-[#111827]">${(dc / 100).toFixed(2)}/mo</span>
+                          <span className="ml-1.5 text-emerald-600 font-medium">
+                            {form.discount_type === 'percent' ? `-${dv}%` : `-$${dv.toFixed(2)}`}
+                          </span>
+                        </p>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Feature Bullets */}
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider mb-3">Feature Bullets</p>
+                    <div className="flex gap-2">
+                      <input ref={featureRef} value={featureInput}
+                        onChange={e => setFeatureInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addFeature(); } }}
+                        placeholder="Type a bullet and press Enter"
+                        className="flex-1 px-3 py-2 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white" />
+                      <button onClick={addFeature} type="button"
+                        className="px-3 py-2 bg-[#F3F4F6] text-[#374151] rounded-xl hover:bg-[#E5E7EB] transition-colors text-sm font-medium">
+                        Add
+                      </button>
+                    </div>
+                    {form.features.length > 0 && (
+                      <div className="mt-2 flex flex-col gap-1.5">
+                        {form.features.map((f, i) => (
+                          <div key={i} draggable
+                            onDragStart={() => setDragIdx(i)}
+                            onDragOver={e => { e.preventDefault(); setDragOverIdx(i); }}
+                            onDrop={() => { reorderFeatures(dragIdx!, i); setDragIdx(null); setDragOverIdx(null); }}
+                            onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
+                            className={`flex items-center gap-2 px-3 py-1.5 border rounded-xl transition-colors cursor-default ${
+                              dragOverIdx === i && dragIdx !== i ? 'bg-[#D8CCFF] border-[#6C55E8]'
+                              : dragIdx === i ? 'bg-[#F3F4F6] border-[#D1D5DB] opacity-50'
+                              : 'bg-[#FAFAFA] border-[#E5E7EB]'
+                            }`}>
+                            <span className="flex-shrink-0 cursor-grab active:cursor-grabbing text-[#C4CAC8] hover:text-[#9CA3AF]">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+                                <circle cx="5" cy="4" r="1.2"/><circle cx="5" cy="8" r="1.2"/><circle cx="5" cy="12" r="1.2"/>
+                                <circle cx="11" cy="4" r="1.2"/><circle cx="11" cy="8" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
+                              </svg>
+                            </span>
+                            <svg className="w-3 h-3 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="flex-1 text-xs text-[#374151]">{f}</span>
+                            <button onClick={() => removeFeature(i)} className="text-[#9CA3AF] hover:text-red-500 transition-colors">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
-                  <p className="text-[11px] text-[#9CA3AF] mt-1.5">Marketing Posts limits are saved but inactive until the Marketing module is enabled.</p>
-                </div>
 
-                {/* Feedback Limits */}
-                <div>
-                  <p className="text-xs font-semibold text-[#374151] mb-2">Feedback Limits <span className="font-normal text-[#9CA3AF]">(per month)</span></p>
-                  <div className="border border-[#E5E7EB] rounded-lg px-3.5 py-3 opacity-50">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-[#374151]">Feedback Requests</span>
-                        <span className="text-[10px] font-semibold bg-[#F3F4F6] text-[#9CA3AF] px-1.5 py-0.5 rounded">Coming soon</span>
+                  {/* Badge + Sort */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-[#374151] mb-1.5">Badge Text</label>
+                      <input value={form.badge_text}
+                        onChange={e => setForm(f => ({ ...f, badge_text: e.target.value }))}
+                        placeholder="e.g. Most Popular"
+                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-[#374151] mb-1.5">Sort Order</label>
+                      <input type="number" min="0" value={form.sort_order}
+                        onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))}
+                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white" />
+                    </div>
+                  </div>
+
+                  {/* Plan Settings (toggle switches) */}
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider mb-3">Plan Settings</p>
+                    <div className="space-y-3">
+                      {([
+                        { key: 'is_featured', label: 'Featured plan', desc: 'Highlighted on the pricing page' },
+                        { key: 'is_active',   label: 'Active',        desc: 'Visible and selectable on the website' },
+                        { key: 'contact_sales', label: 'Contact Sales', desc: 'Hides price, shows Contact Sales button' },
+                      ] as { key: 'is_featured' | 'is_active' | 'contact_sales'; label: string; desc: string }[]).map(({ key, label, desc }) => (
+                        <div key={key} className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-xs font-medium text-[#374151]">{label}</p>
+                            <p className="text-[11px] text-[#9CA3AF] mt-0.5">{desc}</p>
+                          </div>
+                          <button type="button" role="switch" aria-checked={form[key]}
+                            onClick={() => setForm(f => ({ ...f, [key]: !f[key] }))}
+                            className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors mt-0.5 ${form[key] ? 'bg-[#6C55E8]' : 'bg-[#D1D5DB]'}`}>
+                            <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition ease-in-out duration-200 ${form[key] ? 'translate-x-4' : 'translate-x-0'}`} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Right: Limits & Features ── */}
+              <div className="flex-1 overflow-y-auto">
+                <div className="px-7 py-6 space-y-6">
+
+                  <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wider">Limits & Features</p>
+
+                  {/* Feature Access */}
+                  <div>
+                    <p className="text-xs font-semibold text-[#374151] mb-3">Feature Access</p>
+                    <div className="space-y-2">
+                      {([
+                        { key: 'feature_brand_brain',    label: 'Brand Brain',         desc: 'AI tone, language, per-star rules, guardrails' },
+                        { key: 'feature_google_profile', label: 'Google Profile',       desc: 'Profile views, search queries, calls' },
+                        { key: 'feature_insights',       label: 'Insights & Analytics', desc: 'Charts, rating trends, reply-rate metrics' },
+                        { key: 'feature_campaigns',      label: 'Campaigns',            desc: 'Email, SMS and WhatsApp campaign sending' },
+                        { key: 'feature_marketing',      label: 'Marketing',            desc: 'Post creation and scheduling' },
+                        { key: 'feature_feedback',       label: 'Feedback',             desc: 'Customer feedback requests and surveys' },
+                      ] as { key: keyof LimitsForm; label: string; desc: string }[]).map(({ key, label, desc }) => {
+                        const checked = form.limits[key] as boolean;
+                        return (
+                          <div key={key} className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl border transition-colors ${checked ? 'border-[#D8CCFF] bg-[#FDFCFF]' : 'border-[#E5E7EB] bg-[#FAFAFA]'}`}>
+                            <div>
+                              <p className="text-xs font-medium text-[#374151]">{label}</p>
+                              <p className="text-[11px] text-[#9CA3AF] mt-0.5">{desc}</p>
+                            </div>
+                            <button type="button" role="switch" aria-checked={checked}
+                              onClick={() => setForm(f => ({ ...f, limits: { ...f.limits, [key]: !checked } }))}
+                              className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${checked ? 'bg-[#6C55E8]' : 'bg-[#D1D5DB]'}`}>
+                              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition ease-in-out duration-200 ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Core Limits */}
+                  <div>
+                    <p className="text-xs font-semibold text-[#374151] mb-3">Core Limits</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-[#374151] mb-1.5">Locations</label>
+                        <input type="number" min="1" value={form.limits.locations}
+                          onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, locations: e.target.value } }))}
+                          className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white" />
                       </div>
-                      <label className="flex items-center gap-1.5 cursor-pointer">
-                        <input type="checkbox" disabled
-                          checked={form.limits.feedback_requests_unlimited}
-                          onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feedback_requests_unlimited: e.target.checked } }))}
-                          className="w-3.5 h-3.5 accent-[#6C55E8]" />
-                        <span className="text-xs text-[#6B7280]">Unlimited</span>
-                      </label>
-                    </div>
-                    {!form.limits.feedback_requests_unlimited && (
-                      <div className="flex items-center gap-2">
-                        <input type="number" min="0" disabled
-                          value={form.limits.feedback_requests_limit}
-                          onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feedback_requests_limit: e.target.value } }))}
-                          placeholder="0 = no access"
-                          className="flex-1 px-3 py-1.5 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
-                        <span className="text-xs text-[#9CA3AF]">requests/mo</span>
+                      <div>
+                        <label className="block text-xs font-medium text-[#374151] mb-1.5">Team Members</label>
+                        <input type="number" min="0" value={form.limits.team_members}
+                          onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, team_members: e.target.value } }))}
+                          className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white" />
                       </div>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-[#9CA3AF] mt-1.5">Feedback Request limits are saved but inactive until the Feedback module is enabled.</p>
-                </div>
-
-                {/* Locations */}
-                <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-1">Locations included</label>
-                  <input type="number" min="1" value={form.limits.locations}
-                    onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, locations: e.target.value } }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]" />
-                </div>
-
-                {/* Replies */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-medium text-[#374151]">Published Replies</label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={form.limits.replies_unlimited}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, replies_unlimited: e.target.checked } }))}
-                        className="w-3.5 h-3.5 accent-[#6C55E8]" />
-                      <span className="text-xs text-[#6B7280]">Unlimited</span>
-                    </label>
-                  </div>
-                  {!form.limits.replies_unlimited && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <input type="number" min="0" value={form.limits.replies_limit}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, replies_limit: e.target.value } }))}
-                        placeholder="e.g. 100"
-                        className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]" />
-                      <select value={form.limits.replies_reset}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, replies_reset: e.target.value as 'monthly' | 'weekly' } }))}
-                        className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white">
-                        <option value="monthly">per month</option>
-                        <option value="weekly">per week</option>
-                      </select>
                     </div>
-                  )}
-                </div>
-
-                {/* AI Drafts */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-medium text-[#374151]">AI Drafts</label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={form.limits.ai_drafts_unlimited}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, ai_drafts_unlimited: e.target.checked } }))}
-                        className="w-3.5 h-3.5 accent-[#6C55E8]" />
-                      <span className="text-xs text-[#6B7280]">Unlimited</span>
-                    </label>
+                    <p className="text-[11px] text-[#9CA3AF] mt-2">Team: 0 = locked, 1 = owner only, 2+ = can invite members.</p>
                   </div>
-                  {!form.limits.ai_drafts_unlimited && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <input type="number" min="0" value={form.limits.ai_drafts_limit}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, ai_drafts_limit: e.target.value } }))}
-                        placeholder="e.g. 50"
-                        className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]" />
-                      <select value={form.limits.ai_drafts_reset}
-                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, ai_drafts_reset: e.target.value as 'monthly' | 'weekly' } }))}
-                        className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white">
-                        <option value="monthly">per month</option>
-                        <option value="weekly">per week</option>
-                      </select>
+
+                  {/* Usage Limits */}
+                  <div>
+                    <p className="text-xs font-semibold text-[#374151] mb-3">Usage Limits</p>
+                    <div className="space-y-2">
+                      {([
+                        { label: 'Published Replies', unlimitedKey: 'replies_unlimited' as const, limitKey: 'replies_limit' as const, resetKey: 'replies_reset' as const },
+                        { label: 'AI Drafts',         unlimitedKey: 'ai_drafts_unlimited' as const, limitKey: 'ai_drafts_limit' as const, resetKey: 'ai_drafts_reset' as const },
+                      ]).map(({ label, unlimitedKey, limitKey, resetKey }) => {
+                        const isUnlimited = form.limits[unlimitedKey];
+                        return (
+                          <div key={label} className="border border-[#E5E7EB] rounded-xl px-4 py-3 bg-white">
+                            <div className="flex items-center justify-between mb-2.5">
+                              <span className="text-xs font-medium text-[#374151]">{label}</span>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <span className="text-[11px] text-[#6B7280]">Unlimited</span>
+                                <button type="button" role="switch" aria-checked={isUnlimited}
+                                  onClick={() => setForm(f => ({ ...f, limits: { ...f.limits, [unlimitedKey]: !isUnlimited } }))}
+                                  className={`relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${isUnlimited ? 'bg-[#6C55E8]' : 'bg-[#D1D5DB]'}`}>
+                                  <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition ease-in-out duration-200 ${isUnlimited ? 'translate-x-3' : 'translate-x-0'}`} />
+                                </button>
+                              </label>
+                            </div>
+                            {!isUnlimited ? (
+                              <div className="flex items-center gap-2">
+                                <input type="number" min="0" value={form.limits[limitKey]}
+                                  onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, [limitKey]: e.target.value } }))}
+                                  placeholder="e.g. 100"
+                                  className="flex-1 px-3 py-1.5 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white" />
+                                <select value={form.limits[resetKey]}
+                                  onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, [resetKey]: e.target.value as 'monthly' | 'weekly' } }))}
+                                  className="px-3 py-1.5 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white">
+                                  <option value="monthly">per month</option>
+                                  <option value="weekly">per week</option>
+                                </select>
+                              </div>
+                            ) : (
+                              <p className="text-[11px] text-[#6C55E8] font-semibold">Unlimited</p>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                {/* Team members */}
-                <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-1">Team Members</label>
-                  <input type="number" min="0" value={form.limits.team_members}
-                    onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, team_members: e.target.value } }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]" />
-                  <p className="text-[11px] text-[#9CA3AF] mt-1">Set to <span className="font-medium">0</span> to lock Team page. <span className="font-medium">1</span> = owner only (no invites). <span className="font-medium">2+</span> = can invite members.</p>
-                </div>
+                  {/* Campaign Limits */}
+                  <div>
+                    <p className="text-xs font-semibold text-[#374151] mb-3">Campaign Limits <span className="font-normal text-[#9CA3AF]">(per month)</span></p>
+                    <div className="space-y-2">
+                      {([
+                        { label: 'Email',    unlimitedKey: 'campaign_emails_unlimited',   limitKey: 'campaign_emails_limit',    active: true  },
+                        { label: 'SMS',      unlimitedKey: 'campaign_sms_unlimited',      limitKey: 'campaign_sms_limit',       active: false },
+                        { label: 'WhatsApp', unlimitedKey: 'campaign_whatsapp_unlimited', limitKey: 'campaign_whatsapp_limit',  active: false },
+                      ] as { label: string; unlimitedKey: keyof LimitsForm; limitKey: keyof LimitsForm; active: boolean }[]).map(ch => {
+                        const isUnlimited = form.limits[ch.unlimitedKey] as boolean;
+                        return (
+                          <div key={ch.label} className={`border border-[#E5E7EB] rounded-xl px-4 py-3 bg-white ${!ch.active ? 'opacity-50' : ''}`}>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-[#374151]">{ch.label}</span>
+                                {!ch.active && <span className="text-[10px] font-semibold bg-[#F3F4F6] text-[#9CA3AF] px-1.5 py-0.5 rounded-md">Coming soon</span>}
+                              </div>
+                              <label className="flex items-center gap-2">
+                                <span className="text-[11px] text-[#6B7280]">Unlimited</span>
+                                <button type="button" disabled={!ch.active} role="switch" aria-checked={isUnlimited}
+                                  onClick={() => ch.active && setForm(f => ({ ...f, limits: { ...f.limits, [ch.unlimitedKey]: !isUnlimited } }))}
+                                  className={`relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${isUnlimited ? 'bg-[#6C55E8]' : 'bg-[#D1D5DB]'}`}>
+                                  <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition ease-in-out duration-200 ${isUnlimited ? 'translate-x-3' : 'translate-x-0'}`} />
+                                </button>
+                              </label>
+                            </div>
+                            {!isUnlimited ? (
+                              <div className="flex items-center gap-2">
+                                <input type="number" min="0" disabled={!ch.active}
+                                  value={form.limits[ch.limitKey] as string}
+                                  onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, [ch.limitKey]: e.target.value } }))}
+                                  placeholder="0 = no access"
+                                  className="flex-1 px-3 py-1.5 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF] bg-white" />
+                                <span className="text-xs text-[#9CA3AF]">/mo</span>
+                              </div>
+                            ) : (
+                              <p className="text-[11px] text-[#6C55E8] font-semibold">Unlimited per month</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] text-[#9CA3AF] mt-1.5">SMS &amp; WhatsApp are saved but inactive until channels are enabled.</p>
+                  </div>
 
-                {/* Brand Brain steps */}
-                <div>
-                  {/* Steps unlocked — multi-select checkboxes */}
-                  <div className="mt-3">
-                    <label className="block text-xs font-medium text-[#374151] mb-2">Steps Unlocked <span className="text-[#9CA3AF] font-normal">(Preview is always shown)</span></label>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {([['Identity',1],['Voice',2],['Format',3],['Rules',4],['Guardrails',5],['Locations',6]] as [string,number][]).map(([lbl, bit]) => {
+                  {/* Marketing & Feedback Limits */}
+                  <div>
+                    <p className="text-xs font-semibold text-[#374151] mb-3">Marketing &amp; Feedback Limits</p>
+                    <div className="space-y-2">
+                      {([
+                        { label: 'Marketing Posts',    unlimitedKey: 'marketing_posts_unlimited' as const,    limitKey: 'marketing_posts_limit' as const,    unit: 'posts/mo' },
+                        { label: 'Feedback Requests',  unlimitedKey: 'feedback_requests_unlimited' as const,  limitKey: 'feedback_requests_limit' as const,  unit: 'req/mo' },
+                      ]).map(({ label, unlimitedKey, limitKey, unit }) => {
+                        const isUnlimited = form.limits[unlimitedKey];
+                        return (
+                          <div key={label} className="border border-[#E5E7EB] rounded-xl px-4 py-3 bg-white opacity-50">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-[#374151]">{label}</span>
+                                <span className="text-[10px] font-semibold bg-[#F3F4F6] text-[#9CA3AF] px-1.5 py-0.5 rounded-md">Coming soon</span>
+                              </div>
+                              <label className="flex items-center gap-2">
+                                <span className="text-[11px] text-[#6B7280]">Unlimited</span>
+                                <div className={`relative inline-flex h-4 w-7 flex-shrink-0 rounded-full border-2 border-transparent ${isUnlimited ? 'bg-[#6C55E8]' : 'bg-[#D1D5DB]'}`}>
+                                  <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition ease-in-out duration-200 ${isUnlimited ? 'translate-x-3' : 'translate-x-0'}`} />
+                                </div>
+                              </label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input type="number" min="0" disabled
+                                value={form.limits[limitKey]}
+                                onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, [limitKey]: e.target.value } }))}
+                                placeholder="0 = no access"
+                                className="flex-1 px-3 py-1.5 text-sm border border-[#E5E7EB] rounded-lg disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF] bg-white" />
+                              <span className="text-xs text-[#9CA3AF]">{unit}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Brand Brain Steps */}
+                  <div>
+                    <p className="text-xs font-semibold text-[#374151] mb-1">Brand Brain Steps Unlocked</p>
+                    <p className="text-[11px] text-[#9CA3AF] mb-3">Preview is always shown. Unchecked steps show a lock icon.</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['Identity','Voice','Format','Rules','Guardrails','Locations'] as string[]).map((lbl, idx) => {
+                        const bit = idx + 1;
                         const mask = parseInt(form.limits.brand_brain_steps) || 0;
                         const checked = !!(mask & (1 << (bit - 1)));
                         return (
-                          <label key={bit} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-[#E5E7EB] cursor-pointer hover:bg-[#FAFAF7] transition-colors select-none">
+                          <label key={bit} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border cursor-pointer select-none transition-colors ${checked ? 'border-[#D8CCFF] bg-[#FDFCFF]' : 'border-[#E5E7EB] bg-[#FAFAFA] hover:bg-white'}`}>
                             <input type="checkbox" checked={checked}
                               onChange={() => {
                                 const newMask = checked ? mask & ~(1 << (bit - 1)) : mask | (1 << (bit - 1));
                                 setForm(f => ({ ...f, limits: { ...f.limits, brand_brain_steps: String(newMask) } }));
                               }}
                               className="w-3.5 h-3.5 accent-[#6C55E8] cursor-pointer" />
-                            <span className="text-xs text-[#374151]">{lbl}</span>
+                            <span className={`text-xs font-medium ${checked ? 'text-[#6C55E8]' : 'text-[#6B7280]'}`}>{lbl}</span>
                           </label>
                         );
                       })}
                     </div>
-                    <p className="text-[11px] text-[#9CA3AF] mt-1.5">Unchecked steps show a lock icon and redirect to Billing.</p>
                   </div>
-                </div>
 
-                {/* Support tier */}
-                <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-1">Support Tier</label>
-                  <select value={form.limits.support_tier}
-                    onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, support_tier: e.target.value } }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white">
-                    <option value="help_guides">Help center guides</option>
-                    <option value="standard_email">Standard email</option>
-                    <option value="priority_email">Priority email</option>
-                  </select>
-                </div>
-              </div>
-            ) : (<>
-              {/* Name + Slug */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-1">Plan Name *</label>
-                  <input
-                    value={form.name}
-                    onChange={e => setForm(f => ({ ...f, name: e.target.value, slug: f.slug || slugify(e.target.value) }))}
-                    placeholder="e.g. Growth"
-                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-1">Slug</label>
-                  <input
-                    value={form.slug}
-                    onChange={e => setForm(f => ({ ...f, slug: slugify(e.target.value) }))}
-                    placeholder="auto from name"
-                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1">Description</label>
-                <input
-                  value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  placeholder="Short tagline shown under plan name"
-                  className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
-                />
-              </div>
-
-              {/* Prices */}
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-1">Currency</label>
-                  <select
-                    value={form.currency}
-                    onChange={e => setForm(f => ({ ...f, currency: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white"
-                  >
-                    <option value="USD">USD</option>
-                    <option value="PKR">PKR</option>
-                    <option value="GBP">GBP</option>
-                    <option value="EUR">EUR</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-1">Monthly Price</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={form.monthly_price}
-                    onChange={e => setForm(f => ({ ...f, monthly_price: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-1">Annual Discount %</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={form.annual_discount}
-                      onChange={e => setForm(f => ({ ...f, annual_discount: e.target.value }))}
-                      className="w-full px-3 py-2 pr-7 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
-                    />
-                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#9CA3AF]">%</span>
-                  </div>
-                </div>
-              </div>
-              {/* Annual price preview */}
-              {(() => {
-                const mo = parseFloat(form.monthly_price || '0');
-                const disc = Math.min(100, Math.max(0, parseFloat(form.annual_discount || '0')));
-                if (mo <= 0 || disc <= 0) return null;
-                const perMo = +(mo * (1 - disc / 100)).toFixed(2);
-                const total = +(perMo * 12).toFixed(2);
-                return (
-                  <p className="text-[11px] text-[#6B7280] -mt-2">
-                    Annual: <span className="font-medium text-[#374151]">${perMo}/mo</span> · billed ${total}/yr · saves {disc}%
-                  </p>
-                );
-              })()}
-
-              {/* Promotional Discount */}
-              <div>
-                <label className="block text-xs font-semibold text-[#374151] mb-1.5">Promotional Discount <span className="font-normal text-[#9CA3AF]">(optional)</span></label>
-                <div className="grid grid-cols-2 gap-3">
+                  {/* Support Tier */}
                   <div>
-                    <label className="block text-[11px] text-[#9CA3AF] mb-1">Type</label>
-                    <select
-                      value={form.discount_type}
-                      onChange={e => setForm(f => ({ ...f, discount_type: e.target.value as 'fixed' | 'percent' | '' }))}
-                      className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] bg-white"
-                    >
-                      <option value="">No discount</option>
-                      <option value="percent">Percentage (%)</option>
-                      <option value="fixed">Fixed amount ($)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[11px] text-[#9CA3AF] mb-1">
-                      {form.discount_type === 'percent' ? 'Percentage off' : form.discount_type === 'fixed' ? 'Amount off (USD)' : 'Value'}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        step={form.discount_type === 'percent' ? '1' : '0.01'}
-                        max={form.discount_type === 'percent' ? '100' : undefined}
-                        value={form.discount_value}
-                        onChange={e => setForm(f => ({ ...f, discount_value: e.target.value }))}
-                        disabled={!form.discount_type}
-                        placeholder={form.discount_type === 'percent' ? 'e.g. 20' : form.discount_type === 'fixed' ? 'e.g. 5' : '—'}
-                        className="w-full px-3 py-2 pr-7 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]"
-                      />
-                      {form.discount_type && (
-                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#9CA3AF]">
-                          {form.discount_type === 'percent' ? '%' : '$'}
-                        </span>
-                      )}
+                    <p className="text-xs font-semibold text-[#374151] mb-3">Support Tier</p>
+                    <div className="space-y-2">
+                      {([
+                        { value: 'help_guides',     label: 'Help center guides',  desc: 'Self-service documentation only' },
+                        { value: 'standard_email',  label: 'Standard email',      desc: 'Email support with standard SLA' },
+                        { value: 'priority_email',  label: 'Priority email',      desc: 'Faster response times and dedicated support' },
+                      ]).map(({ value, label, desc }) => (
+                        <label key={value} className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-colors ${form.limits.support_tier === value ? 'border-[#6C55E8] bg-[#FDFCFF]' : 'border-[#E5E7EB] bg-[#FAFAFA] hover:bg-white'}`}>
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${form.limits.support_tier === value ? 'border-[#6C55E8]' : 'border-[#D1D5DB]'}`}>
+                            {form.limits.support_tier === value && <div className="w-1.5 h-1.5 rounded-full bg-[#6C55E8]" />}
+                          </div>
+                          <input type="radio" value={value} checked={form.limits.support_tier === value}
+                            onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, support_tier: e.target.value } }))}
+                            className="sr-only" />
+                          <div>
+                            <p className="text-xs font-medium text-[#374151]">{label}</p>
+                            <p className="text-[11px] text-[#9CA3AF] mt-0.5">{desc}</p>
+                          </div>
+                        </label>
+                      ))}
                     </div>
                   </div>
-                </div>
-                {form.discount_type && form.discount_value && parseFloat(form.discount_value) > 0 && (() => {
-                  const mo = parseFloat(form.monthly_price || '0');
-                  const dv = parseFloat(form.discount_value);
-                  if (mo <= 0) return null;
-                  const discountedCents = form.discount_type === 'percent'
-                    ? Math.max(0, Math.round(mo * 100 * (1 - dv / 100)))
-                    : Math.max(0, Math.round(mo * 100) - Math.round(dv * 100));
-                  return (
-                    <p className="text-[11px] text-[#6B7280] mt-1.5">
-                      Shown as: <span className="line-through text-[#9CA3AF]">${mo.toFixed(2)}/mo</span>
-                      <span className="ml-1.5 font-semibold text-[#111827]">${(discountedCents / 100).toFixed(2)}/mo</span>
-                      <span className="ml-1.5 text-emerald-600 font-medium">
-                        {form.discount_type === 'percent' ? `-${dv}%` : `-$${dv.toFixed(2)}`}
-                      </span>
-                    </p>
-                  );
-                })()}
-              </div>
 
-              {/* Features */}
-              <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1">Features</label>
-                <div className="flex gap-2">
-                  <input
-                    ref={featureRef}
-                    value={featureInput}
-                    onChange={e => setFeatureInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addFeature(); } }}
-                    placeholder="Type a feature and press Enter"
-                    className="flex-1 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
-                  />
-                  <button
-                    onClick={addFeature}
-                    type="button"
-                    className="px-3 py-2 bg-[#F3F4F6] text-[#374151] rounded-lg hover:bg-[#E5E7EB] transition-colors text-sm"
-                  >
-                    Add
-                  </button>
-                </div>
-                {form.features.length > 0 && (
-                  <div className="mt-2 flex flex-col gap-1.5">
-                    {form.features.map((f, i) => (
-                      <div
-                        key={i}
-                        draggable
-                        onDragStart={() => setDragIdx(i)}
-                        onDragOver={e => { e.preventDefault(); setDragOverIdx(i); }}
-                        onDrop={() => { reorderFeatures(dragIdx!, i); setDragIdx(null); setDragOverIdx(null); }}
-                        onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
-                        className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg transition-colors cursor-default ${
-                          dragOverIdx === i && dragIdx !== i
-                            ? 'bg-[#D8CCFF] border-[#6C55E8]'
-                            : dragIdx === i
-                            ? 'bg-[#F3F4F6] border-[#D1D5DB] opacity-50'
-                            : 'bg-[#FAFAF7] border-[#E5E7EB]'
-                        }`}
-                      >
-                        {/* Grip handle */}
-                        <span className="flex-shrink-0 cursor-grab active:cursor-grabbing text-[#C4CAC8] hover:text-[#9CA3AF] transition-colors">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
-                            <circle cx="5" cy="4" r="1.2"/><circle cx="5" cy="8" r="1.2"/><circle cx="5" cy="12" r="1.2"/>
-                            <circle cx="11" cy="4" r="1.2"/><circle cx="11" cy="8" r="1.2"/><circle cx="11" cy="12" r="1.2"/>
-                          </svg>
-                        </span>
-                        <svg className="w-3 h-3 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="flex-1 text-xs text-[#374151]">{f}</span>
-                        <button onClick={() => removeFeature(i)} className="text-[#9CA3AF] hover:text-red-500 transition-colors flex-shrink-0">
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Badge + Featured */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-1">Badge Text</label>
-                  <input
-                    value={form.badge_text}
-                    onChange={e => setForm(f => ({ ...f, badge_text: e.target.value }))}
-                    placeholder="e.g. Most Popular"
-                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-[#374151] mb-1">Sort Order</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.sort_order}
-                    onChange={e => setForm(f => ({ ...f, sort_order: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8]"
-                  />
                 </div>
               </div>
-
-              {/* Toggles */}
-              <div className="flex flex-col gap-3">
-                <div className="flex gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.is_featured}
-                      onChange={e => setForm(f => ({ ...f, is_featured: e.target.checked }))}
-                      className="w-4 h-4 accent-[#6C55E8] rounded"
-                    />
-                    <span className="text-sm text-[#374151]">Featured (highlight on pricing page)</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.is_active}
-                      onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
-                      className="w-4 h-4 accent-[#6C55E8] rounded"
-                    />
-                    <span className="text-sm text-[#374151]">Active (visible on website)</span>
-                  </label>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.contact_sales}
-                    onChange={e => setForm(f => ({ ...f, contact_sales: e.target.checked }))}
-                    className="w-4 h-4 accent-[#6C55E8] rounded"
-                  />
-                  <div>
-                    <span className="text-sm text-[#374151]">Contact Sales</span>
-                    <span className="text-xs text-[#9CA3AF] ml-2">— hides price, shows "Contact Sales Team" button → sales@moffu.com</span>
-                  </div>
-                </label>
-              </div>
-            </>)}
             </div>
 
-            <div className="px-6 py-4 border-t border-[#E5E7EB] flex justify-end gap-3 flex-shrink-0">
-              <button
-                onClick={() => setModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="px-4 py-2 text-sm font-medium bg-[#6C55E8] text-white rounded-lg hover:bg-[#5A42D1] disabled:opacity-50 transition-colors"
-              >
-                {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Create Package'}
-              </button>
+            {/* Modal footer */}
+            <div className="px-7 py-4 border-t border-[#F3F4F6] flex items-center justify-between flex-shrink-0">
+              <p className="text-xs text-[#9CA3AF]">
+                {editingId ? 'Changes apply immediately.' : 'New plan will be in Draft until activated.'}
+              </p>
+              <div className="flex gap-3">
+                <button onClick={() => setModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F3F4F6] rounded-xl transition-colors">
+                  Cancel
+                </button>
+                <button onClick={handleSave} disabled={saving}
+                  className="px-5 py-2 text-sm font-semibold bg-[#6C55E8] text-white rounded-xl hover:bg-[#5A42D1] disabled:opacity-50 transition-colors shadow-sm">
+                  {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Create Package'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete confirm */}
+      {/* ── Delete Confirm ── */}
       {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
-            <h2 className="text-base font-semibold text-[#111827] mb-2">Delete Package?</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-7">
+            <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mb-5">
+              <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            <h2 className="text-base font-semibold text-[#111827] mb-1.5">Delete Package?</h2>
             <p className="text-sm text-[#6B7280] mb-6">
               This will permanently delete the package and all its prices. Active subscribers will not be affected but the plan will no longer be selectable.
             </p>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setDeleteId(null)} className="px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F3F4F6] rounded-lg transition-colors">
+              <button onClick={() => setDeleteId(null)}
+                className="px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F3F4F6] rounded-xl transition-colors">
                 Cancel
               </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
-              >
-                {deleting ? 'Deleting…' : 'Delete'}
+              <button onClick={handleDelete} disabled={deleting}
+                className="px-4 py-2 text-sm font-semibold bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors">
+                {deleting ? 'Deleting…' : 'Delete Package'}
               </button>
             </div>
           </div>
@@ -1186,4 +1063,3 @@ export function PackagesSettingsPage() {
     </div>
   );
 }
-
