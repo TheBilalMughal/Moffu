@@ -432,7 +432,7 @@ export function DashboardPage() {
         supabase.from('reviews').select('id', { count: 'exact', head: true }),
         supabase.from('reviews').select('id', { count: 'exact', head: true }).gte('created_at', td),
         supabase.from('google_connections').select('id', { count: 'exact', head: true }).eq('state', 'CONNECTED'),
-        supabase.from('organization_usage').select('id', { count: 'exact', head: true }).eq('event_type', 'ai_draft').gte('created_at', ago30),
+        supabase.from('usage_events').select('id', { count: 'exact', head: true }).eq('event_type', 'ai_draft').gte('created_at', ago30),
         supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('currency', 'USD'),
       ]);
 
