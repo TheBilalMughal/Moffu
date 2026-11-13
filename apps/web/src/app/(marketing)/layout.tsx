@@ -2,6 +2,7 @@ import { SiteFooter } from '../_components/SiteFooter';
 import { PageTransition } from '../_components/PageTransition';
 import { ScrollAnimations } from '../_components/ScrollAnimations';
 import { SiteNavbar } from '../_components/SiteNavbar';
+import { CookieBanner } from '../_components/CookieBanner';
 
 const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL ?? 'https://app.moffu.pro';
 
@@ -12,6 +13,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       <ScrollAnimations />
       <PageTransition>{children}</PageTransition>
       <SiteFooter portalUrl={portalUrl} />
+      <CookieBanner />
     </>
   );
 }
