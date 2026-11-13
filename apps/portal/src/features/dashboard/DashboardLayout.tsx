@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { useLocationStore } from '@/features/location/location.store';
 import { FeatureAccessContext } from '@/components/FeatureGate';
 import { LocationSelectionModal } from '@/features/billing/LocationSelectionModal';
+import { billingService } from '@/features/billing/billing.service';
 import { usePageTracking } from '@/hooks/usePageTracking';
 
 function StarIcon() {
@@ -701,18 +702,28 @@ function TopbarProfile() {
   );
 }
 
-function UpgradeWidget() {
+function UpgradeWidget({ currentName, nextName }: { currentName: string; nextName: string | null }) {
   const navigate = useNavigate();
   return (
     <button
       onClick={() => navigate('/billing')}
-      className="w-full mx-0 mb-2 p-3 rounded-xl text-left cursor-pointer group transition-all duration-200
+      className="w-full p-3 rounded-xl text-left cursor-pointer group transition-all duration-200
         bg-gradient-to-br from-[#6C55E8]/[0.08] to-[#6C55E8]/[0.04]
         border border-[#6C55E8]/[0.12]
         hover:from-[#6C55E8]/[0.13] hover:to-[#6C55E8]/[0.07] hover:border-[#6C55E8]/20"
       type="button"
     >
-      <p className="text-[11px] font-semibold text-[#6C55E8] mb-0.5">Free Plan</p>
+      <div className="flex items-center gap-1 mb-1.5">
+        <span className="text-[10px] font-semibold text-[#9CA3AF]">{currentName}</span>
+        {nextName && (
+          <>
+            <svg className="w-3 h-3 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            <span className="text-[10px] font-semibold text-[#6C55E8]">{nextName}</span>
+          </>
+        )}
+      </div>
       <p className="text-[10px] text-[#6B7280] leading-snug mb-2">Unlock more reviews, AI replies &amp; team features</p>
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-semibold text-[#6C55E8]">Upgrade now</span>
@@ -917,6 +928,7 @@ export function DashboardLayout() {
   const [featureAccess, setFeatureAccess] = useState<Record<string, boolean>>({});
   const [featureLoading, setFeatureLoading] = useState(true);
   const [isFreePlan, setIsFreePlan] = useState(false);
+  const [planUpgradeInfo, setPlanUpgradeInfo] = useState<{ currentName: string; nextName: string | null }>({ currentName: 'Free', nextName: null });
   const [adminDowngradePlan, setAdminDowngradePlan] = useState<{ name: string; locationLimit: number } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
@@ -982,6 +994,23 @@ export function DashboardLayout() {
       setFeatureLoading(false);
     }
     loadFeatureAccess();
+  }, []);
+
+  useEffect(() => {
+    const PLAN_ORDER = ['free', 'starter', 'growth', 'scale'] as const;
+    Promise.all([billingService.getSubscription(), billingService.getPlans()])
+      .then(([sub, plans]) => {
+        const currentSlug = (sub?.plan_slug ?? 'free') as string;
+        const idx = PLAN_ORDER.indexOf(currentSlug as typeof PLAN_ORDER[number]);
+        const nextSlug = idx >= 0 && idx < PLAN_ORDER.length - 1 ? PLAN_ORDER[idx + 1] : null;
+        const currentPlan = plans.find(p => p.slug === currentSlug);
+        const nextPlan = nextSlug ? plans.find(p => p.slug === nextSlug) : null;
+        setPlanUpgradeInfo({
+          currentName: currentPlan?.name ?? 'Free',
+          nextName: nextPlan?.name ?? null,
+        });
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -1093,19 +1122,21 @@ export function DashboardLayout() {
               onClick={() => navigate(group.items[0]!.to)}
             />
           ))}
-          <button
+          {isFreePlan && (
+            <button
               onClick={() => navigate('/billing')}
               className="relative group w-10 h-10 flex items-center justify-center rounded-xl bg-[#6C55E8] hover:bg-[#5A42D1] text-white transition-colors mt-1"
-              title="Upgrade plan"
+              title={`Upgrade to ${planUpgradeInfo.nextName ?? 'next plan'}`}
               aria-label="Upgrade plan"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
               </svg>
               <span className="pointer-events-none absolute left-full ml-2 px-2.5 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 text-white text-[11px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-xl">
-                Upgrade plan
+                Upgrade to {planUpgradeInfo.nextName ?? 'next plan'}
               </span>
             </button>
+          )}
           <div className="mt-auto pt-2">
             <button
               onClick={() => { authService.logout().then(() => { window.location.replace('/auth/login'); }); }}
@@ -1149,9 +1180,11 @@ export function DashboardLayout() {
                   isLocked={isLocked(item.featureKey)}
                 />
               ))}
-              <div className="mt-3">
-                <UpgradeWidget />
-              </div>
+              {isFreePlan && (
+                <div className="mt-3">
+                  <UpgradeWidget currentName={planUpgradeInfo.currentName} nextName={planUpgradeInfo.nextName} />
+                </div>
+              )}
             </div>
             {/* Mobile: show all items */}
             <div className="md:hidden flex flex-col gap-0.5">
