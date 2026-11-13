@@ -513,7 +513,7 @@ export function DashboardPage() {
         supabase.from('google_connections').select('state'),
         supabase.from('subscriptions').select('status, plan_id, user_id'),
         supabase.from('organizations').select('id, name, created_at, ref_id').order('created_at', { ascending: false }).limit(8),
-        supabase.from('audit_events').select('id, action, resource_type, actor_id, org_id, created_at').order('created_at', { ascending: false }).limit(10),
+        supabase.from('audit_events').select('id, action, resource_type, actor_user_id, org_id, created_at').order('created_at', { ascending: false }).limit(10),
         supabase.from('subscriptions').select('id, user_id').eq('status', 'past_due').limit(5),
         supabase.from('google_connections').select('id, org_id, state').in('state', ['REFRESH_FAILED', 'ERROR']).limit(5),
         supabase.from('platform_members').select('user_id').eq('is_active', true),
@@ -641,9 +641,9 @@ export function DashboardPage() {
       }));
 
       // Audit events — enrich actor emails and org names
-      type RawAudit = { id: string; action: string; resource_type: string | null; actor_id: string | null; org_id: string | null; created_at: string };
+      type RawAudit = { id: string; action: string; resource_type: string | null; actor_user_id: string | null; org_id: string | null; created_at: string };
       const auditRows = (auditRes.data ?? []) as RawAudit[];
-      const actorIds = [...new Set(auditRows.filter(r => r.actor_id).map(r => r.actor_id!))];
+      const actorIds = [...new Set(auditRows.filter(r => r.actor_user_id).map(r => r.actor_user_id!))];
       const auditOrgIds = [...new Set(auditRows.filter(r => r.org_id).map(r => r.org_id!))];
       const [actorsRes, auditOrgsRes] = await Promise.all([
         actorIds.length > 0 ? supabase.from('profiles').select('id, email').in('id', actorIds) : { data: [] },
@@ -656,7 +656,7 @@ export function DashboardPage() {
         action: r.action,
         resource_type: r.resource_type,
         created_at: r.created_at,
-        actorEmail: actorEmail.get(r.actor_id ?? '') ?? '—',
+        actorEmail: actorEmail.get(r.actor_user_id ?? '') ?? '—',
         orgName: orgName.get(r.org_id ?? '') ?? '—',
       })));
 
