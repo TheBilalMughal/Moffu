@@ -162,6 +162,8 @@ const COMPARISON_ROWS: { label: string; key: string; section?: string }[] = [
   { label: 'Email Campaigns',      key: 'campaign_emails',    section: 'Campaigns' },
   { label: 'SMS Campaigns',        key: 'campaign_sms',       section: 'Campaigns' },
   { label: 'WhatsApp Campaigns',   key: 'campaign_whatsapp',  section: 'Campaigns' },
+  { label: 'Marketing Posts',      key: 'marketing_posts',    section: 'Marketing' },
+  { label: 'Feedback Requests',    key: 'feedback_requests',  section: 'Feedback' },
   { label: 'Support',              key: 'support_tier' },
 ];
 

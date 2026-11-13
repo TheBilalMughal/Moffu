@@ -452,3 +452,9 @@ IMPLEMENTED: Complete redesign of /settings/api/ai (AISettingsPage) with interna
 IMPLEMENTED: `brandBrain.service.ts` `loadLocations()` now adds `.eq('is_selected', true)` to the Supabase query.
 - Only enabled (is_selected=true) locations appear in Step 1 (Per-location identity overrides) and Step 6 (Location Overrides) of the Brand Brain wizard.
 - Disabled locations are hidden from the UI only; their override rows in `brand_brain_overrides` are never deleted, so re-enabling a location restores all previously saved settings automatically.
+
+## Billing — Marketing + Feedback in plan comparison table — 2026-11-13
+IMPLEMENTED: Added Marketing and Feedback sections to `COMPARISON_ROWS` in `BillingPage.tsx` with correct entitlement key wiring.
+- DB migration `add_marketing_feedback_entitlements` inserted `marketing_posts` (LIMIT 0/mo) and `feedback_requests` (LIMIT 0/mo) rows for all 4 active plans.
+- `COMPARISON_ROWS` now includes: `marketing_posts` (section: Marketing) and `feedback_requests` (section: Feedback).
+- Both sections appear in the plan comparison modal between Campaigns and Support.
