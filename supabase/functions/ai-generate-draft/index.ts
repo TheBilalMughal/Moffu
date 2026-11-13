@@ -126,10 +126,17 @@ function json(data: unknown, status = 200) {
 
 // ── AI provider calls ─────────────────────────────────────────────────────────
 
+interface AIResult {
+  text: string;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
+
 async function callAI(
   provider: string, apiKey: string, model: string,
   systemPrompt: string, userPrompt: string,
-): Promise<string> {
+): Promise<AIResult> {
   if (provider === 'anthropic') {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -146,7 +153,9 @@ async function callAI(
     });
     if (!res.ok) throw new Error(`Anthropic ${res.status}: ${await res.text()}`);
     const data = await res.json();
-    return data.content?.[0]?.text?.trim() ?? '';
+    const inputTokens  = data.usage?.input_tokens  ?? 0;
+    const outputTokens = data.usage?.output_tokens ?? 0;
+    return { text: data.content?.[0]?.text?.trim() ?? '', inputTokens, outputTokens, totalTokens: inputTokens + outputTokens };
   }
 
   if (provider === 'groq') {
@@ -163,7 +172,9 @@ async function callAI(
     });
     if (!res.ok) throw new Error(`Groq ${res.status}: ${await res.text()}`);
     const data = await res.json();
-    return data.choices?.[0]?.message?.content?.trim() ?? '';
+    const inputTokens  = data.usage?.prompt_tokens     ?? 0;
+    const outputTokens = data.usage?.completion_tokens ?? 0;
+    return { text: data.choices?.[0]?.message?.content?.trim() ?? '', inputTokens, outputTokens, totalTokens: data.usage?.total_tokens ?? inputTokens + outputTokens };
   }
 
   if (provider === 'gemini') {
@@ -181,7 +192,9 @@ async function callAI(
     );
     if (!res.ok) throw new Error(`Gemini ${res.status}: ${await res.text()}`);
     const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+    const inputTokens  = data.usageMetadata?.promptTokenCount     ?? 0;
+    const outputTokens = data.usageMetadata?.candidatesTokenCount ?? 0;
+    return { text: data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '', inputTokens, outputTokens, totalTokens: data.usageMetadata?.totalTokenCount ?? inputTokens + outputTokens };
   }
 
   if (provider === 'openai') {
@@ -198,7 +211,9 @@ async function callAI(
     });
     if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
     const data = await res.json();
-    return data.choices?.[0]?.message?.content?.trim() ?? '';
+    const inputTokens  = data.usage?.prompt_tokens     ?? 0;
+    const outputTokens = data.usage?.completion_tokens ?? 0;
+    return { text: data.choices?.[0]?.message?.content?.trim() ?? '', inputTokens, outputTokens, totalTokens: data.usage?.total_tokens ?? inputTokens + outputTokens };
   }
 
   throw new Error(`Unknown provider: ${provider}`);
@@ -427,7 +442,29 @@ Deno.serve(async (req) => {
     const userPrompt = lines.join('\n');
 
     // ── Generate draft ───────────────────────────────────────────────────────
-    let draft = await callAI(aiSetting.provider, aiSetting.api_key, aiSetting.model, systemPrompt, userPrompt);
+    let aiResult: AIResult;
+    try {
+      aiResult = await callAI(aiSetting.provider, aiSetting.api_key, aiSetting.model, systemPrompt, userPrompt);
+    } catch (aiErr) {
+      const errMsg = aiErr instanceof Error ? aiErr.message : String(aiErr);
+      const errCode = errMsg.match(/\b(\d{3})\b/)?.[1] ?? 'ERR';
+      supabase.from('ai_token_usage').insert({
+        org_id: orgMember?.org_id ?? null,
+        provider: aiSetting.provider, model: aiSetting.model,
+        function_name: 'ai-generate-draft',
+        input_tokens: 0, output_tokens: 0, total_tokens: 0,
+        error_code: errCode,
+      }).then(() => {}).catch(() => {});
+      throw aiErr;
+    }
+    const { text: draftText, inputTokens, outputTokens, totalTokens } = aiResult;
+    supabase.from('ai_token_usage').insert({
+      org_id: orgMember?.org_id ?? null,
+      provider: aiSetting.provider, model: aiSetting.model,
+      function_name: 'ai-generate-draft',
+      input_tokens: inputTokens, output_tokens: outputTokens, total_tokens: totalTokens,
+    }).then(() => {}).catch(() => {});
+    let draft = draftText;
     if (!draft) return json({ error: 'Empty response from AI' }, 500);
 
     // Append reply signature if set

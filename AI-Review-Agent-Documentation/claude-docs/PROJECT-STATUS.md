@@ -434,3 +434,16 @@ IMPLEMENTED: New /ai-activity page added to Admin portal under the Clients nav g
 - 30-day SVG trend chart with two lines (AI Drafts purple + Published Replies blue), area fills, dots.
 - Event log table: last 1000 events, paginated 25/page, with event type filter (All/AI Draft/Published) and org/user search.
 - Route: /ai-activity. Nav item added in Clients section of AdminLayout.
+
+## Admin AI Keys page redesign + token usage tracking — 2026-11-13
+IMPLEMENTED: Complete redesign of /settings/api/ai (AISettingsPage) with internal tab navigation.
+- Internal tabs: Dashboard + one tab per provider (Gemini, OpenAI, Groq, Anthropic).
+- Dashboard tab: KPI cards (total calls, tokens, errors, error rate), free-tier limit bars, 30-day SVG bar chart (success purple / error red), per-function breakdown table, recent errors list. Shows empty state if ai_token_usage table has no data yet.
+- Provider tabs: inline API key input (password with show/hide), radio-card model selector (no native select), Save/Set Active/Remove buttons. Colored dot in tab label indicates configured/active state.
+- handleActivate fixed: deactivates all existing active rows before activating target (prevents multiple active providers).
+- handleSave: auto-activates first provider added with no existing active row.
+- DB migration applied (kgttncfkzdrgswfkkdji): ai_token_usage table with RLS (platform_members read, edge functions insert via service role). Indexes on created_at desc, provider, function_name.
+- Edge functions updated to log token usage fire-and-forget after every AI call:
+  - ai-generate-draft: all providers (Gemini/OpenAI/Groq/Anthropic), token extraction per provider's response shape, error_code logging on failure.
+  - extract-review-highlights: Gemini token extraction from usageMetadata.
+  - analyze-complaints: Gemini token extraction, outer handler updated to destructure AnalyzeResult return type.

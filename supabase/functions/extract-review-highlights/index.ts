@@ -16,7 +16,9 @@ function json(data: unknown, status = 200) {
   });
 }
 
-async function callGemini(apiKey: string, model: string, prompt: string): Promise<string> {
+interface GeminiResult { text: string; inputTokens: number; outputTokens: number; totalTokens: number; }
+
+async function callGemini(apiKey: string, model: string, prompt: string): Promise<GeminiResult> {
   const modelId = model?.startsWith('gemini') ? model : 'gemini-1.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
   const res = await fetch(url, {
@@ -32,7 +34,13 @@ async function callGemini(apiKey: string, model: string, prompt: string): Promis
     throw new Error(`Gemini error ${res.status}: ${err}`);
   }
   const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  const inputTokens  = data.usageMetadata?.promptTokenCount     ?? 0;
+  const outputTokens = data.usageMetadata?.candidatesTokenCount ?? 0;
+  return {
+    text: data.candidates?.[0]?.content?.parts?.[0]?.text ?? '',
+    inputTokens, outputTokens,
+    totalTokens: data.usageMetadata?.totalTokenCount ?? inputTokens + outputTokens,
+  };
 }
 
 Deno.serve(async (req) => {
@@ -169,8 +177,14 @@ Respond with ONLY valid JSON in this exact format, no other text:
 
   let parsed: { highlights: Array<{ text: string; keywords: string[] }> };
   try {
-    const raw = await callGemini(aiCfg.api_key, aiCfg.model ?? 'gemini-1.5-flash', prompt);
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    const result = await callGemini(aiCfg.api_key, aiCfg.model ?? 'gemini-1.5-flash', prompt);
+    supabase.from('ai_token_usage').insert({
+      org_id: orgId,
+      provider: 'gemini', model: aiCfg.model ?? 'gemini-1.5-flash',
+      function_name: 'extract-review-highlights',
+      input_tokens: result.inputTokens, output_tokens: result.outputTokens, total_tokens: result.totalTokens,
+    }).then(() => {}).catch(() => {});
+    const jsonMatch = result.text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return 0;
     parsed = JSON.parse(jsonMatch[0]);
   } catch {

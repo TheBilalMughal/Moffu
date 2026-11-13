@@ -88,7 +88,8 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | ADMIN-006 | Internal notes | REMOVED | - | Deliberately removed from product scope |
 | ADMIN-007 | Impersonation | IMPLEMENTED | - | `ClientDetailPage` "Impersonate" button per member → `admin-impersonate` Edge Function → magic link → opens portal in new tab; audit logged |
 | ADMIN-008 | Google troubleshooting | IMPLEMENTED | - | `IntegrationsHealthPage` — per-org Google connection status, error states, last sync timestamps |
-| ADMIN-009 | AI activity | IMPLEMENTED | - | `UsagePage` — AI draft + reply usage per org, date range filter, plan breakdown |
+| ADMIN-009 | AI activity | IMPLEMENTED | - | `UsagePage` — AI draft + reply usage per org, date range filter, plan breakdown. `AIActivityPage` (/ai-activity) — 5 KPI cards, provider badge, 30-day dual-line chart, event log. |
+| ADMIN-015 | AI Keys page (admin) | IMPLEMENTED | AI-001 | `AISettingsPage` redesigned with internal tabs: Dashboard (KPIs/chart/function breakdown/errors from ai_token_usage) + per-provider tabs (inline key management, radio-card model selector). `ai_token_usage` migration applied; edge functions (ai-generate-draft, extract-review-highlights, analyze-complaints) log tokens fire-and-forget. |
 | ADMIN-010 | System health | IMPLEMENTED | - | `IntegrationsHealthPage` covers Google/integration health; `ReportsPage` for broader analytics |
 | ADMIN-011 | Logs/audit | IMPLEMENTED | - | `AuditPage` — full audit_events table, actor/action/target columns, date + action filters, pagination |
 | ADMIN-012 | Refund workflow | IMPLEMENTED | - | `RefundsPage` — refund list with status badges; `PaymentsPage` — payment history; both wired to Paddle data |

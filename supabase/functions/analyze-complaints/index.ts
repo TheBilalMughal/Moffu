@@ -24,7 +24,9 @@ interface Review {
   reviewer_name: string;
 }
 
-async function geminiAnalyze(reviews: Review[]): Promise<Map<string, { is_complaint: boolean; summary: string }>> {
+interface AnalyzeResult { results: Map<string, { is_complaint: boolean; summary: string }>; model: string; inputTokens: number; outputTokens: number; totalTokens: number; }
+
+async function geminiAnalyze(reviews: Review[]): Promise<AnalyzeResult> {
   const reviewsText = reviews
     .map((r, i) => `Review ${i + 1} [ID:${r.id}] (${r.rating} star by ${r.reviewer_name || 'Anonymous'}):\n${r.body || '(no text)'}`)
     .join('\n\n---\n\n');
@@ -49,6 +51,8 @@ ${reviewsText}`;
   ];
 
   let rawText = '';
+  let usedModel = '';
+  let inputTokens = 0, outputTokens = 0, totalTokens = 0;
   for (const { model, body } of modelConfigs) {
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
@@ -57,15 +61,21 @@ ${reviewsText}`;
     if (!res.ok) { console.error(`Gemini ${model} error:`, res.status); continue; }
     const data = await res.json();
     rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
-    if (rawText) break;
+    if (rawText) {
+      usedModel = model;
+      inputTokens  = data.usageMetadata?.promptTokenCount     ?? 0;
+      outputTokens = data.usageMetadata?.candidatesTokenCount ?? 0;
+      totalTokens  = data.usageMetadata?.totalTokenCount      ?? inputTokens + outputTokens;
+      break;
+    }
   }
 
   const results = new Map<string, { is_complaint: boolean; summary: string }>();
-  if (!rawText) return results;
+  if (!rawText) return { results, model: usedModel, inputTokens, outputTokens, totalTokens };
 
   try {
     const jsonMatch = rawText.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) return results;
+    if (!jsonMatch) return { results, model: usedModel, inputTokens, outputTokens, totalTokens };
     const parsed = JSON.parse(jsonMatch[0]) as Array<{ id: string; is_complaint: boolean; summary: string }>;
     for (const item of parsed) {
       if (item.id) results.set(item.id, { is_complaint: !!item.is_complaint, summary: item.summary || '' });
@@ -73,7 +83,7 @@ ${reviewsText}`;
   } catch (e) {
     console.error('Parse error:', e, rawText);
   }
-  return results;
+  return { results, model: usedModel, inputTokens, outputTokens, totalTokens };
 }
 
 Deno.serve(async (req) => {
@@ -143,7 +153,15 @@ Deno.serve(async (req) => {
     }
 
     // AI-analyze reviews that have text
-    const aiResults = await geminiAnalyze(reviews as Review[]);
+    const { results: aiResults, model: aiModel, inputTokens, outputTokens, totalTokens } = await geminiAnalyze(reviews as Review[]);
+
+    // Log token usage (fire-and-forget)
+    supabase.from('ai_token_usage').insert({
+      org_id: member.org_id,
+      provider: 'gemini', model: aiModel || 'gemini-2.0-flash',
+      function_name: 'analyze-complaints',
+      input_tokens: inputTokens, output_tokens: outputTokens, total_tokens: totalTokens,
+    }).then(() => {}).catch(() => {});
 
     // Batch update results
     const now = new Date().toISOString();
