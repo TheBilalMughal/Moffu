@@ -512,10 +512,10 @@ function SentimentCard({ breakdown }: { breakdown: number[] }) {
   ];
 
   return (
-    <GlassCard className="p-5 min-h-[260px] flex flex-col justify-center">
-      <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-5">Review Sentiment</p>
+    <GlassCard className="p-5 min-h-[260px] flex flex-col">
+      <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Review Sentiment</p>
 
-      <div className="grid grid-cols-3 gap-3 mb-5">
+      <div className="grid grid-cols-3 gap-3 flex-1 mb-4">
         {items.map(item => (
           <div key={item.label} className="flex flex-col items-center justify-center gap-4">
             <div className={item.text}>{item.icon}</div>
@@ -762,36 +762,30 @@ function ResponseTimeCard({ dash }: { dash: DashboardData }) {
 
 function ActivityFeed({ items }: { items: ReviewRow[] }) {
   if (!items.length) return (
-    <div className="flex items-center justify-center h-20">
+    <div className="flex items-center justify-center h-16">
       <p className="text-xs text-[#9CA3AF]">No activity in the last 14 days</p>
     </div>
   );
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2">
       {items.map(r => (
-        <div key={r.id} className="flex items-start gap-2.5">
-          <div className="flex flex-col items-center flex-shrink-0 mt-1">
-            <div className={`w-2 h-2 rounded-full ${
-              r.status === 'PUBLISHED' ? 'bg-emerald-500' : r.status === 'PENDING' ? 'bg-amber-400' : 'bg-[#D1D5DB]'
-            }`} />
-            <div className="w-px flex-1 bg-[#F3F4F6] mt-1" style={{ minHeight: 12 }} />
-          </div>
-          <div className="flex-1 min-w-0 pb-1">
-            <p className="text-[11px] text-[#374151] leading-snug">
-              <span className="font-semibold">{r.reviewer_name ?? 'Anonymous'}</span>
-              {' '}left a {r.rating != null ? `${r.rating}★` : ''} review
+        <div key={r.id} className="flex items-center gap-2.5 py-1.5 border-b border-[#F3F4F6] last:border-0">
+          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+            r.status === 'PUBLISHED' ? 'bg-emerald-500' : r.status === 'PENDING' ? 'bg-amber-400' : 'bg-[#D1D5DB]'
+          }`} />
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[#374151] truncate">
+              {r.reviewer_name ?? 'Anonymous'}
+              {r.rating != null && <span className="font-normal text-[#9CA3AF]"> · {r.rating}★</span>}
             </p>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className={`text-[10px] font-medium ${
-                r.status === 'PUBLISHED' ? 'text-emerald-600' : r.status === 'PENDING' ? 'text-amber-600' : 'text-[#9CA3AF]'
-              }`}>
-                {r.status === 'PUBLISHED' ? 'Replied' : r.status === 'PENDING' ? 'Pending' : r.status}
-              </span>
-              <span className="text-[10px] text-[#D1D5DB]">·</span>
-              <span className="text-[10px] text-[#9CA3AF]">{timeAgo(r.published_at)}</span>
-            </div>
+            <p className="text-[10px] text-[#9CA3AF]">{timeAgo(r.published_at)}</p>
           </div>
+          <span className={`text-[10px] font-medium flex-shrink-0 ${
+            r.status === 'PUBLISHED' ? 'text-emerald-600' : r.status === 'PENDING' ? 'text-amber-500' : 'text-[#9CA3AF]'
+          }`}>
+            {r.status === 'PUBLISHED' ? 'Replied' : r.status === 'PENDING' ? 'Pending' : r.status}
+          </span>
         </div>
       ))}
     </div>
