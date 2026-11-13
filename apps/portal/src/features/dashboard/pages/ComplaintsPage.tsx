@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useLocationStore } from '@/features/location/location.store';
+import { Toast, useToast } from '@/components/Toast';
 
 function GlassCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -53,7 +54,7 @@ export function ComplaintsPage() {
   const [complaints, setComplaints]       = useState<ComplaintReview[]>([]);
   const [loading, setLoading]             = useState(true);
   const [analyzing, setAnalyzing]         = useState(false);
-  const [analyzeResult, setAnalyzeResult] = useState<{ analyzed: number; complaints: number } | null>(null);
+  const { toast, show: showToast, clear: clearToast } = useToast();
   const [filterStatus, setFilterStatus]   = useState<FilterStatus>('all');
   const [filterRating, setFilterRating]   = useState<FilterRating>('all');
   const [expandedId, setExpandedId]       = useState<string | null>(null);
@@ -95,7 +96,6 @@ export function ComplaintsPage() {
 
   const handleAnalyze = async () => {
     setAnalyzing(true);
-    setAnalyzeResult(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -110,10 +110,20 @@ export function ComplaintsPage() {
         }
       );
       const result = await res.json();
-      setAnalyzeResult(result);
       await fetchComplaints();
+      if (result.error) {
+        showToast(result.error, 'error');
+      } else if (result.analyzed === 0) {
+        showToast('All reviews are already analyzed.', 'success');
+      } else {
+        showToast(
+          `Analyzed ${result.analyzed} review${result.analyzed !== 1 ? 's' : ''} — found ${result.complaints} complaint${result.complaints !== 1 ? 's' : ''}.`,
+          'success'
+        );
+      }
     } catch (e) {
       console.error('Analyze error:', e);
+      showToast('Could not reach analysis service. Try again.', 'error');
     } finally {
       setAnalyzing(false);
     }
@@ -216,16 +226,6 @@ export function ComplaintsPage() {
       </div>
 
       {/* Analyze result banner */}
-      {analyzeResult && analyzeResult.analyzed > 0 && (
-        <div className="mb-5 p-3.5 rounded-xl bg-[#EDE9FE] border border-[#C4B5FD] flex items-center gap-3">
-          <svg className="w-5 h-5 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <p className="text-[13px] text-[#4C1D95] font-medium">
-            Analyzed {analyzeResult.analyzed} reviews — found {analyzeResult.complaints} new complaint{analyzeResult.complaints !== 1 ? 's' : ''}
-          </p>
-        </div>
-      )}
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -408,6 +408,8 @@ export function ComplaintsPage() {
           })}
         </div>
       )}
+
+      {toast && <Toast message={toast.message} type={toast.type} onDone={clearToast} />}
     </div>
   );
 }
