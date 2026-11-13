@@ -1257,42 +1257,38 @@ export function OverviewPage() {
       ) : !loadingDash && dash ? (
         <>
           <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Left — Sentiment + Recent Reviews */}
-            <div className="flex flex-col gap-4">
-              <SentimentCard breakdown={dash.ratingBreakdown} />
-              <GlassCard className="overflow-hidden flex-1">
-                <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[#E5E7EB]/50">
-                  <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Recent Reviews</p>
-                  <Link to="/reviews" className="text-[11px] font-semibold text-[#6C55E8] hover:underline">View all →</Link>
-                </div>
-                <RecentReviews reviews={dash.recent} />
-              </GlassCard>
-            </div>
+            {/* Row 1: Sentiment | Trend | Upgrade */}
+            <SentimentCard breakdown={dash.ratingBreakdown} />
 
-            {/* Middle — Trend + Rating stacked */}
-            <div className="flex flex-col gap-4">
-              <GlassCard className="p-5 flex flex-col min-h-[260px]">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Reviews · Last 14 Days</p>
-                  <span className="text-xs font-bold text-[#111827]">{dash.trend.reduce((s, d) => s + d.count, 0)} total</span>
-                </div>
-                <div className="flex-1 flex flex-col justify-end">
-                  <TrendChart trend={dash.trend} />
-                </div>
-              </GlassCard>
+            <GlassCard className="p-5 flex flex-col min-h-[260px]">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Reviews · Last 14 Days</p>
+                <span className="text-xs font-bold text-[#111827]">{dash.trend.reduce((s, d) => s + d.count, 0)} total</span>
+              </div>
+              <div className="flex-1 flex flex-col justify-end">
+                <TrendChart trend={dash.trend} />
+              </div>
+            </GlassCard>
 
-              <GlassCard className="p-5">
-                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Rating Breakdown</p>
-                <RatingChart breakdown={dash.ratingBreakdown} />
-              </GlassCard>
-            </div>
+            <UpgradeCard sub={sub} plans={billingPlans} />
 
-            {/* Right — Upgrade Card + Recent Activity */}
+            {/* Row 2: Recent Reviews (col-span-2) | Recent Activity + Rating Breakdown */}
+            <GlassCard className="overflow-hidden lg:col-span-2">
+              <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[#E5E7EB]/50">
+                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Recent Reviews</p>
+                <Link to="/reviews" className="text-[11px] font-semibold text-[#6C55E8] hover:underline">View all →</Link>
+              </div>
+              <RecentReviews reviews={dash.recent} />
+            </GlassCard>
+
             <div className="flex flex-col gap-4">
-              <UpgradeCard sub={sub} plans={billingPlans} />
               <GlassCard className="p-5 flex-1">
                 <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Recent Activity</p>
                 <ActivityFeed items={dash.activityItems} />
+              </GlassCard>
+              <GlassCard className="p-5 flex-1">
+                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Rating Breakdown</p>
+                <RatingChart breakdown={dash.ratingBreakdown} />
               </GlassCard>
             </div>
           </div>
