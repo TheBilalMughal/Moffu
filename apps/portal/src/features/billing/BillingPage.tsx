@@ -158,6 +158,7 @@ const COMPARISON_ROWS: { label: string; key: string; section?: string }[] = [
   { label: 'AI Drafts',            key: 'ai_drafts' },
   { label: 'Team members',         key: 'team_members' },
   { label: 'Brand Brain profiles', key: 'brand_brain_profiles' },
+  { label: 'Brand Brain',          key: 'feature_brand_brain',    section: 'Feature Access' },
   { label: 'Google Profile',       key: 'feature_google_profile', section: 'Feature Access' },
   { label: 'Insights',             key: 'feature_insights',       section: 'Feature Access' },
   { label: 'Campaigns',            key: 'feature_campaigns',      section: 'Feature Access' },

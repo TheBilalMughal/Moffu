@@ -465,6 +465,12 @@ IMPLEMENTED: Converted Campaigns, Marketing, Feedback from numeric limits to boo
 - Admin `PackagesSettingsPage.tsx`: Feature Access section now has 5 checkboxes: Google Profile, Insights & Analytics, Campaigns, Marketing, Feedback.
 - Portal `BillingPage.tsx` `COMPARISON_ROWS`: All 5 feature booleans now appear under the "Feature Access" section header.
 
+## Billing — Brand Brain in Feature Access section + DB rows — 2026-11-13
+IMPLEMENTED: Added `feature_brand_brain` to plan comparison modal Feature Access section and DB for Growth/Scale.
+- `BillingPage.tsx` `COMPARISON_ROWS`: Added `{ label: 'Brand Brain', key: 'feature_brand_brain', section: 'Feature Access' }` before Google Profile row.
+- DB migration `add_feature_brand_brain_growth_scale`: inserted `feature_brand_brain = true` for Growth and Scale plans (Free already true, Starter false).
+- Dynamic BOOLEAN gating (`DashboardLayout.tsx`) now auto-maps this key — no hardcode needed.
+
 ## Entitlement gating for Campaigns/Marketing/Feedback pages — 2026-11-13
 IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation level.
 - `DashboardLayout.tsx`: Updated `navItems` and `navGroups` Engage section to set `featureKey: 'feature_campaigns'`, `'feature_marketing'`, `'feature_feedback'` (were `null`). Sidebar now shows lock icon and greys out items when feature is off.
