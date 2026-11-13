@@ -161,7 +161,7 @@ export function GoogleProfilePage(){
     {selected && <>
       {current && (
         <div className="flex justify-end text-[11px] text-[#6B7280]">
-          <span>Fetched {new Date(current.fetched_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-')}</span>
+          <span>Fetched {new Date(current.fetched_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-')}, {new Date(current.fetched_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
         </div>
       )}
       {error && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>}
