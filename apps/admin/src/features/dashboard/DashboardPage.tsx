@@ -515,7 +515,7 @@ export function DashboardPage() {
         supabase.from('organizations').select('id, name, created_at, ref_id').order('created_at', { ascending: false }).limit(8),
         supabase.from('audit_events').select('id, action, resource_type, actor_user_id, org_id, created_at').order('created_at', { ascending: false }).limit(10),
         supabase.from('subscriptions').select('id, user_id').eq('status', 'past_due').limit(5),
-        supabase.from('google_connections').select('id, org_id, state').in('state', ['REFRESH_FAILED', 'ERROR']).limit(5),
+        supabase.from('google_connections').select('id, user_id, state').in('state', ['REFRESH_FAILED', 'ERROR']).limit(5),
         supabase.from('platform_members').select('user_id').eq('is_active', true),
       ]);
 
@@ -666,9 +666,9 @@ export function DashboardPage() {
       pastDueSubs.slice(0, 3).forEach(s => {
         actionList.push({ id: s.id, kind: 'past_due', label: 'Past-due subscription', detail: `User ${s.user_id.slice(0, 8)}…`, href: '/billing' });
       });
-      const failedConns = (failedConnRes.data ?? []) as { id: string; org_id: string; state: string }[];
+      const failedConns = (failedConnRes.data ?? []) as { id: string; user_id: string; state: string }[];
       failedConns.slice(0, 3).forEach(c => {
-        actionList.push({ id: c.id, kind: 'google_failed', label: 'Google connection failed', detail: `Org ${(c.org_id ?? '').slice(0, 8)}…`, href: '/clients' });
+        actionList.push({ id: c.id, kind: 'google_failed', label: 'Google connection failed', detail: `User ${(c.user_id ?? '').slice(0, 8)}…`, href: '/clients' });
       });
       setActions(actionList);
 
