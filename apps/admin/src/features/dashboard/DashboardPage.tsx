@@ -595,30 +595,34 @@ export function DashboardPage() {
       const recentOrgs = (recentOrgsRes.data ?? []) as { id: string; name: string; created_at: string; ref_id: string }[];
       const orgIds = recentOrgs.map(o => o.id);
 
-      const [subsOwnerRes, reviewCountsRes] = await Promise.all([
-        orgIds.length > 0
-          ? supabase.from('org_members').select('org_id, user_id').eq('role', 'owner').in('org_id', orgIds)
-          : { data: [] },
-        orgIds.length > 0
-          ? supabase.from('reviews').select('org_id').in('org_id', orgIds)
-          : { data: [] },
-      ]);
+      const subsOwnerRes = orgIds.length > 0
+        ? await supabase.from('org_members').select('org_id, user_id').eq('role', 'owner').in('org_id', orgIds)
+        : { data: [] };
 
       const ownerMap = new Map<string, string>();
       ((subsOwnerRes.data ?? []) as { org_id: string; user_id: string }[]).forEach(r => ownerMap.set(r.org_id, r.user_id));
 
       const ownerIds = [...new Set(Array.from(ownerMap.values()))];
-      const ownerSubsRes = ownerIds.length > 0
-        ? await supabase.from('subscriptions').select('user_id, plan_id, status').eq('status', 'active').in('user_id', ownerIds)
-        : { data: [] };
+      const userOrgMap = new Map<string, string>();
+      ownerMap.forEach((userId, orgId) => userOrgMap.set(userId, orgId));
+
+      const [ownerSubsRes, reviewsForOwnersRes] = await Promise.all([
+        ownerIds.length > 0
+          ? supabase.from('subscriptions').select('user_id, plan_id, status').eq('status', 'active').in('user_id', ownerIds)
+          : { data: [] },
+        ownerIds.length > 0
+          ? supabase.from('reviews').select('user_id').in('user_id', ownerIds)
+          : { data: [] },
+      ]);
       const ownerPlanMap = new Map<string, string>();
       ((ownerSubsRes.data ?? []) as { user_id: string; plan_id: string }[]).forEach(r => ownerPlanMap.set(r.user_id, r.plan_id));
 
       const planById = new Map(plans.map(p => [p.id, p]));
 
       const reviewCounts = new Map<string, number>();
-      ((reviewCountsRes.data ?? []) as { org_id: string }[]).forEach(r => {
-        reviewCounts.set(r.org_id, (reviewCounts.get(r.org_id) ?? 0) + 1);
+      ((reviewsForOwnersRes.data ?? []) as { user_id: string }[]).forEach(r => {
+        const orgId = userOrgMap.get(r.user_id);
+        if (orgId) reviewCounts.set(orgId, (reviewCounts.get(orgId) ?? 0) + 1);
       });
 
       setTopOrgs(recentOrgs.map(o => {
