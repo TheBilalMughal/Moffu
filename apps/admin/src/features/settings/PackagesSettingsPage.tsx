@@ -88,7 +88,6 @@ function slugify(s: string) {
 }
 
 function formatPrice(cents: number, currency: string) {
-  if (cents === 0) return 'Free';
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 0 }).format(cents / 100);
 }
 
@@ -191,6 +190,8 @@ export function PackagesSettingsPage() {
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteName, setDeleteName] = useState('');
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
   const [deleting, setDeleting] = useState(false);
 
   async function fetchPlans() {
@@ -371,6 +372,8 @@ export function PackagesSettingsPage() {
     if (e) { toast.error(e.message); }
     else { toast.success('Package deleted.'); await fetchPlans(); }
     setDeleteId(null);
+    setDeleteName('');
+    setDeleteConfirmInput('');
     setDeleting(false);
   }
 
@@ -486,9 +489,9 @@ export function PackagesSettingsPage() {
                         <>
                           <div className="flex items-baseline gap-1 justify-end">
                             <span className="text-2xl font-bold text-[#111827]">
-                              {monthly ? formatPrice(monthly.amount_cents, monthly.currency) : 'Free'}
+                              {monthly ? formatPrice(monthly.amount_cents, monthly.currency) : '$0'}
                             </span>
-                            {monthly && monthly.amount_cents > 0 && <span className="text-xs text-[#9CA3AF]">/mo</span>}
+                            <span className="text-xs text-[#9CA3AF]">/mo</span>
                           </div>
                           {disc > 0 && (
                             <p className="text-[11px] text-[#9CA3AF] mt-0.5">
@@ -521,7 +524,7 @@ export function PackagesSettingsPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
-                      <button onClick={() => setDeleteId(plan.id)}
+                      <button onClick={() => { setDeleteId(plan.id); setDeleteName(plan.name); setDeleteConfirmInput(''); }}
                         className="p-2 text-[#9CA3AF] hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1044,16 +1047,29 @@ export function PackagesSettingsPage() {
               </svg>
             </div>
             <h2 className="text-base font-semibold text-[#111827] mb-1.5">Delete Package?</h2>
-            <p className="text-sm text-[#6B7280] mb-6">
+            <p className="text-sm text-[#6B7280] mb-5">
               This will permanently delete the package and all its prices. Active subscribers will not be affected but the plan will no longer be selectable.
             </p>
+            <div className="mb-5">
+              <label className="block text-xs font-medium text-[#374151] mb-1.5">
+                Type <span className="font-mono font-bold text-[#111827]">{deleteName}</span> to confirm
+              </label>
+              <input
+                value={deleteConfirmInput}
+                onChange={e => setDeleteConfirmInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && deleteConfirmInput === deleteName) handleDelete(); }}
+                placeholder={deleteName}
+                autoFocus
+                className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-xl focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 bg-white"
+              />
+            </div>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setDeleteId(null)}
+              <button onClick={() => { setDeleteId(null); setDeleteName(''); setDeleteConfirmInput(''); }}
                 className="px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F3F4F6] rounded-xl transition-colors">
                 Cancel
               </button>
-              <button onClick={handleDelete} disabled={deleting}
-                className="px-4 py-2 text-sm font-semibold bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 transition-colors">
+              <button onClick={handleDelete} disabled={deleting || deleteConfirmInput !== deleteName}
+                className="px-4 py-2 text-sm font-semibold bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                 {deleting ? 'Deleting…' : 'Delete Package'}
               </button>
             </div>
