@@ -55,6 +55,10 @@ interface LimitsForm {
   campaign_sms_limit: string;
   campaign_whatsapp_unlimited: boolean;
   campaign_whatsapp_limit: string;
+  marketing_posts_unlimited: boolean;
+  marketing_posts_limit: string;
+  feedback_requests_unlimited: boolean;
+  feedback_requests_limit: string;
 }
 
 interface PlanForm {
@@ -103,6 +107,10 @@ const DEFAULT_LIMITS: LimitsForm = {
   campaign_sms_limit: '0',
   campaign_whatsapp_unlimited: false,
   campaign_whatsapp_limit: '0',
+  marketing_posts_unlimited: false,
+  marketing_posts_limit: '0',
+  feedback_requests_unlimited: false,
+  feedback_requests_limit: '0',
 };
 
 const EMPTY_FORM: PlanForm = {
@@ -148,6 +156,10 @@ function entsToLimits(ents: Record<string, PlanEntitlement>): LimitsForm {
     campaign_sms_limit:        String(ents['campaign_sms']?.limit_value ?? 0),
     campaign_whatsapp_unlimited: ents['campaign_whatsapp']?.value_type === 'UNLIMITED',
     campaign_whatsapp_limit:     String(ents['campaign_whatsapp']?.limit_value ?? 0),
+    marketing_posts_unlimited:   ents['marketing_posts']?.value_type === 'UNLIMITED',
+    marketing_posts_limit:       String(ents['marketing_posts']?.limit_value ?? 0),
+    feedback_requests_unlimited: ents['feedback_requests']?.value_type === 'UNLIMITED',
+    feedback_requests_limit:     String(ents['feedback_requests']?.limit_value ?? 0),
   };
 }
 
@@ -328,6 +340,8 @@ export function PackagesSettingsPage() {
       { plan_id: planId, key: 'campaign_emails',    value_type: L.campaign_emails_unlimited    ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_emails_unlimited    ? null : parseInt(L.campaign_emails_limit) || 0,    bool_value: null, enum_value: null, usage_reset: 'monthly' },
       { plan_id: planId, key: 'campaign_sms',       value_type: L.campaign_sms_unlimited       ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_sms_unlimited       ? null : parseInt(L.campaign_sms_limit) || 0,       bool_value: null, enum_value: null, usage_reset: 'monthly' },
       { plan_id: planId, key: 'campaign_whatsapp',  value_type: L.campaign_whatsapp_unlimited  ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_whatsapp_unlimited  ? null : parseInt(L.campaign_whatsapp_limit) || 0,  bool_value: null, enum_value: null, usage_reset: 'monthly' },
+      { plan_id: planId, key: 'marketing_posts',    value_type: L.marketing_posts_unlimited    ? 'UNLIMITED' : 'LIMIT', limit_value: L.marketing_posts_unlimited    ? null : parseInt(L.marketing_posts_limit) || 0,    bool_value: null, enum_value: null, usage_reset: 'monthly' },
+      { plan_id: planId, key: 'feedback_requests',  value_type: L.feedback_requests_unlimited  ? 'UNLIMITED' : 'LIMIT', limit_value: L.feedback_requests_unlimited  ? null : parseInt(L.feedback_requests_limit) || 0,  bool_value: null, enum_value: null, usage_reset: 'monthly' },
     ];
     const { error: ee } = await supabase.from('plan_entitlements').upsert(entUpserts as any, { onConflict: 'plan_id,key' });
     if (ee) { toast.error(ee.message); setSaving(false); return; }
@@ -612,6 +626,68 @@ export function PackagesSettingsPage() {
                     })}
                   </div>
                   <p className="text-[11px] text-[#9CA3AF] mt-1.5">Set to <span className="font-medium">0</span> to block campaigns on this plan. SMS &amp; WhatsApp limits are saved but inactive until channels are enabled.</p>
+                </div>
+
+                {/* Marketing Limits */}
+                <div>
+                  <p className="text-xs font-semibold text-[#374151] mb-2">Marketing Limits <span className="font-normal text-[#9CA3AF]">(per month)</span></p>
+                  <div className="border border-[#E5E7EB] rounded-lg px-3.5 py-3 opacity-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-[#374151]">Marketing Posts</span>
+                        <span className="text-[10px] font-semibold bg-[#F3F4F6] text-[#9CA3AF] px-1.5 py-0.5 rounded">Coming soon</span>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" disabled
+                          checked={form.limits.marketing_posts_unlimited}
+                          onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, marketing_posts_unlimited: e.target.checked } }))}
+                          className="w-3.5 h-3.5 accent-[#6C55E8]" />
+                        <span className="text-xs text-[#6B7280]">Unlimited</span>
+                      </label>
+                    </div>
+                    {!form.limits.marketing_posts_unlimited && (
+                      <div className="flex items-center gap-2">
+                        <input type="number" min="0" disabled
+                          value={form.limits.marketing_posts_limit}
+                          onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, marketing_posts_limit: e.target.value } }))}
+                          placeholder="0 = no access"
+                          className="flex-1 px-3 py-1.5 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
+                        <span className="text-xs text-[#9CA3AF]">posts/mo</span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[#9CA3AF] mt-1.5">Marketing Posts limits are saved but inactive until the Marketing module is enabled.</p>
+                </div>
+
+                {/* Feedback Limits */}
+                <div>
+                  <p className="text-xs font-semibold text-[#374151] mb-2">Feedback Limits <span className="font-normal text-[#9CA3AF]">(per month)</span></p>
+                  <div className="border border-[#E5E7EB] rounded-lg px-3.5 py-3 opacity-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-[#374151]">Feedback Requests</span>
+                        <span className="text-[10px] font-semibold bg-[#F3F4F6] text-[#9CA3AF] px-1.5 py-0.5 rounded">Coming soon</span>
+                      </div>
+                      <label className="flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" disabled
+                          checked={form.limits.feedback_requests_unlimited}
+                          onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feedback_requests_unlimited: e.target.checked } }))}
+                          className="w-3.5 h-3.5 accent-[#6C55E8]" />
+                        <span className="text-xs text-[#6B7280]">Unlimited</span>
+                      </label>
+                    </div>
+                    {!form.limits.feedback_requests_unlimited && (
+                      <div className="flex items-center gap-2">
+                        <input type="number" min="0" disabled
+                          value={form.limits.feedback_requests_limit}
+                          onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feedback_requests_limit: e.target.value } }))}
+                          placeholder="0 = no access"
+                          className="flex-1 px-3 py-1.5 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] disabled:bg-[#F9FAFB] disabled:text-[#9CA3AF]" />
+                        <span className="text-xs text-[#9CA3AF]">requests/mo</span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[#9CA3AF] mt-1.5">Feedback Request limits are saved but inactive until the Feedback module is enabled.</p>
                 </div>
 
                 {/* Locations */}
