@@ -30,7 +30,7 @@ interface OverrideForm {
   locations: string; team_members: string; campaign_emails: string; campaign_emails_unlimited: boolean;
   custom_price: string; billing_interval: string; contract_start: string; contract_end: string; notes: string;
 }
-interface AuditEvent { id: string; action: string; actor_id: string | null; metadata: Record<string, unknown> | null; created_at: string; }
+interface AuditEvent { id: string; action: string; actor_user_id: string | null; metadata: Record<string, unknown> | null; created_at: string; }
 interface PageView { id: string; user_id: string; ip: string; path: string; user_agent: string | null; created_at: string; }
 interface RefundRow {
   id: string; amount_cents: number | null; reason: string; status: string; admin_note: string | null;
@@ -394,7 +394,7 @@ export function ClientDetailPage() {
     if (!org) return;
     setAuditLoading(true);
     const { data } = await supabase.from('audit_events')
-      .select('id, action, actor_id, metadata, created_at')
+      .select('id, action, actor_user_id, metadata, created_at')
       .eq('org_id', org.id)
       .order('created_at', { ascending: false })
       .limit(100);
@@ -493,9 +493,9 @@ export function ClientDetailPage() {
     await supabase.from('organizations').update({ status: 'active' }).eq('id', org.id);
     if (user) {
       await supabase.from('audit_events').insert({
-        actor_id: user.id, action: 'admin_reactivate_org',
-        target_type: 'organization', target_id: org.id,
-        meta: { org_name: org.name },
+        actor_user_id: user.id, action: 'admin_reactivate_org',
+        resource_type: 'organization', resource_id: org.id,
+        metadata: { org_name: org.name },
       });
     }
     setToggling(false); load();
@@ -509,9 +509,9 @@ export function ClientDetailPage() {
     await supabase.from('organizations').update({ status: 'suspended' }).eq('id', org.id);
     if (user) {
       await supabase.from('audit_events').insert({
-        actor_id: user.id, action: 'admin_suspend_org',
-        target_type: 'organization', target_id: org.id,
-        meta: { org_name: org.name, reason: suspendReason, note: suspendNote || null },
+        actor_user_id: user.id, action: 'admin_suspend_org',
+        resource_type: 'organization', resource_id: org.id,
+        metadata: { org_name: org.name, reason: suspendReason, note: suspendNote || null },
       });
     }
     setToggling(false); load();

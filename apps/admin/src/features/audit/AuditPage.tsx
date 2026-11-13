@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 
 interface AuditEvent {
   id: string;
-  actor_id: string | null;
+  actor_user_id: string | null;
   action: string;
   resource_type: string | null;
   resource_id: string | null;
@@ -23,20 +23,20 @@ export function AuditPage() {
     async function load() {
       const { data: rows } = await supabase
         .from('audit_events')
-        .select('id, actor_id, action, resource_type, resource_id, org_id, metadata, created_at')
+        .select('id, actor_user_id, action, resource_type, resource_id, org_id, metadata, created_at')
         .order('created_at', { ascending: false })
         .limit(200);
 
       if (!rows) { setLoading(false); return; }
 
-      type RawRow = { id: string; actor_id: string | null; action: string; resource_type: string | null; resource_id: string | null; org_id: string | null; metadata: Record<string, unknown> | null; created_at: string };
+      type RawRow = { id: string; actor_user_id: string | null; action: string; resource_type: string | null; resource_id: string | null; org_id: string | null; metadata: Record<string, unknown> | null; created_at: string };
       const typedRows: AuditEvent[] = (rows as RawRow[]).map((r) => ({
         ...r,
         actor_email: undefined,
         org_name: undefined,
       }));
 
-      const actorIds = [...new Set(typedRows.filter((r) => r.actor_id).map((r) => r.actor_id!))];
+      const actorIds = [...new Set(typedRows.filter((r) => r.actor_user_id).map((r) => r.actor_user_id!))];
       const orgIds = [...new Set(typedRows.filter((r) => r.org_id).map((r) => r.org_id!))];
 
       const [profilesRes, orgsRes] = await Promise.all([
@@ -53,7 +53,7 @@ export function AuditPage() {
 
       setEvents(typedRows.map((r) => ({
         ...r,
-        actor_email: r.actor_id ? emailById.get(r.actor_id) : undefined,
+        actor_email: r.actor_user_id ? emailById.get(r.actor_user_id) : undefined,
         org_name: r.org_id ? nameById.get(r.org_id) : undefined,
       })));
       setLoading(false);
@@ -132,7 +132,7 @@ export function AuditPage() {
                         {new Date(e.created_at).toLocaleString()}
                       </td>
                       <td className="px-5 py-1.5 text-xs text-[#374151]">
-                        {e.actor_email ?? (e.actor_id ? e.actor_id.slice(0, 8) + '…' : '—')}
+                        {e.actor_email ?? (e.actor_user_id ? e.actor_user_id.slice(0, 8) + '…' : '—')}
                       </td>
                       <td className="px-5 py-1.5">
                         <span className="font-mono text-xs text-[#111827] bg-[#F3F4F6] rounded px-2 py-0.5">{e.action}</span>

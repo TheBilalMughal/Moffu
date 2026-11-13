@@ -198,9 +198,9 @@ export function ClientsPage() {
     await supabase.from('organizations').update({ status: 'active' }).eq('id', client.id);
     if (user) {
       await supabase.from('audit_events').insert({
-        actor_id: user.id, action: 'admin_reactivate_org',
-        target_type: 'organization', target_id: client.id,
-        meta: { org_name: client.name },
+        actor_user_id: user.id, action: 'admin_reactivate_org',
+        resource_type: 'organization', resource_id: client.id,
+        metadata: { org_name: client.name },
       });
     }
     setDeactivating(null);
@@ -215,9 +215,9 @@ export function ClientsPage() {
     await supabase.from('organizations').update({ status: 'suspended' }).eq('id', suspendTarget.id);
     if (user) {
       await supabase.from('audit_events').insert({
-        actor_id: user.id, action: 'admin_suspend_org',
-        target_type: 'organization', target_id: suspendTarget.id,
-        meta: { org_name: suspendTarget.name, reason: suspendReason, note: suspendNote || null },
+        actor_user_id: user.id, action: 'admin_suspend_org',
+        resource_type: 'organization', resource_id: suspendTarget.id,
+        metadata: { org_name: suspendTarget.name, reason: suspendReason, note: suspendNote || null },
       });
     }
     setDeactivating(null);
