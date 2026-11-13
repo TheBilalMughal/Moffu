@@ -6,6 +6,7 @@ interface GoogleCreds {
   client_id: string;
   client_secret: string;
   redirect_uri: string;
+  maps_api_key: string;
 }
 
 const REDIRECT_URI_DEFAULT = 'https://app.moffu.pro/auth/google/callback';
@@ -13,8 +14,8 @@ const REDIRECT_URI_DEFAULT = 'https://app.moffu.pro/auth/google/callback';
 export function GoogleSettingsPage() {
   const toast = useToastStore();
 
-  const [saved, setSaved] = useState<GoogleCreds>({ client_id: '', client_secret: '', redirect_uri: REDIRECT_URI_DEFAULT });
-  const [form, setForm]   = useState<GoogleCreds>({ client_id: '', client_secret: '', redirect_uri: REDIRECT_URI_DEFAULT });
+  const [saved, setSaved] = useState<GoogleCreds>({ client_id: '', client_secret: '', redirect_uri: REDIRECT_URI_DEFAULT, maps_api_key: '' });
+  const [form, setForm]   = useState<GoogleCreds>({ client_id: '', client_secret: '', redirect_uri: REDIRECT_URI_DEFAULT, maps_api_key: '' });
   const [editing, setEditing] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -27,7 +28,7 @@ export function GoogleSettingsPage() {
     const { data, error } = await supabase
       .from('platform_settings')
       .select('key, value')
-      .in('key', ['google_client_id', 'google_client_secret', 'google_redirect_uri']);
+      .in('key', ['google_client_id', 'google_client_secret', 'google_redirect_uri', 'google_maps_api_key']);
 
     if (error) { toast.error('Failed to load settings'); setLoading(false); return; }
 
@@ -38,6 +39,7 @@ export function GoogleSettingsPage() {
       client_id:    map['google_client_id']     ?? '',
       client_secret: map['google_client_secret'] ?? '',
       redirect_uri:  map['google_redirect_uri']  ?? REDIRECT_URI_DEFAULT,
+      maps_api_key:  map['google_maps_api_key']  ?? '',
     };
     setSaved(creds);
     setForm(creds);
@@ -55,6 +57,7 @@ export function GoogleSettingsPage() {
       { key: 'google_client_id',     value: form.client_id.trim() },
       { key: 'google_client_secret', value: form.client_secret.trim() },
       { key: 'google_redirect_uri',  value: form.redirect_uri.trim() },
+      { key: 'google_maps_api_key',  value: form.maps_api_key.trim() },
     ];
 
     const { error } = await supabase.from('platform_settings').upsert(rows, { onConflict: 'key' });
@@ -163,6 +166,27 @@ export function GoogleSettingsPage() {
             </div>
 
             <div>
+              <label className="block text-xs font-semibold text-[#374151] mb-1.5 uppercase tracking-wide">Maps API Key</label>
+              <div className="relative">
+                <input
+                  type={showSecret ? 'text' : 'password'}
+                  value={form.maps_api_key}
+                  onChange={(e) => setForm((p) => ({ ...p, maps_api_key: e.target.value }))}
+                  placeholder="AIzaSy…"
+                  className="w-full px-3 py-2.5 pr-10 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C55E8]/20 focus:border-[#6C55E8] font-mono placeholder:font-sans placeholder:text-[#C4CAC8] transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSecret((s) => !s)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#374151] transition-colors"
+                >
+                  {showSecret ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
+              <p className="text-[11px] text-[#9CA3AF] mt-1">Required for Competitor Analysis. Enable <strong className="text-[#374151]">Places API</strong> in Google Cloud Console.</p>
+            </div>
+
+            <div>
               <div className="flex items-baseline gap-2 mb-1.5">
                 <label className="text-xs font-semibold text-[#374151] uppercase tracking-wide">Redirect URI</label>
                 <span className="text-xs text-[#9CA3AF]">— paste this into Google Console</span>
@@ -206,9 +230,10 @@ export function GoogleSettingsPage() {
         ) : (
           /* ── Read-only view ── */
           <div className="shadow-sm rounded-xl overflow-hidden divide-y divide-[#F3F4F6]">
-            <ReadRow label="Client ID"    value={saved.client_id}     mono />
+            <ReadRow label="Client ID"     value={saved.client_id}     mono />
             <ReadRow label="Client Secret" value={saved.client_secret} mono secret />
             <ReadRow label="Redirect URI"  value={saved.redirect_uri}  mono copyable />
+            <ReadRow label="Maps API Key"  value={saved.maps_api_key}  mono secret />
           </div>
         )}
 
