@@ -41,6 +41,18 @@ const FEATURE_META: Record<string, { name: string; description: string }> = {
     name: 'Auto Sync',
     description: 'Automatically sync your Google reviews on a schedule.',
   },
+  feature_campaigns: {
+    name: 'Campaigns',
+    description: 'Create and manage review request campaigns to gather more customer feedback.',
+  },
+  feature_marketing: {
+    name: 'Marketing',
+    description: 'Create and schedule social media posts for your business locations.',
+  },
+  feature_feedback: {
+    name: 'Feedback',
+    description: 'Collect and manage customer feedback requests directly from your portal.',
+  },
 };
 
 // ── Upgrade wall ──────────────────────────────────────────────────────────────

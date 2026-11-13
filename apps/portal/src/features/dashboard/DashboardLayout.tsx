@@ -114,9 +114,9 @@ const navItems: { to: string; label: string; icon: React.ReactNode; featureKey: 
   { to: '/reviews',        label: 'Reviews',        icon: <StarIcon />,           featureKey: null },
   { to: '/insights/trends', label: 'Insights', icon: <InsightsIcon />, featureKey: 'feature_insights' },
   { to: '/brand-brain', label: 'Brand Brain', icon: <SlidersIcon />,    featureKey: 'feature_brand_brain' },
-  { to: '/marketing',   label: 'Marketing',   icon: <MarketingIcon />,  featureKey: null },
-  { to: '/campaigns',   label: 'Campaigns',   icon: <CampaignIcon />,   featureKey: null },
-  { to: '/feedback',    label: 'Feedback',    icon: <FeedbackIcon />,   featureKey: null },
+  { to: '/marketing',   label: 'Marketing',   icon: <MarketingIcon />,  featureKey: 'feature_marketing' },
+  { to: '/campaigns',   label: 'Campaigns',   icon: <CampaignIcon />,   featureKey: 'feature_campaigns' },
+  { to: '/feedback',    label: 'Feedback',    icon: <FeedbackIcon />,   featureKey: 'feature_feedback' },
   { to: '/team',        label: 'Team',        icon: <TeamIcon />,       featureKey: 'feature_team' },
   { to: '/billing',     label: 'Billing',     icon: <BillingIcon />,    featureKey: null },
 ];
@@ -916,9 +916,9 @@ const RAIL_GROUPS: RailGroup[] = [
     icon: <CampaignIcon />,
     label: 'Engage',
     items: [
-      { to: '/campaigns', label: 'Campaigns', icon: <CampaignIcon />,  featureKey: null },
-      { to: '/marketing', label: 'Marketing', icon: <MarketingIcon />, featureKey: null },
-      { to: '/feedback',  label: 'Feedback',  icon: <FeedbackIcon />,  featureKey: null },
+      { to: '/campaigns', label: 'Campaigns', icon: <CampaignIcon />,  featureKey: 'feature_campaigns' },
+      { to: '/marketing', label: 'Marketing', icon: <MarketingIcon />, featureKey: 'feature_marketing' },
+      { to: '/feedback',  label: 'Feedback',  icon: <FeedbackIcon />,  featureKey: 'feature_feedback' },
     ],
   },
   {

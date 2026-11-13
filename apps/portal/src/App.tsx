@@ -86,12 +86,12 @@ export function App() {
           <Route path="/settings/preferences" element={<SettingsPage />} />
           <Route path="/settings/integrations" element={<SettingsPage />} />
           <Route path="/team"      element={<FeatureGatePage feature="feature_team"><TeamPage /></FeatureGatePage>} />
-          <Route path="/campaigns"     element={<CampaignsPage />} />
-          <Route path="/campaigns/:id" element={<CampaignDetailPage />} />
-          <Route path="/feedback"      element={<FeedbackInboxPage />} />
-          <Route path="/feedback/new"  element={<NewFeedbackRequestPage />} />
-          <Route path="/marketing"     element={<MarketingPage />} />
-          <Route path="/marketing/new" element={<NewPostPage />} />
+          <Route path="/campaigns"     element={<FeatureGatePage feature="feature_campaigns"><CampaignsPage /></FeatureGatePage>} />
+          <Route path="/campaigns/:id" element={<FeatureGatePage feature="feature_campaigns"><CampaignDetailPage /></FeatureGatePage>} />
+          <Route path="/feedback"      element={<FeatureGatePage feature="feature_feedback"><FeedbackInboxPage /></FeatureGatePage>} />
+          <Route path="/feedback/new"  element={<FeatureGatePage feature="feature_feedback"><NewFeedbackRequestPage /></FeatureGatePage>} />
+          <Route path="/marketing"     element={<FeatureGatePage feature="feature_marketing"><MarketingPage /></FeatureGatePage>} />
+          <Route path="/marketing/new" element={<FeatureGatePage feature="feature_marketing"><NewPostPage /></FeatureGatePage>} />
         </Route>
 
         {/* Invite acceptance — no auth required to view */}

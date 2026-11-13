@@ -458,3 +458,15 @@ IMPLEMENTED: Added Marketing and Feedback sections to `COMPARISON_ROWS` in `Bill
 - DB migration `add_marketing_feedback_entitlements` inserted `marketing_posts` (LIMIT 0/mo) and `feedback_requests` (LIMIT 0/mo) rows for all 4 active plans.
 - `COMPARISON_ROWS` now includes: `marketing_posts` (section: Marketing) and `feedback_requests` (section: Feedback).
 - Both sections appear in the plan comparison modal between Campaigns and Support.
+
+## Billing — Campaigns/Marketing/Feedback as boolean Feature Access toggles — 2026-11-13
+IMPLEMENTED: Converted Campaigns, Marketing, Feedback from numeric limits to boolean on/off Feature Access toggles (matching Google Profile and Insights pattern).
+- DB migration `add_feature_bool_entitlements` inserted `feature_campaigns`, `feature_marketing`, `feature_feedback` (BOOLEAN false) rows for all 4 plans.
+- Admin `PackagesSettingsPage.tsx`: Feature Access section now has 5 checkboxes: Google Profile, Insights & Analytics, Campaigns, Marketing, Feedback.
+- Portal `BillingPage.tsx` `COMPARISON_ROWS`: All 5 feature booleans now appear under the "Feature Access" section header.
+
+## Entitlement gating for Campaigns/Marketing/Feedback pages — 2026-11-13
+IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation level.
+- `DashboardLayout.tsx`: Updated `navItems` and `navGroups` Engage section to set `featureKey: 'feature_campaigns'`, `'feature_marketing'`, `'feature_feedback'` (were `null`). Sidebar now shows lock icon and greys out items when feature is off.
+- `FeatureGate.tsx`: Added `FEATURE_META` entries for `feature_campaigns`, `feature_marketing`, `feature_feedback` so UpgradeWall shows meaningful name and description.
+- `App.tsx`: Wrapped all 6 routes (`/campaigns`, `/campaigns/:id`, `/feedback`, `/feedback/new`, `/marketing`, `/marketing/new`) with `<FeatureGatePage feature="...">` — direct URL navigation now also shows UpgradeWall when the feature is disabled in the package.
