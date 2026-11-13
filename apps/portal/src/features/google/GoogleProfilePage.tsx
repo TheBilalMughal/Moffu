@@ -2,7 +2,26 @@
 import { supabase } from '@/lib/supabase';
 import { useLocationStore } from '@/features/location/location.store';
 import { googleService } from './google.service';
-import type { GoogleConnection, GoogleLocation } from './google.service';
+import type { GoogleConnection, GoogleLocation, Competitor } from './google.service';
+
+const RADII = [5, 10, 20] as const;
+type Radius = typeof RADII[number];
+
+function CompetitorStars({ rating }: { rating: number | null }) {
+  if (rating == null) return <span className="text-[10px] text-[#D1D5DB]">No rating</span>;
+  return (
+    <div className="flex items-center gap-1">
+      <div className="flex gap-0.5">
+        {[1,2,3,4,5].map(i => (
+          <svg key={i} className={`w-2.5 h-2.5 ${i <= Math.floor(rating) ? 'text-amber-400' : 'text-[#E5E7EB]'}`} viewBox="0 0 20 20" fill="currentColor">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+          </svg>
+        ))}
+      </div>
+      <span className="text-[11px] font-semibold text-[#374151]">{rating.toFixed(1)}</span>
+    </div>
+  );
+}
 
 interface ReviewStats { total: number; withReply: number; latestAt: string | null; }
 
@@ -44,12 +63,16 @@ function NotConnectedState() {
 
 export function GoogleProfilePage() {
   const { selectedId: globalLocationId } = useLocationStore();
-  const [conn,    setConn]    = useState<GoogleConnection | null>(null);
-  const [loc,     setLoc]     = useState<GoogleLocation | null>(null);
-  const [stats,   setStats]   = useState<ReviewStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState('');
-  const [tick,    setTick]    = useState(0);
+  const [conn,         setConn]         = useState<GoogleConnection | null>(null);
+  const [loc,          setLoc]          = useState<GoogleLocation | null>(null);
+  const [stats,        setStats]        = useState<ReviewStats | null>(null);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState('');
+  const [tick,         setTick]         = useState(0);
+  const [radius,       setRadius]       = useState<Radius>(5);
+  const [competitors,  setCompetitors]  = useState<Competitor[] | null>(null);
+  const [compLoading,  setCompLoading]  = useState(false);
+  const [compError,    setCompError]    = useState<'NO_COORDINATES' | 'NO_MAPS_KEY' | 'OTHER' | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), 60_000);
@@ -96,6 +119,25 @@ export function GoogleProfilePage() {
     load();
     return () => { alive = false; };
   }, [globalLocationId]);
+
+  useEffect(() => {
+    let alive = true;
+    async function loadCompetitors() {
+      setCompLoading(true); setCompError(null); setCompetitors(null);
+      const { competitors: data, error } = await googleService.getCompetitors(globalLocationId ?? null, radius);
+      if (!alive) return;
+      if (error) {
+        if (error === 'NO_COORDINATES') setCompError('NO_COORDINATES');
+        else if (error === 'NO_MAPS_KEY') setCompError('NO_MAPS_KEY');
+        else setCompError('OTHER');
+      } else {
+        setCompetitors(data ?? []);
+      }
+      setCompLoading(false);
+    }
+    loadCompetitors();
+    return () => { alive = false; };
+  }, [globalLocationId, radius]);
 
   if (loading) return (
     <div className="px-6 py-6 space-y-3">
@@ -338,6 +380,106 @@ export function GoogleProfilePage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ── Competitors section ── */}
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest">Competitors Nearby</p>
+          <div className="flex items-center gap-1 p-1 bg-[#F3F4F6] rounded-xl">
+            {RADII.map(r => (
+              <button
+                key={r}
+                onClick={() => setRadius(r)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  radius === r ? 'bg-white text-[#111827] shadow-sm' : 'text-[#9CA3AF] hover:text-[#374151]'
+                }`}
+              >
+                {r}km
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Loading skeleton */}
+        {compLoading && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-28 bg-[#F9FAFB] rounded-2xl animate-pulse" />
+            ))}
+          </div>
+        )}
+
+        {/* No coordinates */}
+        {!compLoading && compError === 'NO_COORDINATES' && (
+          <div className="border border-[#E5E7EB] rounded-2xl bg-white px-5 py-6 text-center">
+            <p className="text-sm font-medium text-[#374151] mb-1">Coordinates not synced yet</p>
+            <p className="text-xs text-[#9CA3AF]">Run a sync in Settings to enable competitor analysis.</p>
+          </div>
+        )}
+
+        {/* No API key */}
+        {!compLoading && compError === 'NO_MAPS_KEY' && (
+          <div className="border border-amber-200 rounded-2xl bg-amber-50 px-5 py-6 text-center">
+            <p className="text-sm font-medium text-amber-700 mb-1">Google Maps API key not configured</p>
+            <p className="text-xs text-amber-600">Ask your admin to add <span className="font-mono bg-amber-100 px-1 rounded">google_maps_api_key</span> in Admin Settings.</p>
+          </div>
+        )}
+
+        {/* Competitor cards */}
+        {!compLoading && !compError && competitors && (
+          competitors.length === 0
+            ? (
+              <div className="border border-[#E5E7EB] rounded-2xl bg-white px-5 py-8 text-center">
+                <p className="text-sm text-[#9CA3AF]">No competitors found within {radius}km.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {competitors.map(c => (
+                  <div
+                    key={c.place_id}
+                    className={`relative rounded-2xl border p-4 flex flex-col gap-2 ${
+                      c.is_you
+                        ? 'border-[#6C55E8] bg-[#F5F3FF]'
+                        : 'border-[#E5E7EB] bg-white'
+                    }`}
+                  >
+                    {/* Position + You badge */}
+                    <div className="flex items-center justify-between gap-1">
+                      <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                        c.position === 1 ? 'bg-amber-50 text-amber-600' :
+                        c.position === 2 ? 'bg-[#F3F4F6] text-[#374151]' :
+                        c.position === 3 ? 'bg-orange-50 text-orange-500' :
+                        c.is_you         ? 'bg-[#EDE9FE] text-[#6C55E8]' :
+                                           'bg-[#F9FAFB] text-[#9CA3AF]'
+                      }`}>
+                        {c.position}
+                      </span>
+                      {c.is_you && (
+                        <span className="text-[10px] font-semibold text-[#6C55E8] bg-[#EDE9FE] px-1.5 py-0.5 rounded-md">You</span>
+                      )}
+                      {!c.is_you && (
+                        <span className="text-[10px] text-[#9CA3AF]">{c.distance_km}km</span>
+                      )}
+                    </div>
+
+                    {/* Name */}
+                    <p className={`text-xs font-semibold leading-snug line-clamp-2 ${c.is_you ? 'text-[#4C1D95]' : 'text-[#111827]'}`}>
+                      {c.name}
+                    </p>
+
+                    {/* Rating */}
+                    <CompetitorStars rating={c.rating} />
+
+                    {/* Review count */}
+                    <p className="text-[10px] text-[#9CA3AF]">
+                      {c.review_count > 0 ? `${c.review_count.toLocaleString()} reviews` : 'No reviews'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )
+        )}
       </div>
     </div>
   );
