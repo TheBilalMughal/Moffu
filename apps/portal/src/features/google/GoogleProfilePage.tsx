@@ -125,7 +125,7 @@ export function GoogleProfilePage(){
   return <div className="w-full space-y-6 p-4 sm:p-6">
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <p className="mb-1 text-xs text-[#6B7280]">Google Profile / Business analysis</p>
+
         <h1 className="text-xl font-semibold tracking-tight text-[#111827]">{selected?.display_name ?? 'Select a business location'}</h1>
         <p className="mt-1 text-xs leading-relaxed text-[#6B7280]">Profile readiness, search performance and nearby businesses for this location.</p>
       </div>
@@ -159,10 +159,11 @@ export function GoogleProfilePage(){
         'Select a business location in Settings to start your analysis.'}
     </Empty><Link to="/settings" className="text-sm text-[#6C55E8]">Manage Google locations</Link></Section>}
     {selected && <>
-      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#6B7280]">
-        <span>Connection: {connection.state.replace(/_/g,' ')} · Updates on opening, location change and every 15 minutes while this page is visible.</span>
-        <span>{current ? 'Fetched '+new Date(current.fetched_at).toLocaleString() : 'Waiting for analysis'}</span>
-      </div>
+      {current && (
+        <div className="flex justify-end text-[11px] text-[#6B7280]">
+          <span>Fetched {new Date(current.fetched_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-')}</span>
+        </div>
+      )}
       {error && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>}
       {loading && <div role="status" aria-live="polite" className="space-y-4">
         <p className="text-xs text-[#6B7280]">Fetching this location’s Google profile and search data…</p>
