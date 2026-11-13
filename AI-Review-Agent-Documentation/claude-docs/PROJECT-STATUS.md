@@ -204,6 +204,8 @@ Also hardened `handle_new_user` with `ON CONFLICT (id) DO NOTHING` to guard agai
 - DashboardLayout — topbar with global location selector, glassmorphic nav
 - OverviewPage — 5 advanced features added: response time card, rating trend arrows (30-day %, vs prev period), recent activity feed, weekly highlight strip, campaign performance summary
 - OverviewPage — location filter wired to global `useLocationStore` (topbar); all metrics filter client-side on selectedId change
+- OverviewPage — 3-column layout updated: Left = SentimentCard (Positive/Neutral/Negative %), Middle = Trend chart + Rating Breakdown, Right = UpgradeCard (current plan → next plan, discounted pricing with strikethrough original, annual rate shown)
+- UpgradeCard: shows discounted price (applyPlanDiscount matches BillingPage formula), annual/monthly both shown, contact_sales plans show "Custom pricing"
 - ReviewsPage — glassmorphic filter bar, custom FilterDropdown popovers (no native select), full-width layout
 - Review Insights — filters and chart background fixed
 - Brand Brain — glassmorphic design

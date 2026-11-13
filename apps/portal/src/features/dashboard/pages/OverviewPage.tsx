@@ -551,6 +551,13 @@ function SentimentCard({ breakdown }: { breakdown: number[] }) {
 
 const PLAN_ORDER = ['free', 'starter', 'growth', 'scale'] as const;
 
+function applyPlanDiscount(amountCents: number, type: 'fixed' | 'percent' | null, value: number | null): number {
+  if (!type || !value || value <= 0) return amountCents;
+  if (type === 'percent') return Math.max(0, Math.round(amountCents * (1 - value / 100)));
+  if (type === 'fixed') return Math.max(0, amountCents - Math.round(value * 100));
+  return amountCents;
+}
+
 function UpgradeCard({ sub, plans }: { sub: Subscription | null; plans: Plan[] }) {
   const currentSlug = sub?.plan_slug ?? 'free';
   const idx         = PLAN_ORDER.indexOf(currentSlug as typeof PLAN_ORDER[number]);
@@ -560,7 +567,12 @@ function UpgradeCard({ sub, plans }: { sub: Subscription | null; plans: Plan[] }
 
   if (!nextPlan) return null;
 
-  const monthlyPrice = nextPlan.prices.find(p => p.interval === 'monthly')?.amount_cents ?? 0;
+  const rawMonthly   = nextPlan.prices.find(p => p.interval === 'monthly')?.amount_cents ?? 0;
+  const rawAnnual    = nextPlan.prices.find(p => p.interval === 'annual')?.amount_cents ?? 0;
+  const discMonthly  = applyPlanDiscount(rawMonthly, nextPlan.discount_type, nextPlan.discount_value);
+  const discAnnual   = applyPlanDiscount(rawAnnual, nextPlan.discount_type, nextPlan.discount_value);
+  const hasMonthlyDiscount = rawMonthly > 0 && discMonthly < rawMonthly;
+  const hasAnnualDiscount  = rawAnnual > 0 && discAnnual < rawAnnual;
   const highlights   = getNextPlanHighlights(nextPlan);
 
   return (
@@ -603,17 +615,39 @@ function UpgradeCard({ sub, plans }: { sub: Subscription | null; plans: Plan[] }
 
         <div className="flex items-end justify-between">
           <div>
-            {monthlyPrice > 0 ? (
-              <>
-                <p className="text-[10px] text-white/35">Starting at</p>
-                <p className="text-xl font-black text-white leading-none">
-                  ${(monthlyPrice / 100).toFixed(0)}
-                  <span className="text-xs font-normal text-white/35">/mo</span>
-                </p>
-              </>
-            ) : (
-              <p className="text-xs text-white/35">Contact us for pricing</p>
-            )}
+            {nextPlan.contact_sales ? (
+              <p className="text-xs text-white/40">Custom pricing</p>
+            ) : rawMonthly > 0 ? (
+              <div>
+                <p className="text-[10px] text-white/35 mb-0.5">Starting at</p>
+                <div className="flex items-baseline gap-1.5">
+                  {hasMonthlyDiscount && (
+                    <span className="text-[11px] text-white/30 line-through">
+                      ${(rawMonthly / 100).toFixed(rawMonthly % 100 === 0 ? 0 : 2)}
+                    </span>
+                  )}
+                  <p className="text-xl font-black text-white leading-none">
+                    ${(discMonthly / 100).toFixed(discMonthly % 100 === 0 ? 0 : 2)}
+                    <span className="text-xs font-normal text-white/35">/mo</span>
+                  </p>
+                  {hasMonthlyDiscount && nextPlan.discount_type === 'percent' && (
+                    <span className="text-[9px] font-semibold bg-[#6C55E8]/30 text-[#A89CFF] px-1.5 py-0.5 rounded-lg">
+                      -{nextPlan.discount_value}%
+                    </span>
+                  )}
+                </div>
+                {rawAnnual > 0 && (
+                  <p className="text-[10px] text-white/30 mt-0.5">
+                    or ${(discAnnual / 100).toFixed(discAnnual % 100 === 0 ? 0 : 2)}/mo billed annually
+                    {hasAnnualDiscount && rawMonthly > 0 && discAnnual < discMonthly && (
+                      <span className="ml-1 text-[#A89CFF]">
+                        (save ${((discMonthly - discAnnual) * 12 / 100).toFixed(0)}/yr)
+                      </span>
+                    )}
+                  </p>
+                )}
+              </div>
+            ) : null}
           </div>
           <Link
             to="/billing"
@@ -1227,16 +1261,10 @@ export function OverviewPage() {
       ) : !loadingDash && dash ? (
         <>
           <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Left — Recent Reviews */}
-            <GlassCard className="overflow-hidden">
-              <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-[#E5E7EB]/50">
-                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Recent Reviews</p>
-                <Link to="/reviews" className="text-[11px] font-semibold text-[#6C55E8] hover:underline">View all →</Link>
-              </div>
-              <RecentReviews reviews={dash.recent} />
-            </GlassCard>
+            {/* Left — Sentiment */}
+            <SentimentCard breakdown={dash.ratingBreakdown} />
 
-            {/* Middle — Trend + Sentiment + Rating stacked */}
+            {/* Middle — Trend + Rating stacked */}
             <div className="flex flex-col gap-4">
               <GlassCard className="p-5">
                 <div className="flex items-center justify-between mb-4">
@@ -1246,22 +1274,14 @@ export function OverviewPage() {
                 <TrendChart trend={dash.trend} />
               </GlassCard>
 
-              <SentimentCard breakdown={dash.ratingBreakdown} />
-
               <GlassCard className="p-5">
                 <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Rating Breakdown</p>
                 <RatingChart breakdown={dash.ratingBreakdown} />
               </GlassCard>
             </div>
 
-            {/* Right — Activity Feed + Upgrade Card */}
-            <div className="flex flex-col gap-4">
-              <GlassCard className="p-5">
-                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Recent Activity</p>
-                <ActivityFeed items={dash.activityItems} />
-              </GlassCard>
-              <UpgradeCard sub={sub} plans={billingPlans} />
-            </div>
+            {/* Right — Upgrade Card */}
+            <UpgradeCard sub={sub} plans={billingPlans} />
           </div>
 
           {/* Google Profile Performance */}
