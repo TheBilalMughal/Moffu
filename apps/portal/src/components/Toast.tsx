@@ -8,14 +8,22 @@ export function Toast({ message, type, onDone }: { message: string; type: 'succe
     return () => { clearTimeout(h); clearTimeout(r); };
   }, [onDone]);
   return (
-    <div className={`fixed bottom-5 left-5 z-[100] flex items-start gap-3 bg-white shadow-lg rounded-xl px-4 py-3 max-w-sm border border-[#E5E7EB] transition-all duration-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-      <div className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 ${type === 'error' ? 'bg-red-100' : 'bg-emerald-100'}`}>
+    <div className={`fixed bottom-5 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border max-w-sm w-max transition-all duration-500 ${
+      type === 'error'
+        ? 'bg-[#FEF2F2] border-[#FECACA]'
+        : 'bg-[#111827] border-[#1F2937]'
+    } ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
+      <div className={`flex-shrink-0 w-5 h-5 rounded-lg flex items-center justify-center ${
+        type === 'error' ? 'bg-[#FEE2E2]' : 'bg-[#6C55E8]'
+      }`}>
         {type === 'error'
-          ? <svg className="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-          : <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
+          ? <svg className="w-3 h-3 text-[#DC2626]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
+          : <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7"/></svg>
         }
       </div>
-      <p className="text-sm text-[#374151] leading-snug">{message}</p>
+      <p className={`text-[13px] font-medium leading-snug ${type === 'error' ? 'text-[#991B1B]' : 'text-white'}`}>
+        {message}
+      </p>
     </div>
   );
 }
