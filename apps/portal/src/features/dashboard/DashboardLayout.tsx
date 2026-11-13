@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type React from 'react';
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '@/features/auth/auth.service';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { supabase } from '@/lib/supabase';
@@ -8,6 +8,7 @@ import { useLocationStore } from '@/features/location/location.store';
 import { FeatureAccessContext } from '@/components/FeatureGate';
 import { LocationSelectionModal } from '@/features/billing/LocationSelectionModal';
 import { billingService } from '@/features/billing/billing.service';
+import type { Plan, Subscription } from '@/features/billing/billing.service';
 import { usePageTracking } from '@/hooks/usePageTracking';
 
 function StarIcon() {
@@ -702,36 +703,105 @@ function TopbarProfile() {
   );
 }
 
-function UpgradeWidget({ currentName, nextName }: { currentName: string; nextName: string | null }) {
-  const navigate = useNavigate();
+const SIDEBAR_PLAN_ORDER = ['free', 'starter', 'growth', 'scale'] as const;
+
+function applySidebarDiscount(cents: number, type: 'fixed' | 'percent' | null, value: number | null): number {
+  if (!type || !value || value <= 0) return cents;
+  if (type === 'percent') return Math.max(0, Math.round(cents * (1 - value / 100)));
+  if (type === 'fixed') return Math.max(0, cents - Math.round(value * 100));
+  return cents;
+}
+
+function getSidebarHighlights(plan: Plan): string[] {
+  const locs    = plan.entitlements['locations']?.limit_value;
+  const drafts  = plan.entitlements['ai_drafts']?.limit_value;
+  const repEnt  = plan.entitlements['published_replies'];
+  const members = plan.entitlements['team_members']?.limit_value;
+  const h: string[] = [];
+  if (locs    != null) h.push(`${locs} location${locs > 1 ? 's' : ''}`);
+  if (drafts  != null) h.push(`${drafts.toLocaleString()} AI drafts/mo`);
+  if (repEnt?.value_type === 'UNLIMITED') h.push('Unlimited replies');
+  else if (repEnt?.limit_value != null) h.push(`${repEnt.limit_value.toLocaleString()} replies/mo`);
+  if (members != null && members > 1) h.push(`${members} team members`);
+  return h.slice(0, 3);
+}
+
+function SidebarUpgradeCard({ sub, plans }: { sub: Subscription | null; plans: Plan[] }) {
+  const currentSlug = sub?.plan_slug ?? 'free';
+  const idx         = SIDEBAR_PLAN_ORDER.indexOf(currentSlug as typeof SIDEBAR_PLAN_ORDER[number]);
+  const nextSlug    = SIDEBAR_PLAN_ORDER[idx + 1];
+  const nextPlan    = nextSlug ? plans.find(p => p.slug === nextSlug) ?? null : null;
+  const currentPlan = plans.find(p => p.slug === currentSlug) ?? null;
+
+  if (!nextPlan) return null;
+
+  const rawMonthly  = nextPlan.prices.find(p => p.interval === 'monthly')?.amount_cents ?? 0;
+  const discMonthly = applySidebarDiscount(rawMonthly, nextPlan.discount_type, nextPlan.discount_value);
+  const hasDiscount = rawMonthly > 0 && discMonthly < rawMonthly;
+  const highlights  = getSidebarHighlights(nextPlan);
+
   return (
-    <button
-      onClick={() => navigate('/billing')}
-      className="w-full p-3 rounded-xl text-left cursor-pointer group transition-all duration-200
-        bg-gradient-to-br from-[#6C55E8]/[0.08] to-[#6C55E8]/[0.04]
-        border border-[#6C55E8]/[0.12]
-        hover:from-[#6C55E8]/[0.13] hover:to-[#6C55E8]/[0.07] hover:border-[#6C55E8]/20"
-      type="button"
-    >
-      <div className="flex items-center gap-1 mb-1.5">
-        <span className="text-[10px] font-semibold text-[#9CA3AF]">{currentName}</span>
-        {nextName && (
-          <>
-            <svg className="w-3 h-3 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-            <span className="text-[10px] font-semibold text-[#6C55E8]">{nextName}</span>
-          </>
+    <Link to="/billing" className="block relative overflow-hidden rounded-xl bg-[#111827] hover:bg-[#1a2235] transition-colors group">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/25 via-transparent to-[#6C55E8]/5 pointer-events-none" />
+      <div className="relative p-3">
+        <div className="flex items-center gap-1.5 mb-2">
+          <span className="text-[9px] font-semibold bg-white/10 text-white/50 px-1.5 py-0.5 rounded-lg">
+            {currentPlan?.name ?? 'Free'}
+          </span>
+          <svg className="w-3 h-3 text-[#6C55E8] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+          <span className="text-[9px] font-semibold bg-[#6C55E8]/30 text-[#A89CFF] px-1.5 py-0.5 rounded-lg">
+            {nextPlan.name}
+          </span>
+        </div>
+
+        <p className="text-[11px] font-bold text-white mb-0.5">Ready for more?</p>
+        <p className="text-[10px] text-white/40 mb-2 leading-relaxed">
+          Unlock more with {nextPlan.name}.
+        </p>
+
+        {highlights.length > 0 && (
+          <div className="space-y-1 mb-2.5">
+            {highlights.map(f => (
+              <div key={f} className="flex items-center gap-1.5">
+                <div className="w-3.5 h-3.5 rounded-full bg-[#6C55E8]/25 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-2 h-2 text-[#A89CFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-[10px] text-white/60">{f}</p>
+              </div>
+            ))}
+          </div>
         )}
+
+        <div className="flex items-end justify-between gap-2">
+          <div className="min-w-0">
+            {nextPlan.contact_sales ? (
+              <p className="text-[10px] text-white/40">Custom pricing</p>
+            ) : rawMonthly > 0 ? (
+              <div>
+                <div className="flex items-baseline gap-1">
+                  {hasDiscount && (
+                    <span className="text-[10px] text-white/30 line-through">
+                      ${(rawMonthly / 100).toFixed(rawMonthly % 100 === 0 ? 0 : 2)}
+                    </span>
+                  )}
+                  <p className="text-base font-black text-white leading-none">
+                    ${(discMonthly / 100).toFixed(discMonthly % 100 === 0 ? 0 : 2)}
+                    <span className="text-[10px] font-normal text-white/35">/mo</span>
+                  </p>
+                </div>
+              </div>
+            ) : null}
+          </div>
+          <span className="flex-shrink-0 inline-flex items-center bg-[#6C55E8] group-hover:bg-[#5A42D1] text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+            Upgrade →
+          </span>
+        </div>
       </div>
-      <p className="text-[10px] text-[#6B7280] leading-snug mb-2">Unlock more reviews, AI replies &amp; team features</p>
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-[#6C55E8]">Upgrade now</span>
-        <svg className="w-3 h-3 text-[#6C55E8] transition-transform duration-150 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7"/>
-        </svg>
-      </div>
-    </button>
+    </Link>
   );
 }
 
@@ -928,7 +998,8 @@ export function DashboardLayout() {
   const [featureAccess, setFeatureAccess] = useState<Record<string, boolean>>({});
   const [featureLoading, setFeatureLoading] = useState(true);
   const [isFreePlan, setIsFreePlan] = useState(false);
-  const [planUpgradeInfo, setPlanUpgradeInfo] = useState<{ currentName: string; nextName: string | null }>({ currentName: 'Free', nextName: null });
+  const [upgradeSub, setUpgradeSub] = useState<Subscription | null>(null);
+  const [upgradePlans, setUpgradePlans] = useState<Plan[]>([]);
   const [adminDowngradePlan, setAdminDowngradePlan] = useState<{ name: string; locationLimit: number } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
@@ -997,19 +1068,8 @@ export function DashboardLayout() {
   }, []);
 
   useEffect(() => {
-    const PLAN_ORDER = ['free', 'starter', 'growth', 'scale'] as const;
     Promise.all([billingService.getSubscription(), billingService.getPlans()])
-      .then(([sub, plans]) => {
-        const currentSlug = (sub?.plan_slug ?? 'free') as string;
-        const idx = PLAN_ORDER.indexOf(currentSlug as typeof PLAN_ORDER[number]);
-        const nextSlug = idx >= 0 && idx < PLAN_ORDER.length - 1 ? PLAN_ORDER[idx + 1] : null;
-        const currentPlan = plans.find(p => p.slug === currentSlug);
-        const nextPlan = nextSlug ? plans.find(p => p.slug === nextSlug) : null;
-        setPlanUpgradeInfo({
-          currentName: currentPlan?.name ?? 'Free',
-          nextName: nextPlan?.name ?? null,
-        });
-      })
+      .then(([sub, plans]) => { setUpgradeSub(sub); setUpgradePlans(plans); })
       .catch(() => {});
   }, []);
 
@@ -1122,21 +1182,6 @@ export function DashboardLayout() {
               onClick={() => navigate(group.items[0]!.to)}
             />
           ))}
-          {isFreePlan && (
-            <button
-              onClick={() => navigate('/billing')}
-              className="relative group w-10 h-10 flex items-center justify-center rounded-xl bg-[#6C55E8] hover:bg-[#5A42D1] text-white transition-colors mt-1"
-              title={`Upgrade to ${planUpgradeInfo.nextName ?? 'next plan'}`}
-              aria-label="Upgrade plan"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
-              <span className="pointer-events-none absolute left-full ml-2 px-2.5 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 text-white text-[11px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-xl">
-                Upgrade to {planUpgradeInfo.nextName ?? 'next plan'}
-              </span>
-            </button>
-          )}
           <div className="mt-auto pt-2">
             <button
               onClick={() => { authService.logout().then(() => { window.location.replace('/auth/login'); }); }}
@@ -1180,9 +1225,9 @@ export function DashboardLayout() {
                   isLocked={isLocked(item.featureKey)}
                 />
               ))}
-              {isFreePlan && (
+              {upgradePlans.length > 0 && (
                 <div className="mt-3">
-                  <UpgradeWidget currentName={planUpgradeInfo.currentName} nextName={planUpgradeInfo.nextName} />
+                  <SidebarUpgradeCard sub={upgradeSub} plans={upgradePlans} />
                 </div>
               )}
             </div>
