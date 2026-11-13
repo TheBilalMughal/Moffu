@@ -48,20 +48,7 @@ export function SiteNavbar({ portalUrl }: { portalUrl: string }) {
           from{opacity:0;transform:translateY(-8px) scale(0.98)}
           to  {opacity:1;transform:translateY(0)    scale(1)   }
         }
-        @keyframes logoRope{
-          0%   { transform:translateY(0) rotate(0deg); }
-          15%  { transform:translateY(6px) rotate(2deg); }
-          35%  { transform:translateY(28px) rotate(6deg); }
-          50%  { transform:translateY(34px) rotate(8deg); }
-          55%  { transform:translateY(32px) rotate(7deg); }
-          70%  { transform:translateY(-18px) rotate(-4deg); }
-          80%  { transform:translateY(-8px) rotate(-2deg); }
-          88%  { transform:translateY(4px) rotate(1deg); }
-          94%  { transform:translateY(-2px) rotate(0deg); }
-          100% { transform:translateY(0) rotate(0deg); }
-        }
         .nav-compact{ animation: navIn 0.25s ease forwards }
-        .logo-bounce:hover{ animation:logoRope 0.9s cubic-bezier(0.25,0.46,0.45,0.94) }
       `}</style>
 
       <header
@@ -77,7 +64,7 @@ export function SiteNavbar({ portalUrl }: { portalUrl: string }) {
           }`}
         >
           {/* Logo */}
-          <Link href="/" className={`flex-shrink-0 ${!scrolled ? 'logo-bounce' : ''}`}>
+          <Link href="/" className="flex-shrink-0">
             <img
               src="/images/logo-transparent.png"
               alt="Moffu"
