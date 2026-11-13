@@ -117,7 +117,7 @@ export const brandBrainService = {
 
     const { data, error } = await supabase
       .from('google_locations').select('id, display_name, address, description')
-      .eq('user_id', user.id).order('display_name');
+      .eq('user_id', user.id).eq('is_selected', true).order('display_name');
 
     if (error) return { error: { message: error.message } };
     return { data: data ?? [] };

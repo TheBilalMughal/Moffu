@@ -447,3 +447,8 @@ IMPLEMENTED: Complete redesign of /settings/api/ai (AISettingsPage) with interna
   - ai-generate-draft: all providers (Gemini/OpenAI/Groq/Anthropic), token extraction per provider's response shape, error_code logging on failure.
   - extract-review-highlights: Gemini token extraction from usageMetadata.
   - analyze-complaints: Gemini token extraction, outer handler updated to destructure AnalyzeResult return type.
+
+## Brand Brain — per-location overrides filter — 2026-11-13
+IMPLEMENTED: `brandBrain.service.ts` `loadLocations()` now adds `.eq('is_selected', true)` to the Supabase query.
+- Only enabled (is_selected=true) locations appear in Step 1 (Per-location identity overrides) and Step 6 (Location Overrides) of the Brand Brain wizard.
+- Disabled locations are hidden from the UI only; their override rows in `brand_brain_overrides` are never deleted, so re-enabling a location restores all previously saved settings automatically.
