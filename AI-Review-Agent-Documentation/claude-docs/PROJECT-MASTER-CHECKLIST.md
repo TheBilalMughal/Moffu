@@ -54,6 +54,7 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | REVIEWS-010 | Existing Google reply handling | PENDING | - | - |
 | REVIEWS-011 | Direct Google edits win | PENDING | - | - |
 | REVIEWS-012 | History/provider merge | PENDING | - | - |
+| REVIEWS-013 | Complaints page (AI-flagged 1-3★) | IMPLEMENTED | AI-001 | `analyze-complaints` edge function; `/reviews/complaints` page; migration adds `is_complaint`, `complaint_summary`, `complaint_analyzed_at` to reviews; sidebar nav item added |
 | AI-001 | Provider abstraction | IMPLEMENTED | - | Gemini API via `ai-generate-draft` edge function; `GEMINI_API_KEY` in Supabase secrets; locked: D-015 |
 | AI-002 | Context builder | IMPLEMENTED | - | Edge function assembles: review text + star rating + brand_brain (tone, length, language, prohibited phrases, example reply) |
 | AI-003 | Language detection | IN_PROGRESS | - | Gemini instructed to match reviewer language; explicit detection/fallback logic not separately implemented |

@@ -365,6 +365,26 @@ Also hardened `handle_new_user` with `ON CONFLICT (id) DO NOTHING` to guard agai
 
 **Feature page missing card:** "Reviews to Social Posts" card added to `feature/page.tsx` FEATURES array (was in home page grid but missing from feature page).
 
+## Complaints Page (AI-flagged reviews)
+**IMPLEMENTED** ✅ (2026-11-13)
+
+**DB migration applied (`kgttncfkzdrgswfkkdji`):**
+- `reviews` table: added `is_complaint BOOLEAN DEFAULT NULL`, `complaint_summary TEXT DEFAULT NULL`, `complaint_analyzed_at TIMESTAMPTZ DEFAULT NULL`
+- Index `idx_reviews_complaint_analysis` on `(rating, is_complaint, complaint_analyzed_at) WHERE rating <= 3`
+- Index `idx_reviews_is_complaint` on `(location_id, is_complaint, published_at DESC) WHERE is_complaint = TRUE`
+
+**Edge Function:**
+- `analyze-complaints` — authenticates user, finds unanalyzed 1-3 star reviews for the user's org locations, sends batches of up to 50 to Gemini 2.0 Flash (falls back to 1.5 Flash), gets `is_complaint` + `complaint_summary` for each, updates `reviews` table; no-body reviews marked non-complaint without AI call
+
+**Portal UI (`/reviews/complaints`):**
+- Stat cards: Total Complaints, Unanswered, 1-Star Complaints, 2-3 Star Complaints
+- Filter bar: status (all/unanswered/answered) + star rating (all/1/2/3)
+- Complaint cards: expandable, shows AI summary (purple), review snippet, rating badge, replied/pending status tag, location name chip
+- "Run AI Analysis" button triggers Edge Function, shows result banner after completion
+- Sidebar nav item "Complaints" (warning triangle icon) added under Reviews group
+- Global location selector respected (uses `useLocationStore`)
+- Reviews page unchanged
+
 ## External/configuration pending
 - `VITE_WEB_URL` → set to `https://moffu.vercel.app` in portalmoffu Vercel project (for "Back to website" link in prod)
 - Google OAuth credentials → needed for Phase 4

@@ -27,6 +27,7 @@ import { FeedbackInboxPage } from '@/features/feedback/FeedbackInboxPage';
 import { NewFeedbackRequestPage } from '@/features/feedback/NewFeedbackRequestPage';
 import { MarketingPage } from '@/features/marketing/MarketingPage';
 import { NewPostPage } from '@/features/marketing/NewPostPage';
+import { ComplaintsPage } from '@/features/dashboard/pages/ComplaintsPage';
 
 
 export function App() {
@@ -69,6 +70,7 @@ export function App() {
         <Route element={<AuthGuard><DashboardLayout /></AuthGuard>}>
           <Route path="/dashboard" element={<OverviewPage />} />
           <Route path="/reviews"   element={<ReviewsPage />} />
+          <Route path="/reviews/complaints" element={<ComplaintsPage />} />
           <Route path="/insights" element={<Navigate to="/insights/trends" replace />} />
           <Route path="/insights/trends"      element={<FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage>} />
           <Route path="/insights/ratings"     element={<FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage>} />
