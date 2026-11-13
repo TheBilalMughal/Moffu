@@ -474,14 +474,12 @@ function SentimentCard({ breakdown }: { breakdown: number[] }) {
       label: 'Positive',
       count: s.positive,
       pct: s.positivePct,
-      color: '#22C55E',
-      bg: 'bg-emerald-50',
-      text: 'text-emerald-600',
+      text: 'text-emerald-500',
       barBg: 'bg-emerald-400',
       icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="9" strokeWidth={1.75} />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 10h.01M15 10h.01M8.5 14.5s1 2 3.5 2 3.5-2 3.5-2" />
+        <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" strokeWidth={1.5} />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 10h.01M15 10h.01M8.5 14.5s1 2 3.5 2 3.5-2 3.5-2" />
         </svg>
       ),
     },
@@ -489,14 +487,12 @@ function SentimentCard({ breakdown }: { breakdown: number[] }) {
       label: 'Neutral',
       count: s.neutral,
       pct: s.neutralPct,
-      color: '#EAB308',
-      bg: 'bg-amber-50',
-      text: 'text-amber-600',
+      text: 'text-amber-500',
       barBg: 'bg-amber-400',
       icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="9" strokeWidth={1.75} />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 10h.01M15 10h.01M8.5 15h7" />
+        <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" strokeWidth={1.5} />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 10h.01M15 10h.01M8.5 15h7" />
         </svg>
       ),
     },
@@ -504,45 +500,45 @@ function SentimentCard({ breakdown }: { breakdown: number[] }) {
       label: 'Negative',
       count: s.negative,
       pct: s.negativePct,
-      color: '#EF4444',
-      bg: 'bg-red-50',
       text: 'text-red-500',
       barBg: 'bg-red-400',
       icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="9" strokeWidth={1.75} />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 10h.01M15 10h.01M8.5 16.5s1-2 3.5-2 3.5 2 3.5 2" />
+        <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" strokeWidth={1.5} />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 10h.01M15 10h.01M8.5 16.5s1-2 3.5-2 3.5 2 3.5 2" />
         </svg>
       ),
     },
   ];
 
   return (
-    <GlassCard className="p-5 min-h-[260px]">
-      <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Review Sentiment</p>
+    <GlassCard className="p-5 min-h-[260px] flex flex-col justify-between">
+      <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-5">Review Sentiment</p>
 
-      <div className="grid grid-cols-3 gap-2 mb-4">
+      <div className="grid grid-cols-3 gap-3 flex-1">
         {items.map(item => (
-          <div key={item.label} className="text-center">
-            <div className={`w-9 h-9 rounded-xl ${item.bg} ${item.text} flex items-center justify-center mx-auto mb-2`}>
-              {item.icon}
+          <div key={item.label} className="flex flex-col items-center justify-center gap-2">
+            <div className={item.text}>{item.icon}</div>
+            <div className="text-center">
+              <p className="text-xl font-bold text-[#111827] leading-none">{s.total > 0 ? `${item.pct}%` : '—'}</p>
+              <p className="text-[10px] font-semibold text-[#374151] mt-1">{item.label}</p>
+              <p className="text-[10px] text-[#9CA3AF] mt-0.5">{item.count} reviews</p>
             </div>
-            <p className="text-lg font-bold text-[#111827] leading-none">{s.total > 0 ? `${item.pct}%` : '—'}</p>
-            <p className="text-[10px] font-semibold text-[#374151] mt-0.5">{item.label}</p>
-            <p className="text-[10px] text-[#9CA3AF]">{item.count} reviews</p>
           </div>
         ))}
       </div>
 
-      {s.total > 0 ? (
-        <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden">
-          {items.map(item => item.pct > 0 && (
-            <div key={item.label} className={`${item.barBg} transition-all`} style={{ width: `${item.pct}%` }} />
-          ))}
-        </div>
-      ) : (
-        <div className="h-1.5 rounded-full bg-[#F3F4F6]" />
-      )}
+      <div className="mt-5">
+        {s.total > 0 ? (
+          <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden">
+            {items.map(item => item.pct > 0 && (
+              <div key={item.label} className={`${item.barBg} transition-all`} style={{ width: `${item.pct}%` }} />
+            ))}
+          </div>
+        ) : (
+          <div className="h-1.5 rounded-full bg-[#F3F4F6]" />
+        )}
+      </div>
     </GlassCard>
   );
 }
