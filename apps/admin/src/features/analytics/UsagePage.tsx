@@ -78,8 +78,8 @@ export function UsagePage() {
   const [events, setEvents]   = useState<UsageRow[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [dateFrom, setDateFrom] = useState(monthStart);
-  const [dateTo,   setDateTo]   = useState(today);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo,   setDateTo]   = useState('');
   const [planFilter,   setPlanFilter]   = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
