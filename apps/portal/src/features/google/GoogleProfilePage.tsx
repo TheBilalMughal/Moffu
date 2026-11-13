@@ -378,19 +378,19 @@ export function GoogleProfilePage(){
           description="Impressions, clicks and direction requests from Google Business Profile.">
           {(()=>{
             const perf=analysis?.performance;
-            const stats:[string,number|undefined][]=[
-              ['Search impressions',insightTotals?.views_search ?? (perf?.search_views ?? undefined)],
-              ['Maps impressions',insightTotals?.views_maps ?? (perf?.maps_views ?? undefined)],
-              ['Call clicks',insightTotals?.calls ?? (perf?.calls ?? undefined)],
-              ['Website clicks',insightTotals?.website_clicks ?? (perf?.website_clicks ?? undefined)],
-              ['Direction requests',insightTotals?.direction_requests ?? (perf?.directions ?? undefined)],
+            if (!analysis) return <div className="h-24 animate-pulse rounded-xl bg-[#F3F4F6]" />;
+            const stats:[string,number|null|undefined][]=[
+              ['Search impressions', perf?.search_views],
+              ['Maps impressions',   perf?.maps_views],
+              ['Call clicks',        perf?.calls],
+              ['Website clicks',     perf?.website_clicks],
+              ['Direction requests', perf?.directions],
             ];
             const hasStats=stats.some(([,v])=>v!=null);
             const metrics=insightMetrics??[];
             const maxViews=Math.max(...metrics.map(m=>m.views_search+m.views_maps),1);
-            if (!analysis && !insightTotals) return <div className="h-24 animate-pulse rounded-xl bg-[#F3F4F6]" />;
             return <>
-              {hasStats && (
+              {hasStats ? (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 mb-5">
                   {stats.map(([label,value])=>(
                     <div key={label} className="rounded-lg bg-[#F9FAFB] p-4">
@@ -399,7 +399,7 @@ export function GoogleProfilePage(){
                     </div>
                   ))}
                 </div>
-              )}
+              ) : <Empty>Performance data not available for this location. Check your Google connection.</Empty>}
               {metrics.length>0 && (
                 <div>
                   <p className="mb-2 text-xs font-semibold text-[#374151]">Daily impressions</p>
@@ -414,7 +414,6 @@ export function GoogleProfilePage(){
                   </div>
                 </div>
               )}
-              {!hasStats && !insightLoading && <Empty>Performance data not available. Run a sync from Settings to load your Google insights.</Empty>}
             </>;
           })()}
         </Section>
