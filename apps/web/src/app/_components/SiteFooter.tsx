@@ -130,7 +130,7 @@ export function SiteFooter({ portalUrl = 'https://app.moffu.pro' }: { portalUrl?
 
         {/* Bottom bar */}
         <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-[12px] text-[#6B7280]">© {new Date().getFullYear()} Creative Nodes LLC. All rights reserved.</p>
+          <p className="text-[12px] text-[#6B7280]">© 2026 Creative Nodes LLC. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="text-[12px] text-[#6B7280] hover:text-white transition-colors duration-150">Privacy</Link>
             <Link href="/terms" className="text-[12px] text-[#6B7280] hover:text-white transition-colors duration-150">Terms</Link>
