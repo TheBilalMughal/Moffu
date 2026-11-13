@@ -512,7 +512,7 @@ function SentimentCard({ breakdown }: { breakdown: number[] }) {
   ];
 
   return (
-    <GlassCard className="p-5 min-h-[260px] flex flex-col">
+    <GlassCard className="p-5 min-h-[260px] flex flex-col justify-center">
       <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-5">Review Sentiment</p>
 
       <div className="grid grid-cols-3 gap-3 mb-5">
