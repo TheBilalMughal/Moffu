@@ -411,3 +411,13 @@ DEPLOYED: Supabase Edge Function v1 and Vercel portal production deployment c57d
 - Verification: 10 focused Node tests passed; portal TypeScript check and Vite production build passed. Test-fixture desktop (1440px) and mobile (390px) visual inspection checked category display, global location changes, radius changes and unavailable-configuration state. Local dropdown positioning corrected during mobile QA.
 - Existing bundle-size/dynamic-import Vite warnings remain. Live OAuth/Places success is not yet verified. Admin google_maps_api_key setting is present as of 2026-11-13; its validity and Places API response remain unverified.
 - See developer-docs/16-GOOGLE-PROFILE-ANALYSIS.md for sources, setup, limitations and verification.
+
+## Google Profile advanced analytics additions — 2026-11-13
+IMPLEMENTED: 6 advanced features added to GoogleProfilePage.tsx in the client portal.
+- Review analytics section: rating distribution (5-star bar breakdown) + monthly trend SVG polyline line chart with area fill, dots and value labels; fed from existing `reviews` DB table.
+- Search performance section: search impressions/clicks with optional date range via google-fetch-insights Edge Function (already existed).
+- Photos, Q&A, Posts section: new `google-fetch-extra-data` Edge Function fetches media count, Q&A total/unanswered, and recent posts from Google My Business v4 API in parallel.
+- Competitor keyword fix: google-competitors Edge Function now uses `description` (business category) only as keyword, with no fallback to display_name; `rankby=prominence` added.
+- Global date filter: single DateRangePicker in page header controls both reviews and insights sections; no pre-selection (empty default = all reviews / last 30 days for insights).
+- UI changes: fetch timestamp format changed to `13-Nov-2026, 6:40 PM`; connection status line removed; breadcrumb label removed.
+- Admin GoogleSettingsPage: `google_maps_api_key` field added (show/hide toggle) for Places API key management.

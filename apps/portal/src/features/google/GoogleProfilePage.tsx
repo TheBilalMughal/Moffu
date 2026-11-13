@@ -12,7 +12,6 @@ const panel='rounded-xl border border-[#E5E7EB] bg-white';
 const number=(n:number|null|undefined)=>n==null ? '—' : n.toLocaleString();
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
-function daysAgo(n:number):string { const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
 function today():string { return new Date().toISOString().slice(0,10); }
 function fmtMonth(iso:string):string { const d=new Date(iso+'T00:00:00'); return d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}); }
 
@@ -86,15 +85,15 @@ export function GoogleProfilePage(){
   const [initRevision,setInitRevision]=useState(0);
   const selectorRef=useRef<HTMLDivElement>(null);
 
+  // ── Global date filter (empty = no filter / use defaults) ────────────────
+  const [globalFrom,setGlobalFrom]=useState('');
+  const [globalTo,setGlobalTo]=useState('');
+
   // ── Review analytics state ────────────────────────────────────────────────
-  const [reviewFrom,setReviewFrom]=useState(daysAgo(89));
-  const [reviewTo,setReviewTo]=useState(today());
   const [reviewRows,setReviewRows]=useState<ReviewRow[]|null>(null);
   const [reviewLoading,setReviewLoading]=useState(false);
 
-  // ── Insights date range state ─────────────────────────────────────────────
-  const [insightFrom,setInsightFrom]=useState(daysAgo(29));
-  const [insightTo,setInsightTo]=useState(today());
+  // ── Insights state ────────────────────────────────────────────────────────
   const [insightMetrics,setInsightMetrics]=useState<InsightMetric[]|null>(null);
   const [insightTotals,setInsightTotals]=useState<InsightTotals|null>(null);
   const [insightLoading,setInsightLoading]=useState(false);
@@ -154,32 +153,29 @@ export function GoogleProfilePage(){
     (async()=>{
       const { data: { user } } = await supabase.auth.getUser();
       if (!user || !alive) return;
-      const { data } = await supabase
-        .from('reviews')
-        .select('rating, published_at, reply_text')
-        .eq('user_id', user.id)
-        .eq('location_id', selected.id)
-        .gte('published_at', reviewFrom+'T00:00:00Z')
-        .lte('published_at', reviewTo+'T23:59:59Z')
-        .order('published_at', { ascending: true });
+      let q=supabase.from('reviews').select('rating, published_at, reply_text')
+        .eq('user_id', user.id).eq('location_id', selected.id);
+      if (globalFrom) q=q.gte('published_at', globalFrom+'T00:00:00Z');
+      if (globalTo)   q=q.lte('published_at', globalTo+'T23:59:59Z');
+      const { data } = await q.order('published_at', { ascending: true });
       if (alive) { setReviewRows((data ?? []) as ReviewRow[]); setReviewLoading(false); }
     })();
     return ()=>{ alive=false; };
-  },[selected?.id, reviewFrom, reviewTo]);
+  },[selected?.id, globalFrom, globalTo]);
 
-  // ── Fetch insights with custom date range ─────────────────────────────────
+  // ── Fetch insights with global date range ─────────────────────────────────
   useEffect(()=>{
     if (!selected || !connection) { setInsightMetrics(null); setInsightTotals(null); return; }
     let alive=true;
     setInsightLoading(true); setInsightError('');
-    googleService.fetchInsights(selected.id, insightFrom, insightTo).then(r=>{
+    googleService.fetchInsights(selected.id, globalFrom, globalTo).then(r=>{
       if (!alive) return;
       if (r.error) { setInsightError(r.error); }
       else { setInsightMetrics(r.data?.metrics ?? []); setInsightTotals(r.data?.totals ?? null); }
       setInsightLoading(false);
     });
     return ()=>{ alive=false; };
-  },[selected?.id, connection?.id, insightFrom, insightTo]);
+  },[selected?.id, connection?.id, globalFrom, globalTo]);
 
   // ── Fetch photos, Q&A, posts ──────────────────────────────────────────────
   useEffect(()=>{
@@ -228,6 +224,7 @@ export function GoogleProfilePage(){
         <p className="mt-1 text-xs leading-relaxed text-[#6B7280]">Profile readiness, search performance and nearby businesses for this location.</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
+        <DateRangePicker from={globalFrom} to={globalTo} onChange={(f,t)=>{setGlobalFrom(f);setGlobalTo(t);}} alignRight />
         {!globalLocationId && locations.length>0 && <div ref={selectorRef} className="relative">
           <button type="button" aria-expanded={menuOpen} aria-controls="profile-location-options"
             onClick={()=>setMenuOpen(v=>!v)} onKeyDown={e=>{if(e.key==='Escape') setMenuOpen(false);}}
@@ -299,8 +296,7 @@ export function GoogleProfilePage(){
         </div>
         {/* ── Review analytics ──────────────────────────────────────────── */}
         <Section title="Review analytics"
-          description="Rating breakdown and volume trend from your synced reviews."
-          action={<DateRangePicker from={reviewFrom} to={reviewTo} onChange={(f,t)=>{setReviewFrom(f||daysAgo(89));setReviewTo(t||today());}} alignRight />}>
+          description="Rating breakdown and volume trend from your synced reviews.">
           {reviewLoading && <div className="h-32 animate-pulse rounded-xl bg-[#F3F4F6]" />}
           {!reviewLoading && reviewRows!=null && (()=>{
             const months=buildMonthBuckets(reviewRows);
@@ -332,19 +328,38 @@ export function GoogleProfilePage(){
                     <span>{total ? Math.round(replied/total*100) : 0}% replied</span>
                   </div>
                 </div>
-                {/* Monthly trend */}
+                {/* Monthly trend — line chart */}
                 <div>
                   <p className="mb-3 text-xs font-semibold text-[#374151]">Monthly trend</p>
-                  {months.length===0 ? <p className="text-xs text-[#9CA3AF]">No monthly data.</p> :
-                  <div className="flex items-end gap-1" style={{height:'96px'}}>
-                    {months.map(m=>(
-                      <div key={m.month} className="flex flex-col items-center flex-1 min-w-0 group relative" title={`${fmtMonth(m.month+'-01')}: ${m.count} reviews`}>
-                        <div className="w-full rounded-t-sm bg-[#6C55E8] transition-all duration-300"
-                          style={{height:`${Math.max((m.count/maxCount)*80,2)}px`}} />
-                        <span className="mt-1 text-[9px] text-[#9CA3AF] truncate w-full text-center">{fmtMonth(m.month+'-01')}</span>
-                      </div>
-                    ))}
-                  </div>}
+                  {months.length===0 ? <p className="text-xs text-[#9CA3AF]">No monthly data.</p> : (()=>{
+                    const W=300; const H=80; const PAD=8;
+                    const pts=months.map((m,i)=>({
+                      x: months.length===1 ? W/2 : PAD+(i/(months.length-1))*(W-PAD*2),
+                      y: PAD+H-PAD-(m.count/maxCount)*(H-PAD*2),
+                      m,
+                    }));
+                    const polyline=pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+                    return <svg viewBox={`0 0 ${W} ${H+20}`} className="w-full overflow-visible">
+                      {/* Grid lines */}
+                      {[0,0.5,1].map(v=>(
+                        <line key={v} x1={PAD} x2={W-PAD} y1={PAD+H-PAD-(v*(H-PAD*2))} y2={PAD+H-PAD-(v*(H-PAD*2))}
+                          stroke="#F3F4F6" strokeWidth="1" />
+                      ))}
+                      {/* Area fill */}
+                      <path d={`M ${pts[0]!.x.toFixed(1)},${pts[0]!.y.toFixed(1)} ${pts.slice(1).map(p=>`L ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} L ${pts[pts.length-1]!.x.toFixed(1)},${(H+PAD).toFixed(1)} L ${pts[0]!.x.toFixed(1)},${(H+PAD).toFixed(1)} Z`}
+                        fill="#6C55E8" fillOpacity="0.08" />
+                      {/* Line */}
+                      <polyline points={polyline} fill="none" stroke="#6C55E8" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+                      {/* Dots + labels */}
+                      {pts.map((p,i)=>(
+                        <g key={i}>
+                          <circle cx={p.x} cy={p.y} r="3.5" fill="#6C55E8" />
+                          <text x={p.x} y={p.y-7} textAnchor="middle" fontSize="8" fill="#374151">{p.m.count}</text>
+                          <text x={p.x} y={H+PAD+14} textAnchor="middle" fontSize="8" fill="#9CA3AF">{fmtMonth(p.m.month+'-01')}</text>
+                        </g>
+                      ))}
+                    </svg>;
+                  })()}
                 </div>
               </div>
             </>;
@@ -353,8 +368,7 @@ export function GoogleProfilePage(){
 
         {/* ── Search and Maps performance (with custom date range) ──────── */}
         <Section title="Search and Maps performance"
-          description="Impressions, clicks and direction requests from Google Business Profile."
-          action={<DateRangePicker from={insightFrom} to={insightTo} onChange={(f,t)=>{setInsightFrom(f||daysAgo(29));setInsightTo(t||today());}} alignRight />}>
+          description="Impressions, clicks and direction requests from Google Business Profile.">
           {insightLoading && <div className="h-24 animate-pulse rounded-xl bg-[#F3F4F6]" />}
           {!insightLoading && insightError && <Empty>{insightError}</Empty>}
           {!insightLoading && !insightError && insightTotals && (()=>{

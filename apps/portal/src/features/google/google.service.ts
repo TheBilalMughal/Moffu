@@ -290,7 +290,7 @@ export const googleService = {
     const res = await fetch(`${BASE}/google-fetch-insights`, {
       method: 'POST',
       headers: { Authorization: auth, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ location_id: locationId, start_date: startDate, end_date: endDate }),
+      body: JSON.stringify({ location_id: locationId, ...(startDate ? { start_date: startDate } : {}), ...(endDate ? { end_date: endDate } : {}) }),
     });
     const json = await res.json();
     if (!res.ok) return { error: json.error ?? 'Failed to fetch insights' };
