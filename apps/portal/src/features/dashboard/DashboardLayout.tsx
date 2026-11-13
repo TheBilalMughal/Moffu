@@ -1093,8 +1093,7 @@ export function DashboardLayout() {
               onClick={() => navigate(group.items[0]!.to)}
             />
           ))}
-          {isFreePlan && !featureLoading && (
-            <button
+          <button
               onClick={() => navigate('/billing')}
               className="relative group w-10 h-10 flex items-center justify-center rounded-xl bg-[#6C55E8] hover:bg-[#5A42D1] text-white transition-colors mt-1"
               title="Upgrade plan"
@@ -1107,7 +1106,6 @@ export function DashboardLayout() {
                 Upgrade plan
               </span>
             </button>
-          )}
           <div className="mt-auto pt-2">
             <button
               onClick={() => { authService.logout().then(() => { window.location.replace('/auth/login'); }); }}
@@ -1151,11 +1149,9 @@ export function DashboardLayout() {
                   isLocked={isLocked(item.featureKey)}
                 />
               ))}
-              {isFreePlan && !featureLoading && (
-                <div className="mt-3">
-                  <UpgradeWidget />
-                </div>
-              )}
+              <div className="mt-3">
+                <UpgradeWidget />
+              </div>
             </div>
             {/* Mobile: show all items */}
             <div className="md:hidden flex flex-col gap-0.5">
