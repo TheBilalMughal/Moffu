@@ -1225,11 +1225,6 @@ export function DashboardLayout() {
                   isLocked={isLocked(item.featureKey)}
                 />
               ))}
-              {upgradePlans.length > 0 && (
-                <div className="mt-3">
-                  <SidebarUpgradeCard sub={upgradeSub} plans={upgradePlans} />
-                </div>
-              )}
             </div>
             {/* Mobile: show all items */}
             <div className="md:hidden flex flex-col gap-0.5">
@@ -1245,6 +1240,12 @@ export function DashboardLayout() {
               ))}
             </div>
           </nav>
+
+          {upgradePlans.length > 0 && (
+            <div className="flex-shrink-0 px-3 pb-3">
+              <SidebarUpgradeCard sub={upgradeSub} plans={upgradePlans} />
+            </div>
+          )}
         </aside>
 
         {/* Main Content */}
