@@ -159,7 +159,6 @@ Also hardened `handle_new_user` with `ON CONFLICT (id) DO NOTHING` to guard agai
 **Portal BillingPage** (`/billing`):
 - Current plan card with team seats meter (1/N)
 - Usage meters (AI drafts + replies) with alert banners at ≥80% / ≥90%
-- Overage protection toggle
 - 14-day usage history bar chart
 - Add extra location button → dialog with cost breakdown
 - Active add-on line items with cancel

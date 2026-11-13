@@ -548,8 +548,6 @@ export function BillingPage() {
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'annual'>('monthly');
   const [showCompare, setShowCompare] = useState(false);
   const [showAddLocation, setShowAddLocation] = useState(false);
-  const [overageProtection, setOverageProtection] = useState(true);
-  const [overageToggling, setOverageToggling] = useState(false);
   const [downgradePlan, setDowngradePlan] = useState<Plan | null>(null);
   const [downgradeMsg, setDowngradeMsg] = useState<string | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
@@ -620,7 +618,6 @@ export function BillingPage() {
         const u = await billingService.getUsage(s, ps);
         setUsage(u);
         if (s.billing_interval) setBillingInterval(s.billing_interval);
-        setOverageProtection(s.overage_protection);
       }
       // Fetch org-level override (enterprise custom quota)
       const { data: { user } } = await supabase.auth.getUser();
@@ -697,16 +694,6 @@ export function BillingPage() {
     } else {
       setDowngradeMsg(`Downgrade to ${plan.name} requested. Billing management coming soon.`);
     }
-  }
-
-  async function handleOverageToggle() {
-    if (!sub || overageToggling) return;
-    const next = !overageProtection;
-    setOverageToggling(true);
-    setOverageProtection(next);
-    await billingService.updateOverageProtection(sub.id, next);
-    setSub(s => s ? { ...s, overage_protection: next } : s);
-    setOverageToggling(false);
   }
 
   if (loading) {
@@ -950,46 +937,6 @@ export function BillingPage() {
             <p className="text-xs text-[#9CA3AF]">No active subscription.</p>
           )}
 
-          {/* Overage protection toggle */}
-          <div className="border-t border-[#F3F4F6] mt-4 pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-medium text-[#374151]">Overage protection</p>
-                <p className="text-[10px] text-[#9CA3AF] mt-0.5">
-                  {overageProtection
-                    ? 'Actions blocked when limit is reached'
-                    : 'Actions allowed beyond limit — charged per reply'}
-                </p>
-              </div>
-              <button
-                onClick={handleOverageToggle}
-                disabled={overageToggling || !sub}
-                className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors ${overageToggling ? 'opacity-50 cursor-wait' : 'cursor-pointer'} ${overageProtection ? 'bg-[#111827]' : 'bg-[#D1D5DB]'}`}
-                aria-label="Toggle overage protection"
-              >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${overageProtection ? 'translate-x-4' : 'translate-x-0'}`} />
-              </button>
-            </div>
-            {(() => {
-              const pricePerReply = sub ? billingService.getOveragePricePerReplyCents(sub, plans) : null;
-              if (!overageProtection && pricePerReply !== null) {
-                return (
-                  <div className="mt-2 flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                    <svg className="w-3 h-3 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <p className="text-[10px] text-amber-700">
-                      Each reply over limit costs <strong>{cents(pricePerReply)}</strong> — charged via Stripe at period end.
-                    </p>
-                  </div>
-                );
-              }
-              if (!overageProtection && pricePerReply === null) {
-                return <p className="text-[10px] text-[#9CA3AF] mt-1">Overage pricing applies when Stripe is connected.</p>;
-              }
-              return null;
-            })()}
-          </div>
         </div>
       </div>
 
