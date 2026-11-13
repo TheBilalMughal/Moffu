@@ -1128,13 +1128,11 @@ export function DashboardLayout() {
         .eq('plan_id', sub.plan_id);
       const map: Record<string, boolean> = {};
       for (const e of ents ?? []) {
-        if (e.key === 'feature_google_profile') {
-          map['feature_google_profile'] = e.bool_value !== false;
-        } else if (e.key === 'feature_insights') {
-          map['feature_insights'] = e.bool_value !== false;
-        } else if (e.key === 'brand_brain_steps') {
+        if (e.value_type === 'BOOLEAN') {
+          map[e.key] = e.bool_value !== false;
+        } else if (e.key === 'brand_brain_steps' && !('feature_brand_brain' in map)) {
           map['feature_brand_brain'] = e.value_type === 'UNLIMITED' || ((e.limit_value ?? 63) & 63) > 0;
-        } else if (e.key === 'team_members') {
+        } else if (e.key === 'team_members' && !('feature_team' in map)) {
           map['feature_team'] = e.value_type === 'UNLIMITED' || (e.limit_value ?? 2) > 1;
         }
       }
