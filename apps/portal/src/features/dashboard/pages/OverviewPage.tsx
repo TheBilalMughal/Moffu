@@ -572,7 +572,7 @@ function UpgradeCard({ sub, plans }: { sub: Subscription | null; plans: Plan[] }
   const highlights   = getNextPlanHighlights(nextPlan);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-[#111827]">
+    <Link to="/billing" className="block relative overflow-hidden rounded-2xl bg-[#111827] hover:bg-[#1a2235] transition-colors group">
       <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/25 via-transparent to-[#6C55E8]/5 pointer-events-none" />
       <div className="relative p-5">
 
@@ -645,15 +645,12 @@ function UpgradeCard({ sub, plans }: { sub: Subscription | null; plans: Plan[] }
               </div>
             ) : null}
           </div>
-          <Link
-            to="/billing"
-            className="inline-flex items-center gap-1.5 bg-[#6C55E8] hover:bg-[#5A42D1] text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-colors"
-          >
+          <span className="inline-flex items-center gap-1.5 bg-[#6C55E8] group-hover:bg-[#5A42D1] text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-colors">
             Upgrade →
-          </Link>
+          </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
