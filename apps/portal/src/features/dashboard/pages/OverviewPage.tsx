@@ -1283,12 +1283,12 @@ export function OverviewPage() {
 
             <div className="flex flex-col gap-4">
               <GlassCard className="p-5 flex-1">
-                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Recent Activity</p>
-                <ActivityFeed items={dash.activityItems} />
-              </GlassCard>
-              <GlassCard className="p-5 flex-1">
                 <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Rating Breakdown</p>
                 <RatingChart breakdown={dash.ratingBreakdown} />
+              </GlassCard>
+              <GlassCard className="p-5 flex-1">
+                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Recent Activity</p>
+                <ActivityFeed items={dash.activityItems} />
               </GlassCard>
             </div>
           </div>
