@@ -49,6 +49,9 @@ interface LimitsForm {
   support_tier: string;
   feature_google_profile: boolean;
   feature_insights: boolean;
+  feature_campaigns: boolean;
+  feature_marketing: boolean;
+  feature_feedback: boolean;
   campaign_emails_unlimited: boolean;
   campaign_emails_limit: string;
   campaign_sms_unlimited: boolean;
@@ -101,6 +104,9 @@ const DEFAULT_LIMITS: LimitsForm = {
   support_tier: 'help_guides',
   feature_google_profile: true,
   feature_insights: true,
+  feature_campaigns: false,
+  feature_marketing: false,
+  feature_feedback: false,
   campaign_emails_unlimited: false,
   campaign_emails_limit: '500',
   campaign_sms_unlimited: false,
@@ -150,6 +156,9 @@ function entsToLimits(ents: Record<string, PlanEntitlement>): LimitsForm {
     support_tier:        sup?.enum_value ?? 'help_guides',
     feature_google_profile: ents['feature_google_profile']?.bool_value !== false,
     feature_insights:    ents['feature_insights']?.bool_value !== false,
+    feature_campaigns:   ents['feature_campaigns']?.bool_value === true,
+    feature_marketing:   ents['feature_marketing']?.bool_value === true,
+    feature_feedback:    ents['feature_feedback']?.bool_value === true,
     campaign_emails_unlimited: ents['campaign_emails']?.value_type === 'UNLIMITED',
     campaign_emails_limit:     String(ents['campaign_emails']?.limit_value ?? 500),
     campaign_sms_unlimited:    ents['campaign_sms']?.value_type === 'UNLIMITED',
@@ -336,7 +345,10 @@ export function PackagesSettingsPage() {
       { plan_id: planId, key: 'brand_brain_steps',   value_type: 'LIMIT', limit_value: (parseInt(L.brand_brain_steps) || 0) & 63, bool_value: null, enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'support_tier',        value_type: 'ENUM',      limit_value: null,                                  bool_value: null, enum_value: L.support_tier,  usage_reset: null },
       { plan_id: planId, key: 'feature_google_profile', value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_google_profile, enum_value: null, usage_reset: null },
-      { plan_id: planId, key: 'feature_insights',    value_type: 'BOOLEAN',   limit_value: null, bool_value: L.feature_insights,    enum_value: null, usage_reset: null },
+      { plan_id: planId, key: 'feature_insights',    value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_insights,    enum_value: null, usage_reset: null },
+      { plan_id: planId, key: 'feature_campaigns',   value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_campaigns,   enum_value: null, usage_reset: null },
+      { plan_id: planId, key: 'feature_marketing',   value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_marketing,   enum_value: null, usage_reset: null },
+      { plan_id: planId, key: 'feature_feedback',    value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_feedback,    enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'campaign_emails',    value_type: L.campaign_emails_unlimited    ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_emails_unlimited    ? null : parseInt(L.campaign_emails_limit) || 0,    bool_value: null, enum_value: null, usage_reset: 'monthly' },
       { plan_id: planId, key: 'campaign_sms',       value_type: L.campaign_sms_unlimited       ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_sms_unlimited       ? null : parseInt(L.campaign_sms_limit) || 0,       bool_value: null, enum_value: null, usage_reset: 'monthly' },
       { plan_id: planId, key: 'campaign_whatsapp',  value_type: L.campaign_whatsapp_unlimited  ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_whatsapp_unlimited  ? null : parseInt(L.campaign_whatsapp_limit) || 0,  bool_value: null, enum_value: null, usage_reset: 'monthly' },
@@ -576,6 +588,51 @@ export function PackagesSettingsPage() {
                       </div>
                       <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_insights ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
                         {form.limits.feature_insights ? 'On' : 'Off'}
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#FAFAF7] transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={form.limits.feature_campaigns}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_campaigns: e.target.checked } }))}
+                        className="w-4 h-4 accent-[#6C55E8] rounded flex-shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-[#111827]">Campaigns</p>
+                        <p className="text-[11px] text-[#9CA3AF] mt-0.5">Email, SMS and WhatsApp campaign sending</p>
+                      </div>
+                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_campaigns ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+                        {form.limits.feature_campaigns ? 'On' : 'Off'}
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#FAFAF7] transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={form.limits.feature_marketing}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_marketing: e.target.checked } }))}
+                        className="w-4 h-4 accent-[#6C55E8] rounded flex-shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-[#111827]">Marketing</p>
+                        <p className="text-[11px] text-[#9CA3AF] mt-0.5">Marketing post creation and scheduling</p>
+                      </div>
+                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_marketing ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+                        {form.limits.feature_marketing ? 'On' : 'Off'}
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#FAFAF7] transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={form.limits.feature_feedback}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_feedback: e.target.checked } }))}
+                        className="w-4 h-4 accent-[#6C55E8] rounded flex-shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-[#111827]">Feedback</p>
+                        <p className="text-[11px] text-[#9CA3AF] mt-0.5">Customer feedback requests and surveys</p>
+                      </div>
+                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_feedback ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+                        {form.limits.feature_feedback ? 'On' : 'Off'}
                       </span>
                     </label>
                     <div className="px-3.5 py-3 flex items-center gap-3">
