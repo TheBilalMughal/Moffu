@@ -21,12 +21,12 @@ interface Client {
 }
 
 const PLAN_COLOR: Record<string, string> = {
-  free:       'bg-[#F3F4F6] text-[#374151]',
-  starter:    'bg-[#EFF6FF] text-[#1D4ED8]',
-  growth:     'bg-[#F0FDF4] text-[#15803D]',
-  scale:      'bg-[#FFF7ED] text-[#C2410C]',
-  pro:        'bg-[#F0FDF4] text-[#15803D]',
-  enterprise: 'bg-[#FFF7ED] text-[#C2410C]',
+  free:       'text-[#374151]',
+  starter:    'text-[#1D4ED8]',
+  growth:     'text-[#15803D]',
+  scale:      'text-[#C2410C]',
+  pro:        'text-[#15803D]',
+  enterprise: 'text-[#C2410C]',
 };
 
 const PLAN_LIMIT: Record<string, number> = {
@@ -88,14 +88,32 @@ export function ClientsPage() {
     const ownerIds = [...new Set(ownerUserIdByOrg.values())];
     const allMemberIds = [...userToOrg.keys()];
 
-    // Fetch GBP configured orgs (at least one is_selected location)
-    const { data: gbpRows } = await supabase
-      .from('google_locations')
-      .select('org_id')
-      .eq('is_selected', true)
-      .in('org_id', orgIds);
+    // Fetch GBP configured orgs:
+    // google_locations → connection_id → google_connections → user_id → userToOrg → org_id
+    const { data: connRows } = await supabase
+      .from('google_connections')
+      .select('id, user_id')
+      .in('user_id', allMemberIds);
 
-    const gbpConfiguredOrgs = new Set((gbpRows ?? []).map((r: { org_id: string }) => r.org_id));
+    const connToOrg = new Map<string, string>();
+    (connRows ?? []).forEach((c: { id: string; user_id: string }) => {
+      const orgId = userToOrg.get(c.user_id);
+      if (orgId) connToOrg.set(c.id, orgId);
+    });
+
+    const connIds = [...connToOrg.keys()];
+    let gbpConfiguredOrgs = new Set<string>();
+    if (connIds.length > 0) {
+      const { data: locRows } = await supabase
+        .from('google_locations')
+        .select('connection_id')
+        .eq('is_selected', true)
+        .in('connection_id', connIds);
+      (locRows ?? []).forEach((l: { connection_id: string }) => {
+        const orgId = connToOrg.get(l.connection_id);
+        if (orgId) gbpConfiguredOrgs.add(orgId);
+      });
+    }
 
     const [plansRes, subsRes, emailRes, usageRes, overridesRes] = await Promise.all([
       supabase.from('plans').select('id, slug'),
@@ -376,19 +394,19 @@ export function ClientsPage() {
                         </td>
                         <td className="px-5 py-1.5 text-[#374151] text-xs">{c.owner_email ?? '—'}</td>
                         <td className="px-5 py-1.5">
-                          <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${PLAN_COLOR[c.plan ?? 'free'] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
-                            {c.plan ?? 'free'}
+                          <span className={`text-xs font-semibold ${PLAN_COLOR[c.plan ?? 'free'] ?? 'text-[#374151]'}`}>
+                            {(c.plan ?? 'free').charAt(0).toUpperCase() + (c.plan ?? 'free').slice(1)}
                           </span>
                         </td>
                         <td className="px-5 py-1.5">
                           {c.gbp_configured ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium rounded bg-[#DCFCE7] text-[#15803D]">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#15803D]">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] flex-shrink-0" />
                               Configured
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium rounded bg-[#F3F4F6] text-[#6B7280]">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#D1D5DB]" />
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#9CA3AF]">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#D1D5DB] flex-shrink-0" />
                               Not Set Up
                             </span>
                           )}
