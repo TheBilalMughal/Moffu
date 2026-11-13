@@ -517,7 +517,7 @@ function SentimentCard({ breakdown }: { breakdown: number[] }) {
 
       <div className="grid grid-cols-3 gap-3 flex-1">
         {items.map(item => (
-          <div key={item.label} className="flex flex-col items-center justify-center gap-2">
+          <div key={item.label} className="flex flex-col items-center justify-center gap-4">
             <div className={item.text}>{item.icon}</div>
             <div className="text-center">
               <p className="text-xl font-bold text-[#111827] leading-none">{s.total > 0 ? `${item.pct}%` : '—'}</p>
@@ -528,7 +528,7 @@ function SentimentCard({ breakdown }: { breakdown: number[] }) {
         ))}
       </div>
 
-      <div className="mt-5">
+      <div className="mt-2">
         {s.total > 0 ? (
           <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden">
             {items.map(item => item.pct > 0 && (
