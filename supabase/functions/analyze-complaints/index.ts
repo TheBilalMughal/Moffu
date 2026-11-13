@@ -89,19 +89,20 @@ Deno.serve(async (req) => {
     );
     if (userError || !user) return json({ error: 'Unauthorized' }, 401);
 
-    // Get user's org locations
+    // Get user's org
     const { data: member } = await supabase
-      .from('platform_members')
+      .from('org_members')
       .select('org_id')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (!member) return json({ error: 'No organization found' }, 403);
 
     const { data: locations } = await supabase
       .from('google_locations')
       .select('id')
-      .eq('org_id', member.org_id);
+      .eq('org_id', member.org_id)
+      .eq('is_selected', true);
 
     if (!locations || locations.length === 0) return json({ analyzed: 0, complaints: 0 });
 

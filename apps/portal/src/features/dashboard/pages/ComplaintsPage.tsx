@@ -194,7 +194,7 @@ export function ComplaintsPage() {
         <button
           onClick={handleAnalyze}
           disabled={analyzing}
-          className="inline-flex items-center gap-2 bg-[#6C55E8] hover:bg-[#5A42D1] disabled:opacity-60 text-white text-[13px] font-semibold px-4 py-2 rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 bg-[#111827] hover:bg-[#6C55E8] disabled:opacity-60 text-white text-[13px] font-semibold px-4 py-2 rounded-lg transition-colors"
         >
           {analyzing ? (
             <>
