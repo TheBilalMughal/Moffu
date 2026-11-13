@@ -1,13 +1,46 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useLocationStore } from '@/features/location/location.store';
+import { supabase } from '@/lib/supabase';
 import { googleService, type GoogleConnection, type GoogleLocation } from './google.service';
 import { analysisMessage, fetchProfileAnalysis, type ProfileAnalysis } from './profile-analysis.service';
+import { DateRangePicker } from '@/components/DateRangePicker';
 
 const RADII=[5,10,20,30] as const;
 const REFRESH_MS=15*60*1000;
 const panel='rounded-xl border border-[#E5E7EB] bg-white';
 const number=(n:number|null|undefined)=>n==null ? '—' : n.toLocaleString();
+
+// ── Date helpers ──────────────────────────────────────────────────────────────
+function daysAgo(n:number):string { const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
+function today():string { return new Date().toISOString().slice(0,10); }
+function fmtMonth(iso:string):string { const d=new Date(iso+'T00:00:00'); return d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}); }
+
+// ── Review analytics types ────────────────────────────────────────────────────
+interface ReviewRow { rating: number|null; published_at: string|null; reply_text: string|null; }
+interface MonthBucket { month: string; count: number; replied: number; }
+interface RatingBucket { rating: number; count: number; }
+
+function buildMonthBuckets(rows:ReviewRow[]):MonthBucket[] {
+  const map:Record<string,{count:number;replied:number}>={};
+  rows.forEach(r=>{
+    if (!r.published_at) return;
+    const key=r.published_at.slice(0,7);
+    if (!map[key]) map[key]={count:0,replied:0};
+    map[key]!.count++;
+    if (r.reply_text) map[key]!.replied++;
+  });
+  return Object.entries(map).sort(([a],[b])=>a.localeCompare(b)).map(([month,v])=>({month,...v}));
+}
+function buildRatingBuckets(rows:ReviewRow[]):RatingBucket[] {
+  const counts:Record<number,number>={1:0,2:0,3:0,4:0,5:0};
+  rows.forEach(r=>{ if(r.rating!=null && r.rating>=1 && r.rating<=5) counts[r.rating]!++; });
+  return [5,4,3,2,1].map(rating=>({rating,count:counts[rating]!}));
+}
+
+// ── Insight trend type ────────────────────────────────────────────────────────
+interface InsightMetric { date:string; views_search:number; views_maps:number; calls:number; website_clicks:number; direction_requests:number; }
+interface InsightTotals { views_search:number; views_maps:number; calls:number; website_clicks:number; direction_requests:number; total_views:number; }
 function safeUrl(value:string|null|undefined):string|undefined {
   try { const url=new URL(value ?? ''); return ['https:','http:'].includes(url.protocol) ? url.href : undefined; }
   catch { return undefined; }
@@ -53,6 +86,25 @@ export function GoogleProfilePage(){
   const [initRevision,setInitRevision]=useState(0);
   const selectorRef=useRef<HTMLDivElement>(null);
 
+  // ── Review analytics state ────────────────────────────────────────────────
+  const [reviewFrom,setReviewFrom]=useState(daysAgo(89));
+  const [reviewTo,setReviewTo]=useState(today());
+  const [reviewRows,setReviewRows]=useState<ReviewRow[]|null>(null);
+  const [reviewLoading,setReviewLoading]=useState(false);
+
+  // ── Insights date range state ─────────────────────────────────────────────
+  const [insightFrom,setInsightFrom]=useState(daysAgo(29));
+  const [insightTo,setInsightTo]=useState(today());
+  const [insightMetrics,setInsightMetrics]=useState<InsightMetric[]|null>(null);
+  const [insightTotals,setInsightTotals]=useState<InsightTotals|null>(null);
+  const [insightLoading,setInsightLoading]=useState(false);
+  const [insightError,setInsightError]=useState('');
+
+  // ── Extra data state (photos, Q&A, posts) ─────────────────────────────────
+  type ExtraData = Awaited<ReturnType<typeof googleService.fetchExtraData>>['data'];
+  const [extraData,setExtraData]=useState<ExtraData>(undefined);
+  const [extraLoading,setExtraLoading]=useState(false);
+
   useEffect(()=>{
     let active=true;
     setInitialLoading(true); setInitialError('');
@@ -93,6 +145,52 @@ export function GoogleProfilePage(){
     const timer=setInterval(()=>{if(document.visibilityState==='visible') setRevision(n=>n+1);},REFRESH_MS);
     return ()=>clearInterval(timer);
   },[selected?.id,radius]);
+
+  // ── Fetch review rows from Supabase ───────────────────────────────────────
+  useEffect(()=>{
+    if (!selected) { setReviewRows(null); return; }
+    let alive=true;
+    setReviewLoading(true); setReviewRows(null);
+    (async()=>{
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !alive) return;
+      const { data } = await supabase
+        .from('reviews')
+        .select('rating, published_at, reply_text')
+        .eq('user_id', user.id)
+        .eq('location_id', selected.id)
+        .gte('published_at', reviewFrom+'T00:00:00Z')
+        .lte('published_at', reviewTo+'T23:59:59Z')
+        .order('published_at', { ascending: true });
+      if (alive) { setReviewRows((data ?? []) as ReviewRow[]); setReviewLoading(false); }
+    })();
+    return ()=>{ alive=false; };
+  },[selected?.id, reviewFrom, reviewTo]);
+
+  // ── Fetch insights with custom date range ─────────────────────────────────
+  useEffect(()=>{
+    if (!selected || !connection) { setInsightMetrics(null); setInsightTotals(null); return; }
+    let alive=true;
+    setInsightLoading(true); setInsightError('');
+    googleService.fetchInsights(selected.id, insightFrom, insightTo).then(r=>{
+      if (!alive) return;
+      if (r.error) { setInsightError(r.error); }
+      else { setInsightMetrics(r.data?.metrics ?? []); setInsightTotals(r.data?.totals ?? null); }
+      setInsightLoading(false);
+    });
+    return ()=>{ alive=false; };
+  },[selected?.id, connection?.id, insightFrom, insightTo]);
+
+  // ── Fetch photos, Q&A, posts ──────────────────────────────────────────────
+  useEffect(()=>{
+    if (!selected || !connection) { setExtraData(undefined); return; }
+    let alive=true;
+    setExtraLoading(true); setExtraData(undefined);
+    googleService.fetchExtraData(selected.id).then(r=>{
+      if (alive) { setExtraData(r.data); setExtraLoading(false); }
+    });
+    return ()=>{ alive=false; };
+  },[selected?.id, connection?.id]);
 
   if(initialLoading) return <div className="space-y-4 p-6" role="status" aria-label="Loading business locations">
     {[0,1,2].map(n=><div key={n} className="h-24 animate-pulse rounded-xl bg-[#F3F4F6] motion-reduce:animate-none" />)}
@@ -199,16 +297,157 @@ export function GoogleProfilePage(){
             <a href="https://support.google.com/business/answer/7091" target="_blank" rel="noreferrer" className="mt-4 inline-block text-xs font-medium text-[#6C55E8]">Google’s local ranking guidance</a>
           </Section>
         </div>
-        <Section title="Search and Maps performance" description={current.performance.start ?
-          current.performance.start+' to '+current.performance.end+' · Google Business Profile data may arrive with a delay.' : 'Last 30 completed days'}>
-          {current.performance.status==='available' && (current.performance.days_with_data ?? 0)>0 ?
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{[
-              ['Search impressions',current.performance.search_views],['Maps impressions',current.performance.maps_views],
-              ['Call clicks',current.performance.calls],['Website clicks',current.performance.website_clicks],['Direction requests',current.performance.directions],
-            ].map(([label,value])=><div key={label} className="rounded-lg bg-[#F9FAFB] p-4">
-              <p className="text-[11px] text-[#6B7280]">{label}</p><p className="mt-2 font-mono text-xl font-semibold tabular-nums">{number(value as number|undefined)}</p>
-            </div>)}</div> :
-            <Empty>{current.performance.status==='available' ? 'Google returned no performance observations for this period.' : warningText('performance')}</Empty>}
+        {/* ── Review analytics ──────────────────────────────────────────── */}
+        <Section title="Review analytics"
+          description="Rating breakdown and volume trend from your synced reviews."
+          action={<DateRangePicker from={reviewFrom} to={reviewTo} onChange={(f,t)=>{setReviewFrom(f||daysAgo(89));setReviewTo(t||today());}} alignRight />}>
+          {reviewLoading && <div className="h-32 animate-pulse rounded-xl bg-[#F3F4F6]" />}
+          {!reviewLoading && reviewRows!=null && (()=>{
+            const months=buildMonthBuckets(reviewRows);
+            const ratings=buildRatingBuckets(reviewRows);
+            const maxCount=Math.max(...months.map(m=>m.count),1);
+            const maxRating=Math.max(...ratings.map(r=>r.count),1);
+            const total=reviewRows.length;
+            const replied=reviewRows.filter(r=>r.reply_text).length;
+            const STAR_COLOR=['','#EF4444','#F97316','#EAB308','#84CC16','#22C55E'];
+            return total===0 ? <Empty>No reviews synced in this date range. Adjust the range or run a sync from Settings.</Empty> : <>
+              <div className="grid gap-6 sm:grid-cols-2">
+                {/* Rating distribution */}
+                <div>
+                  <p className="mb-3 text-xs font-semibold text-[#374151]">Rating distribution</p>
+                  <div className="space-y-2">
+                    {ratings.map(({rating,count})=>(
+                      <div key={rating} className="flex items-center gap-2">
+                        <span className="w-5 text-right text-xs font-semibold text-[#374151]">{rating}★</span>
+                        <div className="relative flex-1 h-5 rounded-md bg-[#F3F4F6] overflow-hidden">
+                          <div className="absolute left-0 top-0 h-full rounded-md transition-all duration-500"
+                            style={{width:`${(count/maxRating)*100}%`,backgroundColor:STAR_COLOR[rating]}} />
+                        </div>
+                        <span className="w-7 text-right text-xs tabular-nums text-[#6B7280]">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-4 text-xs text-[#6B7280]">
+                    <span>{total} total reviews</span>
+                    <span>{total ? Math.round(replied/total*100) : 0}% replied</span>
+                  </div>
+                </div>
+                {/* Monthly trend */}
+                <div>
+                  <p className="mb-3 text-xs font-semibold text-[#374151]">Monthly trend</p>
+                  {months.length===0 ? <p className="text-xs text-[#9CA3AF]">No monthly data.</p> :
+                  <div className="flex items-end gap-1" style={{height:'96px'}}>
+                    {months.map(m=>(
+                      <div key={m.month} className="flex flex-col items-center flex-1 min-w-0 group relative" title={`${fmtMonth(m.month+'-01')}: ${m.count} reviews`}>
+                        <div className="w-full rounded-t-sm bg-[#6C55E8] transition-all duration-300"
+                          style={{height:`${Math.max((m.count/maxCount)*80,2)}px`}} />
+                        <span className="mt-1 text-[9px] text-[#9CA3AF] truncate w-full text-center">{fmtMonth(m.month+'-01')}</span>
+                      </div>
+                    ))}
+                  </div>}
+                </div>
+              </div>
+            </>;
+          })()}
+        </Section>
+
+        {/* ── Search and Maps performance (with custom date range) ──────── */}
+        <Section title="Search and Maps performance"
+          description="Impressions, clicks and direction requests from Google Business Profile."
+          action={<DateRangePicker from={insightFrom} to={insightTo} onChange={(f,t)=>{setInsightFrom(f||daysAgo(29));setInsightTo(t||today());}} alignRight />}>
+          {insightLoading && <div className="h-24 animate-pulse rounded-xl bg-[#F3F4F6]" />}
+          {!insightLoading && insightError && <Empty>{insightError}</Empty>}
+          {!insightLoading && !insightError && insightTotals && (()=>{
+            const metrics=insightMetrics??[];
+            const maxViews=Math.max(...metrics.map(m=>m.views_search+m.views_maps),1);
+            return <>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 mb-5">
+                {([
+                  ['Search impressions',insightTotals.views_search],
+                  ['Maps impressions',insightTotals.views_maps],
+                  ['Call clicks',insightTotals.calls],
+                  ['Website clicks',insightTotals.website_clicks],
+                  ['Direction requests',insightTotals.direction_requests],
+                ] as [string,number][]).map(([label,value])=>(
+                  <div key={label} className="rounded-lg bg-[#F9FAFB] p-4">
+                    <p className="text-[11px] text-[#6B7280]">{label}</p>
+                    <p className="mt-2 font-mono text-xl font-semibold tabular-nums">{number(value)}</p>
+                  </div>
+                ))}
+              </div>
+              {metrics.length>0 && (
+                <div>
+                  <p className="mb-2 text-xs font-semibold text-[#374151]">Daily impressions</p>
+                  <div className="flex items-end gap-px overflow-x-auto" style={{height:'72px'}}>
+                    {metrics.map(m=>{
+                      const h=Math.max(((m.views_search+m.views_maps)/maxViews)*64,1);
+                      return <div key={m.date} className="flex-shrink-0 group relative" style={{width:`${Math.max(100/metrics.length,2)}%`,maxWidth:'32px'}}
+                        title={`${m.date}: ${number(m.views_search+m.views_maps)} views`}>
+                        <div className="w-full rounded-t-sm bg-[#6C55E8] opacity-80" style={{height:`${h}px`}} />
+                      </div>;
+                    })}
+                  </div>
+                </div>
+              )}
+              {metrics.length===0 && <Empty>Google returned no performance data for this period. Try a broader date range.</Empty>}
+            </>;
+          })()}
+          {!insightLoading && !insightError && !insightTotals && <Empty>Performance data could not be loaded. Check your Google connection.</Empty>}
+        </Section>
+
+        {/* ── Google Business extras (photos, Q&A, posts) ───────────────── */}
+        <Section title="Photos, Q&A and Posts">
+          {extraLoading && <div className="grid grid-cols-3 gap-4">{[0,1,2].map(n=><div key={n} className="h-20 animate-pulse rounded-xl bg-[#F3F4F6]" />)}</div>}
+          {!extraLoading && (()=>{
+            const p=extraData?.photos;
+            const q=extraData?.qanda;
+            const posts=extraData?.posts;
+            return <>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-5">
+                {/* Photos */}
+                <div className="rounded-xl bg-[#F9FAFB] p-4">
+                  <p className="text-[11px] text-[#6B7280]">Total photos</p>
+                  <p className="mt-2 font-mono text-2xl font-semibold tabular-nums text-[#111827]">{p ? number(p.total) : '—'}</p>
+                  {p?.owner_total!=null && <p className="mt-1 text-[11px] text-[#9CA3AF]">{number(p.owner_total)} owner · {number((p.total??0)-(p.owner_total??0))} customer</p>}
+                </div>
+                {/* Q&A */}
+                <div className="rounded-xl bg-[#F9FAFB] p-4">
+                  <p className="text-[11px] text-[#6B7280]">Q&amp;A questions</p>
+                  <p className="mt-2 font-mono text-2xl font-semibold tabular-nums text-[#111827]">{q ? number(q.total) : '—'}</p>
+                  {q!=null && <p className="mt-1 text-[11px] text-[#9CA3AF]">{number(q.unanswered)} unanswered</p>}
+                </div>
+                {/* Posts */}
+                <div className="rounded-xl bg-[#F9FAFB] p-4">
+                  <p className="text-[11px] text-[#6B7280]">Recent posts</p>
+                  <p className="mt-2 font-mono text-2xl font-semibold tabular-nums text-[#111827]">{posts ? posts.length : '—'}</p>
+                  {posts!=null && <p className="mt-1 text-[11px] text-[#9CA3AF]">Last {posts.length} returned</p>}
+                </div>
+              </div>
+              {posts && posts.length>0 && (
+                <div>
+                  <p className="mb-3 text-xs font-semibold text-[#374151]">Recent posts</p>
+                  <div className="space-y-2">
+                    {posts.map((post,i)=>(
+                      <div key={post.name||i} className="flex items-start justify-between gap-3 rounded-lg border border-[#F3F4F6] px-4 py-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-[#374151] truncate">{post.summary ?? 'No caption'}</p>
+                          <p className="text-[11px] text-[#9CA3AF] mt-0.5">
+                            {post.post_type ?? 'Post'}{post.cta_type ? ' · '+post.cta_type.replace(/_/g,' ') : ''}
+                            {post.created_at ? ' · '+new Date(post.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-') : ''}
+                          </p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          {post.views!=null && <p className="text-xs tabular-nums font-semibold text-[#374151]">{number(post.views)} views</p>}
+                          {post.clicks!=null && <p className="text-[11px] text-[#9CA3AF]">{number(post.clicks)} clicks</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {!extraData && <Empty>Photos, Q&amp;A and post data could not be loaded. This requires an active Google Business Profile connection.</Empty>}
+            </>;
+          })()}
         </Section>
         <Section title="Search terms bringing customers to this profile"
           description={'Google Business Profile · '+current.keywords.month+' · Last completed calendar month. These are profile discovery terms, not all searches within a radius.'}>

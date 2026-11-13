@@ -252,4 +252,48 @@ export const googleService = {
     if (!res.ok) return { error: json.error ?? 'Publish failed' };
     return {};
   },
+
+  async fetchExtraData(locationId: string | null): Promise<{
+    data?: {
+      photos: { total: number | null; owner_total: number | null } | null;
+      qanda: { total: number | null; unanswered: number } | null;
+      posts: Array<{
+        name: string; summary: string | null; post_type: string | null;
+        state: string | null; created_at: string | null;
+        cta_type: string | null; views: number | null; clicks: number | null;
+      }> | null;
+    };
+    error?: string;
+  }> {
+    const auth = await getAuthHeader();
+    if (!auth) return { error: 'Not authenticated' };
+    const res = await fetch(`${BASE}/google-fetch-extra-data`, {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ location_id: locationId }),
+    });
+    const json = await res.json();
+    if (!res.ok) return { error: json.error ?? 'Failed to fetch extra data' };
+    return { data: json };
+  },
+
+  async fetchInsights(locationId: string | null, startDate: string, endDate: string): Promise<{
+    data?: {
+      metrics: Array<{ date: string; views_search: number; views_maps: number; calls: number; website_clicks: number; direction_requests: number }>;
+      totals: { views_search: number; views_maps: number; calls: number; website_clicks: number; direction_requests: number; total_views: number };
+      date_range: { start: string; end: string };
+    };
+    error?: string;
+  }> {
+    const auth = await getAuthHeader();
+    if (!auth) return { error: 'Not authenticated' };
+    const res = await fetch(`${BASE}/google-fetch-insights`, {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ location_id: locationId, start_date: startDate, end_date: endDate }),
+    });
+    const json = await res.json();
+    if (!res.ok) return { error: json.error ?? 'Failed to fetch insights' };
+    return { data: json };
+  },
 };

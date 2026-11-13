@@ -60,10 +60,12 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'NO_MAPS_KEY' }), { status: 400, headers: corsHeaders });
     }
 
-    const keyword = loc.description || loc.display_name || '';
+    // Use business category as keyword; fall back to no keyword (returns all nearby businesses)
+    const keyword = (loc.description ?? '').trim();
     const params = new URLSearchParams({
       location: `${loc.latitude},${loc.longitude}`,
       radius:   String(radiusKm * 1000),
+      rankby:   'prominence',
       key:      mapsKey,
       ...(keyword ? { keyword } : {}),
     });
