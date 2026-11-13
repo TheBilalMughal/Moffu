@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
 
     for (const account of accounts) {
       const locRes = await fetch(
-        `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?readMask=name,title,storefrontAddress,categories`,
+        `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?readMask=name,title,storefrontAddress,categories,latlng`,
         { headers: { Authorization: `Bearer ${accessToken}` } },
       );
       if (!locRes.ok) {
@@ -152,12 +152,19 @@ Deno.serve(async (req) => {
       }
 
       const locData = await locRes.json();
-      const locations: Array<{ name: string; title?: string; storefrontAddress?: { addressLines?: string[] }; categories?: { primaryCategory?: { displayName?: string } } }> = locData.locations ?? [];
+      const locations: Array<{
+        name: string;
+        title?: string;
+        storefrontAddress?: { addressLines?: string[] };
+        categories?: { primaryCategory?: { displayName?: string } };
+        latlng?: { latitude?: number; longitude?: number };
+      }> = locData.locations ?? [];
 
       for (const loc of locations) {
-        const address = loc.storefrontAddress?.addressLines?.join(', ') ?? null;
+        const address     = loc.storefrontAddress?.addressLines?.join(', ') ?? null;
         const description = loc.categories?.primaryCategory?.displayName ?? null;
-        // Use full path "accounts/{id}/locations/{id}" to match oauth-callback format
+        const latitude    = loc.latlng?.latitude  ?? null;
+        const longitude   = loc.latlng?.longitude ?? null;
         const fullLocationName = loc.name.startsWith('accounts/')
           ? loc.name
           : `${account.name}/${loc.name}`;
@@ -168,6 +175,8 @@ Deno.serve(async (req) => {
           display_name: loc.title ?? null,
           address,
           description,
+          latitude,
+          longitude,
         }, { onConflict: 'connection_id,google_location_name' });
         total++;
       }

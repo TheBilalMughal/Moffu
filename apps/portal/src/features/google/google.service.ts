@@ -32,6 +32,17 @@ export interface GoogleLocation {
   description: string | null;
 }
 
+export interface Competitor {
+  position: number;
+  name: string;
+  place_id: string;
+  rating: number | null;
+  review_count: number;
+  address: string | null;
+  distance_km: number;
+  is_you: boolean;
+}
+
 async function getAuthHeader(): Promise<string | null> {
   const { data: { session } } = await supabase.auth.getSession();
   return session ? `Bearer ${session.access_token}` : null;
@@ -158,6 +169,19 @@ export const googleService = {
     const json = await res.json();
     if (!res.ok) return { error: json.error ?? 'Failed to fetch locations' };
     return { locations_fetched: json.locations_fetched };
+  },
+
+  async getCompetitors(locationId: string | null, radiusKm: number): Promise<{ competitors?: Competitor[]; error?: string }> {
+    const auth = await getAuthHeader();
+    if (!auth) return { error: 'Not authenticated' };
+    const res = await fetch(`${BASE}/google-competitors`, {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ location_id: locationId, radius_km: radiusKm }),
+    });
+    const json = await res.json();
+    if (!res.ok) return { error: json.error ?? 'Failed to fetch competitors' };
+    return { competitors: json.competitors };
   },
 
   async searchBusiness(keyword: string): Promise<{ businesses?: BusinessSearchResult[]; error?: string }> {
