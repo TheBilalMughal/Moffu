@@ -518,7 +518,7 @@ function SentimentCard({ breakdown }: { breakdown: number[] }) {
   ];
 
   return (
-    <GlassCard className="p-5">
+    <GlassCard className="p-5 min-h-[196px]">
       <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Review Sentiment</p>
 
       <div className="grid grid-cols-3 gap-2 mb-4">
@@ -1275,12 +1275,14 @@ export function OverviewPage() {
 
             {/* Middle — Trend + Rating stacked */}
             <div className="flex flex-col gap-4">
-              <GlassCard className="p-5">
+              <GlassCard className="p-5 flex flex-col min-h-[196px]">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide">Reviews · Last 14 Days</p>
                   <span className="text-xs font-bold text-[#111827]">{dash.trend.reduce((s, d) => s + d.count, 0)} total</span>
                 </div>
-                <TrendChart trend={dash.trend} />
+                <div className="flex-1 flex flex-col justify-end">
+                  <TrendChart trend={dash.trend} />
+                </div>
               </GlassCard>
 
               <GlassCard className="p-5">
