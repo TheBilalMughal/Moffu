@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Dropdown } from '@/components/Dropdown';
+import { DateRangePicker } from '@/components/DateRangePicker';
 import { formatDate, formatId, refToSlug } from '@/lib/format';
 
 interface Client {
@@ -16,6 +17,7 @@ interface Client {
   owner_email: string | null;
   member_count: number;
   usage: number;
+  gbp_configured: boolean;
 }
 
 const PLAN_COLOR: Record<string, string> = {
@@ -40,7 +42,11 @@ export function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [planFilter, setPlanFilter] = useState('all');
+  const [planFilter, setPlanFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [gbpFilter, setGbpFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [deactivating, setDeactivating] = useState<string | null>(null);
   const [suspendTarget, setSuspendTarget] = useState<Client | null>(null);
   const [suspendReason, setSuspendReason] = useState('');
@@ -81,6 +87,15 @@ export function ClientsPage() {
 
     const ownerIds = [...new Set(ownerUserIdByOrg.values())];
     const allMemberIds = [...userToOrg.keys()];
+
+    // Fetch GBP configured orgs (at least one is_selected location)
+    const { data: gbpRows } = await supabase
+      .from('google_locations')
+      .select('org_id')
+      .eq('is_selected', true)
+      .in('org_id', orgIds);
+
+    const gbpConfiguredOrgs = new Set((gbpRows ?? []).map((r: { org_id: string }) => r.org_id));
 
     const [plansRes, subsRes, emailRes, usageRes, overridesRes] = await Promise.all([
       supabase.from('plans').select('id, slug'),
@@ -143,6 +158,7 @@ export function ClientsPage() {
         owner_email: ownerUserId ? (emailByUser.get(ownerUserId) ?? null) : null,
         member_count: memberCountByOrg.get(o.id) ?? 0,
         usage: usageByOrg.get(o.id) ?? 0,
+        gbp_configured: gbpConfiguredOrgs.has(o.id),
       };
     });
 
@@ -154,13 +170,11 @@ export function ClientsPage() {
 
   async function handleDeactivate(client: Client) {
     if (client.status !== 'suspended') {
-      // Open suspension modal to collect reason
       setSuspendReason('');
       setSuspendNote('');
       setSuspendTarget(client);
       return;
     }
-    // Reactivate directly
     setDeactivating(client.id);
     const { data: { user } } = await supabase.auth.getUser();
     await supabase.from('organizations').update({ status: 'active' }).eq('id', client.id);
@@ -192,13 +206,38 @@ export function ClientsPage() {
     load();
   }
 
+  function clearFilters() {
+    setSearch('');
+    setPlanFilter('');
+    setStatusFilter('');
+    setGbpFilter('');
+    setDateFrom('');
+    setDateTo('');
+  }
+
+  const hasFilters = search.trim() !== '' || planFilter !== '' || statusFilter !== '' || gbpFilter !== '' || dateFrom !== '' || dateTo !== '';
+
   const filtered = clients.filter((c) => {
-    const matchSearch =
-      search.trim() === '' ||
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      (c.owner_email ?? '').toLowerCase().includes(search.toLowerCase());
-    const matchPlan = planFilter === 'all' || c.plan === planFilter;
-    return matchSearch && matchPlan;
+    if (search.trim() !== '') {
+      const q = search.toLowerCase();
+      if (!c.name.toLowerCase().includes(q) && !(c.owner_email ?? '').toLowerCase().includes(q)) return false;
+    }
+    if (planFilter !== '' && c.plan !== planFilter) return false;
+    if (statusFilter === 'active' && c.status === 'suspended') return false;
+    if (statusFilter === 'suspended' && c.status !== 'suspended') return false;
+    if (gbpFilter === 'configured' && !c.gbp_configured) return false;
+    if (gbpFilter === 'not_set_up' && c.gbp_configured) return false;
+    if (dateFrom !== '') {
+      const created = new Date(c.created_at);
+      const from = new Date(dateFrom + 'T00:00:00');
+      if (created < from) return false;
+    }
+    if (dateTo !== '') {
+      const created = new Date(c.created_at);
+      const to = new Date(dateTo + 'T23:59:59');
+      if (created > to) return false;
+    }
+    return true;
   });
 
   return (
@@ -210,8 +249,9 @@ export function ClientsPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex-shrink-0 px-8 pb-3 flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs">
+      <div className="flex-shrink-0 px-8 pb-3 flex flex-wrap items-center gap-2">
+        {/* Search */}
+        <div className="relative">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -220,14 +260,16 @@ export function ClientsPage() {
             placeholder="Search clients or email…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"
+            className="w-56 pl-9 pr-3 py-2 text-sm shadow-sm rounded-xl bg-white text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#6C55E8]"
           />
         </div>
+
+        {/* Plan */}
         <Dropdown
           clearable
           placeholder="All plans"
-          value={planFilter === 'all' ? '' : planFilter}
-          onChange={(v) => setPlanFilter(v === '' ? 'all' : v)}
+          value={planFilter}
+          onChange={(v) => setPlanFilter(v)}
           options={[
             { value: 'free',    label: 'Free'    },
             { value: 'starter', label: 'Starter' },
@@ -235,6 +277,49 @@ export function ClientsPage() {
             { value: 'scale',   label: 'Scale'   },
           ]}
         />
+
+        {/* Status */}
+        <Dropdown
+          clearable
+          placeholder="All statuses"
+          value={statusFilter}
+          onChange={(v) => setStatusFilter(v)}
+          options={[
+            { value: 'active',    label: 'Active'    },
+            { value: 'suspended', label: 'Suspended' },
+          ]}
+        />
+
+        {/* GBP Status */}
+        <Dropdown
+          clearable
+          placeholder="GBP: All"
+          value={gbpFilter}
+          onChange={(v) => setGbpFilter(v)}
+          options={[
+            { value: 'configured',  label: 'Configured'  },
+            { value: 'not_set_up',  label: 'Not Set Up'  },
+          ]}
+        />
+
+        {/* Date range — Joined */}
+        <DateRangePicker
+          from={dateFrom}
+          to={dateTo}
+          onChange={(from, to) => { setDateFrom(from); setDateTo(to); }}
+        />
+
+        {/* Clear filters */}
+        {hasFilters && (
+          <button
+            onClick={clearFilters}
+            className="text-xs font-medium text-[#6B7280] hover:text-[#111827] px-2 py-2 transition-colors"
+          >
+            Clear filters
+          </button>
+        )}
+
+        <span className="ml-auto text-xs text-[#9CA3AF]">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
       {/* Scrollable table */}
@@ -248,8 +333,9 @@ export function ClientsPage() {
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Client Name</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Email</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Plan</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">GBP Status</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Members</th>
-                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Created</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Joined</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Usage</th>
                   <th className="px-5 py-2.5 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Actions</th>
                 </tr>
@@ -258,7 +344,7 @@ export function ClientsPage() {
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => (
                     <tr key={i}>
-                      {Array.from({ length: 8 }).map((_, j) => (
+                      {Array.from({ length: 9 }).map((_, j) => (
                         <td key={j} className="px-5 py-1.5">
                           <div className="h-3.5 bg-[#E5E7EB] rounded animate-pulse w-20" />
                         </td>
@@ -267,8 +353,8 @@ export function ClientsPage() {
                   ))
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
-                      {search || planFilter !== 'all' ? 'No clients match your filters.' : 'No clients yet.'}
+                    <td colSpan={9} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
+                      {hasFilters ? 'No clients match your filters.' : 'No clients yet.'}
                     </td>
                   </tr>
                 ) : (
@@ -293,6 +379,19 @@ export function ClientsPage() {
                           <span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded ${PLAN_COLOR[c.plan ?? 'free'] ?? 'bg-[#F3F4F6] text-[#374151]'}`}>
                             {c.plan ?? 'free'}
                           </span>
+                        </td>
+                        <td className="px-5 py-1.5">
+                          {c.gbp_configured ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium rounded bg-[#DCFCE7] text-[#15803D]">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
+                              Configured
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium rounded bg-[#F3F4F6] text-[#6B7280]">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#D1D5DB]" />
+                              Not Set Up
+                            </span>
+                          )}
                         </td>
                         <td className="px-5 py-1.5 text-[#374151]">{c.member_count}</td>
                         <td className="px-5 py-1.5 text-[#9CA3AF] text-xs">{formatDate(c.created_at)}</td>
@@ -388,4 +487,3 @@ export function ClientsPage() {
     </div>
   );
 }
-
