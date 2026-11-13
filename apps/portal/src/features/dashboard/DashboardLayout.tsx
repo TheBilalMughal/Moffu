@@ -986,9 +986,12 @@ export function DashboardLayout() {
 
   useEffect(() => {
     let prevPlanId: string | null = null;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let cancelled = false;
+
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      const channel = supabase
+      if (!user || cancelled) return;
+      channel = supabase
         .channel('subscription-plan-change')
         .on(
           'postgres_changes',
@@ -1023,8 +1026,12 @@ export function DashboardLayout() {
         .subscribe();
       supabase.from('subscriptions').select('plan_id').eq('user_id', user.id).eq('status', 'active').maybeSingle()
         .then(({ data }) => { prevPlanId = data?.plan_id ?? null; });
-      return () => { supabase.removeChannel(channel); };
     });
+
+    return () => {
+      cancelled = true;
+      if (channel) supabase.removeChannel(channel);
+    };
   }, []);
 
   function isLocked(featureKey: string | null): boolean {
