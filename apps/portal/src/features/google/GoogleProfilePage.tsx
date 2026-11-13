@@ -133,8 +133,11 @@ export function GoogleProfilePage(){
         {!globalLocationId && locations.length>0 && <div ref={selectorRef} className="relative">
           <button type="button" aria-expanded={menuOpen} aria-controls="profile-location-options"
             onClick={()=>setMenuOpen(v=>!v)} onKeyDown={e=>{if(e.key==='Escape') setMenuOpen(false);}}
-            className="inline-flex max-w-[280px] items-center gap-3 whitespace-nowrap rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium">
-            <span className="truncate">{selected?.display_name ?? 'Choose location'}</span><span aria-hidden="true">⌄</span>
+            className="inline-flex max-w-[280px] items-center gap-2 whitespace-nowrap rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium">
+            <span className="truncate">{selected?.display_name ?? 'Choose location'}</span>
+            <svg className={`h-3 w-3 flex-shrink-0 transition-transform ${menuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m6 9 6 6 6-6"/>
+            </svg>
           </button>
           {menuOpen && <div id="profile-location-options" className="absolute left-0 z-30 mt-1 max-h-72 w-72 sm:left-auto sm:right-0 overflow-y-auto rounded-lg border border-[#E5E7EB] bg-white p-1 shadow-sm"
             onKeyDown={e=>{if(e.key==='Escape') setMenuOpen(false);}}>

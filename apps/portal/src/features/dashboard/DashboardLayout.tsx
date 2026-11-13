@@ -546,16 +546,21 @@ function TopbarLocationPicker() {
     return () => document.removeEventListener('mousedown', fn);
   }, []);
 
-  if (locations.length < 2) return null;
+  if (locations.length === 0) return null;
 
   const current = selectedId ? locations.find(l => l.id === selectedId) : null;
+  const currentRating = selectedId ? locationRatings[selectedId] : undefined;
   const isActive = !!selectedId;
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative inline-flex items-center">
       <button
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls="topbar-location-options"
         onClick={() => setOpen(o => !o)}
-        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors ${
+        className={`inline-flex h-9 max-w-[calc(100vw-2rem)] items-center gap-2 whitespace-nowrap rounded-lg border px-3 text-sm transition-colors md:max-w-[340px] ${
           isActive
             ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8] font-medium'
             : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#6C55E8] hover:text-[#6C55E8]'
@@ -564,18 +569,32 @@ function TopbarLocationPicker() {
         <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
-        <span className="text-xs">{current?.display_name ?? 'All Locations'}</span>
-        {isActive
-          ? <span onClick={e => { e.stopPropagation(); setSelectedId(null); setOpen(false); }} className="ml-0.5 hover:text-red-500 transition-colors">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12"/></svg>
-            </span>
-          : <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
-        }
+        <span className="min-w-0 truncate text-xs">{current?.display_name ?? 'All Locations'}</span>
+        {currentRating != null && <span className="inline-flex flex-shrink-0 items-center gap-1 text-xs font-medium tabular-nums text-amber-600" aria-label={`Rating ${currentRating.toFixed(1)} out of 5`}>
+          <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+          </svg>
+          {currentRating.toFixed(1)}
+        </span>}
+        <svg className={`h-3 w-3 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m6 9 6 6 6-6"/>
+        </svg>
       </button>
+      {isActive && <button
+        type="button"
+        aria-label="Show all locations"
+        title="Show all locations"
+        onClick={() => { setSelectedId(null); setOpen(false); }}
+        className="ml-1 inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-[#9CA3AF] transition-colors hover:bg-[#F3F4F6] hover:text-red-500"
+      >
+        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18 18 6M6 6l12 12"/>
+        </svg>
+      </button>}
 
       {open && (
-        <div className="absolute top-full mt-1.5 left-0 z-[200] bg-white border border-[#E5E7EB] rounded-xl shadow-lg py-1.5 min-w-[200px]">
-          <button
+        <div id="topbar-location-options" role="listbox" aria-label="Choose a location" className="absolute left-0 top-full z-[200] mt-1.5 max-h-80 min-w-[240px] overflow-y-auto rounded-xl border border-[#E5E7EB] bg-white py-1.5 shadow-lg">
+          <button role="option" aria-selected={!selectedId}
             onClick={() => { setSelectedId(null); setOpen(false); }}
             className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${!selectedId ? 'text-[#6C55E8] font-medium bg-[#EDE9FE]/40' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
           >
@@ -588,6 +607,8 @@ function TopbarLocationPicker() {
             return (
               <button
                 key={l.id}
+                role="option"
+                aria-selected={sel}
                 onClick={() => { setSelectedId(l.id); setOpen(false); }}
                 className={`w-full flex items-center justify-between gap-3 px-3.5 py-2 text-sm transition-colors ${sel ? 'text-[#6C55E8] font-medium bg-[#EDE9FE]/40' : 'text-[#374151] hover:bg-[#F9FAFB]'}`}
               >
@@ -992,7 +1013,7 @@ function RailGroupButton({
 
 export function DashboardLayout() {
   usePageTracking();
-  const { setLocations, setSelectedId } = useLocationStore();
+  const { setLocations, setSelectedId, setLocationRatings } = useLocationStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [featureAccess, setFeatureAccess] = useState<Record<string, boolean>>({});
@@ -1019,14 +1040,42 @@ export function DashboardLayout() {
   }, [setLocations, setSelectedId]);
 
   useEffect(() => {
-    if (!authUserId) { setLocations([]); return; }
+    if (!authUserId) { setLocations([]); setLocationRatings({}); return; }
+    let active = true;
     supabase
       .from('google_locations')
       .select('id, display_name')
       .eq('user_id', authUserId)
       .eq('is_selected', true)
-      .then(({ data }) => { setLocations(data ?? []); });
-  }, [authUserId, setLocations]);
+      .then(({ data }) => { if (active) setLocations(data ?? []); });
+
+    (async () => {
+      const totals: Record<string, { sum: number; count: number }> = {};
+      for (let from = 0; active; from += 500) {
+        const { data, error } = await supabase
+          .from('reviews')
+          .select('location_id, rating')
+          .eq('user_id', authUserId)
+          .not('location_id', 'is', null)
+          .range(from, from + 499);
+        if (!active) return;
+        if (error) { setLocationRatings({}); return; }
+        for (const review of data ?? []) {
+          if (!review.location_id || review.rating <= 0) continue;
+          const total = totals[review.location_id] ??= { sum: 0, count: 0 };
+          total.sum += review.rating;
+          total.count += 1;
+        }
+        if ((data?.length ?? 0) < 500) break;
+      }
+      if (!active) return;
+      setLocationRatings(Object.fromEntries(
+        Object.entries(totals).map(([id, total]) => [id, total.sum / total.count]),
+      ));
+    })();
+
+    return () => { active = false; };
+  }, [authUserId, setLocations, setLocationRatings]);
 
   useEffect(() => {
     async function loadFeatureAccess() {

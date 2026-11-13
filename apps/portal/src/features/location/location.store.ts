@@ -19,7 +19,12 @@ export const useLocationStore = create<LocationState>((set) => ({
   locations: [],
   selectedId: null,
   locationRatings: {},
-  setLocations: (locations) => set({ locations, selectedId: null }),
+  setLocations: (locations) => set((state) => ({
+    locations,
+    selectedId: state.selectedId && locations.some((location) => location.id === state.selectedId)
+      ? state.selectedId
+      : null,
+  })),
   setSelectedId: (selectedId) => set({ selectedId }),
   setLocationRatings: (locationRatings) => set({ locationRatings }),
   clearAll: () => set({ locations: [], selectedId: null, locationRatings: {} }),
