@@ -300,20 +300,20 @@ export function PaymentsPage() {
     const [subsRes, plansRes, pricesRes, orgMembersRes] = await Promise.all([
       supabase.from('subscriptions').select('id, user_id, plan_id, status, billing_interval, current_period_start, current_period_end, cancel_at_period_end, stripe_subscription_id, created_at').order('created_at', { ascending: false }),
       supabase.from('plans').select('id, slug, name').order('sort_order'),
-      supabase.from('plan_prices').select('plan_id, "interval", amount_cents').eq('currency', 'USD'),
+      supabase.from('plan_prices').select('plan_id, billing_interval, amount_cents').eq('currency', 'USD'),
       supabase.from('org_members').select('user_id, org_id').eq('role', 'owner'),
     ]);
 
     type SubRaw = { id: string; user_id: string; plan_id: string; status: string; billing_interval: string | null; current_period_start: string; current_period_end: string; cancel_at_period_end: boolean; stripe_subscription_id: string | null; created_at: string };
     type PlanRaw = { id: string; slug: string; name: string };
-    type PriceRaw = { plan_id: string; interval: string; amount_cents: number };
+    type PriceRaw = { plan_id: string; billing_interval: string; amount_cents: number };
     type OrgMemberRaw = { user_id: string; org_id: string };
 
     const allSubsRaw = (subsRes.data ?? []) as SubRaw[];
     const allPlans = (plansRes.data ?? []) as PlanRaw[];
     const planById = new Map<string, PlanRaw>(allPlans.map((p) => [p.id, p]));
     const priceMap = new Map<string, number>();
-    (pricesRes.data ?? []).forEach((p: PriceRaw) => priceMap.set(`${p.plan_id}:${p.interval}`, p.amount_cents));
+    (pricesRes.data ?? []).forEach((p: PriceRaw) => priceMap.set(`${p.plan_id}:${p.billing_interval}`, p.amount_cents));
     const orgByOwner = new Map<string, string>((orgMembersRes.data ?? []).map((m: OrgMemberRaw) => [m.user_id, m.org_id]));
 
     // Exclude internal/platform users — only keep subs whose user is an org owner
