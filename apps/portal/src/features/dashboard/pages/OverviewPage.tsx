@@ -512,10 +512,10 @@ function SentimentCard({ breakdown }: { breakdown: number[] }) {
   ];
 
   return (
-    <GlassCard className="p-5 min-h-[260px] flex flex-col justify-between">
+    <GlassCard className="p-5 min-h-[260px] flex flex-col">
       <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-5">Review Sentiment</p>
 
-      <div className="grid grid-cols-3 gap-3 flex-1">
+      <div className="grid grid-cols-3 gap-3 mb-5">
         {items.map(item => (
           <div key={item.label} className="flex flex-col items-center justify-center gap-4">
             <div className={item.text}>{item.icon}</div>
@@ -528,7 +528,7 @@ function SentimentCard({ breakdown }: { breakdown: number[] }) {
         ))}
       </div>
 
-      <div className="mt-2">
+      <div>
         {s.total > 0 ? (
           <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden">
             {items.map(item => item.pct > 0 && (
