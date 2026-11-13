@@ -125,6 +125,11 @@ export function GoogleProfilePage() {
       icon: <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
     },
     {
+      label: 'Business Type',
+      value: loc?.description ?? null,
+      icon: <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>,
+    },
+    {
       label: 'Connected Email',
       value: conn.google_email ?? null,
       icon: <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>,
@@ -186,18 +191,19 @@ export function GoogleProfilePage() {
             <h1 className="text-lg font-bold text-[#111827] truncate">
               {loc?.display_name ?? 'Google Business Profile'}
             </h1>
-            <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-lg border flex-shrink-0 ${
-              healthy
-                ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                : 'text-red-600 bg-red-50 border-red-200'
+            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold flex-shrink-0 ${
+              healthy ? 'text-emerald-600' : 'text-red-500'
             }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${healthy ? 'bg-emerald-500' : 'bg-red-500'}`}/>
+              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${healthy ? 'bg-emerald-500' : 'bg-red-500'}`}/>
               {healthy ? 'Healthy' : 'Issue'}
             </span>
           </div>
-          {loc?.address && (
-            <p className="text-sm text-[#9CA3AF] truncate">{loc.address}</p>
-          )}
+          {loc?.description
+            ? <p className="text-sm text-[#9CA3AF] truncate">{loc.description}</p>
+            : loc?.address
+              ? <p className="text-sm text-[#9CA3AF] truncate">{loc.address}</p>
+              : null
+          }
         </div>
       </div>
 
