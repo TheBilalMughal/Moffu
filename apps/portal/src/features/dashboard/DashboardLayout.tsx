@@ -763,7 +763,7 @@ const RAIL_GROUPS: RailGroup[] = [
     icon: <StarIcon />,
     label: 'Reviews',
     items: [
-      { to: '/reviews',             label: 'Reviews',        icon: <StarIcon />,          featureKey: null },
+      { to: '/reviews',             label: 'Reviews',        icon: <StarIcon />,          featureKey: null, end: true },
       { to: '/reviews/complaints',  label: 'Complaints',     icon: (<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>), featureKey: null },
       { to: '/google-profile',      label: 'Google Profile', icon: <GoogleProfileIcon />, featureKey: 'feature_google_profile' },
     ],
