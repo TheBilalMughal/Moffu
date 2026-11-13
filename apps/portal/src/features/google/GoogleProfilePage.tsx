@@ -328,34 +328,41 @@ export function GoogleProfilePage(){
                     <span>{total ? Math.round(replied/total*100) : 0}% replied</span>
                   </div>
                 </div>
-                {/* Monthly trend — line chart */}
+                {/* Monthly trend — line chart (Reviews-style) */}
                 <div>
                   <p className="mb-3 text-xs font-semibold text-[#374151]">Monthly trend</p>
                   {months.length===0 ? <p className="text-xs text-[#9CA3AF]">No monthly data.</p> : (()=>{
-                    const W=300; const H=80; const PAD=8;
+                    const W=400; const H=120;
+                    const PAD={top:16,right:8,bottom:20,left:8};
+                    const innerW=W-PAD.left-PAD.right;
+                    const innerH=H-PAD.top-PAD.bottom;
                     const pts=months.map((m,i)=>({
-                      x: months.length===1 ? W/2 : PAD+(i/(months.length-1))*(W-PAD*2),
-                      y: PAD+H-PAD-(m.count/maxCount)*(H-PAD*2),
+                      x: PAD.left+(months.length===1 ? innerW/2 : (i/(months.length-1))*innerW),
+                      y: PAD.top+innerH-(m.count/maxCount)*innerH,
                       m,
                     }));
-                    const polyline=pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-                    return <svg viewBox={`0 0 ${W} ${H+20}`} className="w-full overflow-visible">
-                      {/* Grid lines */}
+                    const linePath=pts.map((p,i)=>`${i===0?'M':'L'} ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+                    const areaPath=`${linePath} L ${pts[pts.length-1]!.x.toFixed(1)},${(PAD.top+innerH).toFixed(1)} L ${pts[0]!.x.toFixed(1)},${(PAD.top+innerH).toFixed(1)} Z`;
+                    const gradId=`rg_${Math.random().toString(36).slice(2,7)}`;
+                    return <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{height:120}} preserveAspectRatio="none" aria-hidden="true">
+                      <defs>
+                        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#6C55E8" stopOpacity="0.12"/>
+                          <stop offset="100%" stopColor="#6C55E8" stopOpacity="0"/>
+                        </linearGradient>
+                      </defs>
                       {[0,0.5,1].map(v=>(
-                        <line key={v} x1={PAD} x2={W-PAD} y1={PAD+H-PAD-(v*(H-PAD*2))} y2={PAD+H-PAD-(v*(H-PAD*2))}
-                          stroke="#F3F4F6" strokeWidth="1" />
+                        <line key={v} x1={PAD.left} x2={W-PAD.right}
+                          y1={PAD.top+innerH-v*innerH} y2={PAD.top+innerH-v*innerH}
+                          stroke="#F3F4F6" strokeWidth={1}/>
                       ))}
-                      {/* Area fill */}
-                      <path d={`M ${pts[0]!.x.toFixed(1)},${pts[0]!.y.toFixed(1)} ${pts.slice(1).map(p=>`L ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')} L ${pts[pts.length-1]!.x.toFixed(1)},${(H+PAD).toFixed(1)} L ${pts[0]!.x.toFixed(1)},${(H+PAD).toFixed(1)} Z`}
-                        fill="#6C55E8" fillOpacity="0.08" />
-                      {/* Line */}
-                      <polyline points={polyline} fill="none" stroke="#6C55E8" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-                      {/* Dots + labels */}
+                      <path d={areaPath} fill={`url(#${gradId})`}/>
+                      <path d={linePath} fill="none" stroke="#6C55E8" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>
                       {pts.map((p,i)=>(
                         <g key={i}>
-                          <circle cx={p.x} cy={p.y} r="3.5" fill="#6C55E8" />
-                          <text x={p.x} y={p.y-7} textAnchor="middle" fontSize="8" fill="#374151">{p.m.count}</text>
-                          <text x={p.x} y={H+PAD+14} textAnchor="middle" fontSize="8" fill="#9CA3AF">{fmtMonth(p.m.month+'-01')}</text>
+                          <text x={p.x} y={p.y-6} textAnchor="middle" fontSize={9} fill="#374151">{p.m.count}</text>
+                          <circle cx={p.x} cy={p.y} r={3} fill="#6C55E8" stroke="white" strokeWidth={1.5}/>
+                          <text x={p.x} y={H-4} textAnchor="middle" fontSize={9} fill="#9CA3AF">{fmtMonth(p.m.month+'-01')}</text>
                         </g>
                       ))}
                     </svg>;
@@ -366,29 +373,33 @@ export function GoogleProfilePage(){
           })()}
         </Section>
 
-        {/* ── Search and Maps performance (with custom date range) ──────── */}
+        {/* ── Search and Maps performance ───────────────────────────────── */}
         <Section title="Search and Maps performance"
           description="Impressions, clicks and direction requests from Google Business Profile.">
-          {insightLoading && <div className="h-24 animate-pulse rounded-xl bg-[#F3F4F6]" />}
-          {!insightLoading && insightError && <Empty>{insightError}</Empty>}
-          {!insightLoading && !insightError && insightTotals && (()=>{
+          {(()=>{
+            const perf=analysis?.performance;
+            const stats:[string,number|undefined][]=[
+              ['Search impressions',insightTotals?.views_search ?? (perf?.search_views ?? undefined)],
+              ['Maps impressions',insightTotals?.views_maps ?? (perf?.maps_views ?? undefined)],
+              ['Call clicks',insightTotals?.calls ?? (perf?.calls ?? undefined)],
+              ['Website clicks',insightTotals?.website_clicks ?? (perf?.website_clicks ?? undefined)],
+              ['Direction requests',insightTotals?.direction_requests ?? (perf?.directions ?? undefined)],
+            ];
+            const hasStats=stats.some(([,v])=>v!=null);
             const metrics=insightMetrics??[];
             const maxViews=Math.max(...metrics.map(m=>m.views_search+m.views_maps),1);
+            if (!analysis && !insightTotals) return <div className="h-24 animate-pulse rounded-xl bg-[#F3F4F6]" />;
             return <>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 mb-5">
-                {([
-                  ['Search impressions',insightTotals.views_search],
-                  ['Maps impressions',insightTotals.views_maps],
-                  ['Call clicks',insightTotals.calls],
-                  ['Website clicks',insightTotals.website_clicks],
-                  ['Direction requests',insightTotals.direction_requests],
-                ] as [string,number][]).map(([label,value])=>(
-                  <div key={label} className="rounded-lg bg-[#F9FAFB] p-4">
-                    <p className="text-[11px] text-[#6B7280]">{label}</p>
-                    <p className="mt-2 font-mono text-xl font-semibold tabular-nums">{number(value)}</p>
-                  </div>
-                ))}
-              </div>
+              {hasStats && (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 mb-5">
+                  {stats.map(([label,value])=>(
+                    <div key={label} className="rounded-lg bg-[#F9FAFB] p-4">
+                      <p className="text-[11px] text-[#6B7280]">{label}</p>
+                      <p className="mt-2 font-mono text-xl font-semibold tabular-nums">{value!=null ? number(value) : '—'}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
               {metrics.length>0 && (
                 <div>
                   <p className="mb-2 text-xs font-semibold text-[#374151]">Daily impressions</p>
@@ -403,10 +414,9 @@ export function GoogleProfilePage(){
                   </div>
                 </div>
               )}
-              {metrics.length===0 && <Empty>Google returned no performance data for this period. Try a broader date range.</Empty>}
+              {!hasStats && !insightLoading && <Empty>Performance data not available. Run a sync from Settings to load your Google insights.</Empty>}
             </>;
           })()}
-          {!insightLoading && !insightError && !insightTotals && <Empty>Performance data could not be loaded. Check your Google connection.</Empty>}
         </Section>
 
         {/* ── Google Business extras (photos, Q&A, posts) ───────────────── */}
