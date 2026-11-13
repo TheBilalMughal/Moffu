@@ -271,5 +271,5 @@ These rows track this change separately from older conflicting implementation no
 | GOOGLE-PROFILE-006 | On-page automatic refresh and partial-error states | IMPLEMENTED | On open/change/manual + 15-minute visible-page refresh; no unattended monitoring claim |
 | GOOGLE-PROFILE-007 | Backend owner/account/feature checks | TESTED | auth.getUser + explicit user/location/connection filters + active profile + active subscription feature; denial tests |
 | GOOGLE-PROFILE-008 | Local verification | TESTED | 10 Node tests; portal tsc noEmit; Vite production build; 1440px/390px fixture visual inspection |
-| GOOGLE-PROFILE-009 | Production deploy and authenticated provider smoke verification | PENDING | No live release or Google/Places success asserted |
+| GOOGLE-PROFILE-009 | Production deploy and authenticated provider smoke verification | IN_PROGRESS | Supabase google-profile-analysis v1 ACTIVE; appmoffu Vercel production deployment c57d029 READY and aliased to app.moffu.pro; authenticated Google/Places response pending |
 | GOOGLE-PROFILE-010 | Public radius-wise keyword volume and geo-grid rankings | BLOCKED | Requires an appropriate configured geographic keyword/ranking provider; current Google Profile/Places endpoints do not supply this dataset |

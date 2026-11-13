@@ -401,7 +401,7 @@ Free weekly and paid monthly usage renewal is approved (including monthly allowa
 
 
 ## Google Profile business analysis — 2026-11-13
-IMPLEMENTED locally; production deployment and authenticated Google provider verification pending.
+DEPLOYED: Supabase Edge Function v1 and Vercel portal production deployment c57d029 are READY; authenticated Google provider smoke verification remains pending.
 - Strict selected-location analysis and an explicit local selector when the global filter is All Locations. No cross-location fallback; stale responses are aborted/ignored.
 - New google-profile-analysis Edge Function reads primary/additional categories separately from description, contact details, hours, address/service area and place metadata directly from Google.
 - Moffu SEO readiness with visible weights/coverage; no official Google SEO score claim.
@@ -409,5 +409,5 @@ IMPLEMENTED locally; production deployment and authenticated Google provider ver
 - Google Places setup required for competitor ratings and own public rating. No radius-level public query volume or geo-grid ranking is fabricated. Unattended monitoring is not implemented; the page refreshes on open/change/manual request and every 15 minutes while visible.
 - Backend authenticates identity, location/connection ownership, active account and plan feature access. No schema migration or provider-content persistence added.
 - Verification: 10 focused Node tests passed; portal TypeScript check and Vite production build passed. Test-fixture desktop (1440px) and mobile (390px) visual inspection checked category display, global location changes, radius changes and unavailable-configuration state. Local dropdown positioning corrected during mobile QA.
-- Existing bundle-size/dynamic-import Vite warnings remain. Live OAuth/Places success is not yet verified.
+- Existing bundle-size/dynamic-import Vite warnings remain. Live OAuth/Places success is not yet verified. Admin google_maps_api_key setting is present as of 2026-11-13; its validity and Places API response remain unverified.
 - See developer-docs/16-GOOGLE-PROFILE-ANALYSIS.md for sources, setup, limitations and verification.
