@@ -29,6 +29,7 @@ export interface GoogleLocation {
   display_name: string | null;
   address: string | null;
   is_selected: boolean;
+  description: string | null;
 }
 
 async function getAuthHeader(): Promise<string | null> {
@@ -86,7 +87,7 @@ export const googleService = {
     if (!user) return { data: [] };
     const { data, error } = await supabase
       .from('google_locations')
-      .select('id, google_location_name, display_name, address, is_selected')
+      .select('id, google_location_name, display_name, address, is_selected, description')
       .eq('user_id', user.id)
       .order('display_name');
     if (error) return { error: error.message };
