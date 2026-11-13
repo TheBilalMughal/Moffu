@@ -4,6 +4,8 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/features/auth/auth.store';
 import { useOrgStore } from '@/features/onboarding/org.store';
 import { useLocationStore } from '@/features/location/location.store';
+import { billingService } from '@/features/billing/billing.service';
+import type { Plan, Subscription } from '@/features/billing/billing.service';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -98,6 +100,33 @@ function stars(n: number | null) {
 function pctChange(curr: number, prev: number): number | null {
   if (prev === 0) return curr > 0 ? 100 : null;
   return Math.round(((curr - prev) / prev) * 100);
+}
+
+function computeSentiment(breakdown: number[]) {
+  const pos   = (breakdown[3] ?? 0) + (breakdown[4] ?? 0);
+  const neu   = breakdown[2] ?? 0;
+  const neg   = (breakdown[0] ?? 0) + (breakdown[1] ?? 0);
+  const total = pos + neu + neg;
+  return {
+    positive: pos, neutral: neu, negative: neg, total,
+    positivePct: total > 0 ? Math.round((pos / total) * 100) : 0,
+    neutralPct:  total > 0 ? Math.round((neu / total) * 100) : 0,
+    negativePct: total > 0 ? Math.round((neg / total) * 100) : 0,
+  };
+}
+
+function getNextPlanHighlights(plan: Plan): string[] {
+  const locs    = plan.entitlements['locations']?.limit_value;
+  const drafts  = plan.entitlements['ai_drafts']?.limit_value;
+  const repEnt  = plan.entitlements['published_replies'];
+  const members = plan.entitlements['team_members']?.limit_value;
+  const h: string[] = [];
+  if (locs    != null) h.push(`${locs} location${locs > 1 ? 's' : ''}`);
+  if (drafts  != null) h.push(`${drafts.toLocaleString()} AI drafts / month`);
+  if (repEnt?.value_type === 'UNLIMITED') h.push('Unlimited published replies');
+  else if (repEnt?.limit_value != null) h.push(`${repEnt.limit_value.toLocaleString()} replies / month`);
+  if (members != null && members > 1) h.push(`${members} team members`);
+  return h.slice(0, 3);
 }
 
 function computeDash(rows: ReviewRow[]): DashboardData | null {
@@ -431,6 +460,169 @@ function RatingChart({ breakdown }: { breakdown: number[] }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ─── Sentiment Card ───────────────────────────────────────────────────────────
+
+function SentimentCard({ breakdown }: { breakdown: number[] }) {
+  const s = computeSentiment(breakdown);
+
+  const items = [
+    {
+      label: 'Positive',
+      count: s.positive,
+      pct: s.positivePct,
+      color: '#22C55E',
+      bg: 'bg-emerald-50',
+      text: 'text-emerald-600',
+      barBg: 'bg-emerald-400',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" strokeWidth={1.75} />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 10h.01M15 10h.01M8.5 14.5s1 2 3.5 2 3.5-2 3.5-2" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Neutral',
+      count: s.neutral,
+      pct: s.neutralPct,
+      color: '#EAB308',
+      bg: 'bg-amber-50',
+      text: 'text-amber-600',
+      barBg: 'bg-amber-400',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" strokeWidth={1.75} />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 10h.01M15 10h.01M8.5 15h7" />
+        </svg>
+      ),
+    },
+    {
+      label: 'Negative',
+      count: s.negative,
+      pct: s.negativePct,
+      color: '#EF4444',
+      bg: 'bg-red-50',
+      text: 'text-red-500',
+      barBg: 'bg-red-400',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" strokeWidth={1.75} />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 10h.01M15 10h.01M8.5 16.5s1-2 3.5-2 3.5 2 3.5 2" />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <GlassCard className="p-5">
+      <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Review Sentiment</p>
+
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {items.map(item => (
+          <div key={item.label} className="text-center">
+            <div className={`w-9 h-9 rounded-xl ${item.bg} ${item.text} flex items-center justify-center mx-auto mb-2`}>
+              {item.icon}
+            </div>
+            <p className="text-lg font-bold text-[#111827] leading-none">{s.total > 0 ? `${item.pct}%` : '—'}</p>
+            <p className="text-[10px] font-semibold text-[#374151] mt-0.5">{item.label}</p>
+            <p className="text-[10px] text-[#9CA3AF]">{item.count} reviews</p>
+          </div>
+        ))}
+      </div>
+
+      {s.total > 0 ? (
+        <div className="flex gap-0.5 h-1.5 rounded-full overflow-hidden">
+          {items.map(item => item.pct > 0 && (
+            <div key={item.label} className={`${item.barBg} transition-all`} style={{ width: `${item.pct}%` }} />
+          ))}
+        </div>
+      ) : (
+        <div className="h-1.5 rounded-full bg-[#F3F4F6]" />
+      )}
+    </GlassCard>
+  );
+}
+
+// ─── Upgrade Card ─────────────────────────────────────────────────────────────
+
+const PLAN_ORDER = ['free', 'starter', 'growth', 'scale'] as const;
+
+function UpgradeCard({ sub, plans }: { sub: Subscription | null; plans: Plan[] }) {
+  const currentSlug = sub?.plan_slug ?? 'free';
+  const idx         = PLAN_ORDER.indexOf(currentSlug as typeof PLAN_ORDER[number]);
+  const nextSlug    = PLAN_ORDER[idx + 1];
+  const nextPlan    = nextSlug ? plans.find(p => p.slug === nextSlug) ?? null : null;
+  const currentPlan = plans.find(p => p.slug === currentSlug) ?? null;
+
+  if (!nextPlan) return null;
+
+  const monthlyPrice = nextPlan.prices.find(p => p.interval === 'monthly')?.amount_cents ?? 0;
+  const highlights   = getNextPlanHighlights(nextPlan);
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl bg-[#111827]">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/25 via-transparent to-[#6C55E8]/5 pointer-events-none" />
+      <div className="relative p-5">
+
+        {/* Plan trail */}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-[10px] font-semibold bg-white/10 text-white/50 px-2 py-0.5 rounded-lg">
+            {currentPlan?.name ?? 'Free'}
+          </span>
+          <svg className="w-3.5 h-3.5 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+          <span className="text-[10px] font-semibold bg-[#6C55E8]/30 text-[#A89CFF] px-2 py-0.5 rounded-lg">
+            {nextPlan.name}
+          </span>
+        </div>
+
+        <p className="text-sm font-bold text-white mb-0.5">Ready for more?</p>
+        <p className="text-[11px] text-white/40 mb-3 leading-relaxed">
+          Unlock more capacity and features with {nextPlan.name}.
+        </p>
+
+        {highlights.length > 0 && (
+          <div className="space-y-1.5 mb-4">
+            {highlights.map(f => (
+              <div key={f} className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-[#6C55E8]/25 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-2.5 h-2.5 text-[#A89CFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-[11px] text-white/60">{f}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-end justify-between">
+          <div>
+            {monthlyPrice > 0 ? (
+              <>
+                <p className="text-[10px] text-white/35">Starting at</p>
+                <p className="text-xl font-black text-white leading-none">
+                  ${(monthlyPrice / 100).toFixed(0)}
+                  <span className="text-xs font-normal text-white/35">/mo</span>
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-white/35">Contact us for pricing</p>
+            )}
+          </div>
+          <Link
+            to="/billing"
+            className="inline-flex items-center gap-1.5 bg-[#6C55E8] hover:bg-[#5A42D1] text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-colors"
+          >
+            Upgrade →
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
@@ -843,6 +1035,8 @@ export function OverviewPage() {
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [insights, setInsights]                 = useState<InsightsSummary | null>(null);
   const [loadingInsights, setLoadingInsights]   = useState(false);
+  const [sub, setSub]                           = useState<Subscription | null>(null);
+  const [billingPlans, setBillingPlans]         = useState<Plan[]>([]);
 
   // ── Load setup + reviews + locations ──────────────────────────────────────
   useEffect(() => {
@@ -917,6 +1111,15 @@ export function OverviewPage() {
       setLoadingInsights(false);
     });
   }, [user, setup.googleConnected, setup.loading, selectedLocId]);
+
+  // ── Billing (subscription + plans for upgrade card) ───────────────────────
+  useEffect(() => {
+    if (!user) return;
+    Promise.all([billingService.getSubscription(), billingService.getPlans()]).then(([s, ps]) => {
+      setSub(s);
+      setBillingPlans(ps);
+    }).catch(() => { /* non-fatal */ });
+  }, [user]);
 
   // ── Campaign stats ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -1033,7 +1236,7 @@ export function OverviewPage() {
               <RecentReviews reviews={dash.recent} />
             </GlassCard>
 
-            {/* Middle — Trend + Rating stacked */}
+            {/* Middle — Trend + Sentiment + Rating stacked */}
             <div className="flex flex-col gap-4">
               <GlassCard className="p-5">
                 <div className="flex items-center justify-between mb-4">
@@ -1043,17 +1246,22 @@ export function OverviewPage() {
                 <TrendChart trend={dash.trend} />
               </GlassCard>
 
+              <SentimentCard breakdown={dash.ratingBreakdown} />
+
               <GlassCard className="p-5">
                 <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Rating Breakdown</p>
                 <RatingChart breakdown={dash.ratingBreakdown} />
               </GlassCard>
             </div>
 
-            {/* Right — Activity Feed */}
-            <GlassCard className="p-5">
-              <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Recent Activity</p>
-              <ActivityFeed items={dash.activityItems} />
-            </GlassCard>
+            {/* Right — Activity Feed + Upgrade Card */}
+            <div className="flex flex-col gap-4">
+              <GlassCard className="p-5">
+                <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-4">Recent Activity</p>
+                <ActivityFeed items={dash.activityItems} />
+              </GlassCard>
+              <UpgradeCard sub={sub} plans={billingPlans} />
+            </div>
           </div>
 
           {/* Google Profile Performance */}
