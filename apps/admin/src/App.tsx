@@ -16,6 +16,7 @@ import { PaymentsPage } from '@/features/billing/PaymentsPage';
 import { MRRPage } from '@/features/billing/MRRPage';
 import { CouponsPage } from '@/features/billing/CouponsPage';
 import { UsagePage } from '@/features/analytics/UsagePage';
+import { AIActivityPage } from '@/features/analytics/AIActivityPage';
 import { BroadcastPage } from '@/features/broadcasts/BroadcastPage';
 import { FeatureFlagsPage } from '@/features/flags/FeatureFlagsPage';
 import { WaitlistPage } from '@/features/waitlist/WaitlistPage';
@@ -66,6 +67,7 @@ export function App() {
           <Route path="refunds" element={<RefundsPage />} />
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="usage" element={<UsagePage />} />
+          <Route path="ai-activity" element={<AIActivityPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="broadcasts" element={<BroadcastPage />} />
           <Route path="waitlist" element={<WaitlistPage />} />

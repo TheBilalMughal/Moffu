@@ -427,3 +427,10 @@ IMPLEMENTED: SettingsPage.tsx handleToggleLocation now triggers a background syn
 - When a location is toggled ON, showToast displays "Location enabled. Syncing latest data..." and googleService.syncReviews() fires fire-and-forget in the background.
 - No change when disabling a location (no data loss concern).
 - Uses existing syncReviews Edge Function (google-sync-reviews); no new backend changes needed.
+## Admin AI Activity page — 2026-11-13
+IMPLEMENTED: New /ai-activity page added to Admin portal under the Clients nav group.
+- 5 KPI cards: AI Drafts Today, 7-day, 30-day, Published Replies 30-day, Active Orgs.
+- Active AI provider badge (reads from ai_settings table, is_active=true).
+- 30-day SVG trend chart with two lines (AI Drafts purple + Published Replies blue), area fills, dots.
+- Event log table: last 1000 events, paginated 25/page, with event type filter (All/AI Draft/Published) and org/user search.
+- Route: /ai-activity. Nav item added in Clients section of AdminLayout.
