@@ -1,13 +1,9 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { googleService } from '@/features/google/google.service';
 import { useLocationStore } from '@/features/location/location.store';
 import { Toast } from '@/components/Toast';
 import { DateRangePicker } from '@/components/DateRangePicker';
-import { billingService } from '@/features/billing/billing.service';
-import type { Plan, Subscription } from '@/features/billing/billing.service';
-
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type DbStatus = 'NEW' | 'DRAFTING' | 'DRAFT_READY' | 'AWAITING_APPROVAL' | 'NEEDS_ATTENTION' | 'PUBLISHING' | 'PUBLISHED' | 'PUBLISH_FAILED';
@@ -1152,126 +1148,6 @@ function AutoSyncModal({ onConfirm, onCancel }: {
   );
 }
 
-// ── Upgrade Card ─────────────────────────────────────────────────────────────
-
-const PLAN_ORDER = ['free', 'starter', 'growth', 'scale'] as const;
-
-function applyPlanDiscount(amountCents: number, type: 'fixed' | 'percent' | null, value: number | null): number {
-  if (!type || !value || value <= 0) return amountCents;
-  if (type === 'percent') return Math.max(0, Math.round(amountCents * (1 - value / 100)));
-  if (type === 'fixed') return Math.max(0, amountCents - Math.round(value * 100));
-  return amountCents;
-}
-
-function getNextPlanHighlights(plan: Plan): string[] {
-  const locs    = plan.entitlements['locations']?.limit_value;
-  const drafts  = plan.entitlements['ai_drafts']?.limit_value;
-  const repEnt  = plan.entitlements['published_replies'];
-  const members = plan.entitlements['team_members']?.limit_value;
-  const h: string[] = [];
-  if (locs    != null) h.push(`${locs} location${locs > 1 ? 's' : ''}`);
-  if (drafts  != null) h.push(`${drafts.toLocaleString()} AI drafts / month`);
-  if (repEnt?.value_type === 'UNLIMITED') h.push('Unlimited published replies');
-  else if (repEnt?.limit_value != null) h.push(`${repEnt.limit_value.toLocaleString()} replies / month`);
-  if (members != null && members > 1) h.push(`${members} team members`);
-  return h.slice(0, 3);
-}
-
-function ReviewsUpgradeCard({ sub, plans }: { sub: Subscription | null; plans: Plan[] }) {
-  const currentSlug = sub?.plan_slug ?? 'free';
-  const idx         = PLAN_ORDER.indexOf(currentSlug as typeof PLAN_ORDER[number]);
-  const nextSlug    = PLAN_ORDER[idx + 1];
-  const nextPlan    = nextSlug ? plans.find(p => p.slug === nextSlug) ?? null : null;
-  const currentPlan = plans.find(p => p.slug === currentSlug) ?? null;
-
-  if (!nextPlan) return null;
-
-  const rawMonthly   = nextPlan.prices.find(p => p.interval === 'monthly')?.amount_cents ?? 0;
-  const rawAnnual    = nextPlan.prices.find(p => p.interval === 'annual')?.amount_cents ?? 0;
-  const discMonthly  = applyPlanDiscount(rawMonthly, nextPlan.discount_type, nextPlan.discount_value);
-  const discAnnual   = applyPlanDiscount(rawAnnual, nextPlan.discount_type, nextPlan.discount_value);
-  const hasMonthlyDiscount = rawMonthly > 0 && discMonthly < rawMonthly;
-  const hasAnnualDiscount  = rawAnnual > 0 && discAnnual < rawAnnual;
-  const highlights   = getNextPlanHighlights(nextPlan);
-
-  return (
-    <Link to="/billing" className="block relative overflow-hidden rounded-2xl bg-[#111827] hover:bg-[#1a2235] transition-colors group">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/25 via-transparent to-[#6C55E8]/5 pointer-events-none" />
-      <div className="relative p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-[10px] font-semibold bg-white/10 text-white/50 px-2 py-0.5 rounded-lg">
-            {currentPlan?.name ?? 'Free'}
-          </span>
-          <svg className="w-3.5 h-3.5 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-          <span className="text-[10px] font-semibold bg-[#6C55E8]/30 text-[#A89CFF] px-2 py-0.5 rounded-lg">
-            {nextPlan.name}
-          </span>
-        </div>
-        <p className="text-sm font-bold text-white mb-0.5">Ready for more?</p>
-        <p className="text-[11px] text-white/40 mb-3 leading-relaxed">
-          Unlock more capacity and features with {nextPlan.name}.
-        </p>
-        {highlights.length > 0 && (
-          <div className="space-y-1.5 mb-4">
-            {highlights.map(f => (
-              <div key={f} className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-[#6C55E8]/25 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-2.5 h-2.5 text-[#A89CFF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <p className="text-[11px] text-white/60">{f}</p>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="flex items-end justify-between">
-          <div>
-            {nextPlan.contact_sales ? (
-              <p className="text-xs text-white/40">Custom pricing</p>
-            ) : rawMonthly > 0 ? (
-              <div>
-                <p className="text-[10px] text-white/35 mb-0.5">Starting at</p>
-                <div className="flex items-baseline gap-1.5">
-                  {hasMonthlyDiscount && (
-                    <span className="text-[11px] text-white/30 line-through">
-                      ${(rawMonthly / 100).toFixed(rawMonthly % 100 === 0 ? 0 : 2)}
-                    </span>
-                  )}
-                  <p className="text-xl font-black text-white leading-none">
-                    ${(discMonthly / 100).toFixed(discMonthly % 100 === 0 ? 0 : 2)}
-                    <span className="text-xs font-normal text-white/35">/mo</span>
-                  </p>
-                  {hasMonthlyDiscount && nextPlan.discount_type === 'percent' && (
-                    <span className="text-[9px] font-semibold bg-[#6C55E8]/30 text-[#A89CFF] px-1.5 py-0.5 rounded-lg">
-                      -{nextPlan.discount_value}%
-                    </span>
-                  )}
-                </div>
-                {rawAnnual > 0 && (
-                  <p className="text-[10px] text-white/30 mt-0.5">
-                    or ${(discAnnual / 100).toFixed(discAnnual % 100 === 0 ? 0 : 2)}/mo billed annually
-                    {hasAnnualDiscount && rawMonthly > 0 && discAnnual < discMonthly && (
-                      <span className="ml-1 text-[#A89CFF]">
-                        (save ${((discMonthly - discAnnual) * 12 / 100).toFixed(0)}/yr)
-                      </span>
-                    )}
-                  </p>
-                )}
-              </div>
-            ) : null}
-          </div>
-          <span className="inline-flex items-center gap-1.5 bg-[#6C55E8] group-hover:bg-[#5A42D1] text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-colors">
-            Upgrade →
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function ReviewsPage() {
@@ -1304,10 +1180,6 @@ export function ReviewsPage() {
   const [sortBy, setSortBy] = useState<SortKey>('newest');
   const [flagFilter, setFlagFilter] = useState(false);
   const [withBodyFilter, setWithBodyFilter] = useState(false);
-
-  // Billing (for upgrade card)
-  const [sub, setSub] = useState<Subscription | null>(null);
-  const [billingPlans, setBillingPlans] = useState<Plan[]>([]);
 
   // Presets
   const [presets, setPresets] = useState<FilterPreset[]>(loadPresets);
@@ -1423,14 +1295,6 @@ export function ReviewsPage() {
     }
     setLocationRatings(map);
   }, [reviews, setLocationRatings]);
-
-  // Billing data for upgrade card
-  useEffect(() => {
-    Promise.all([billingService.getSubscription(), billingService.getPlans()]).then(([s, ps]) => {
-      setSub(s);
-      setBillingPlans(ps);
-    }).catch(() => { /* non-fatal */ });
-  }, []);
 
   // Reviews scoped to is_selected locations + active global location filter — used for stats, chart, tab counts
   const activeReviews = useMemo(() => {
@@ -1874,11 +1738,6 @@ async function handleFlag(id: string) {
           </div>
         </div>
       )}
-
-      {/* Upgrade card */}
-      <div className="px-4 md:px-10 pb-4 flex-shrink-0">
-        <ReviewsUpgradeCard sub={sub} plans={billingPlans} />
-      </div>
 
       {/* Filter bar + Table — unified card, same horizontal margin */}
       <div className="flex-1 flex flex-col min-h-0">

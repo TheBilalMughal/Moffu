@@ -1093,6 +1093,21 @@ export function DashboardLayout() {
               onClick={() => navigate(group.items[0]!.to)}
             />
           ))}
+          {isFreePlan && !featureLoading && (
+            <button
+              onClick={() => navigate('/billing')}
+              className="relative group w-10 h-10 flex items-center justify-center rounded-xl bg-[#6C55E8] hover:bg-[#5A42D1] text-white transition-colors mt-1"
+              title="Upgrade plan"
+              aria-label="Upgrade plan"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+              </svg>
+              <span className="pointer-events-none absolute left-full ml-2 px-2.5 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/10 text-white text-[11px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-xl">
+                Upgrade plan
+              </span>
+            </button>
+          )}
           <div className="mt-auto pt-2">
             <button
               onClick={() => { authService.logout().then(() => { window.location.replace('/auth/login'); }); }}
