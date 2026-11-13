@@ -47,6 +47,7 @@ interface LimitsForm {
   team_members: string;
   brand_brain_steps: string; // bitmask 0–63: bit0=step1 … bit5=step6
   support_tier: string;
+  feature_brand_brain: boolean;
   feature_google_profile: boolean;
   feature_insights: boolean;
   feature_campaigns: boolean;
@@ -102,6 +103,7 @@ const DEFAULT_LIMITS: LimitsForm = {
   team_members: '1',
   brand_brain_steps: '63',
   support_tier: 'help_guides',
+  feature_brand_brain: true,
   feature_google_profile: true,
   feature_insights: true,
   feature_campaigns: false,
@@ -154,6 +156,7 @@ function entsToLimits(ents: Record<string, PlanEntitlement>): LimitsForm {
     team_members:        String(team?.limit_value ?? 1),
     brand_brain_steps:   String(ents['brand_brain_steps']?.limit_value ?? 63),
     support_tier:        sup?.enum_value ?? 'help_guides',
+    feature_brand_brain: ents['feature_brand_brain']?.bool_value === true,
     feature_google_profile: ents['feature_google_profile']?.bool_value !== false,
     feature_insights:    ents['feature_insights']?.bool_value !== false,
     feature_campaigns:   ents['feature_campaigns']?.bool_value === true,
@@ -344,6 +347,7 @@ export function PackagesSettingsPage() {
       { plan_id: planId, key: 'team_members',        value_type: 'LIMIT',     limit_value: parseInt(L.team_members) || 1,         bool_value: null, enum_value: null,            usage_reset: null },
       { plan_id: planId, key: 'brand_brain_steps',   value_type: 'LIMIT', limit_value: (parseInt(L.brand_brain_steps) || 0) & 63, bool_value: null, enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'support_tier',        value_type: 'ENUM',      limit_value: null,                                  bool_value: null, enum_value: L.support_tier,  usage_reset: null },
+      { plan_id: planId, key: 'feature_brand_brain',    value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_brand_brain,    enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'feature_google_profile', value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_google_profile, enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'feature_insights',    value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_insights,    enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'feature_campaigns',   value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_campaigns,   enum_value: null, usage_reset: null },
@@ -563,6 +567,21 @@ export function PackagesSettingsPage() {
                     <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#FAFAF7] transition-colors">
                       <input
                         type="checkbox"
+                        checked={form.limits.feature_brand_brain}
+                        onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_brand_brain: e.target.checked } }))}
+                        className="w-4 h-4 accent-[#6C55E8] rounded flex-shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-[#111827]">Brand Brain</p>
+                        <p className="text-[11px] text-[#9CA3AF] mt-0.5">AI tone, language, per-star rules, guardrails, location overrides</p>
+                      </div>
+                      <span className={`ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${form.limits.feature_brand_brain ? 'bg-[#D8CCFF] text-[#6C55E8]' : 'bg-[#F3F4F6] text-[#9CA3AF]'}`}>
+                        {form.limits.feature_brand_brain ? 'On' : 'Off'}
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-3 px-3.5 py-3 cursor-pointer hover:bg-[#FAFAF7] transition-colors">
+                      <input
+                        type="checkbox"
                         checked={form.limits.feature_google_profile}
                         onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, feature_google_profile: e.target.checked } }))}
                         className="w-4 h-4 accent-[#6C55E8] rounded flex-shrink-0"
@@ -635,10 +654,6 @@ export function PackagesSettingsPage() {
                         {form.limits.feature_feedback ? 'On' : 'Off'}
                       </span>
                     </label>
-                    <div className="px-3.5 py-3 flex items-center gap-3">
-                      <svg className="w-4 h-4 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                      <p className="text-[11px] text-[#9CA3AF]"><span className="font-medium text-[#6B7280]">Brand Brain</span> &amp; <span className="font-medium text-[#6B7280]">Team</span> access is controlled by their limits below — set to <span className="font-medium">0</span> to lock, <span className="font-medium">1+</span> to allow.</p>
-                    </div>
                   </div>
                 </div>
 
