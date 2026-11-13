@@ -180,7 +180,7 @@ function DashboardTab({ usage, loading, tableExists, activeProvider }: {
         <KpiCard label="Calls Last 7 Days"  value={usage.calls7d.toLocaleString()} />
         <KpiCard label="Calls Last 30 Days" value={usage.calls30d.toLocaleString()} sub={`${usage.tokens30d.toLocaleString()} tokens`} />
         <KpiCard label="Errors (30 days)"   value={usage.errors30d.toLocaleString()}
-          sub={usage.calls30d > 0 ? `${((usage.errors30d / usage.calls30d) * 100).toFixed(1)}% error rate` : undefined} />
+          {...(usage.calls30d > 0 ? { sub: `${((usage.errors30d / usage.calls30d) * 100).toFixed(1)}% error rate` } : {})} />
       </div>
 
       {/* Free-tier limit bar */}
@@ -645,12 +645,12 @@ export function AISettingsPage() {
         ) : (
           <>
             {activeTab === 'dashboard' && (
-              <DashboardTab usage={usage} loading={usageLoading} tableExists={usageTableExists} activeProvider={activeProvider} />
+              <DashboardTab usage={usage} loading={usageLoading} tableExists={usageTableExists} {...(activeProvider ? { activeProvider } : {})} />
             )}
             {activeTab !== 'dashboard' && (
               <ProviderTab
                 provider={activeTab as Provider}
-                setting={settingByProvider[activeTab as Provider]}
+                {...(settingByProvider[activeTab as Provider] ? { setting: settingByProvider[activeTab as Provider] } : {})}
                 form={forms[activeTab as Provider]}
                 onFormChange={(field, value) =>
                   setForms(prev => ({ ...prev, [activeTab]: { ...prev[activeTab as Provider], [field]: value } }))
