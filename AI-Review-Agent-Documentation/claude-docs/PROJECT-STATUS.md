@@ -398,3 +398,16 @@ When asked "pending kya hai?" inspect actual code/database/config/tests; never g
 
 ## Documentation update - 2026-10-11: usage reset cadence
 Free weekly and paid monthly usage renewal is approved (including monthly allowances on annual subscriptions). See DECISIONS.md D-014 and 09-BILLING-PLANS-AND-ADDONS.md. Documentation only: runtime reset enforcement has not been implemented or verified in this task. Billing implementation remains pending.
+
+
+## Google Profile business analysis — 2026-11-13
+IMPLEMENTED locally; production deployment and authenticated Google provider verification pending.
+- Strict selected-location analysis and an explicit local selector when the global filter is All Locations. No cross-location fallback; stale responses are aborted/ignored.
+- New google-profile-analysis Edge Function reads primary/additional categories separately from description, contact details, hours, address/service area and place metadata directly from Google.
+- Moffu SEO readiness with visible weights/coverage; no official Google SEO score claim.
+- Last 30 completed days of Google performance, last completed calendar month of profile discovery terms with privacy thresholds, and category-based competitor samples at 5/10/20/30 km.
+- Google Places setup required for competitor ratings and own public rating. No radius-level public query volume or geo-grid ranking is fabricated. Unattended monitoring is not implemented; the page refreshes on open/change/manual request and every 15 minutes while visible.
+- Backend authenticates identity, location/connection ownership, active account and plan feature access. No schema migration or provider-content persistence added.
+- Verification: 10 focused Node tests passed; portal TypeScript check and Vite production build passed. Test-fixture desktop (1440px) and mobile (390px) visual inspection checked category display, global location changes, radius changes and unavailable-configuration state. Local dropdown positioning corrected during mobile QA.
+- Existing bundle-size/dynamic-import Vite warnings remain. Live OAuth/Places success is not yet verified.
+- See developer-docs/16-GOOGLE-PROFILE-ANALYSIS.md for sources, setup, limitations and verification.

@@ -256,3 +256,20 @@ The master checklist is durable project memory. Claude updates statuses only aft
 
 ## Status rules
 Allowed: PENDING, IN_PROGRESS, IMPLEMENTED, TESTED, CONFIGURED, COMPLETED, BLOCKED, REQUIRES_EXTERNAL_APPROVAL, LEGAL_REVIEW_REQUIRED, FUTURE, NOT_APPLICABLE (reason required). Never remove completed history; supersede explicitly. Before declaring a domain complete, search all child requirements and hard rules and verify applicable completion gates.
+
+
+## Google Profile analysis additions — 2026-11-13
+These rows track this change separately from older conflicting implementation notes above.
+
+| ID | Requirement | Status | Evidence |
+|---|---|---|---|
+| GOOGLE-PROFILE-001 | Exact selected-location data, no fallback or stale-response overwrite | IMPLEMENTED | GoogleProfilePage.tsx; response identity + AbortController; local selector for All Locations; desktop/mobile fixture QA |
+| GOOGLE-PROFILE-002 | Fetch actual primary/additional categories separately from description | IMPLEMENTED | google-profile-analysis Business Information readMask + normalizeProfile; regression test |
+| GOOGLE-PROFILE-003 | Transparent Moffu SEO readiness with unknown-data coverage | TESTED | buildReadiness; explicit weights and unknown exclusion; not an official Google score |
+| GOOGLE-PROFILE-004 | Google performance and monthly discovery keywords | IMPLEMENTED | Correct nested Performance API parsing; privacy thresholds preserved; live authorized access pending |
+| GOOGLE-PROFILE-005 | Category-matched competitor sample at 5/10/20/30 km | IMPLEMENTED | Places Text Search New + exact haversine filtering + place-ID identity; live Places configuration pending |
+| GOOGLE-PROFILE-006 | On-page automatic refresh and partial-error states | IMPLEMENTED | On open/change/manual + 15-minute visible-page refresh; no unattended monitoring claim |
+| GOOGLE-PROFILE-007 | Backend owner/account/feature checks | TESTED | auth.getUser + explicit user/location/connection filters + active profile + active subscription feature; denial tests |
+| GOOGLE-PROFILE-008 | Local verification | TESTED | 10 Node tests; portal tsc noEmit; Vite production build; 1440px/390px fixture visual inspection |
+| GOOGLE-PROFILE-009 | Production deploy and authenticated provider smoke verification | PENDING | No live release or Google/Places success asserted |
+| GOOGLE-PROFILE-010 | Public radius-wise keyword volume and geo-grid rankings | BLOCKED | Requires an appropriate configured geographic keyword/ranking provider; current Google Profile/Places endpoints do not supply this dataset |
