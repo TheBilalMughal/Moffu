@@ -9,7 +9,10 @@ export interface ProfileAnalysis {
   };
   reviews:{total:number;replied:number;rating:number|null;google_review_count:number|null;latest_at:string|null};
   readiness:{score:number|null;coverage:number;explanation:string;methodology_version:string;
-    checks:{id:string;label:string;weight:number;status:'pass'|'action'|'unknown';detail:string;recommendation:string}[]};
+    checks:{id:string;label:string;weight:number;severity:'high'|'medium'|'low';
+      status:'pass'|'action'|'unknown'|'not_applicable';observed_value:string|null;
+      source:'google_business_profile'|'synced_reviews'|'none';observed_at:string|null;
+      evidence_ref:string|null;limitations:string[];detail:string;recommendation:string}[]};
   performance:{status:string;search_views?:number;maps_views?:number;calls?:number;website_clicks?:number;
     directions?:number;days_with_data?:number;start?:string;end?:string};
   keywords:{status:string;month:string;items:{keyword:string;value:number|null;threshold:number|null}[];has_more:boolean};
@@ -51,5 +54,29 @@ export async function fetchProfileAnalysis(locationId:string,radiusKm:number,sig
   if (!res.ok) throw new Error(analysisMessage(body?.error ?? (res.status===401 ? 'UNAUTHORIZED' : 'INTERNAL_ERROR')));
   if (!body || body.location_id!==locationId || !body.profile || !body.readiness || !body.nearby)
     throw new Error('The business analysis response was incomplete. Please retry.');
-  return body as ProfileAnalysis;
+  const fetchedAt=typeof body.fetched_at==='string' ? body.fetched_at : null;
+  const checks=Array.isArray(body.readiness.checks) ? body.readiness.checks.map((check:Record<string,unknown>)=>{
+    const weight=typeof check.weight==='number' ? check.weight : 0;
+    const source=check.source==='google_business_profile' || check.source==='synced_reviews' || check.source==='none'
+      ? check.source : body.profile.source==='google_business_profile' ? 'google_business_profile' : 'none';
+    const limitations=Array.isArray(check.limitations) ? check.limitations.filter((item):item is string=>typeof item==='string') :
+      source==='synced_reviews' ? ['Review findings use reviews currently synced into Moffu and may not represent Google’s complete review history.'] :
+      source==='google_business_profile' ? ['Assessment uses only fields returned by the authorized Business Profile API.'] :
+      ['Google or review evidence was unavailable; this check is left unknown and excluded from coverage.'];
+    return {
+      ...check,
+      weight,
+      severity:check.severity==='high' || check.severity==='medium' || check.severity==='low'
+        ? check.severity : weight>=20 ? 'high' : weight>=10 ? 'medium' : 'low',
+      status:check.status==='pass' || check.status==='action' || check.status==='not_applicable' ? check.status : 'unknown',
+      observed_value:typeof check.observed_value==='string' ? check.observed_value : null,
+      source,
+      observed_at:typeof check.observed_at==='string' ? check.observed_at : source==='none' ? null : fetchedAt,
+      evidence_ref:typeof check.evidence_ref==='string' ? check.evidence_ref : null,
+      limitations,
+      detail:typeof check.detail==='string' ? check.detail : 'Evidence was not returned.',
+      recommendation:typeof check.recommendation==='string' ? check.recommendation : 'Review this profile field in Google Business Profile.',
+    };
+  }) : [];
+  return { ...body, readiness:{ ...body.readiness, methodology_version:body.readiness.methodology_version ?? 'moffu-local-readiness-v1', checks } } as ProfileAnalysis;
 }

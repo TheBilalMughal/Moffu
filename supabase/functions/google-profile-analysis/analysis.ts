@@ -9,7 +9,13 @@ export interface ReviewSummary {
   total: number; replied: number; rating: number | null; latest_at: string | null;
 }
 export interface Check {
-  id: string; label: string; weight: number; status: 'pass' | 'action' | 'unknown';
+  id: string; label: string; weight: number; severity: 'high' | 'medium' | 'low';
+  status: 'pass' | 'action' | 'unknown' | 'not_applicable';
+  observed_value: string | null;
+  source: 'google_business_profile' | 'synced_reviews' | 'none';
+  observed_at: string | null;
+  evidence_ref: string | null;
+  limitations: string[];
   detail: string; recommendation: string;
 }
 export function coordinatesValid(lat: unknown, lng: unknown): lat is number {
@@ -44,30 +50,64 @@ export function normalizeProfile(raw: any, saved: any): Profile {
 export function buildReadiness(profile: Profile, reviews: ReviewSummary, now = Date.now()) {
   const known = profile.source === 'google_business_profile';
   const checks: Check[] = [];
-  const add = (id: string, label: string, weight: number, pass: boolean | null, detail: string, recommendation: string) =>
-    checks.push({id,label,weight,status:pass === null ? 'unknown' : pass ? 'pass' : 'action',detail,recommendation});
-  add('name','Business name',10,known ? Boolean(profile.name) : null,profile.name ?? 'Not returned','Use your accurate real-world business name.');
-  add('category','Primary category',20,known ? Boolean(profile.category) : null,profile.category ?? 'Not returned','Choose the most specific category that accurately describes this location.');
-  add('contact','Contact details',10,known ? Boolean(profile.phone) : null,profile.phone ?? 'Not returned','Add a current customer contact number.');
-  add('website','Website',10,known ? Boolean(profile.website) : null,profile.website ?? 'Not returned','Link the website page that represents this location.');
-  add('description','Business description',10,known ? Boolean(profile.description?.trim()) : null,profile.description ? 'Description present' : 'Not returned','Describe your real services clearly; avoid keyword stuffing.');
-  add('hours','Business hours',10,profile.has_hours,'Regular hours ' + (profile.has_hours ? 'present' : 'not returned'),'Maintain accurate regular and special hours where applicable.');
-  add('location','Location or service area',10,known ? Boolean(profile.address || profile.has_service_area) : null,
-    profile.address ?? (profile.has_service_area ? 'Service area configured' : 'Not returned'),
-    'Keep the address or service area accurate for your business model.');
+  const observedAt = new Date(now).toISOString();
+  const add = (id: string, label: string, weight: number, pass: boolean | null, observedValue: string | null,
+    source: Check['source'], evidenceRef: string | null, detail: string, recommendation: string) => {
+    const status = pass === null ? 'unknown' : pass ? 'pass' : 'action';
+    checks.push({id,label,weight,severity:weight>=20?'high':weight>=10?'medium':'low',status,
+      observed_value:observedValue,source,observed_at:source==='none'?null:observedAt,evidence_ref:evidenceRef,
+      limitations:source==='google_business_profile' ? ['Assessment uses only fields returned by the authorized Business Profile API.'] :
+        source==='synced_reviews' ? ['Review findings use the reviews currently synced into Moffu and may not represent Google’s complete review history.'] :
+        ['Google or review evidence was unavailable; this check is left unknown and excluded from coverage.'],
+      detail,recommendation});
+  };
+  const profileSource: Check['source'] = known ? 'google_business_profile' : 'none';
+  add('name','Business name',10,known ? Boolean(profile.name) : null,profile.name,profileSource,
+    known ? 'google.business_information.title' : null,profile.name ?? 'Google Business Profile data was unavailable.',
+    'Use your accurate real-world business name.');
+  add('category','Primary category',20,known ? Boolean(profile.category) : null,profile.category,profileSource,
+    known ? 'google.business_information.categories.primaryCategory' : null,profile.category ?? 'Google Business Profile data was unavailable.',
+    'Choose the most specific category that accurately describes this location.');
+  add('contact','Contact details',10,known ? Boolean(profile.phone) : null,profile.phone,profileSource,
+    known ? 'google.business_information.phoneNumbers.primaryPhone' : null,profile.phone ?? 'Google Business Profile data was unavailable.',
+    'Add a current customer contact number.');
+  add('website','Website',10,known ? Boolean(profile.website) : null,profile.website,profileSource,
+    known ? 'google.business_information.websiteUri' : null,profile.website ?? 'Google Business Profile data was unavailable.',
+    'Link the website page that represents this location.');
+  add('description','Business description',10,known ? Boolean(profile.description?.trim()) : null,
+    profile.description?.trim() ? 'Description present' : profile.description,profileSource,
+    known ? 'google.business_information.profile.description' : null,
+    profile.description?.trim() ? 'Description present' : 'Google Business Profile data was unavailable.',
+    'Describe your real services clearly; avoid keyword stuffing.');
+  add('hours','Business hours',10,known ? profile.has_hours : null,
+    known && profile.has_hours !== null ? profile.has_hours ? 'Regular hours present' : 'No regular hours returned' : null,
+    profileSource,known ? 'google.business_information.regularHours' : null,
+    known ? 'Regular hours ' + (profile.has_hours ? 'present' : 'not returned') : 'Google Business Profile data was unavailable.',
+    'Maintain accurate regular and special hours where applicable.');
+  const hasLocationInfo = Boolean(profile.address || profile.has_service_area);
+  const locationValue = profile.address ?? (profile.has_service_area ? 'Service area configured' : null);
+  add('location','Location or service area',10,known ? hasLocationInfo : null,locationValue,profileSource,
+    known ? 'google.business_information.storefrontAddress|serviceArea' : null,
+    locationValue ?? 'Google Business Profile data was unavailable.',
+    'Keep the address or service area accurate for your business model. A service-area business does not need a public storefront address.');
   const rate = reviews.total ? reviews.replied / reviews.total : null;
+  const reviewSource: Check['source'] = reviews.total > 0 ? 'synced_reviews' : 'none';
   add('responses','Review response coverage',10,rate === null ? null : rate >= 0.8,
+    rate === null ? null : Math.round(rate*100) + '% of synced reviews answered',reviewSource,
+    reviews.total > 0 ? 'reviews.synced_response_coverage' : null,
     rate === null ? 'No synced reviews' : Math.round(rate*100) + '% of synced reviews answered',
     'Respond helpfully to outstanding reviews. The 80% target is a Moffu operational target.');
   const age = reviews.latest_at ? (now - Date.parse(reviews.latest_at)) / 86400000 : null;
   add('activity','Recent review activity',10,age === null ? null : age <= 30,
+    reviews.latest_at ?? null,reviews.latest_at ? 'synced_reviews' : 'none',
+    reviews.latest_at ? 'reviews.latest_published_at' : null,
     age === null ? 'No synced review history' : 'Latest synced review: ' + reviews.latest_at?.slice(0,10),
     'Invite honest reviews from all customers without incentives or sentiment filtering. The 30-day target is a Moffu heuristic.');
-  const assessed = checks.filter(c => c.status !== 'unknown');
+  const assessed = checks.filter(c => c.status !== 'unknown' && c.status !== 'not_applicable');
   const possible = assessed.reduce((s,c)=>s+c.weight,0);
   return { score: possible ? Math.round(100*assessed.filter(c=>c.status==='pass').reduce((s,c)=>s+c.weight,0)/possible) : null,
-    coverage: possible, checks, methodology_version:'moffu-local-readiness-v1',
-    explanation:'Moffu diagnostic with visible weights, based on available profile fields and synced review activity. Not a Google score, search position, or prediction. Unknown checks are excluded; coverage shows assessed weight out of 100.' };
+    coverage: possible, checks, methodology_version:'moffu-local-readiness-v2',
+    explanation:'Moffu Profile Doctor assessment based on the fields returned by Google Business Profile and your synced review summary. This is not a Google score, search position, or ranking prediction. Unknown checks are excluded; coverage shows assessed weight out of 100. The 80% response and 30-day activity thresholds are Moffu heuristics.' };
 }
 export function parseMetrics(raw: any) {
   const values: Record<string, number> = {};

@@ -5,7 +5,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, content-type',
+  'Access-Control-Allow-Headers': 'authorization, apikey, x-client-info, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
@@ -38,14 +38,14 @@ async function refreshAccessToken(refreshToken: string, clientId: string, client
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) return json({ error: 'Unauthorized' }, 401);
+    const bearer = /^Bearer\s+(.+)$/i.exec(req.headers.get('Authorization') ?? '');
+    if (!bearer) return json({ error: 'Unauthorized' }, 401);
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-    const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    const { data: { user }, error: userError } = await supabase.auth.getUser(bearer[1]);
     if (userError || !user) return json({ error: 'Unauthorized' }, 401);
 
     const body = await req.json().catch(() => ({}));

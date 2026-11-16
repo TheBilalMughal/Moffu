@@ -265,16 +265,25 @@ export const googleService = {
     };
     error?: string;
   }> {
-    const auth = await getAuthHeader();
-    if (!auth) return { error: 'Not authenticated' };
-    const res = await fetch(`${BASE}/google-fetch-extra-data`, {
-      method: 'POST',
-      headers: { Authorization: auth, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ location_id: locationId }),
-    });
-    const json = await res.json();
-    if (!res.ok) return { error: json.error ?? 'Failed to fetch extra data' };
-    return { data: json };
+    try {
+      const auth = await getAuthHeader();
+      if (!auth) return { error: 'Not authenticated' };
+      const res = await fetch(`${BASE}/google-fetch-extra-data`, {
+        method: 'POST',
+        headers: { Authorization: auth, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ location_id: locationId }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok) return { error: json?.error ?? 'Photos, Q&A and posts are temporarily unavailable.' };
+      if (!json || typeof json !== 'object') return { error: 'Google returned an invalid supplemental-data response.' };
+      return { data: {
+        photos: json.photos ?? null,
+        qanda: json.qanda ?? null,
+        posts: Array.isArray(json.posts) ? json.posts : null,
+      } };
+    } catch {
+      return { error: 'Photos, Q&A and posts are temporarily unavailable. Profile diagnostics can still be used.' };
+    }
   },
 
   async fetchInsights(locationId: string | null, startDate: string, endDate: string): Promise<{

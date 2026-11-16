@@ -476,3 +476,20 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - `DashboardLayout.tsx`: Updated `navItems` and `navGroups` Engage section to set `featureKey: 'feature_campaigns'`, `'feature_marketing'`, `'feature_feedback'` (were `null`). Sidebar now shows lock icon and greys out items when feature is off.
 - `FeatureGate.tsx`: Added `FEATURE_META` entries for `feature_campaigns`, `feature_marketing`, `feature_feedback` so UpgradeWall shows meaningful name and description.
 - `App.tsx`: Wrapped all 6 routes (`/campaigns`, `/campaigns/:id`, `/feedback`, `/feedback/new`, `/marketing`, `/marketing/new`) with `<FeatureGatePage feature="...">` — direct URL navigation now also shows UpgradeWall when the feature is disabled in the package.
+
+## Moffu 2.0 — Phase 0 audit and Profile Doctor slice — 2026-11-16
+**Profile Doctor evidence schema/UI: IMPLEMENTED LOCALLY; validation pending.**
+- The existing `google-profile-analysis` server function remains the Profile Doctor source. Each readiness check now carries a stable evidence reference, source, observation timestamp, capability limitation, severity, observed value, status, weight, and versioned methodology (`moffu-local-readiness-v2`).
+- Google Business Profile and synced-review evidence remain separated. Unknown values are excluded from readiness coverage; service-area businesses can pass with a configured service area and no public storefront address.
+- `GoogleProfilePage` shows the assessment explanation, methodology version, assessed-weight coverage, and per-check status/severity/source/value/time/evidence reference. It states that the assessment is calculated for this view and not saved as a report.
+- Existing `feature_google_profile` route and server-side entitlement/ownership checks are preserved. No new auth/billing system, schema/table, Google publish action, feedback-flow change, or GeoRank capability was added.
+- Phase 0 report: `19-MOFFU-2.0-PHASE-0-AUDIT.md`.
+- Critical migration gate: 69 local migration files versus 73 remote history rows, with only 28 identical filename versions. Reconcile migration history before any new DDL; this mismatch does not prove a missing production schema.
+- Live Supabase advisor findings are recorded in the audit report; no unrelated security changes were made.
+- Portal typecheck passed (`pnpm --filter @moffu/portal typecheck`). Test suites, production build, Deno typecheck (Deno is unavailable in this environment), and visual browser QA were not run. No deployment or production write was performed.
+
+## Google Profile local-dev errors — 2026-11-16
+- Supabase Edge logs show `OPTIONS 404 NOT_FOUND` for `/functions/v1/google-fetch-extra-data`; live function inventory confirms the slug is not deployed. The local source already handled `OPTIONS`, but a missing deployed function never reached that handler.
+- `google-fetch-extra-data/index.ts` now has explicit preflight headers/status and strict manual Bearer validation; `supabase/config.toml` sets `verify_jwt = false` for this function because the handler validates the user token itself and must receive unauthenticated CORS preflight requests.
+- Portal now normalizes older `google-profile-analysis` responses that lack Phase 1 evidence fields, and supplemental-data fetch failures render an unavailable state instead of becoming unhandled promise rejections.
+- Portal typecheck passed after the fix. No Edge Function was deployed; photos/Q&A/posts will remain unavailable against the connected project until `google-fetch-extra-data` is deployed there.

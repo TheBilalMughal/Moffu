@@ -1151,7 +1151,7 @@ function AutoSyncModal({ onConfirm, onCancel }: {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function ReviewsPage() {
-  const { selectedId: globalLocationId, setLocationRatings } = useLocationStore();
+  const { selectedId: globalLocationId } = useLocationStore();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1278,23 +1278,6 @@ export function ReviewsPage() {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [focusedIdx]);
-
-  // Avg rating per location — push to store so the topbar LocationPicker can show ratings
-  useEffect(() => {
-    const map: Record<string, number> = {};
-    const totals: Record<string, { sum: number; count: number }> = {};
-    for (const r of reviews) {
-      if (r.location_id && r.rating > 0) {
-        if (!totals[r.location_id]) totals[r.location_id] = { sum: 0, count: 0 };
-        totals[r.location_id]!.sum += r.rating;
-        totals[r.location_id]!.count += 1;
-      }
-    }
-    for (const [id, { sum, count }] of Object.entries(totals)) {
-      map[id] = sum / count;
-    }
-    setLocationRatings(map);
-  }, [reviews, setLocationRatings]);
 
   // Reviews scoped to is_selected locations + active global location filter — used for stats, chart, tab counts
   const activeReviews = useMemo(() => {

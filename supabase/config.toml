@@ -184,6 +184,10 @@ minimum_password_length = 6
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
 password_requirements = ""
 
+[functions.google-fetch-extra-data]
+# The handler accepts OPTIONS preflight and validates Bearer tokens with Supabase Auth itself.
+verify_jwt = false
+
 # Configure passkey sign-ins.
 # [auth.passkey]
 # enabled = false

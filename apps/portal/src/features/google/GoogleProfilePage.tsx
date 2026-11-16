@@ -68,6 +68,14 @@ function Metric({label,value,detail}:{label:string;value:ReactNode;detail?:strin
     {detail && <p className="mt-1 text-[11px] leading-relaxed text-[#9CA3AF]">{detail}</p>}
   </div>;
 }
+function evidenceSourceLabel(source:'google_business_profile'|'synced_reviews'|'none'){
+  return source==='google_business_profile' ? 'Google Business Profile' : source==='synced_reviews' ? 'Synced reviews' : 'Unavailable';
+}
+function evidenceTime(value:string|null){
+  if(!value) return 'Not observed';
+  const date=new Date(value);
+  return Number.isNaN(date.getTime()) ? 'Not observed' : date.toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
+}
 
 export function GoogleProfilePage(){
   const globalLocationId=useLocationStore(s=>s.selectedId);
@@ -103,6 +111,7 @@ export function GoogleProfilePage(){
   type ExtraData = Awaited<ReturnType<typeof googleService.fetchExtraData>>['data'];
   const [extraData,setExtraData]=useState<ExtraData>(undefined);
   const [extraLoading,setExtraLoading]=useState(false);
+  const [extraError,setExtraError]=useState('');
 
   useEffect(()=>{
     let active=true;
@@ -179,11 +188,13 @@ export function GoogleProfilePage(){
 
   // ── Fetch photos, Q&A, posts ──────────────────────────────────────────────
   useEffect(()=>{
-    if (!selected || !connection) { setExtraData(undefined); return; }
+    if (!selected || !connection) { setExtraData(undefined); setExtraError(''); setExtraLoading(false); return; }
     let alive=true;
-    setExtraLoading(true); setExtraData(undefined);
+    setExtraLoading(true); setExtraData(undefined); setExtraError('');
     googleService.fetchExtraData(selected.id).then(r=>{
-      if (alive) { setExtraData(r.data); setExtraLoading(false); }
+      if (alive) { setExtraData(r.data); setExtraError(r.error ?? ''); setExtraLoading(false); }
+    }).catch(()=>{
+      if (alive) { setExtraData(undefined); setExtraError('Photos, Q&A and posts are temporarily unavailable. Profile diagnostics can still be used.'); setExtraLoading(false); }
     });
     return ()=>{ alive=false; };
   },[selected?.id, connection?.id]);
@@ -283,14 +294,41 @@ export function GoogleProfilePage(){
               </dd></div>)}</dl>
             {safeUrl(profile?.maps_url) && <a className="mt-4 inline-block text-xs font-medium text-[#6C55E8]" href={safeUrl(profile?.maps_url)} target="_blank" rel="noreferrer">View this business on Google Maps</a>}
           </Section>
-          <Section title="SEO readiness checklist" description="A transparent Moffu diagnostic informed by Google's local ranking guidance.">
+          <Section title="Profile Doctor diagnostics" description="A versioned Moffu assessment based on the data available for this location.">
             <p className="mb-4 text-xs leading-relaxed text-[#6B7280]">{readiness?.explanation}</p>
-            <div className="space-y-3">{readiness?.checks.map(check=><div key={check.id} className="border-b border-[#F3F4F6] pb-3 last:border-0">
-              <div className="flex justify-between gap-3 text-xs"><span className="font-medium text-[#374151]">{check.label} <span className="font-normal text-[#9CA3AF]">· {check.weight} points</span></span>
-                <span className={check.status==='pass' ? 'text-emerald-700' : check.status==='unknown' ? 'text-[#9CA3AF]' : 'text-amber-700'}>
-                  {check.status==='pass' ? 'Present / met' : check.status==='unknown' ? 'Unknown' : 'Improve'}</span></div>
-              <p className="mt-1 text-[11px] leading-relaxed text-[#6B7280]">{check.status==='action' ? check.recommendation : check.detail}</p>
-            </div>)}</div>
+            <div className="mb-5 rounded-lg bg-[#F9FAFB] p-4">
+              <div className="mb-2 flex items-center justify-between gap-3 text-xs">
+                <span className="font-medium text-[#374151]">Diagnostic coverage</span>
+                <span className="font-mono tabular-nums text-[#111827]">{readiness?.coverage ?? 0} / 100 weight assessed</span>
+              </div>
+              <div role="progressbar" aria-label="Profile diagnostic coverage" aria-valuemin={0} aria-valuemax={100}
+                aria-valuenow={readiness?.coverage ?? 0} className="h-2 overflow-hidden rounded-sm bg-[#E5E7EB]">
+                <div className="h-full bg-[#6C55E8] transition-[width]" style={{width:`${Math.max(0,Math.min(100,readiness?.coverage ?? 0))}%`}} />
+              </div>
+              <p className="mt-2 text-[11px] leading-relaxed text-[#6B7280]">
+                Method {readiness?.methodology_version}. Calculated for this view and not saved as a report.
+              </p>
+            </div>
+            <div className="space-y-3">{readiness?.checks.map(check=>{
+              const status=check.status==='pass' ? {label:'Met',className:'text-emerald-700'} :
+                check.status==='action' ? {label:'Action needed',className:'text-amber-700'} :
+                check.status==='not_applicable' ? {label:'Not applicable',className:'text-[#6B7280]'} :
+                {label:'Unknown',className:'text-[#6B7280]'};
+              return <div key={check.id} className="border-b border-[#F3F4F6] pb-3 last:border-0">
+                <div className="flex flex-wrap items-start justify-between gap-2 text-xs">
+                  <span className="font-medium text-[#374151]">{check.label}
+                    <span className="font-normal text-[#9CA3AF]"> · {check.weight} points · {check.severity} priority</span>
+                  </span>
+                  <span className={status.className}>{status.label}</span>
+                </div>
+                <p className="mt-1 text-[11px] leading-relaxed text-[#6B7280]">{check.status==='action' ? check.recommendation : check.detail}</p>
+                <p className="mt-1 break-words text-[10px] leading-relaxed text-[#9CA3AF]">
+                  Observed: {check.observed_value ?? 'No value returned'} · Source: {evidenceSourceLabel(check.source)} · {evidenceTime(check.observed_at)}
+                  {check.evidence_ref ? <span className="block font-mono">Evidence: {check.evidence_ref}</span> : null}
+                  {(check.limitations ?? []).map(limit=><span key={limit} className="block">Limit: {limit}</span>)}
+                </p>
+              </div>;
+            })}</div>
             <a href="https://support.google.com/business/answer/7091" target="_blank" rel="noreferrer" className="mt-4 inline-block text-xs font-medium text-[#6C55E8]">Google’s local ranking guidance</a>
           </Section>
         </div>
@@ -468,7 +506,8 @@ export function GoogleProfilePage(){
                   </div>
                 </div>
               )}
-              {!extraData && <Empty>Photos, Q&amp;A and post data could not be loaded. This requires an active Google Business Profile connection.</Empty>}
+              {!extraData && extraError && <p role="status" className="text-xs leading-relaxed text-[#6B7280]">{extraError}</p>}
+              {!extraData && !extraError && <Empty>Photos, Q&amp;A and post data require an active Google Business Profile connection.</Empty>}
             </>;
           })()}
         </Section>

@@ -279,3 +279,13 @@ These rows track this change separately from older conflicting implementation no
 | GOOGLE-PROFILE-013 | Photo count, Q&A count, post performance | IMPLEMENTED | google-fetch-extra-data Edge Function; Photos/Q&A stat cards + recent posts list in portal |
 | GOOGLE-PROFILE-014 | Competitor keyword fix: use business category only | IMPLEMENTED | google-competitors Edge Function: keyword = loc.description only; no business name fallback; rankby=prominence |
 | GOOGLE-PROFILE-015 | Global date filter (single DateRangePicker, no pre-selection) | IMPLEMENTED | globalFrom/globalTo state initialised to empty string; DateRangePicker in page header; both reviews and insights sections respond |
+
+## Moffu 2.0 — Phase 1 local delivery — 2026-11-16
+
+| ID | Requirement | Status | Evidence |
+|---|---|---|---|
+| PROFILE-DOCTOR-001 | Versioned assessment with stable evidence references, source, observed value/time, severity, status, and weighted coverage | IN_PROGRESS | `supabase/functions/google-profile-analysis/analysis.ts`; methodology `moffu-local-readiness-v2`; validation pending |
+| PROFILE-DOCTOR-002 | Responsive diagnostic UI communicates score limits, coverage, evidence source/freshness, and recommendations | IN_PROGRESS | `apps/portal/src/features/google/GoogleProfilePage.tsx`; code implemented locally; visual/type validation pending |
+| PROFILE-DOCTOR-003 | Preserve backend entitlement, user/location authorization, and avoid new provider-content persistence | IMPLEMENTED | Existing `/google-profile` FeatureGate and Edge Function owner/account/subscription checks reused; no migration or report persistence added |
+| PROFILE-DOCTOR-004 | Reconcile checked-in and production migration histories before any new schema change | BLOCKED | 69 checked-in files vs 73 remote entries; exact version overlap is 28; see `19-MOFFU-2.0-PHASE-0-AUDIT.md` |
+| GOOGLE-PROFILE-016 | Supplemental photo/Q&A/post fetch has CORS-safe preflight and UI failure handling | IN_PROGRESS | Source/config fixed locally; Supabase logs confirm function slug is not deployed in project `kgttncfkzdrgswfkkdji`; deploy and authenticated browser check remain pending |
