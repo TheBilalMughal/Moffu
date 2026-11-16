@@ -15,7 +15,7 @@ async function checkAndRecordUsage(
   supabase: SupabaseClient,
   userId: string,
   eventType: UsageEventType,
-): Promise<{ allowed: boolean; used: number; limit: number | null }> {
+): Promise<{ allowed: boolean; used: number; limit: number | null; orgId: string | null }> {
   const entKey = ENTITLEMENT_KEY[eventType];
   const overrideField = OVERRIDE_FIELD[eventType];
 
@@ -26,7 +26,7 @@ async function checkAndRecordUsage(
     .eq('status', 'active')
     .maybeSingle();
 
-  if (!sub) return { allowed: false, used: 0, limit: 0 };
+  if (!sub) return { allowed: false, used: 0, limit: 0, orgId: null };
 
   // Check org-level override first
   const { data: orgMember } = await supabase
@@ -35,12 +35,14 @@ async function checkAndRecordUsage(
     .eq('user_id', userId)
     .maybeSingle();
 
+  const orgId: string | null = orgMember?.org_id ?? null;
+
   let overrideLimit: number | null = null;
-  if (orgMember?.org_id) {
+  if (orgId) {
     const { data: override } = await supabase
       .from('org_plan_overrides')
       .select(overrideField)
-      .eq('org_id', orgMember.org_id)
+      .eq('org_id', orgId)
       .maybeSingle();
     if (override && override[overrideField] !== null && override[overrideField] !== undefined) {
       overrideLimit = override[overrideField] as number;
@@ -48,7 +50,7 @@ async function checkAndRecordUsage(
   }
 
   // -1 = unlimited via override
-  if (overrideLimit === -1) return { allowed: true, used: 0, limit: null };
+  if (overrideLimit === -1) return { allowed: true, used: 0, limit: null, orgId };
 
   // If no org override, fall back to plan entitlement
   if (overrideLimit === null) {
@@ -59,7 +61,7 @@ async function checkAndRecordUsage(
       .eq('key', entKey)
       .maybeSingle();
 
-    if (!ent || ent.value_type === 'UNLIMITED') return { allowed: true, used: 0, limit: null };
+    if (!ent || ent.value_type === 'UNLIMITED') return { allowed: true, used: 0, limit: null, orgId };
 
     const resetCadence = (ent.usage_reset as string | null) ?? 'monthly';
     let periodStart: string;
@@ -86,7 +88,7 @@ async function checkAndRecordUsage(
 
     const used = count ?? 0;
     const limit = ent.limit_value ?? 0;
-    return used >= limit ? { allowed: false, used, limit } : { allowed: true, used, limit };
+    return used >= limit ? { allowed: false, used, limit, orgId } : { allowed: true, used, limit, orgId };
   }
 
   // Org override is a positive number — count usage in current calendar month
@@ -104,8 +106,8 @@ async function checkAndRecordUsage(
 
   const used = count ?? 0;
   return used >= overrideLimit
-    ? { allowed: false, used, limit: overrideLimit }
-    : { allowed: true, used, limit: overrideLimit };
+    ? { allowed: false, used, limit: overrideLimit, orgId }
+    : { allowed: true, used, limit: overrideLimit, orgId };
 }
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -449,7 +451,7 @@ Deno.serve(async (req) => {
       const errMsg = aiErr instanceof Error ? aiErr.message : String(aiErr);
       const errCode = errMsg.match(/\b(\d{3})\b/)?.[1] ?? 'ERR';
       supabase.from('ai_token_usage').insert({
-        org_id: orgMember?.org_id ?? null,
+        org_id: limitCheck.orgId,
         provider: aiSetting.provider, model: aiSetting.model,
         function_name: 'ai-generate-draft',
         input_tokens: 0, output_tokens: 0, total_tokens: 0,
@@ -459,7 +461,7 @@ Deno.serve(async (req) => {
     }
     const { text: draftText, inputTokens, outputTokens, totalTokens } = aiResult;
     supabase.from('ai_token_usage').insert({
-      org_id: orgMember?.org_id ?? null,
+      org_id: limitCheck.orgId,
       provider: aiSetting.provider, model: aiSetting.model,
       function_name: 'ai-generate-draft',
       input_tokens: inputTokens, output_tokens: outputTokens, total_tokens: totalTokens,

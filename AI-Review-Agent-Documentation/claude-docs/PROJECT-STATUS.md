@@ -1,7 +1,7 @@
 # Project Status
 
 ## Current milestone
-PHASE 6 — Billing & Subscription (schema + UI + usage tracking COMPLETE; Stripe integration + server-side limit enforcement pending)
+PHASE 6 — Billing & Subscription (schema + UI + usage tracking + server-side limit enforcement COMPLETE; Stripe/Paddle integration pending)
 
 ## Completed
 
@@ -171,7 +171,7 @@ Also hardened `handle_new_user` with `ON CONFLICT (id) DO NOTHING` to guard agai
 - Billing view loads transactions on mount
 
 **Pending (further work):**
-- Server-side limit enforcement in `google-publish-reply` edge function (ai-generate-draft is ✅ done)
+- ~~Server-side limit enforcement in `google-publish-reply` edge function~~ ✅ DONE (org override + plan entitlement check added, matches ai-generate-draft pattern)
 - Upgrade/downgrade/cancel subscription lifecycle (Paddle portal link)
 
 ## Phase 8 — Onboarding Flow
