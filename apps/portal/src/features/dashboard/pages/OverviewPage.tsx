@@ -226,8 +226,8 @@ const STEPS = [
     key: 'googleConnected' as const,
     label: 'Connect Google Business Profile',
     description: 'Link your account to start syncing reviews.',
-    href: '/settings',
-    linkLabel: 'Go to Settings',
+    href: '/settings/integrations',
+    linkLabel: 'Go to Integrations',
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
