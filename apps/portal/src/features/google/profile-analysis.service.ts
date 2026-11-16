@@ -57,8 +57,33 @@ export async function fetchProfileAnalysis(locationId:string,radiusKm:number,sig
   const fetchedAt=typeof body.fetched_at==='string' ? body.fetched_at : null;
   const checks=Array.isArray(body.readiness.checks) ? body.readiness.checks.map((check:Record<string,unknown>)=>{
     const weight=typeof check.weight==='number' ? check.weight : 0;
-    const source=check.source==='google_business_profile' || check.source==='synced_reviews' || check.source==='none'
-      ? check.source : body.profile.source==='google_business_profile' ? 'google_business_profile' : 'none';
+    const reviewCheck=check.id==='responses' || check.id==='activity';
+    const source=reviewCheck
+      ? (check.id==='responses' ? body.reviews?.total>0 : Boolean(body.reviews?.latest_at)) ? 'synced_reviews' : 'none'
+      : check.source==='google_business_profile' || check.source==='synced_reviews' || check.source==='none'
+        ? check.source : body.profile.source==='google_business_profile' ? 'google_business_profile' : 'none';
+    const legacyObservedValue:Record<string,string|null>={
+      name:body.profile.name ?? null,
+      category:body.profile.category ?? null,
+      contact:body.profile.phone ?? null,
+      website:body.profile.website ?? null,
+      description:body.profile.description?.trim() ? 'Description present' : null,
+      hours:body.profile.has_hours===true ? 'Regular hours present' : body.profile.has_hours===false ? 'No regular hours returned' : null,
+      location:body.profile.address ?? (body.profile.has_service_area ? 'Service area configured' : null),
+      responses:body.reviews?.total>0 ? `${Math.round(100*body.reviews.replied/body.reviews.total)}% of synced reviews answered` : null,
+      activity:body.reviews?.latest_at ?? null,
+    };
+    const evidenceRefs:Record<string,string>={
+      name:'google.business_information.title',
+      category:'google.business_information.categories.primaryCategory',
+      contact:'google.business_information.phoneNumbers.primaryPhone',
+      website:'google.business_information.websiteUri',
+      description:'google.business_information.profile.description',
+      hours:'google.business_information.regularHours',
+      location:'google.business_information.storefrontAddress|serviceArea',
+      responses:'reviews.synced_response_coverage',
+      activity:'reviews.latest_published_at',
+    };
     const limitations=Array.isArray(check.limitations) ? check.limitations.filter((item):item is string=>typeof item==='string') :
       source==='synced_reviews' ? ['Review findings use reviews currently synced into Moffu and may not represent Google’s complete review history.'] :
       source==='google_business_profile' ? ['Assessment uses only fields returned by the authorized Business Profile API.'] :
@@ -69,10 +94,10 @@ export async function fetchProfileAnalysis(locationId:string,radiusKm:number,sig
       severity:check.severity==='high' || check.severity==='medium' || check.severity==='low'
         ? check.severity : weight>=20 ? 'high' : weight>=10 ? 'medium' : 'low',
       status:check.status==='pass' || check.status==='action' || check.status==='not_applicable' ? check.status : 'unknown',
-      observed_value:typeof check.observed_value==='string' ? check.observed_value : null,
+      observed_value:typeof check.observed_value==='string' ? check.observed_value : legacyObservedValue[String(check.id)] ?? null,
       source,
       observed_at:typeof check.observed_at==='string' ? check.observed_at : source==='none' ? null : fetchedAt,
-      evidence_ref:typeof check.evidence_ref==='string' ? check.evidence_ref : null,
+      evidence_ref:typeof check.evidence_ref==='string' ? check.evidence_ref : source==='none' ? null : evidenceRefs[String(check.id)] ?? null,
       limitations,
       detail:typeof check.detail==='string' ? check.detail : 'Evidence was not returned.',
       recommendation:typeof check.recommendation==='string' ? check.recommendation : 'Review this profile field in Google Business Profile.',

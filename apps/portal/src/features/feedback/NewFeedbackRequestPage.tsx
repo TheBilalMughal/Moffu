@@ -101,7 +101,7 @@ export function NewFeedbackRequestPage() {
                 </svg>
               </div>
               <h2 className="text-lg font-bold text-[#111827] mb-2">Feedback link created</h2>
-              <p className="text-sm text-[#6B7280] mb-6">Share this link with your customer. Happy → Google review. Unhappy → private form.</p>
+              <p className="text-sm text-[#6B7280] mb-6">Share this link with your customer. Everyone can leave an honest Google review or send private feedback.</p>
 
               <div className="flex items-center gap-2 px-3.5 py-2.5 bg-white/60 backdrop-blur-sm border border-white/60 rounded-xl mb-3">
                 <span className="flex-1 text-xs text-[#374151] truncate text-left font-mono">{created.link}</span>
@@ -179,7 +179,7 @@ export function NewFeedbackRequestPage() {
           Back to inbox
         </Link>
         <h1 className="text-xl font-bold text-[#111827]">New feedback request</h1>
-        <p className="text-sm text-[#6B7280] mt-0.5">Generate a shareable link. Happy customers go to Google — unhappy ones send private feedback to you.</p>
+        <p className="text-sm text-[#6B7280] mt-0.5">Generate a shareable link that offers every customer the same public-review and private-feedback options.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="relative max-w-lg">

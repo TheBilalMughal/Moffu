@@ -272,7 +272,7 @@ These rows track this change separately from older conflicting implementation no
 | GOOGLE-PROFILE-006 | On-page automatic refresh and partial-error states | IMPLEMENTED | On open/change/manual + 15-minute visible-page refresh; no unattended monitoring claim |
 | GOOGLE-PROFILE-007 | Backend owner/account/feature checks | TESTED | auth.getUser + explicit user/location/connection filters + active profile + active subscription feature; denial tests |
 | GOOGLE-PROFILE-008 | Local verification | TESTED | 10 Node tests; portal tsc noEmit; Vite production build; 1440px/390px fixture visual inspection |
-| GOOGLE-PROFILE-009 | Production deploy and authenticated provider smoke verification | IN_PROGRESS | Supabase google-profile-analysis v1 ACTIVE; appmoffu Vercel production deployment c57d029 READY and aliased to app.moffu.pro; authenticated Google/Places response pending |
+| GOOGLE-PROFILE-009 | Production deploy and authenticated provider smoke verification | IN_PROGRESS | Supabase `google-profile-analysis` v2 ACTIVE with `verify_jwt=true`; authenticated local portal refresh returned v2 readiness plus GBP/Places data; current portal frontend remains local, Vercel deployment pending |
 | GOOGLE-PROFILE-010 | Public radius-wise keyword volume and geo-grid rankings | BLOCKED | Requires an appropriate configured geographic keyword/ranking provider; current Google Profile/Places endpoints do not supply this dataset |
 | GOOGLE-PROFILE-011 | Review analytics: rating distribution + monthly trend line chart + date range filter | IMPLEMENTED | GoogleProfilePage.tsx: SVG polyline line chart with area fill, dots, value labels; buildMonthBuckets/buildRatingBuckets; global date filter in page header |
 | GOOGLE-PROFILE-012 | Search impressions/clicks with date range (global filter) | IMPLEMENTED | fetchInsights in google.service.ts; global from/to passed as optional dates; daily trend chart |
@@ -284,8 +284,26 @@ These rows track this change separately from older conflicting implementation no
 
 | ID | Requirement | Status | Evidence |
 |---|---|---|---|
-| PROFILE-DOCTOR-001 | Versioned assessment with stable evidence references, source, observed value/time, severity, status, and weighted coverage | IN_PROGRESS | `supabase/functions/google-profile-analysis/analysis.ts`; methodology `moffu-local-readiness-v2`; validation pending |
-| PROFILE-DOCTOR-002 | Responsive diagnostic UI communicates score limits, coverage, evidence source/freshness, and recommendations | IN_PROGRESS | `apps/portal/src/features/google/GoogleProfilePage.tsx`; code implemented locally; visual/type validation pending |
+| PROFILE-DOCTOR-001 | Versioned assessment with stable evidence references, source, observed value/time, severity, status, and weighted coverage | TESTED | `supabase/functions/google-profile-analysis/analysis.ts`; methodology `moffu-local-readiness-v2`; 10 focused Node tests pass, including evidence metadata, unique IDs, and unknown-data coverage |
+| PROFILE-DOCTOR-002 | Responsive diagnostic UI communicates score limits, coverage, evidence source/freshness, and recommendations | IN_PROGRESS | `apps/portal/src/features/google/GoogleProfilePage.tsx`; portal typecheck/build and authenticated desktop browser QA pass; mobile visual QA and current frontend deployment remain pending |
 | PROFILE-DOCTOR-003 | Preserve backend entitlement, user/location authorization, and avoid new provider-content persistence | IMPLEMENTED | Existing `/google-profile` FeatureGate and Edge Function owner/account/subscription checks reused; no migration or report persistence added |
-| PROFILE-DOCTOR-004 | Reconcile checked-in and production migration histories before any new schema change | BLOCKED | 69 checked-in files vs 73 remote entries; exact version overlap is 28; see `19-MOFFU-2.0-PHASE-0-AUDIT.md` |
-| GOOGLE-PROFILE-016 | Supplemental photo/Q&A/post fetch has CORS-safe preflight and UI failure handling | IN_PROGRESS | Source/config fixed locally; Supabase logs confirm function slug is not deployed in project `kgttncfkzdrgswfkkdji`; deploy and authenticated browser check remain pending |
+| PROFILE-DOCTOR-004 | Reconcile checked-in and production migration histories before any new schema change | BLOCKED | Pre-GeoRank read-only comparison: 69 local files, 73 remote rows, 29 exact pairs, 40 local-only, 44 remote-only; new unapplied GeoRank migration raises checkout to 70 files/41 local-only; duplicate local versions 20241025000028 and 20241025000029; see `20-MOFFU-2.0-PHASE-2-GEORANK-SOURCE-REVIEW.md` |
+| GOOGLE-PROFILE-016 | Supplemental photo/Q&A/post fetch has CORS-safe preflight and UI failure handling | TESTED | Supabase `google-fetch-extra-data` v1 deployed; OPTIONS 204 and unauthenticated POST 401 with CORS headers; authenticated local UI returned photo, Q&A, and post data |
+
+## Moffu 2.0 neutral feedback invitation — 2026-11-16
+
+| ID | Requirement | Status | Evidence |
+|---|---|---|---|
+| FEEDBACK-001 | Offer the same optional honest public review invitation regardless of private feedback sentiment | IN_PROGRESS | Local changes in FeedbackClient.tsx, feedback-gate, feedback-send-email, and portal request form; web and portal typechecks pass; feedback Edge Functions remain local and not deployed |
+
+## Moffu 2.0 — Phase 2 GeoRank foundation — 2026-11-16
+
+| ID | Requirement | Status | Evidence |
+|---|---|---|---|
+| GEORANK-001 | Provider and upstream rights approved for customer-facing local rank analysis | BLOCKED | DataForSEO technical candidate only; current terms leave upstream rights/use unresolved; written use/retention/display review required; see `20-MOFFU-2.0-PHASE-2-GEORANK-SOURCE-REVIEW.md` |
+| GEORANK-002 | Source-neutral grid geometry, result-state validation, truthful metrics, and configurable cost estimate | TESTED | `supabase/functions/_shared/georank-core.ts`; 7 focused Node tests and strict TypeScript check pass |
+| GEORANK-003 | Tenant-safe scan history and atomic usage reservation | IMPLEMENTED LOCALLY | New additive migration has owner RLS and monthly reservation RPC; migration not applied pending history reconciliation |
+| GEORANK-004 | Crash-resumable jobs, leases, retries, and cancellation | NOT STARTED | Local adapter currently processes bounded work synchronously |
+| GEORANK-005 | Approved provider adapter and real permitted geo scans | IMPLEMENTED BUT DISABLED | Local DataForSEO adapter; no calls sent; rights, coordinate provenance, provider secret, and cost caps unresolved |
+| GEORANK-006 | Competitor Radar joins only compatible GeoRank observations and labels discovery/rank separately | IN_PROGRESS | Existing GBP/Places competitor sample remains; no GeoRank comparisons exposed |
+| GEORANK-007 | Customer GeoRank page with estimate, grid, metrics, and scan history | IMPLEMENTED LOCALLY, GATED | `/georank`; GeoRank v1 status function is deployed; scans require approved rights, migration, and server environment configuration |

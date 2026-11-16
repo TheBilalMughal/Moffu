@@ -195,6 +195,14 @@ export function GoogleConnectPage() {
                     Limit reached
                   </span>
                 )}
+                <button
+                  type="button"
+                  onClick={handleRetryFetch}
+                  disabled={retrying}
+                  className="text-xs font-medium text-[#6C55E8] hover:underline disabled:opacity-50"
+                >
+                  {retrying ? 'Refreshing…' : 'Refresh from Google'}
+                </button>
               </div>
 
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1">

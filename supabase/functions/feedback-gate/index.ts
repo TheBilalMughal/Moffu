@@ -88,7 +88,8 @@ Deno.serve(async (req) => {
     return json({
       ok:               true,
       sentiment,
-      google_review_url: sentiment === 'happy' ? req_row.google_review_url : null,
+      // The public review invitation is available regardless of private sentiment.
+      google_review_url: req_row.google_review_url,
     });
   }
 

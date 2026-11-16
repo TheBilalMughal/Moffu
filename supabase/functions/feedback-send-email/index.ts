@@ -70,6 +70,33 @@ Deno.serve(async (req) => {
   const feedbackLink = `${webUrl}/f/${reqRow.token}`;
   const trackOpenUrl = `${supabaseUrl}/functions/v1/feedback-track?token=${reqRow.token}&event=open`;
   const trackClickUrl= `${supabaseUrl}/functions/v1/feedback-track?token=${reqRow.token}&event=click`;
+  const publicReviewUrl = (() => {
+    try {
+      const reviewUrl = new URL(reqRow.google_review_url ?? '');
+      return reviewUrl.protocol === 'https:' ? reviewUrl.href : null;
+    } catch { return null; }
+  })();
+  const escapeHtmlAttr = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;');
+  const actionsHtml = publicReviewUrl ? `
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                <tr>
+                  <td width="48%" style="padding-right:6px;">
+                    <a href="${escapeHtmlAttr(publicReviewUrl)}" style="display:block;text-align:center;background:#0D4C3C;color:#ffffff;font-size:14px;font-weight:600;padding:14px 16px;border-radius:12px;text-decoration:none;">
+                      Leave an honest Google review
+                    </a>
+                  </td>
+                  <td width="4%"></td>
+                  <td width="48%" style="padding-left:6px;">
+                    <a href="${feedbackLink}" style="display:block;text-align:center;background:#F8FAF9;color:#374151;font-size:14px;font-weight:600;padding:14px 16px;border-radius:12px;text-decoration:none;border:1px solid #E5EAE8;">
+                      Share private feedback
+                    </a>
+                  </td>
+                </tr>
+              </table>` : `
+              <a href="${feedbackLink}" style="display:block;text-align:center;background:#0D4C3C;color:#ffffff;font-size:14px;font-weight:600;padding:14px 20px;border-radius:12px;text-decoration:none;margin-bottom:28px;">
+                Share private feedback
+              </a>`;
 
   // HTML email
   const html = `<!DOCTYPE html>
@@ -116,25 +143,11 @@ Deno.serve(async (req) => {
               </h1>
               <p style="margin:0 0 32px;font-size:14px;color:#6B7280;text-align:center;line-height:1.6;">
                 ${greeting}<br/>
-                We'd love to hear how your visit went. It only takes a second.
+                We welcome honest feedback. A public Google review and private feedback are both optional and available to every customer.
               </p>
 
-              <!-- CTA buttons -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-                <tr>
-                  <td width="48%" style="padding-right:6px;">
-                    <a href="${feedbackLink}?s=happy" style="display:block;text-align:center;background:#0D4C3C;color:#ffffff;font-size:14px;font-weight:600;padding:14px 20px;border-radius:12px;text-decoration:none;">
-                      Great!
-                    </a>
-                  </td>
-                  <td width="4%"></td>
-                  <td width="48%" style="padding-left:6px;">
-                    <a href="${feedbackLink}?s=unhappy" style="display:block;text-align:center;background:#F8FAF9;color:#374151;font-size:14px;font-weight:600;padding:14px 20px;border-radius:12px;text-decoration:none;border:1px solid #E5EAE8;">
-                      Could be better
-                    </a>
-                  </td>
-                </tr>
-              </table>
+              <!-- Same public-review and private-feedback options for every recipient -->
+              ${actionsHtml}
 
               <p style="margin:0;font-size:11px;color:#D1D5DB;text-align:center;">
                 Or <a href="${feedbackLink}" style="color:#9CA3AF;text-decoration:underline;">open in browser</a>

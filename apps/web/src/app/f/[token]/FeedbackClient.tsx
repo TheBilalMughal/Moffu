@@ -18,6 +18,12 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
   const [errorMsg, setErrorMsg] = useState('');
 
   const name = customerName ? `, ${customerName.split(' ')[0]}` : '';
+  const safeGoogleReviewUrl = (() => {
+    try {
+      const url = new URL(googleReviewUrl ?? '');
+      return url.protocol === 'https:' ? url.href : null;
+    } catch { return null; }
+  })();
 
   async function submit(sentiment: 'happy' | 'unhappy', text?: string) {
     setStep('submitting');
@@ -32,15 +38,7 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
         if (data.error === 'already_responded') { setStep('unhappy_done'); return; }
         throw new Error(data.error ?? 'Unknown error');
       }
-      if (sentiment === 'happy') {
-        if (data.google_review_url) {
-          window.location.href = data.google_review_url;
-        } else {
-          setStep('happy_done');
-        }
-      } else {
-        setStep('unhappy_done');
-      }
+      setStep(sentiment === 'happy' ? 'happy_done' : 'unhappy_done');
     } catch (e: unknown) {
       setErrorMsg(e instanceof Error ? e.message : 'Something went wrong');
       setStep('error');
@@ -67,9 +65,19 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
             <div className="px-8 py-10 text-center">
               <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-widest mb-3">{orgName}</p>
               <h1 className="text-xl font-bold text-[#111827] mb-2">
-                How was your experience{name}?
+                Share your honest feedback{name}
               </h1>
-              <p className="text-sm text-[#6B7280] mb-8">Your honest feedback helps us improve.</p>
+              <p className="text-sm text-[#6B7280] mb-6">Choose either option. An honest Google review is available to every customer, and private feedback is optional.</p>
+              {safeGoogleReviewUrl && (
+                <a href={safeGoogleReviewUrl} target="_blank" rel="noopener noreferrer"
+                  className="mb-7 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#111111] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#6C55E8]">
+                  Leave an honest review on Google
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
+                  </svg>
+                </a>
+              )}
+              <p className="mb-3 text-left text-xs font-semibold text-[#374151]">Or share private feedback</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => submit('happy')}
@@ -81,8 +89,8 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
                         d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75s.168-.75.375-.75S9.75 9.336 9.75 9.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z"/>
                     </svg>
                   </div>
-                  <span className="text-sm font-semibold text-[#111827]">Great!</span>
-                  <span className="text-[11px] text-[#9CA3AF]">Share on Google</span>
+                  <span className="text-sm font-semibold text-[#111827]">Good experience</span>
+                  <span className="text-[11px] text-[#9CA3AF]">Send private feedback</span>
                 </button>
                 <button
                   onClick={() => setStep('unhappy_form')}
@@ -95,7 +103,7 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
                     </svg>
                   </div>
                   <span className="text-sm font-semibold text-[#111827]">Could be better</span>
-                  <span className="text-[11px] text-[#9CA3AF]">Tell us what happened</span>
+                  <span className="text-[11px] text-[#9CA3AF]">Tell us privately</span>
                 </button>
               </div>
             </div>
@@ -138,7 +146,7 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
             </div>
           )}
 
-          {/* happy done — Google redirect fallback */}
+          {/* positive private feedback received */}
           {step === 'happy_done' && (
             <div className="px-8 py-12 text-center">
               <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4">
@@ -147,15 +155,15 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
                 </svg>
               </div>
               <h2 className="text-lg font-bold text-[#111827] mb-2">Thanks{name}!</h2>
-              <p className="text-sm text-[#6B7280] mb-6">We&apos;re glad you had a great experience.</p>
-              {googleReviewUrl && (
+              <p className="text-sm text-[#6B7280] mb-6">Your private feedback has been received. You can also leave an honest public review if you wish.</p>
+              {safeGoogleReviewUrl && (
                 <a
-                  href={googleReviewUrl}
+                  href={safeGoogleReviewUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-[#111111] text-white text-sm font-semibold px-6 py-3 rounded-xl hover:bg-[#6C55E8] transition-colors"
                 >
-                  Leave a Google review
+                  Leave an honest Google review (optional)
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
                   </svg>
@@ -176,6 +184,12 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
               <p className="text-sm text-[#6B7280]">
                 Thank you{name}. The team has been notified and will look into this.
               </p>
+              {safeGoogleReviewUrl && (
+                <a href={safeGoogleReviewUrl} target="_blank" rel="noopener noreferrer"
+                  className="mt-6 inline-flex items-center gap-2 rounded-xl border border-[#E5EAE8] px-5 py-3 text-sm font-semibold text-[#374151] transition-colors hover:border-[#6C55E8] hover:text-[#6C55E8]">
+                  Leave an honest Google review (optional)
+                </a>
+              )}
             </div>
           )}
 

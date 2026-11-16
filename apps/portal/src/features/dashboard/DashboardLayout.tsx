@@ -111,6 +111,7 @@ function FeedbackIcon() {
 const navItems: { to: string; label: string; icon: React.ReactNode; featureKey: string | null }[] = [
   { to: '/dashboard',      label: 'Overview',       icon: <ChartBarIcon />,       featureKey: null },
   { to: '/google-profile', label: 'Google Profile', icon: <GoogleProfileIcon />,  featureKey: 'feature_google_profile' },
+  { to: '/georank', label: 'GeoRank', icon: <ChartBarIcon />, featureKey: 'feature_google_profile' },
   { to: '/reviews',        label: 'Reviews',        icon: <StarIcon />,           featureKey: null },
   { to: '/insights/trends', label: 'Insights', icon: <InsightsIcon />, featureKey: 'feature_insights' },
   { to: '/brand-brain', label: 'Brand Brain', icon: <SlidersIcon />,    featureKey: 'feature_brand_brain' },
@@ -882,6 +883,7 @@ const RAIL_GROUPS: RailGroup[] = [
     items: [
       { to: '/dashboard', label: 'Overview', icon: <ChartBarIcon />, featureKey: null, end: true },
       { to: '/google-profile', label: 'Google Profile', icon: <GoogleProfileIcon />, featureKey: 'feature_google_profile' },
+      { to: '/georank', label: 'GeoRank', icon: <ChartBarIcon />, featureKey: 'feature_google_profile' },
     ],
   },
   {
@@ -1272,7 +1274,7 @@ export function DashboardLayout() {
         </aside>
 
         {/* Text Sidebar */}
-        <aside className={'fixed inset-y-0 left-0 z-10 w-56 flex flex-col bg-white border-r border-[#E5E7EB] transform transition-transform duration-200 ease-out md:relative md:w-52 md:flex-shrink-0 md:translate-x-0 ' + (sidebarOpen ? 'translate-x-0' : '-translate-x-full')}>
+        <aside className={'fixed inset-y-0 left-0 z-50 w-56 flex flex-col bg-white border-r border-[#E5E7EB] transform transition-transform duration-200 ease-out md:relative md:z-auto md:w-52 md:flex-shrink-0 md:translate-x-0 ' + (sidebarOpen ? 'translate-x-0' : '-translate-x-full')}>
           <div className="relative px-4 py-5 flex items-center justify-center flex-shrink-0">
             <img src="/images/logo.png" alt="Moffu" className="h-8 w-auto" />
             <button
@@ -1324,7 +1326,7 @@ export function DashboardLayout() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-hidden flex flex-col min-w-0 z-30">
+        <main className="flex-1 overflow-hidden flex flex-col min-w-0">
           {/* Topbar */}
           <div className="flex-shrink-0 h-14 flex items-center justify-between px-6 gap-4 bg-[#F3F4F6]">
             {/* Left: hamburger (mobile) + breadcrumb (desktop) */}

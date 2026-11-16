@@ -26,6 +26,9 @@ test('unavailable profile fields are unknown, not penalized as missing',()=>{
   const result=a.buildReadiness(p,{total:0,replied:0,rating:null,latest_at:null});
   assert.equal(result.score,null);assert.equal(result.coverage,0);
   assert.ok(result.checks.every(c=>c.status==='unknown'));
+  assert.equal(result.methodology_version,'moffu-local-readiness-v2');
+  assert.ok(result.checks.every(c=>c.id && c.source==='none' && c.observed_at===null &&
+    c.evidence_ref===null && Array.isArray(c.limitations) && c.limitations.length>0));
 });
 test('rating is not invented from synced reviews and thresholds remain thresholds',()=>{
   const list=a.normalizeKeywords({searchKeywordsCounts:[
@@ -57,6 +60,12 @@ test('readiness weights total 100 and complete observed checks score 100',()=>{
   const result=a.buildReadiness(profile,{total:100,replied:80,rating:null,latest_at:'2026-11-12T12:00:00Z'},Date.parse('2026-11-13T12:00:00Z'));
   assert.equal(result.checks.reduce((n,c)=>n+c.weight,0),100);
   assert.equal(result.score,100);assert.equal(result.coverage,100);
+  assert.equal(result.methodology_version,'moffu-local-readiness-v2');
+  const evidenceIds=result.checks.map(c=>c.id);
+  assert.equal(new Set(evidenceIds).size,evidenceIds.length);
+  assert.ok(result.checks.every(c=>c.source && c.observed_at && Array.isArray(c.limitations) && c.limitations.length>0));
+  assert.ok(result.checks.every(c=>['pass','action','unknown','not_applicable'].includes(c.status)));
+  assert.ok(result.checks.every(c=>['low','medium','high'].includes(c.severity)));
 });
 function handler({user=true,location=null,accountStatus='active',entitled=true}={}){
   let serve;let providerCalls=0;const queried=[];

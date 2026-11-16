@@ -26,15 +26,16 @@ async function getGoogleCreds(supabase: ReturnType<typeof createClient>) {
   };
 }
 
-async function refreshAccessToken(refreshToken: string, clientId: string, clientSecret: string): Promise<string | null> {
+async function refreshAccessToken(refreshToken: string, clientId: string, clientSecret: string): Promise<{access_token:string;expires_in:number}|null> {
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ refresh_token: refreshToken, client_id: clientId, client_secret: clientSecret, grant_type: 'refresh_token' }),
+    signal: AbortSignal.timeout(12_000),
   });
   if (!res.ok) return null;
   const d = await res.json();
-  return d.access_token ?? null;
+  return typeof d.access_token==='string' ? {access_token:d.access_token,expires_in:Number(d.expires_in)||3600} : null;
 }
 
 Deno.serve(async (req) => {
@@ -48,8 +49,12 @@ Deno.serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(bearer[1]);
     if (userError || !user) return json({ error: 'Unauthorized' }, 401);
 
-    const body = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') return json({ error: 'Invalid request' }, 400);
     const locationId: string | null = body.location_id ?? null;
+    if (locationId !== null && (typeof locationId !== 'string' ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(locationId)))
+      return json({ error: 'Invalid location' }, 400);
 
     // ── Get the location ──────────────────────────────────────────────────────
     const locQ = supabase
@@ -57,39 +62,61 @@ Deno.serve(async (req) => {
       .select('id, google_location_name, connection_id')
       .eq('user_id', user.id);
     if (locationId) locQ.eq('id', locationId); else locQ.eq('is_selected', true);
-    const { data: loc } = await locQ.maybeSingle();
+    const { data: loc, error: locError } = await locQ.maybeSingle();
+    if (locError) return json({ error: 'Database unavailable' }, 503);
     if (!loc) return json({ error: 'Location not found' }, 404);
 
-    // ── Get tokens ────────────────────────────────────────────────────────────
-    const [{ data: tokenRow }, { data: conn }] = await Promise.all([
-      supabase.from('google_connection_tokens').select('access_token, refresh_token').eq('connection_id', loc.connection_id).single(),
-      supabase.from('google_connections').select('token_expiry').eq('id', loc.connection_id).single(),
+    const [{ data: profile, error: profileError }, { data: subscription, error: subscriptionError }] = await Promise.all([
+      supabase.from('profiles').select('status').eq('id', user.id).maybeSingle(),
+      supabase.from('subscriptions').select('plan_id').eq('user_id', user.id).eq('status', 'active').maybeSingle(),
     ]);
+    if (profileError || subscriptionError) return json({ error: 'Database unavailable' }, 503);
+    if (!profile || profile.status !== 'active') return json({ error: 'Account inactive' }, 403);
+    if (!subscription) return json({ error: 'Feature unavailable' }, 403);
+    const { data: entitlement, error: entitlementError } = await supabase.from('plan_entitlements').select('bool_value')
+      .eq('plan_id', subscription.plan_id).eq('key', 'feature_google_profile').maybeSingle();
+    if (entitlementError) return json({ error: 'Database unavailable' }, 503);
+    if (entitlement?.bool_value === false) return json({ error: 'Feature unavailable' }, 403);
+
+    // ── Get tokens ────────────────────────────────────────────────────────────
+    const [{ data: tokenRow, error: tokenError }, { data: conn, error: connectionError }] = await Promise.all([
+      supabase.from('google_connection_tokens').select('access_token, refresh_token').eq('connection_id', loc.connection_id).maybeSingle(),
+      supabase.from('google_connections').select('id,state,token_expiry').eq('id', loc.connection_id).eq('user_id', user.id).maybeSingle(),
+    ]);
+    if (tokenError || connectionError) return json({ error: 'Database unavailable' }, 503);
     if (!tokenRow) return json({ error: 'No token found' }, 400);
+    if (!conn || conn.state === 'DISCONNECTED' || conn.state === 'REVOKED') return json({ error: 'Reconnect Google' }, 409);
 
     let accessToken = tokenRow.access_token;
     const expiry = conn?.token_expiry ? new Date(conn.token_expiry) : null;
     if (!expiry || expiry < new Date(Date.now() + 60_000)) {
       const { clientId, clientSecret } = await getGoogleCreds(supabase);
       if (clientId && clientSecret) {
-        const newToken = await refreshAccessToken(tokenRow.refresh_token, clientId, clientSecret);
-        if (newToken) {
-          accessToken = newToken;
-          await supabase.from('google_connection_tokens')
-            .update({ access_token: newToken, updated_at: new Date().toISOString() })
-            .eq('connection_id', loc.connection_id);
-        }
-      }
+        const refreshed = await refreshAccessToken(tokenRow.refresh_token, clientId, clientSecret);
+        if (refreshed) {
+          accessToken = refreshed.access_token;
+          const expiresAt = new Date(Date.now() + Math.max(60, refreshed.expires_in - 60) * 1000).toISOString();
+          const [{ error: tokenSaveError }, { error: expirySaveError }] = await Promise.all([
+            supabase.from('google_connection_tokens')
+            .update({ access_token: refreshed.access_token, updated_at: new Date().toISOString() })
+            .eq('connection_id', loc.connection_id),
+            supabase.from('google_connections').update({ token_expiry: expiresAt }).eq('id', loc.connection_id).eq('user_id', user.id),
+          ]);
+          if (tokenSaveError || expirySaveError) return json({ error: 'Could not save refreshed Google authorization' }, 503);
+        } else return json({ error: 'Reconnect Google' }, 409);
+      } else return json({ error: 'Google OAuth is not configured' }, 503);
+      if (!accessToken) return json({ error: 'Reconnect Google' }, 409);
     }
 
     const locationName = loc.google_location_name;
     const authHdr = { Authorization: `Bearer ${accessToken}` };
+    const providerInit = { headers: authHdr, signal: AbortSignal.timeout(15_000) };
 
     // ── Fetch photos, Q&A, posts in parallel ─────────────────────────────────
     const [mediaRes, questionsRes, postsRes] = await Promise.all([
-      fetch(`https://mybusiness.googleapis.com/v4/${locationName}/media?pageSize=1`, { headers: authHdr }),
-      fetch(`https://mybusiness.googleapis.com/v4/${locationName}/questions?pageSize=10&answersPerQuestion=0`, { headers: authHdr }),
-      fetch(`https://mybusiness.googleapis.com/v4/${locationName}/localPosts?pageSize=10`, { headers: authHdr }),
+      fetch(`https://mybusiness.googleapis.com/v4/${locationName}/media?pageSize=1`, providerInit),
+      fetch(`https://mybusiness.googleapis.com/v4/${locationName}/questions?pageSize=10&answersPerQuestion=0`, providerInit),
+      fetch(`https://mybusiness.googleapis.com/v4/${locationName}/localPosts?pageSize=10`, providerInit),
     ]);
 
     // ── Photos ────────────────────────────────────────────────────────────────
@@ -101,7 +128,7 @@ Deno.serve(async (req) => {
         owner_total: d.totalOwnerMediaItemCount ?? null,
       };
     } else {
-      console.warn('media API:', mediaRes.status, await mediaRes.text());
+      console.warn('media API status:', mediaRes.status);
     }
 
     // ── Q&A ───────────────────────────────────────────────────────────────────
@@ -115,7 +142,7 @@ Deno.serve(async (req) => {
         unanswered:  questions.filter((q) => !q.topAnswers?.length).length,
       };
     } else {
-      console.warn('questions API:', questionsRes.status, await questionsRes.text());
+      console.warn('questions API status:', questionsRes.status);
     }
 
     // ── Posts ─────────────────────────────────────────────────────────────────
@@ -142,13 +169,13 @@ Deno.serve(async (req) => {
         clicks:     p.insights?.localPostActionsForCallToAction ?? null,
       }));
     } else {
-      console.warn('localPosts API:', postsRes.status, await postsRes.text());
+      console.warn('localPosts API status:', postsRes.status);
     }
 
     return json({ photos, qanda, posts });
 
   } catch (err) {
-    console.error('google-fetch-extra-data error:', err);
+    console.error('google-fetch-extra-data:', err instanceof Error ? err.name : 'UNKNOWN_ERROR');
     return json({ error: 'Internal error' }, 500);
   }
 });

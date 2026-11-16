@@ -484,7 +484,7 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - `GoogleProfilePage` shows the assessment explanation, methodology version, assessed-weight coverage, and per-check status/severity/source/value/time/evidence reference. It states that the assessment is calculated for this view and not saved as a report.
 - Existing `feature_google_profile` route and server-side entitlement/ownership checks are preserved. No new auth/billing system, schema/table, Google publish action, feedback-flow change, or GeoRank capability was added.
 - Phase 0 report: `19-MOFFU-2.0-PHASE-0-AUDIT.md`.
-- Critical migration gate: 69 local migration files versus 73 remote history rows, with only 28 identical filename versions. Reconcile migration history before any new DDL; this mismatch does not prove a missing production schema.
+- Critical migration gate: pre-GeoRank audit compared 69 local files with 73 remote rows (29 exact, 40 local-only, 44 remote-only). The new local-only GeoRank migration raises the checkout to 70 files/41 local-only; duplicate local versions 20241025000028/20241025000029 remain. Reconcile before applying DDL; this does not prove a missing production schema.
 - Live Supabase advisor findings are recorded in the audit report; no unrelated security changes were made.
 - Portal typecheck passed (`pnpm --filter @moffu/portal typecheck`). Test suites, production build, Deno typecheck (Deno is unavailable in this environment), and visual browser QA were not run. No deployment or production write was performed.
 
@@ -492,4 +492,41 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - Supabase Edge logs show `OPTIONS 404 NOT_FOUND` for `/functions/v1/google-fetch-extra-data`; live function inventory confirms the slug is not deployed. The local source already handled `OPTIONS`, but a missing deployed function never reached that handler.
 - `google-fetch-extra-data/index.ts` now has explicit preflight headers/status and strict manual Bearer validation; `supabase/config.toml` sets `verify_jwt = false` for this function because the handler validates the user token itself and must receive unauthenticated CORS preflight requests.
 - Portal now normalizes older `google-profile-analysis` responses that lack Phase 1 evidence fields, and supplemental-data fetch failures render an unavailable state instead of becoming unhandled promise rejections.
-- Portal typecheck passed after the fix. No Edge Function was deployed; photos/Q&A/posts will remain unavailable against the connected project until `google-fetch-extra-data` is deployed there.
+- Portal typecheck passed after the fix. Supabase `google-fetch-extra-data` v1 is now deployed to project `kgttncfkzdrgswfkkdji` with `verify_jwt=false`; live OPTIONS preflight returned 204 with CORS headers, and unauthenticated POST returned 401 with CORS headers. Authenticated Google provider/Places response and UI browser flow remain unverified.
+
+## Moffu 2.0 — neutral feedback invitation — 2026-11-16
+- `feedback-gate` now returns the saved public review URL for both positive and negative private-feedback responses.
+- The public feedback page displays the same optional honest Google review link before sentiment is selected. Choosing private feedback remains optional; existing `happy`/`unhappy` records and request statuses are preserved.
+- Feedback email copy now offers an honest public review and private feedback as equal choices, without positive/negative branching. The portal's request-creation copy describes the neutral flow.
+- Portal/web and Edge Function source changes are local only. `feedback-gate` and `feedback-send-email` were not deployed; no existing records were changed and no customer emails were sent.
+- Live project policies prohibit review suppression or selectively soliciting positive reviews; see [Google Maps user-generated content policy](https://support.google.com/contributionpolicy/answer/7400114).
+
+## Moffu 2.0 — Phase 1 validation update — 2026-11-16
+- Profile Doctor analysis regression suite: all 10 tests pass. Added assertions for methodology version, stable unique check IDs, provenance metadata, and unknown-data treatment.
+- Portal typecheck and production build pass. Existing Vite warnings remain about a shared Supabase module being both dynamically and statically imported and a large JS chunk.
+- Web typecheck passes. Next.js build compiled, linted, typechecked, and generated all static pages, then exited with `EPERM` while creating pnpm dependency symlinks in `.next/standalone`; no application compile error was reported.
+- Browser QA reached the local `/auth/login?next=/google-profile` gate. No credentials or Terms acceptance were entered, so authenticated UI and responsive visual inspection remain pending.
+- Deno is unavailable, so Supabase Edge Function typecheck was not run. Feedback Edge Functions remain local and undeployed.
+
+## Moffu 2.0 — authenticated Profile Doctor QA — 2026-11-16
+- User signed in to the local portal and the selected Black Drivo location loaded. Authenticated Google Business Profile response included primary category `Transportation service`, business fields, and Google Maps link.
+- Google Performance, profile discovery terms, competitor sample, rating analytics, and deployed supplemental photo/Q&A/posts data rendered in the page. At the 5 km radius, the page showed a 16-business returned sample; the UI correctly labels it as a sample, not a ranking/census.
+- Desktop UI visually checked at the current browser viewport. Profile readiness explanation correctly says it is a Moffu diagnostic, not Google's score or a prediction. Profile evidence fallback now derives observed values, correct GBP-versus-synced-review sources, evidence references, and freshness for legacy server v1 responses.
+- Pre-deploy verification showed `moffu-local-readiness-v1`; user-approved v2 deployment and authenticated post-deploy verification are recorded below. Local Edge Function source has 10/10 regression tests passing; Deno is unavailable.
+- Mobile visual QA remains pending. No refresh button was pressed, no production data was written, and no production deployment was performed in this QA step.
+
+## Moffu 2.0 — Profile Doctor v2 deployment — 2026-11-16
+- User-approved Supabase Edge Function deployment completed: `google-profile-analysis` is ACTIVE v2 on project `kgttncfkzdrgswfkkdji`, with `verify_jwt=true` preserved. Deployment included `index.ts` and `analysis.ts`; no migration or schema changes.
+- Authenticated local portal refresh after deployment succeeded. The page now reports `moffu-local-readiness-v2`, shows the methodology explanation and Moffu heuristic thresholds, and renders per-check observations, source, timestamp, evidence reference, severity, status, and coverage.
+- Live GBP category/profile, Google rating/reviews, performance, profile discovery terms, Places competitor sample, and deployed supplemental photo/Q&A/posts data returned for the selected location.
+- Portal typecheck/build and 10 focused analysis tests pass. Desktop browser QA passed. Mobile QA and current Vercel frontend deployment remain pending. Web build is blocked at standalone dependency symlink creation on Windows (`EPERM`), after compile and static page generation.
+
+## Moffu 2.0 — Phase 2 GeoRank foundation — 2026-11-16
+- Audited existing discovery/rank code. `google-search-business` is a generic Pakistan/English DataForSEO Maps query, not a selected-location grid scan. Google Places discovery order remains separate from rank.
+- Current DataForSEO docs describe coordinate-targeted Maps SERPs, but its Terms §7 and legal FAQ do not resolve Moffu's customer-facing rank analytics rights or upstream Google permissions. DataForSEO is a technical candidate only, not approved. See `20-MOFFU-2.0-PHASE-2-GEORANK-SOURCE-REVIEW.md`.
+- Implemented source-neutral grid generation, point-state validation, completion/top-3/top-10/mean-observed-rank metrics, survivorship-bias flag, configurable pricing estimator, and budget check in `supabase/functions/_shared/georank-core.ts`.
+- Verification: 7 focused Node tests pass; strict standalone TypeScript check and `git diff --check` pass.
+- Added local `/georank` portal route and sidebar item, authenticated DataForSEO adapter (off unless rights/config flags are enabled), history/grid UI, selected-location ownership and existing plan checks, per-point status persistence, provider cost reconciliation, and a staged additive migration for scan history/RLS/atomic reservations/expiry cleanup.
+- Portal `pnpm --filter @moffu/portal typecheck` passes; `git diff --check` passes. Focused GeoRank tests and helper strict TypeScript check passed in the earlier Phase 2 slice.
+- Not activated: no provider API call or credential read; migration was not applied. Supabase `georank` Edge Function v1 is deployed with JWT verification on to return configuration blockers; the scan schema is still missing. Production database still requires migration-history reconciliation. The synchronous worker lacks crash-resumable jobs/leases/retries, so production automation remains incomplete.
+- GeoRank remains disabled until source/coordinate rights review and server-side `DATAFORSEO_AUTH`, `GEORANK_ENABLED`, `GEORANK_SOURCE_RIGHTS_APPROVED`, `GEORANK_PRICE_PER_REQUEST_USD`, and `GEORANK_MONTHLY_CAP_USD` configuration are provided. The Admin Google Maps API key is not a GeoRank provider key.

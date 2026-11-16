@@ -188,6 +188,9 @@ password_requirements = ""
 # The handler accepts OPTIONS preflight and validates Bearer tokens with Supabase Auth itself.
 verify_jwt = false
 
+[functions.georank]
+verify_jwt = true
+
 # Configure passkey sign-ins.
 # [auth.passkey]
 # enabled = false

@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
 
     for (const account of accounts) {
       const locRes = await fetch(
-        `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?readMask=name,title,storefrontAddress,categories,latlng`,
+        `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?readMask=name,title,storefrontAddress,categories,latlng,metadata`,
         { headers: { Authorization: `Bearer ${accessToken}` } },
       );
       if (!locRes.ok) {
@@ -158,26 +158,36 @@ Deno.serve(async (req) => {
         storefrontAddress?: { addressLines?: string[] };
         categories?: { primaryCategory?: { displayName?: string } };
         latlng?: { latitude?: number; longitude?: number };
+        metadata?: { placeId?: string };
       }> = locData.locations ?? [];
 
       for (const loc of locations) {
         const address     = loc.storefrontAddress?.addressLines?.join(', ') ?? null;
         const description = loc.categories?.primaryCategory?.displayName ?? null;
-        const latitude    = loc.latlng?.latitude  ?? null;
-        const longitude   = loc.latlng?.longitude ?? null;
+        const latitude    = loc.latlng?.latitude;
+        const longitude   = loc.latlng?.longitude;
         const fullLocationName = loc.name.startsWith('accounts/')
           ? loc.name
           : `${account.name}/${loc.name}`;
-        await supabase.from('google_locations').upsert({
+        const locationRecord: Record<string, unknown> = {
           connection_id: conn.id,
           user_id: user.id,
           google_location_name: fullLocationName,
-          display_name: loc.title ?? null,
+          display_name: loc.title,
           address,
           description,
-          latitude,
-          longitude,
-        }, { onConflict: 'connection_id,google_location_name' });
+        };
+        if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+          locationRecord.latitude = latitude;
+          locationRecord.longitude = longitude;
+        }
+        if (loc.metadata?.placeId) locationRecord.dataforseo_place_id = loc.metadata.placeId;
+        const { error: upsertError } = await supabase.from('google_locations')
+          .upsert(locationRecord, { onConflict: 'connection_id,google_location_name' });
+        if (upsertError) {
+          console.error('Location upsert failed:', upsertError.message);
+          continue;
+        }
         total++;
       }
     }

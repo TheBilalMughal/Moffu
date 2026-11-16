@@ -16,6 +16,7 @@ import { BrandBrainPage } from '@/features/brand-brain/BrandBrainPage';
 import { InsightsPage } from '@/features/insights/InsightsPage';
 import { GoogleProfilePage } from '@/features/google/GoogleProfilePage';
 import { CompetitorPage } from '@/features/google/CompetitorPage';
+import { GeoRankPage } from '@/features/google/GeoRankPage';
 import { BillingPage } from '@/features/billing/BillingPage';
 import { GoogleCallbackPage } from '@/features/google/GoogleCallbackPage';
 import { GoogleConnectPage } from '@/features/google/GoogleConnectPage';
@@ -77,6 +78,7 @@ export function App() {
           <Route path="/insights/ratings"     element={<FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage>} />
           <Route path="/insights/agent-rules" element={<FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage>} />
           <Route path="/google-profile" element={<FeatureGatePage feature="feature_google_profile"><GoogleProfilePage /></FeatureGatePage>} />
+          <Route path="/georank" element={<FeatureGatePage feature="feature_google_profile"><GeoRankPage /></FeatureGatePage>} />
           <Route path="/competitors" element={<FeatureGatePage feature="feature_google_profile"><CompetitorPage /></FeatureGatePage>} />
           <Route path="/brand-brain" element={<FeatureGatePage feature="feature_brand_brain"><BrandBrainPage /></FeatureGatePage>} />
           <Route path="/billing"   element={<BillingPage />} />

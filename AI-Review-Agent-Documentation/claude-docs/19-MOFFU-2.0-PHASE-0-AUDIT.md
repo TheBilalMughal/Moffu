@@ -10,7 +10,7 @@ The repository already has a working Google Profile analysis path. It calls Goog
 
 Phase 1 can extend this vertical slice without adding tables or retaining additional Google/Places content. The first local implementation enriches every readiness check with stable evidence metadata and displays provenance, freshness, coverage, and methodology in the existing Google Profile page.
 
-**Do not add or apply database migrations until migration history is reconciled.** The checkout contains 69 migration files while the connected Supabase history reports 73 applied migrations. Comparing filename versions shows 28 matching versions, 41 local-only versions, and 45 remote-only versions. This discrepancy is not evidence of missing production tables; it is a blocker for new DDL until explained.
+**Do not apply database migrations until migration history is reconciled.** The read-only comparison was made before the new Phase 2 GeoRank migration: then the checkout had 69 files and Supabase reported 73 applied migrations. It found 29 exact version/name pairs, 40 local-only pairs, 44 remote-only pairs, and two duplicate local version IDs. The unapplied GeoRank migration now brings the checkout to 70 files and 41 local-only pairs. This discrepancy is not evidence of missing production tables; reconcile before applying new DDL.
 
 ## Repository and runtime evidence
 
@@ -52,7 +52,7 @@ The portal also contains Reviews, Complaints, Insights, Competitors, Brand Brain
 
 - Checked-in migration files: 69.
 - Connected project migration history: 73 entries.
-- Exact filename-version overlap: 28.
+- Exact filename-version overlap: 29 (corrected by Phase 2 read-only re-comparison below).
 - Local-only versions: 41; remote-only versions: 45.
 - Core tables confirmed live include `google_connections`, `google_connection_tokens`, `google_locations`, `reviews`, `profiles`, `subscriptions`, `plan_entitlements`, `usage_events`, `feature_flags`, and `org_feature_flags`.
 - RLS is enabled on the inspected core tables. `google_connection_tokens` has no user-facing RLS policies, as expected for service-role-only token access.
@@ -106,3 +106,20 @@ Status: **Implemented locally; validation pending.**
 - Node tests, production build, and browser visual QA were not run. `deno check` could not run because Deno is not installed in this environment.
 - Do not mark this slice fully tested until the remaining checks and visual QA are run.
 
+
+## Phase 1 validation update — 2026-11-16
+- Profile Doctor analysis: 10/10 focused Node tests pass, including methodology/evidence metadata, unique check IDs, and unknown-data exclusion from score coverage.
+- Portal TypeScript check and Vite production build pass. Existing bundle/chunk warnings remain.
+- Web TypeScript check passes. Next.js build completed compile, lint/type validation, and static page generation, but failed during standalone trace copying because Windows denied creation of pnpm dependency symlinks (`EPERM`).
+- Local browser route redirected to `/auth/login?next=/google-profile`; no credentials or Terms acceptance were entered. Authenticated visual QA remains pending.
+- Deno is unavailable, so no Deno function check was run. No feedback function deploy, migration, provider write, or customer email was performed.
+
+## Authenticated Profile Doctor browser QA — 2026-11-16
+- Signed-in local portal successfully fetched the selected Black Drivo location, separate primary category (`Transportation service`), business profile, rating/reviews, Google Performance, last-month discovery terms, category-based Places competitors, and supplemental photos/Q&A/posts.
+- Desktop Profile Doctor UI was visually inspected. A compatibility issue against the still-deployed v1 analysis response showed empty observed values and mislabeled synced-review evidence. The portal response adapter now fills legacy observed values and evidence references and classifies review evidence correctly; the refreshed page shows actual observations and evidence.
+- Before deployment, the connected analysis endpoint returned `moffu-local-readiness-v1`; the user-approved v2 deployment and post-deploy verification are recorded below. Mobile QA remains pending.
+
+## Profile Doctor v2 deployment — 2026-11-16
+- With user approval, deployed `google-profile-analysis` v2 to project `kgttncfkzdrgswfkkdji`; JWT verification remains enabled. Uploaded only the function entrypoint and its local analysis module. No database migration/schema change.
+- Authenticated refresh from the local portal verified the live response reports `moffu-local-readiness-v2` and renders evidence values, correct GBP/synced-review source, observation timestamps, stable refs, limits, and coverage.
+- Desktop page QA passed. Mobile QA and Vercel frontend deployment remain pending.
