@@ -594,6 +594,50 @@ function ReviewsLineChart({ reviews, totalReviews, avgRatingStr, replyRate: repl
 
 // ── Shortcuts Modal ───────────────────────────────────────────────────────────
 
+function LimitReachedModal({ type, onClose }: { type: 'draft' | 'reply'; onClose: () => void }) {
+  const isDraft = type === 'draft';
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
+      <div
+        className="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Icon */}
+        <div className="w-14 h-14 rounded-xl bg-[#EDE9FC] flex items-center justify-center mb-5 mx-auto">
+          <svg className="w-7 h-7 text-[#6C55E8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 9v3m0 3h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          </svg>
+        </div>
+
+        <h2 className="text-[1.125rem] font-bold text-[#111827] text-center mb-2">
+          {isDraft ? 'AI Draft Limit Reached' : 'Published Reply Limit Reached'}
+        </h2>
+        <p className="text-sm text-[#6B7280] text-center leading-relaxed mb-7">
+          {isDraft
+            ? 'You have used all AI draft generations allowed on your current plan. Upgrade to continue generating AI-powered replies.'
+            : 'You have used all published reply slots allowed on your current plan. Upgrade to continue publishing replies to Google.'}
+        </p>
+
+        <div className="flex flex-col gap-3">
+          <a
+            href="/billing"
+            className="block w-full text-center py-2.5 rounded-lg bg-[#6C55E8] hover:bg-[#5A42D1] text-white text-sm font-semibold transition-colors"
+            onClick={onClose}
+          >
+            Upgrade Plan
+          </a>
+          <button
+            onClick={onClose}
+            className="w-full py-2.5 rounded-lg border border-[#E5E7EB] text-sm font-semibold text-[#374151] hover:bg-[#F9FAFB] transition-colors"
+          >
+            Maybe Later
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ShortcutsModal({ onClose }: { onClose: () => void }) {
   const shortcuts = [
     { key: 'J / ↓', desc: 'Next review' },
@@ -1169,6 +1213,7 @@ export function ReviewsPage() {
   const [confirmOffModal, setConfirmOffModal] = useState<'sync' | 'draft' | 'publish' | null>(null);
   const [autoRunning, setAutoRunning] = useState<'draft' | 'publish' | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [limitModal, setLimitModal] = useState<{ type: 'draft' | 'reply' } | null>(null);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -1392,7 +1437,7 @@ export function ReviewsPage() {
         for (const r of toGenerate) {
           const res = await googleService.generateDraft(r.id);
           if (res.error) {
-            if (res.error.toLowerCase().includes('limit')) { draftLimitHit = true; break; }
+            if (res.limitReached) { draftLimitHit = true; break; }
           } else {
             draftedCount++;
           }
@@ -1400,6 +1445,7 @@ export function ReviewsPage() {
         await loadReviews();
         if (draftedCount > 0) setToast({ message: `Auto-drafted ${draftedCount} review${draftedCount !== 1 ? 's' : ''}.`, type: 'success' });
         if (draftLimitHit) {
+          setLimitModal({ type: 'draft' });
           await notifyLimitHit(
             'AI Draft Limit Reached',
             `${draftedCount} review${draftedCount !== 1 ? 's' : ''} drafted. Package limit reached — upgrade your plan to draft more reviews automatically.`,
@@ -1421,7 +1467,7 @@ export function ReviewsPage() {
         for (const r of toPublish) {
           const res = await googleService.publishReply(r.id, r.reply_draft as string);
           if (res.error) {
-            if (res.error.toLowerCase().includes('limit')) { publishLimitHit = true; break; }
+            if (res.limitReached) { publishLimitHit = true; break; }
           } else {
             publishedCount++;
           }
@@ -1429,6 +1475,7 @@ export function ReviewsPage() {
         await loadReviews();
         if (publishedCount > 0) setToast({ message: `Auto-published ${publishedCount} repl${publishedCount !== 1 ? 'ies' : 'y'} to Google.`, type: 'success' });
         if (publishLimitHit) {
+          setLimitModal({ type: 'reply' });
           await notifyLimitHit(
             'Reply Limit Reached',
             `${publishedCount} repl${publishedCount !== 1 ? 'ies' : 'y'} published. Package limit reached — upgrade your plan to publish more replies automatically.`,
@@ -1482,13 +1529,17 @@ export function ReviewsPage() {
       await supabase.from('reviews').update({ draft_history: newHistory }).eq('id', id);
     }
     setReviews(p => p.map(r => r.id === id ? { ...r, status: 'DRAFTING' as const } : r));
-    const { error } = await googleService.generateDraft(id);
-    if (error) { setReviews(p => p.map(r => r.id === id ? { ...r, status: 'NEW' as const } : r)); setToast({ message: error, type: 'error' }); }
-    else { await loadReviews(); }
+    const { error, limitReached } = await googleService.generateDraft(id);
+    if (error) {
+      setReviews(p => p.map(r => r.id === id ? { ...r, status: 'NEW' as const } : r));
+      if (limitReached) { setLimitModal({ type: 'draft' }); }
+      else { setToast({ message: error, type: 'error' }); }
+    } else { await loadReviews(); }
   }
 
   async function handlePublish(id: string, draft: string): Promise<{ error?: string }> {
     const r = await googleService.publishReply(id, draft);
+    if (r.limitReached) { setLimitModal({ type: 'reply' }); return r; }
     if (!r.error) { await loadReviews(); setToast({ message: 'Reply published to Google.', type: 'success' }); }
     return r;
   }
@@ -1518,14 +1569,17 @@ async function handleFlag(id: string) {
     setBulkPublishing(true);
     const draftReady = reviews.filter(r => selectedIds.has(r.id) && r.status === 'DRAFT_READY' && r.reply_draft);
     let published = 0;
+    let limitHit = false;
     for (const r of draftReady) {
       const result = await googleService.publishReply(r.id, r.reply_draft!);
+      if (result.limitReached) { limitHit = true; break; }
       if (!result.error) published++;
     }
     await loadReviews();
     setSelectedIds(new Set());
     setBulkPublishing(false);
-    setToast({ message: `Published ${published} repl${published !== 1 ? 'ies' : 'y'} to Google.`, type: 'success' });
+    if (limitHit) { setLimitModal({ type: 'reply' }); }
+    else { setToast({ message: `Published ${published} repl${published !== 1 ? 'ies' : 'y'} to Google.`, type: 'success' }); }
   }
 
   async function handleBulkMarkAttention() {
@@ -1594,6 +1648,12 @@ async function handleFlag(id: string) {
 
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)}/>}
       {toast && <Toast message={toast.message} type={toast.type} onDone={() => setToast(null)}/>}
+      {limitModal && (
+        <LimitReachedModal
+          type={limitModal.type}
+          onClose={() => setLimitModal(null)}
+        />
+      )}
       {autoModal === 'sync' && (
         <AutoSyncModal onConfirm={handleAutoSyncModalConfirm} onCancel={() => setAutoModal(null)}/>
       )}

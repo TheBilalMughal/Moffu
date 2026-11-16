@@ -111,7 +111,7 @@ PHASE 6 — Billing & Subscription (schema + UI + usage tracking + server-side l
 - `prohibited_phrases`: enforced via prompt instruction
 - Server-side billing check (inlined `checkAndRecordUsage`): queries `subscriptions` + `plan_entitlements` + `usage_events`; returns 429 when limit reached
 
-**Portal UI:** ReviewsPage — "Generate Draft" button calls edge function, populates editable textarea; "Approve & Publish" calls `google-publish-reply`
+**Portal UI:** ReviewsPage — "Generate Draft" button calls edge function, populates editable textarea; "Approve & Publish" calls `google-publish-reply`; limit reached (429) shows LimitReachedModal with upgrade CTA linking to /billing
 
 **Usage tracking:** Server-side in edge function (`usage_events` insert after successful draft generation)
 

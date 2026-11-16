@@ -225,7 +225,7 @@ export const googleService = {
     return {};
   },
 
-  async generateDraft(reviewId: string): Promise<{ draft?: string; error?: string }> {
+  async generateDraft(reviewId: string): Promise<{ draft?: string; error?: string; limitReached?: boolean }> {
     const auth = await getAuthHeader();
     if (!auth) return { error: 'Not authenticated' };
 
@@ -235,11 +235,12 @@ export const googleService = {
       body: JSON.stringify({ review_id: reviewId }),
     });
     const json = await res.json();
+    if (res.status === 429) return { error: json.error ?? 'AI draft limit reached', limitReached: true };
     if (!res.ok) return { error: json.error ?? 'AI generation failed' };
     return { draft: json.draft };
   },
 
-  async publishReply(reviewId: string, replyText: string): Promise<{ error?: string }> {
+  async publishReply(reviewId: string, replyText: string): Promise<{ error?: string; limitReached?: boolean }> {
     const auth = await getAuthHeader();
     if (!auth) return { error: 'Not authenticated' };
 
@@ -249,6 +250,7 @@ export const googleService = {
       body: JSON.stringify({ review_id: reviewId, reply_text: replyText }),
     });
     const json = await res.json();
+    if (res.status === 429) return { error: json.error ?? 'Published reply limit reached', limitReached: true };
     if (!res.ok) return { error: json.error ?? 'Publish failed' };
     return {};
   },
