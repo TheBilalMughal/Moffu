@@ -350,6 +350,17 @@ function SetupGuide({ status }: { status: SetupStatus }) {
 
 // ─── Weekly Highlight Banner ──────────────────────────────────────────────────
 
+function daysToHuman(days: number): string {
+  const y = Math.floor(days / 365);
+  const m = Math.floor((days % 365) / 30);
+  const d = days % 30;
+  const parts: string[] = [];
+  if (y > 0) parts.push(`${y} year${y !== 1 ? 's' : ''}`);
+  if (m > 0) parts.push(`${m} month${m !== 1 ? 's' : ''}`);
+  if (d > 0 || parts.length === 0) parts.push(`${d} day${d !== 1 ? 's' : ''}`);
+  return parts.join(', ');
+}
+
 function WeeklyHighlight({ dash }: { dash: DashboardData }) {
   const oldestPendingUrgent = dash.oldestPendingDays != null && dash.oldestPendingDays >= 3;
   const perfectWeek = dash.thisWeekTotal > 0 && dash.thisWeekReplied === dash.thisWeekTotal;
@@ -365,7 +376,7 @@ function WeeklyHighlight({ dash }: { dash: DashboardData }) {
       dot: 'bg-amber-400',
       label: 'Action needed',
       msg: `${dash.pending} review${dash.pending !== 1 ? 's' : ''} waiting for a reply`,
-      sub: `Oldest is ${dash.oldestPendingDays} days old`,
+      sub: `Oldest is ${daysToHuman(dash.oldestPendingDays!)} old`,
       cta: <Link to="/reviews" className="text-[11px] font-semibold text-[#6C55E8] hover:underline whitespace-nowrap">Reply now →</Link>,
     };
   } else if (perfectWeek) {
@@ -386,7 +397,7 @@ function WeeklyHighlight({ dash }: { dash: DashboardData }) {
   }
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[#F9FAFB] border border-[#E5E7EB] mb-5">
+    <div className="flex items-center gap-2.5 mb-5">
       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${v.dot}`} />
       <span className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide flex-shrink-0">{v.label}</span>
       <span className="w-px h-3 bg-[#E5E7EB] flex-shrink-0" />
@@ -1182,18 +1193,6 @@ export function OverviewPage() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            {dash && dash.pending > 0 && (
-              <Link
-                to="/reviews"
-                className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-[#111827] hover:bg-[#6C55E8] rounded-lg transition-colors"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/>
-                </svg>
-                {dash.pending} pending {dash.pending === 1 ? 'reply' : 'replies'}
-              </Link>
-            )}
           </div>
         </div>
       </div>
