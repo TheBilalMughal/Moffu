@@ -1126,7 +1126,18 @@ export function OverviewPage() {
         );
         if (res.ok) {
           const data = await res.json();
-          if (data.summary) setInsights(data.summary as InsightsSummary);
+          if (data.totals) {
+            setInsights({
+              impressions:        data.totals.total_views ?? 0,
+              direction_requests: data.totals.direction_requests ?? 0,
+              call_clicks:        data.totals.calls ?? 0,
+              website_clicks:     data.totals.website_clicks ?? 0,
+              trend: (data.metrics ?? []).map((m: { date: string; views_search: number; views_maps: number }) => ({
+                date:        m.date,
+                impressions: (m.views_search ?? 0) + (m.views_maps ?? 0),
+              })),
+            });
+          }
         }
       } catch { /* non-fatal */ }
       setLoadingInsights(false);
