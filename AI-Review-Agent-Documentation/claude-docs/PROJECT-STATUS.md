@@ -530,3 +530,42 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - Portal `pnpm --filter @moffu/portal typecheck` passes; `git diff --check` passes. Focused GeoRank tests and helper strict TypeScript check passed in the earlier Phase 2 slice.
 - Not activated: no provider API call or credential read; migration was not applied. Supabase `georank` Edge Function v1 is deployed with JWT verification on to return configuration blockers; the scan schema is still missing. Production database still requires migration-history reconciliation. The synchronous worker lacks crash-resumable jobs/leases/retries, so production automation remains incomplete.
 - GeoRank remains disabled until source/coordinate rights review and server-side `DATAFORSEO_AUTH`, `GEORANK_ENABLED`, `GEORANK_SOURCE_RIGHTS_APPROVED`, `GEORANK_PRICE_PER_REQUEST_USD`, and `GEORANK_MONTHLY_CAP_USD` configuration are provided. The Admin Google Maps API key is not a GeoRank provider key.
+
+## Moffu 2.0 — Phase 2 live-state correction — 2026-11-17
+- Supabase GeoRank scan tables and RLS were applied to project `kgttncfkzdrgswfkkdji`; remote migration history records `20261116083141_georank_scans_and_usage_reservations`. The checked-in migration filename is aligned to that applied version.
+- After the signed-in Google Business Profile refresh, 4 of 7 saved locations have coordinates and Google Maps Place IDs. Of 2 selected locations, Black Drivo is ready; Pakswedish School Tibba Kamangran still lacks both.
+- `google-fetch-locations` v28 is deployed with Business Profile metadata Place ID and coordinate persistence. GeoRank remains gated: no paid DataForSEO rank request was made, and provider rights, DataForSEO credentials, server cost limits, and permitted coordinate provenance still need resolution.
+- 2026-11-17 DataForSEO check: `DATAFORSEO_AUTH` is present but a free `appendix/user_data` request rejected it. GeoRank now supports `DATAFORSEO_LOGIN` and `DATAFORSEO_PASSWORD` server secrets and shows a non-billable connection test. Live Maps base price `$0.002` and initial per-user monthly cap `$0.10` are configured; the cost-limit blocker cleared. The rights and enabled gates remain off; no paid scan was sent. GeoRank Edge Function v5 is deployed with JWT verification on.
+- Earlier Phase 2 notes describe the 2026-11-16 pre-migration state. Their “migration not applied” statements are historical, not current.
+
+## Google Profile page redesign + GBP Posts system — 2026-11-17
+**IMPLEMENTED LOCALLY (not pushed)**
+
+**GoogleProfilePage.tsx — full layout redesign (2026-11-17 v2):**
+- Card top borders removed (`Metric` component no longer has the purple accent bar; plain white cards)
+- `Section` component: accepts optional `className` prop for `flex-1` height stretching
+- Layout order: KPI cards → Search & Maps performance section → 2-col grid (Business Profile + Review Analytics | Profile Doctor)
+- Photos/Q&A/Posts section: removed from this page entirely (moved to dedicated subpage)
+- Left column: `flex flex-col gap-6` with Business Profile + Review Analytics each `flex-1` (combined height matches Profile Doctor on the right)
+- Review analytics: improved 5-color rating bars + monthly SVG trend chart; `StatusDot` component for per-check status labels
+- Search & Maps: stacked daily bar chart (Search purple + Maps light purple) with legend and 5 stat cards (no top accent)
+
+**Google Business Profile Posts — dedicated subpage:**
+- `apps/portal/src/features/google/GooglePostsPage.tsx` — new full-page social media post creator
+  - Three post types: What's New (STANDARD), Event, Offer — card selector
+  - 1500-char summary textarea with live counter
+  - Event/Offer fields: title, start date, end date, coupon code (Offer only), T&C (Offer only)
+  - CTA chip selector: No button / Learn more / Book / Order online / Shop / Sign up / Call now
+  - Live preview panel (PostPreview matches Google Maps post card style)
+  - Google post guidelines sidebar
+  - Recent posts list from `googleService.fetchExtraData()`
+  - Publishes via `googleService.createGooglePost()`
+  - Google logo attribution at bottom
+- `DashboardLayout.tsx`: “Posts” submenu item added to Overview RAIL_GROUPS under Google Profile
+- `App.tsx`: `/google-profile/posts` route added, wrapped in `FeatureGatePage` with `feature_google_profile`
+
+**Edge Function:**
+- `supabase/functions/google-create-post/index.ts` — POST to `mybusiness.googleapis.com/v4/{locationName}/localPosts`; validates location_id, summary (max 1500), topic_type (STANDARD/EVENT/OFFER); builds callToAction and event schedule; same token refresh pattern
+- `google.service.ts` — `createGooglePost(locationId, data)` method added
+
+**Not pushed/deployed:** `push nai krna hai` constraint in effect.

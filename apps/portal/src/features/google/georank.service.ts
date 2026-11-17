@@ -44,6 +44,8 @@ export type GeoRankStatus = {
   blockers: string[];
 };
 
+export type GeoRankProviderCheck = { connected: boolean; reason: string | null };
+
 export type GeoRankRequest = {
   location_id: string;
   keyword: string;
@@ -77,6 +79,9 @@ async function invoke<T>(body: Record<string, unknown>): Promise<T> {
 export const georankService = {
   getStatus(locationId: string) {
     return invoke<GeoRankStatus>({ action: 'status', location_id: locationId });
+  },
+  checkProvider(locationId: string) {
+    return invoke<GeoRankProviderCheck>({ action: 'provider_check', location_id: locationId });
   },
   getHistory(locationId: string) {
     return invoke<{ history: GeoScanResponse[] }>({ action: 'history', location_id: locationId });

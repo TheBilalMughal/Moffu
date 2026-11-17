@@ -3,6 +3,16 @@
 **Reviewed:** 2026-11-16  
 **State:** Source-neutral domain core implemented locally; provider use, durable scans, and customer-facing GeoRank remain gated.
 
+### Live-state correction — 2026-11-17
+
+The historical statements below that the scan migration was unapplied describe the 2026-11-16 review snapshot. The migration was subsequently applied to Supabase project `kgttncfkzdrgswfkkdji`; remote history records version `20261116083141` and the scan, point, and reservation tables were verified with RLS enabled. The checked-in filename is aligned to that version. After a signed-in Business Profile refresh on 2026-11-17, 4 of 7 locations have coordinates and Google Maps Place IDs. Of 2 selected locations, Black Drivo is ready; Pakswedish School Tibba Kamangran is missing both. No paid DataForSEO scan was sent. Provider rights, valid credentials, permitted coordinate provenance, and durable workers remain unresolved; cost limits were subsequently configured as described below.
+
+### DataForSEO configuration check — 2026-11-17
+
+`DATAFORSEO_AUTH` exists in project secrets, but the signed-in portal's non-billable `GET /v3/appendix/user_data` connection check received an authentication rejection. The secret's contents were not read or printed. The GeoRank function now accepts `DATAFORSEO_LOGIN` and `DATAFORSEO_PASSWORD` as server secrets and constructs Basic authentication internally; the legacy `DATAFORSEO_AUTH` fallback remains. Obtain the API login and password from DataForSEO's API Access page and set them as Supabase Edge Function secrets, never in the Google Maps API key field or client code.
+
+The server price was set to `$0.002` per Live Maps request and the initial per-user monthly cap to `$0.10`, matching the published base price at this check. The portal confirms that the cost-limit blocker cleared. `GEORANK_SOURCE_RIGHTS_APPROVED` and `GEORANK_ENABLED` remain unset, so no paid scan can start. The price/cap are pilot values, not a provider-side spending limit or a global account cap. Source rights, coordinate provenance, and durable execution still need review before activation.
+
 ## Executive result
 
 DataForSEO Google Maps SERP is a technical candidate, not an approved Moffu GeoRank source. Its API supports coordinate-centered Maps queries, result depth, device, and `search_this_area`; however, DataForSEO's published terms leave the customer's compliance with upstream search-engine rights to the customer, and its legal FAQ says it cannot confirm whether a particular product use complies with its terms. Moffu's commercial local-rank analytics use therefore needs written source-rights review before live scans or retained customer results.
@@ -74,8 +84,8 @@ This is migration metadata only; remote SQL bodies were not retrieved or compare
 |---|---|---|
 | Approved provider and upstream use/retention/display rights | BLOCKED | DataForSEO is a technical candidate only; terms do not resolve Moffu's intended product use; obtain written rights review |
 | Source-neutral geometry, state, metrics, and cost core | TESTED | `_shared/georank-core.ts`; 7 focused tests pass; strict standalone TypeScript check passes |
-| Local scan schema, history, and atomic cost reservation | IMPLEMENTED LOCALLY | `20261116075126_georank_scans_and_usage_reservations.sql`; not applied due migration-history mismatch |
+| Local scan schema, history, and atomic cost reservation | DEPLOYED | `20261116083141_georank_scans_and_usage_reservations.sql`; tables and RLS verified in production; broader migration-history mismatch still needs reconciliation |
 | Crash-resumable jobs, leases, retry, and cancellation | NOT STARTED | Current handler is bounded synchronous work; production queue worker remains required |
 | Provider adapter | IMPLEMENTED BUT DISABLED | `supabase/functions/georank/index.ts`; no external requests made; rights and coordinate provenance unresolved |
 | Competitor Radar integration | IN_PROGRESS | Existing GBP/Places competitor sample remains; no GeoRank comparisons exposed |
-| Customer GeoRank UI | IMPLEMENTED LOCALLY, GATED | `/georank`; estimate, scan grid, metrics and history; needs migration, rights, and server config |
+| Customer GeoRank UI | IMPLEMENTED, GATED | `/georank`; estimate, scan grid, metrics and history; production schema is deployed, rights and server configuration remain required |

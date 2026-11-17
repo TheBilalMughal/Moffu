@@ -288,6 +288,30 @@ export const googleService = {
     }
   },
 
+  async createGooglePost(locationId: string, data: {
+    summary: string;
+    topic_type?: 'STANDARD' | 'EVENT' | 'OFFER';
+    cta_type?: string;
+    cta_url?: string;
+    event_title?: string;
+    event_start_date?: string;
+    event_end_date?: string;
+  }): Promise<{
+    post?: { name: string; summary: string | null; post_type: string | null; state: string | null; created_at: string | null; cta_type: string | null };
+    error?: string;
+  }> {
+    const auth = await getAuthHeader();
+    if (!auth) return { error: 'Not authenticated' };
+    const res = await fetch(`${BASE}/google-create-post`, {
+      method: 'POST',
+      headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ location_id: locationId, ...data }),
+    });
+    const json = await res.json();
+    if (!res.ok) return { error: json.error ?? 'Failed to create post' };
+    return { post: json.post };
+  },
+
   async fetchInsights(locationId: string | null, startDate: string, endDate: string): Promise<{
     data?: {
       metrics: Array<{ date: string; views_search: number; views_maps: number; calls: number; website_clicks: number; direction_requests: number }>;

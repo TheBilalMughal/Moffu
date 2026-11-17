@@ -11,11 +11,9 @@ const REFRESH_MS=15*60*1000;
 const panel='rounded-xl border border-[#E5E7EB] bg-white';
 const number=(n:number|null|undefined)=>n==null ? '—' : n.toLocaleString();
 
-// ── Date helpers ──────────────────────────────────────────────────────────────
 function today():string { return new Date().toISOString().slice(0,10); }
 function fmtMonth(iso:string):string { const d=new Date(iso+'T00:00:00'); return d.toLocaleDateString('en-GB',{month:'short',year:'2-digit'}); }
 
-// ── Review analytics types ────────────────────────────────────────────────────
 interface ReviewRow { rating: number|null; published_at: string|null; reply_text: string|null; }
 interface MonthBucket { month: string; count: number; replied: number; }
 interface RatingBucket { rating: number; count: number; }
@@ -37,21 +35,23 @@ function buildRatingBuckets(rows:ReviewRow[]):RatingBucket[] {
   return [5,4,3,2,1].map(rating=>({rating,count:counts[rating]!}));
 }
 
-// ── Insight trend type ────────────────────────────────────────────────────────
 interface InsightMetric { date:string; views_search:number; views_maps:number; calls:number; website_clicks:number; direction_requests:number; }
 interface InsightTotals { views_search:number; views_maps:number; calls:number; website_clicks:number; direction_requests:number; total_views:number; }
+
 function safeUrl(value:string|null|undefined):string|undefined {
   try { const url=new URL(value ?? ''); return ['https:','http:'].includes(url.protocol) ? url.href : undefined; }
   catch { return undefined; }
 }
+
 function GoogleAttribution(){
   return <div className="flex items-center gap-2 text-xs text-[#6B7280]">
     <img src="https://maps.gstatic.com/mapfiles/api-3/images/powered-by-google-on-white3.png"
       alt="Powered by Google" className="h-[18px] w-auto" />
   </div>;
 }
-function Section({title,description,action,children}:{title:string;description?:string;action?:ReactNode;children:ReactNode}){
-  return <section className={panel}>
+
+function Section({title,description,action,children,className=''}:{title:string;description?:string;action?:ReactNode;children:ReactNode;className?:string}){
+  return <section className={`${panel} ${className}`}>
     <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#F3F4F6] p-5">
       <div><h2 className="text-sm font-semibold text-[#111827]">{title}</h2>
         {description && <p className="mt-1 max-w-2xl text-xs leading-relaxed text-[#6B7280]">{description}</p>}</div>{action}
@@ -61,13 +61,23 @@ function Section({title,description,action,children}:{title:string;description?:
 function Empty({children}:{children:ReactNode}){
   return <p className="py-5 text-sm leading-relaxed text-[#6B7280]">{children}</p>;
 }
-function Metric({label,value,detail}:{label:string;value:ReactNode;detail?:string}){
+
+function Metric({label,value,detail,icon}:{label:string;value:ReactNode;detail?:string;icon?:ReactNode}){
   return <div className={panel+' p-4'}>
-    <p className="text-xs text-[#6B7280]">{label}</p>
+    <div className="flex items-start justify-between gap-2">
+      <p className="text-xs leading-relaxed text-[#6B7280]">{label}</p>
+      {icon && <span className="flex-shrink-0 text-[#6C55E8] opacity-60">{icon}</span>}
+    </div>
     <p className="mt-2 font-mono text-2xl font-semibold tabular-nums text-[#111827]">{value}</p>
     {detail && <p className="mt-1 text-[11px] leading-relaxed text-[#9CA3AF]">{detail}</p>}
   </div>;
 }
+
+const IconShield=()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
+const IconStar=()=><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>;
+const IconCheck=()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+const IconPin=()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
+
 function evidenceSourceLabel(source:'google_business_profile'|'synced_reviews'|'none'){
   return source==='google_business_profile' ? 'Google Business Profile' : source==='synced_reviews' ? 'Synced reviews' : 'Unavailable';
 }
@@ -75,6 +85,11 @@ function evidenceTime(value:string|null){
   if(!value) return 'Not observed';
   const date=new Date(value);
   return Number.isNaN(date.getTime()) ? 'Not observed' : date.toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
+}
+
+function StatusDot({status}:{status:string}){
+  const cls = status==='pass' ? 'bg-emerald-500' : status==='action' ? 'bg-amber-400' : 'bg-[#D1D5DB]';
+  return <span className={`inline-block h-2 w-2 flex-shrink-0 rounded-full ${cls} mt-1`} />;
 }
 
 export function GoogleProfilePage(){
@@ -93,25 +108,16 @@ export function GoogleProfilePage(){
   const [initRevision,setInitRevision]=useState(0);
   const selectorRef=useRef<HTMLDivElement>(null);
 
-  // ── Global date filter (empty = no filter / use defaults) ────────────────
   const [globalFrom,setGlobalFrom]=useState('');
   const [globalTo,setGlobalTo]=useState('');
 
-  // ── Review analytics state ────────────────────────────────────────────────
   const [reviewRows,setReviewRows]=useState<ReviewRow[]|null>(null);
   const [reviewLoading,setReviewLoading]=useState(false);
 
-  // ── Insights state ────────────────────────────────────────────────────────
   const [insightMetrics,setInsightMetrics]=useState<InsightMetric[]|null>(null);
   const [insightTotals,setInsightTotals]=useState<InsightTotals|null>(null);
   const [insightLoading,setInsightLoading]=useState(false);
   const [insightError,setInsightError]=useState('');
-
-  // ── Extra data state (photos, Q&A, posts) ─────────────────────────────────
-  type ExtraData = Awaited<ReturnType<typeof googleService.fetchExtraData>>['data'];
-  const [extraData,setExtraData]=useState<ExtraData>(undefined);
-  const [extraLoading,setExtraLoading]=useState(false);
-  const [extraError,setExtraError]=useState('');
 
   useEffect(()=>{
     let active=true;
@@ -128,14 +134,15 @@ export function GoogleProfilePage(){
     return ()=>{active=false;};
   },[initRevision]);
 
-  // "All locations" needs an explicit local choice. An invalid global selection never falls back to a different business.
   const locationId=globalLocationId ?? localId;
   const selected=locations.find(l=>l.id===locationId);
+
   useEffect(()=>{
     const close=(e:MouseEvent)=>{if(!selectorRef.current?.contains(e.target as Node)) setMenuOpen(false);};
     document.addEventListener('mousedown',close);
     return ()=>document.removeEventListener('mousedown',close);
   },[]);
+
   useEffect(()=>{
     if (!selected || !connection) {setAnalysis(null);setError('');setLoading(false);return;}
     const controller=new AbortController();
@@ -154,7 +161,6 @@ export function GoogleProfilePage(){
     return ()=>clearInterval(timer);
   },[selected?.id,radius]);
 
-  // ── Fetch review rows from Supabase ───────────────────────────────────────
   useEffect(()=>{
     if (!selected) { setReviewRows(null); return; }
     let alive=true;
@@ -172,7 +178,6 @@ export function GoogleProfilePage(){
     return ()=>{ alive=false; };
   },[selected?.id, globalFrom, globalTo]);
 
-  // ── Fetch insights with global date range ─────────────────────────────────
   useEffect(()=>{
     if (!selected || !connection) { setInsightMetrics(null); setInsightTotals(null); return; }
     let alive=true;
@@ -185,19 +190,6 @@ export function GoogleProfilePage(){
     });
     return ()=>{ alive=false; };
   },[selected?.id, connection?.id, globalFrom, globalTo]);
-
-  // ── Fetch photos, Q&A, posts ──────────────────────────────────────────────
-  useEffect(()=>{
-    if (!selected || !connection) { setExtraData(undefined); setExtraError(''); setExtraLoading(false); return; }
-    let alive=true;
-    setExtraLoading(true); setExtraData(undefined); setExtraError('');
-    googleService.fetchExtraData(selected.id).then(r=>{
-      if (alive) { setExtraData(r.data); setExtraError(r.error ?? ''); setExtraLoading(false); }
-    }).catch(()=>{
-      if (alive) { setExtraData(undefined); setExtraError('Photos, Q&A and posts are temporarily unavailable. Profile diagnostics can still be used.'); setExtraLoading(false); }
-    });
-    return ()=>{ alive=false; };
-  },[selected?.id, connection?.id]);
 
   if(initialLoading) return <div className="space-y-4 p-6" role="status" aria-label="Loading business locations">
     {[0,1,2].map(n=><div key={n} className="h-24 animate-pulse rounded-xl bg-[#F3F4F6] motion-reduce:animate-none" />)}
@@ -227,10 +219,13 @@ export function GoogleProfilePage(){
     ['Business description',profile?.description],
     ['Regular hours',profile?.has_hours==null ? null : profile.has_hours ? 'Configured' : 'Not returned'],
   ];
+
+  // suppress unused warning
+  void insightLoading; void insightTotals;
+
   return <div className="w-full space-y-6 p-4 sm:p-6">
     <header className="flex flex-wrap items-start justify-between gap-4">
       <div>
-
         <h1 className="text-xl font-semibold tracking-tight text-[#111827]">{selected?.display_name ?? 'Select a business location'}</h1>
         <p className="mt-1 text-xs leading-relaxed text-[#6B7280]">Profile readiness, search performance and nearby businesses for this location.</p>
       </div>
@@ -245,11 +240,11 @@ export function GoogleProfilePage(){
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m6 9 6 6 6-6"/>
             </svg>
           </button>
-          {menuOpen && <div id="profile-location-options" className="absolute left-0 z-30 mt-1 max-h-72 w-72 sm:left-auto sm:right-0 overflow-y-auto rounded-lg border border-[#E5E7EB] bg-white p-1 shadow-sm"
+          {menuOpen && <div id="profile-location-options" className="absolute left-0 z-30 mt-1 max-h-72 w-72 sm:left-auto sm:right-0 overflow-y-auto rounded-xl border border-[#E5E7EB] bg-white p-1 shadow-sm"
             onKeyDown={e=>{if(e.key==='Escape') setMenuOpen(false);}}>
             {locations.map(l=><button key={l.id} type="button" aria-pressed={l.id===locationId}
               onClick={()=>{setLocalId(l.id);setMenuOpen(false);}}
-              className={'block w-full rounded-md px-3 py-2 text-left text-xs hover:bg-[#F9FAFB] '+(l.id===locationId ? 'bg-[#F5F3FF] text-[#6C55E8]' : 'text-[#374151]')}>
+              className={'block w-full rounded-lg px-3 py-2 text-left text-xs hover:bg-[#F9FAFB] '+(l.id===locationId ? 'bg-[#F5F3FF] text-[#6C55E8]' : 'text-[#374151]')}>
               {l.display_name ?? 'Unnamed location'}{l.address && <span className="mt-1 block text-[11px] text-[#6B7280]">{l.address}</span>}
             </button>)}
           </div>}
@@ -260,10 +255,12 @@ export function GoogleProfilePage(){
         </button>
       </div>
     </header>
+
     {!selected && <Section title="Choose a location"><Empty>
       {globalLocationId ? 'The selected location is not available. Choose an active location in the top bar.' :
         'Select a business location in Settings to start your analysis.'}
     </Empty><Link to="/settings" className="text-sm text-[#6C55E8]">Manage Google locations</Link></Section>}
+
     {selected && <>
       {current && (
         <div className="flex justify-end text-[11px] text-[#6B7280]">
@@ -272,144 +269,25 @@ export function GoogleProfilePage(){
       )}
       {error && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>}
       {loading && <div role="status" aria-live="polite" className="space-y-4">
-        <p className="text-xs text-[#6B7280]">Fetching this location’s Google profile and search data…</p>
+        <p className="text-xs text-[#6B7280]">Fetching this location's Google profile and search data…</p>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">{[0,1,2,3].map(n=><div key={n} className="h-24 animate-pulse rounded-xl bg-[#F3F4F6] motion-reduce:animate-none" />)}</div>
       </div>}
       {current && <>
         {current.warnings.length>0 && <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-900" role="status">
           Some Google data is unavailable. Each section below explains what could be loaded.
         </div>}
+
+        {/* ── KPI cards ───────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-          <Metric label="Moffu SEO readiness" value={readiness?.score==null ? '—' : readiness.score+'/100'} detail={'Coverage: '+readiness?.coverage+'/100 weight assessed'} />
-          <Metric label="Google rating" value={reviews?.rating?.toFixed(1) ?? '—'} detail={reviews?.google_review_count==null ? 'Google Places rating unavailable' : number(reviews.google_review_count)+' Google reviews'} />
-          <Metric label="Synced reviews answered" value={reviews?.total ? Math.round(reviews.replied/reviews.total*100)+'%' : '—'} detail={number(reviews?.replied)+' of '+number(reviews?.total)+' synced reviews'} />
-          <Metric label={'Nearby average rating · '+radius+' km'} value={average?.toFixed(1) ?? '—'} detail={rated.length+' rated businesses in the returned sample'} />
+          <Metric label="Moffu SEO readiness" value={readiness?.score==null ? '—' : readiness.score+'/100'}
+            detail={'Coverage: '+readiness?.coverage+'/100 weight assessed'} icon={<IconShield/>} />
+          <Metric label="Google rating" value={reviews?.rating?.toFixed(1) ?? '—'}
+            detail={reviews?.google_review_count==null ? 'Google Places rating unavailable' : number(reviews.google_review_count)+' Google reviews'} icon={<IconStar/>} />
+          <Metric label="Synced reviews answered" value={reviews?.total ? Math.round(reviews.replied/reviews.total*100)+'%' : '—'}
+            detail={number(reviews?.replied)+' of '+number(reviews?.total)+' synced reviews'} icon={<IconCheck/>} />
+          <Metric label={'Nearby avg · '+radius+' km'} value={average?.toFixed(1) ?? '—'}
+            detail={rated.length+' rated businesses in the sample'} icon={<IconPin/>} />
         </div>
-        <div className="grid gap-6 xl:grid-cols-2">
-          <Section title="Business profile" description="Business category and description are fetched as separate Google fields.">
-            {profile?.source!=='google_business_profile' && <p className="mb-4 text-xs leading-relaxed text-amber-700">{warningText('profile')} Saved identity is shown; unknown fields are not scored as missing.</p>}
-            <dl className="divide-y divide-[#F3F4F6]">{fields.map(([label,value])=><div key={label} className="grid grid-cols-[120px_1fr] gap-4 py-3 text-xs">
-              <dt className="text-[#6B7280]">{label}</dt><dd className="break-words font-medium leading-relaxed text-[#374151]">
-                {label==='Website' && safeUrl(value) ? <a href={safeUrl(value)} target="_blank" rel="noreferrer" className="text-[#6C55E8] hover:underline">{value}</a> : value || 'Not available'}
-              </dd></div>)}</dl>
-            {safeUrl(profile?.maps_url) && <a className="mt-4 inline-block text-xs font-medium text-[#6C55E8]" href={safeUrl(profile?.maps_url)} target="_blank" rel="noreferrer">View this business on Google Maps</a>}
-          </Section>
-          <Section title="Profile Doctor diagnostics" description="A versioned Moffu assessment based on the data available for this location.">
-            <p className="mb-4 text-xs leading-relaxed text-[#6B7280]">{readiness?.explanation}</p>
-            <div className="mb-5 rounded-lg bg-[#F9FAFB] p-4">
-              <div className="mb-2 flex items-center justify-between gap-3 text-xs">
-                <span className="font-medium text-[#374151]">Diagnostic coverage</span>
-                <span className="font-mono tabular-nums text-[#111827]">{readiness?.coverage ?? 0} / 100 weight assessed</span>
-              </div>
-              <div role="progressbar" aria-label="Profile diagnostic coverage" aria-valuemin={0} aria-valuemax={100}
-                aria-valuenow={readiness?.coverage ?? 0} className="h-2 overflow-hidden rounded-sm bg-[#E5E7EB]">
-                <div className="h-full bg-[#6C55E8] transition-[width]" style={{width:`${Math.max(0,Math.min(100,readiness?.coverage ?? 0))}%`}} />
-              </div>
-              <p className="mt-2 text-[11px] leading-relaxed text-[#6B7280]">
-                Method {readiness?.methodology_version}. Calculated for this view and not saved as a report.
-              </p>
-            </div>
-            <div className="space-y-3">{readiness?.checks.map(check=>{
-              const status=check.status==='pass' ? {label:'Met',className:'text-emerald-700'} :
-                check.status==='action' ? {label:'Action needed',className:'text-amber-700'} :
-                check.status==='not_applicable' ? {label:'Not applicable',className:'text-[#6B7280]'} :
-                {label:'Unknown',className:'text-[#6B7280]'};
-              return <div key={check.id} className="border-b border-[#F3F4F6] pb-3 last:border-0">
-                <div className="flex flex-wrap items-start justify-between gap-2 text-xs">
-                  <span className="font-medium text-[#374151]">{check.label}
-                    <span className="font-normal text-[#9CA3AF]"> · {check.weight} points · {check.severity} priority</span>
-                  </span>
-                  <span className={status.className}>{status.label}</span>
-                </div>
-                <p className="mt-1 text-[11px] leading-relaxed text-[#6B7280]">{check.status==='action' ? check.recommendation : check.detail}</p>
-                <p className="mt-1 break-words text-[10px] leading-relaxed text-[#9CA3AF]">
-                  Observed: {check.observed_value ?? 'No value returned'} · Source: {evidenceSourceLabel(check.source)} · {evidenceTime(check.observed_at)}
-                  {check.evidence_ref ? <span className="block font-mono">Evidence: {check.evidence_ref}</span> : null}
-                  {(check.limitations ?? []).map(limit=><span key={limit} className="block">Limit: {limit}</span>)}
-                </p>
-              </div>;
-            })}</div>
-            <a href="https://support.google.com/business/answer/7091" target="_blank" rel="noreferrer" className="mt-4 inline-block text-xs font-medium text-[#6C55E8]">Google’s local ranking guidance</a>
-          </Section>
-        </div>
-        {/* ── Review analytics ──────────────────────────────────────────── */}
-        <Section title="Review analytics"
-          description="Rating breakdown and volume trend from your synced reviews.">
-          {reviewLoading && <div className="h-32 animate-pulse rounded-xl bg-[#F3F4F6]" />}
-          {!reviewLoading && reviewRows!=null && (()=>{
-            const months=buildMonthBuckets(reviewRows);
-            const ratings=buildRatingBuckets(reviewRows);
-            const maxCount=Math.max(...months.map(m=>m.count),1);
-            const maxRating=Math.max(...ratings.map(r=>r.count),1);
-            const total=reviewRows.length;
-            const replied=reviewRows.filter(r=>r.reply_text).length;
-            const STAR_COLOR=['','#EF4444','#F97316','#EAB308','#84CC16','#22C55E'];
-            return total===0 ? <Empty>No reviews synced in this date range. Adjust the range or run a sync from Settings.</Empty> : <>
-              <div className="grid gap-6 sm:grid-cols-2">
-                {/* Rating distribution */}
-                <div>
-                  <p className="mb-3 text-xs font-semibold text-[#374151]">Rating distribution</p>
-                  <div className="space-y-2">
-                    {ratings.map(({rating,count})=>(
-                      <div key={rating} className="flex items-center gap-2">
-                        <span className="w-5 text-right text-xs font-semibold text-[#374151]">{rating}★</span>
-                        <div className="relative flex-1 h-5 rounded-md bg-[#F3F4F6] overflow-hidden">
-                          <div className="absolute left-0 top-0 h-full rounded-md transition-all duration-500"
-                            style={{width:`${(count/maxRating)*100}%`,backgroundColor:STAR_COLOR[rating]}} />
-                        </div>
-                        <span className="w-7 text-right text-xs tabular-nums text-[#6B7280]">{count}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-4 text-xs text-[#6B7280]">
-                    <span>{total} total reviews</span>
-                    <span>{total ? Math.round(replied/total*100) : 0}% replied</span>
-                  </div>
-                </div>
-                {/* Monthly trend — line chart (Reviews-style) */}
-                <div>
-                  <p className="mb-3 text-xs font-semibold text-[#374151]">Monthly trend</p>
-                  {months.length===0 ? <p className="text-xs text-[#9CA3AF]">No monthly data.</p> : (()=>{
-                    const W=400; const H=120;
-                    const PAD={top:16,right:8,bottom:20,left:8};
-                    const innerW=W-PAD.left-PAD.right;
-                    const innerH=H-PAD.top-PAD.bottom;
-                    const pts=months.map((m,i)=>({
-                      x: PAD.left+(months.length===1 ? innerW/2 : (i/(months.length-1))*innerW),
-                      y: PAD.top+innerH-(m.count/maxCount)*innerH,
-                      m,
-                    }));
-                    const linePath=pts.map((p,i)=>`${i===0?'M':'L'} ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-                    const areaPath=`${linePath} L ${pts[pts.length-1]!.x.toFixed(1)},${(PAD.top+innerH).toFixed(1)} L ${pts[0]!.x.toFixed(1)},${(PAD.top+innerH).toFixed(1)} Z`;
-                    const gradId=`rg_${Math.random().toString(36).slice(2,7)}`;
-                    return <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{height:120}} preserveAspectRatio="none" aria-hidden="true">
-                      <defs>
-                        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#6C55E8" stopOpacity="0.12"/>
-                          <stop offset="100%" stopColor="#6C55E8" stopOpacity="0"/>
-                        </linearGradient>
-                      </defs>
-                      {[0,0.5,1].map(v=>(
-                        <line key={v} x1={PAD.left} x2={W-PAD.right}
-                          y1={PAD.top+innerH-v*innerH} y2={PAD.top+innerH-v*innerH}
-                          stroke="#F3F4F6" strokeWidth={1}/>
-                      ))}
-                      <path d={areaPath} fill={`url(#${gradId})`}/>
-                      <path d={linePath} fill="none" stroke="#6C55E8" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>
-                      {pts.map((p,i)=>(
-                        <g key={i}>
-                          <text x={p.x} y={p.y-6} textAnchor="middle" fontSize={9} fill="#374151">{p.m.count}</text>
-                          <circle cx={p.x} cy={p.y} r={3} fill="#6C55E8" stroke="white" strokeWidth={1.5}/>
-                          <text x={p.x} y={H-4} textAnchor="middle" fontSize={9} fill="#9CA3AF">{fmtMonth(p.m.month+'-01')}</text>
-                        </g>
-                      ))}
-                    </svg>;
-                  })()}
-                </div>
-              </div>
-            </>;
-          })()}
-        </Section>
 
         {/* ── Search and Maps performance ───────────────────────────────── */}
         <Section title="Search and Maps performance"
@@ -429,24 +307,36 @@ export function GoogleProfilePage(){
             const maxViews=Math.max(...metrics.map(m=>m.views_search+m.views_maps),1);
             return <>
               {hasStats ? (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 mb-5">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 mb-6">
                   {stats.map(([label,value])=>(
                     <div key={label} className="rounded-lg bg-[#F9FAFB] p-4">
                       <p className="text-[11px] text-[#6B7280]">{label}</p>
-                      <p className="mt-2 font-mono text-xl font-semibold tabular-nums">{value!=null ? number(value) : '—'}</p>
+                      <p className="mt-2 font-mono text-xl font-semibold tabular-nums text-[#111827]">{value!=null ? number(value) : '—'}</p>
                     </div>
                   ))}
                 </div>
               ) : <Empty>Performance data not available for this location. Check your Google connection.</Empty>}
+              {insightError && <p className="mb-4 text-xs text-amber-700">{insightError}</p>}
               {metrics.length>0 && (
                 <div>
-                  <p className="mb-2 text-xs font-semibold text-[#374151]">Daily impressions</p>
-                  <div className="flex items-end gap-px overflow-x-auto" style={{height:'72px'}}>
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-xs font-semibold text-[#374151]">Daily impressions</p>
+                    <div className="flex items-center gap-4 text-[11px] text-[#6B7280]">
+                      <span className="flex items-center gap-1.5"><span className="inline-block h-2 w-2 rounded-sm bg-[#6C55E8]" />Search</span>
+                      <span className="flex items-center gap-1.5"><span className="inline-block h-2 w-2 rounded-sm bg-[#C4B8F7]" />Maps</span>
+                    </div>
+                  </div>
+                  <div className="flex items-end gap-px overflow-x-auto" style={{height:'96px'}}>
                     {metrics.map(m=>{
-                      const h=Math.max(((m.views_search+m.views_maps)/maxViews)*64,1);
-                      return <div key={m.date} className="flex-shrink-0 group relative" style={{width:`${Math.max(100/metrics.length,2)}%`,maxWidth:'32px'}}
-                        title={`${m.date}: ${number(m.views_search+m.views_maps)} views`}>
-                        <div className="w-full rounded-t-sm bg-[#6C55E8] opacity-80" style={{height:`${h}px`}} />
+                      const totalH=Math.max(((m.views_search+m.views_maps)/maxViews)*80,2);
+                      const searchFrac=m.views_search+m.views_maps>0 ? m.views_search/(m.views_search+m.views_maps) : 0;
+                      const searchH=Math.round(totalH*searchFrac);
+                      const mapsH=Math.round(totalH*(1-searchFrac));
+                      return <div key={m.date} className="flex-shrink-0 flex flex-col justify-end group relative"
+                        style={{width:`${Math.max(100/metrics.length,2)}%`,maxWidth:'32px'}}
+                        title={`${m.date}: ${number(m.views_search+m.views_maps)} views (${number(m.views_search)} search, ${number(m.views_maps)} maps)`}>
+                        <div className="w-full bg-[#C4B8F7]" style={{height:`${mapsH}px`}} />
+                        <div className="w-full rounded-t-sm bg-[#6C55E8]" style={{height:`${searchH}px`}} />
                       </div>;
                     })}
                   </div>
@@ -456,61 +346,145 @@ export function GoogleProfilePage(){
           })()}
         </Section>
 
-        {/* ── Google Business extras (photos, Q&A, posts) ───────────────── */}
-        <Section title="Photos, Q&A and Posts">
-          {extraLoading && <div className="grid grid-cols-3 gap-4">{[0,1,2].map(n=><div key={n} className="h-20 animate-pulse rounded-xl bg-[#F3F4F6]" />)}</div>}
-          {!extraLoading && (()=>{
-            const p=extraData?.photos;
-            const q=extraData?.qanda;
-            const posts=extraData?.posts;
-            return <>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-5">
-                {/* Photos */}
-                <div className="rounded-xl bg-[#F9FAFB] p-4">
-                  <p className="text-[11px] text-[#6B7280]">Total photos</p>
-                  <p className="mt-2 font-mono text-2xl font-semibold tabular-nums text-[#111827]">{p ? number(p.total) : '—'}</p>
-                  {p?.owner_total!=null && <p className="mt-1 text-[11px] text-[#9CA3AF]">{number(p.owner_total)} owner · {number((p.total??0)-(p.owner_total??0))} customer</p>}
-                </div>
-                {/* Q&A */}
-                <div className="rounded-xl bg-[#F9FAFB] p-4">
-                  <p className="text-[11px] text-[#6B7280]">Q&amp;A questions</p>
-                  <p className="mt-2 font-mono text-2xl font-semibold tabular-nums text-[#111827]">{q ? number(q.total) : '—'}</p>
-                  {q!=null && <p className="mt-1 text-[11px] text-[#9CA3AF]">{number(q.unanswered)} unanswered</p>}
-                </div>
-                {/* Posts */}
-                <div className="rounded-xl bg-[#F9FAFB] p-4">
-                  <p className="text-[11px] text-[#6B7280]">Recent posts</p>
-                  <p className="mt-2 font-mono text-2xl font-semibold tabular-nums text-[#111827]">{posts ? posts.length : '—'}</p>
-                  {posts!=null && <p className="mt-1 text-[11px] text-[#9CA3AF]">Last {posts.length} returned</p>}
-                </div>
-              </div>
-              {posts && posts.length>0 && (
-                <div>
-                  <p className="mb-3 text-xs font-semibold text-[#374151]">Recent posts</p>
-                  <div className="space-y-2">
-                    {posts.map((post,i)=>(
-                      <div key={post.name||i} className="flex items-start justify-between gap-3 rounded-lg border border-[#F3F4F6] px-4 py-3">
-                        <div className="min-w-0">
-                          <p className="text-xs font-medium text-[#374151] truncate">{post.summary ?? 'No caption'}</p>
-                          <p className="text-[11px] text-[#9CA3AF] mt-0.5">
-                            {post.post_type ?? 'Post'}{post.cta_type ? ' · '+post.cta_type.replace(/_/g,' ') : ''}
-                            {post.created_at ? ' · '+new Date(post.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-') : ''}
-                          </p>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          {post.views!=null && <p className="text-xs tabular-nums font-semibold text-[#374151]">{number(post.views)} views</p>}
-                          {post.clicks!=null && <p className="text-[11px] text-[#9CA3AF]">{number(post.clicks)} clicks</p>}
-                        </div>
+        {/* ── 2-col grid: left = Business Profile + Review Analytics, right = Profile Doctor ── */}
+        <div className="grid gap-6 xl:grid-cols-2 xl:items-stretch">
+
+          {/* Left column */}
+          <div className="flex flex-col gap-6">
+
+            {/* ── Business profile ──────────────────────────────────────── */}
+            <Section className="flex-1" title="Business profile" description="Business category and description are fetched as separate Google fields.">
+              {profile?.source!=='google_business_profile' && <p className="mb-4 text-xs leading-relaxed text-amber-700">{warningText('profile')} Saved identity is shown; unknown fields are not scored as missing.</p>}
+              <dl className="divide-y divide-[#F3F4F6]">{fields.map(([label,value])=><div key={label} className="grid grid-cols-[120px_1fr] gap-4 py-3 text-xs">
+                <dt className="text-[#6B7280]">{label}</dt><dd className="break-words font-medium leading-relaxed text-[#374151]">
+                  {label==='Website' && safeUrl(value) ? <a href={safeUrl(value)} target="_blank" rel="noreferrer" className="text-[#6C55E8] hover:underline">{value}</a> : value || 'Not available'}
+                </dd></div>)}</dl>
+              {safeUrl(profile?.maps_url) && <a className="mt-4 inline-block text-xs font-medium text-[#6C55E8]" href={safeUrl(profile?.maps_url)} target="_blank" rel="noreferrer">View this business on Google Maps</a>}
+            </Section>
+
+            {/* ── Review analytics ──────────────────────────────────────── */}
+            <Section className="flex-1" title="Review analytics" description="Rating breakdown and volume trend from your synced reviews.">
+              {reviewLoading && <div className="h-32 animate-pulse rounded-xl bg-[#F3F4F6]" />}
+              {!reviewLoading && reviewRows!=null && (()=>{
+                const months=buildMonthBuckets(reviewRows);
+                const ratings=buildRatingBuckets(reviewRows);
+                const maxCount=Math.max(...months.map(m=>m.count),1);
+                const maxRating=Math.max(...ratings.map(r=>r.count),1);
+                const total=reviewRows.length;
+                const replied=reviewRows.filter(r=>r.reply_text).length;
+                const STAR_COLOR=['','#EF4444','#F97316','#EAB308','#84CC16','#22C55E'];
+                return total===0 ? <Empty>No reviews synced in this date range. Adjust the range or run a sync from Settings.</Empty> : <>
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <div>
+                      <p className="mb-3 text-xs font-semibold text-[#374151]">Rating distribution</p>
+                      <div className="space-y-2.5">
+                        {ratings.map(({rating,count})=>{
+                          const pct=total>0 ? Math.round(count/total*100) : 0;
+                          return <div key={rating} className="flex items-center gap-2">
+                            <span className="w-5 text-right text-xs font-semibold text-[#374151]">{rating}★</span>
+                            <div className="relative flex-1 h-5 rounded-md bg-[#F3F4F6] overflow-hidden">
+                              <div className="absolute left-0 top-0 h-full rounded-md transition-all duration-500"
+                                style={{width:`${maxRating>0 ? (count/maxRating)*100 : 0}%`,backgroundColor:STAR_COLOR[rating]}} />
+                            </div>
+                            <span className="w-14 text-right text-[11px] tabular-nums text-[#6B7280]">{count} · {pct}%</span>
+                          </div>;
+                        })}
                       </div>
-                    ))}
+                      <div className="mt-4 flex flex-wrap gap-4 rounded-lg bg-[#F9FAFB] px-4 py-3 text-xs text-[#6B7280]">
+                        <span className="font-medium text-[#374151]">{total} reviews</span>
+                        <span className="font-medium text-[#374151]">{total ? Math.round(replied/total*100) : 0}% replied</span>
+                        {reviews?.rating!=null && <span>Avg: <span className="font-semibold text-[#111827]">{reviews.rating.toFixed(1)} ★</span></span>}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-3 text-xs font-semibold text-[#374151]">Monthly review volume</p>
+                      {months.length===0 ? <p className="text-xs text-[#9CA3AF]">No monthly data.</p> : (()=>{
+                        const W=400; const H=160;
+                        const PAD={top:20,right:12,bottom:28,left:28};
+                        const innerW=W-PAD.left-PAD.right;
+                        const innerH=H-PAD.top-PAD.bottom;
+                        const pts=months.map((m,i)=>({
+                          x: PAD.left+(months.length===1 ? innerW/2 : (i/(months.length-1))*innerW),
+                          y: PAD.top+innerH-(m.count/maxCount)*innerH,
+                          m,
+                        }));
+                        const linePath=pts.map((p,i)=>`${i===0?'M':'L'} ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+                        const areaPath=`${linePath} L ${pts[pts.length-1]!.x.toFixed(1)},${(PAD.top+innerH).toFixed(1)} L ${pts[0]!.x.toFixed(1)},${(PAD.top+innerH).toFixed(1)} Z`;
+                        const gradId=`rg_${Math.random().toString(36).slice(2,7)}`;
+                        const gridLines=[0,0.25,0.5,0.75,1];
+                        return <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{height:160}} aria-hidden="true">
+                          <defs>
+                            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#6C55E8" stopOpacity="0.15"/>
+                              <stop offset="100%" stopColor="#6C55E8" stopOpacity="0"/>
+                            </linearGradient>
+                          </defs>
+                          {gridLines.map(v=>{
+                            const y=PAD.top+innerH-v*innerH;
+                            const val=Math.round(v*maxCount);
+                            return <g key={v}>
+                              <line x1={PAD.left} x2={W-PAD.right} y1={y} y2={y} stroke="#F3F4F6" strokeWidth={1}/>
+                              <text x={PAD.left-4} y={y+3.5} textAnchor="end" fontSize={8} fill="#9CA3AF">{val}</text>
+                            </g>;
+                          })}
+                          <path d={areaPath} fill={`url(#${gradId})`}/>
+                          <path d={linePath} fill="none" stroke="#6C55E8" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round"/>
+                          {pts.map((p,i)=><g key={i}>
+                            <circle cx={p.x} cy={p.y} r={3.5} fill="#6C55E8" stroke="white" strokeWidth={1.5}/>
+                            {(months.length<=8||i%Math.ceil(months.length/8)===0) && <>
+                              <text x={p.x} y={p.y-8} textAnchor="middle" fontSize={9} fill="#374151" fontWeight="600">{p.m.count}</text>
+                              <text x={p.x} y={H-6} textAnchor="middle" fontSize={8} fill="#9CA3AF">{fmtMonth(p.m.month+'-01')}</text>
+                            </>}
+                          </g>)}
+                        </svg>;
+                      })()}
+                    </div>
                   </div>
+                </>;
+              })()}
+            </Section>
+          </div>
+
+          {/* ── Right column: Profile Doctor (full height) ───────────────── */}
+          <Section title="Profile Doctor diagnostics" description="A versioned Moffu assessment based on the data available for this location.">
+            <p className="mb-4 text-xs leading-relaxed text-[#6B7280]">{readiness?.explanation}</p>
+            <div className="mb-5 rounded-lg bg-[#F9FAFB] p-4">
+              <div className="mb-2 flex items-center justify-between gap-3 text-xs">
+                <span className="font-medium text-[#374151]">Diagnostic coverage</span>
+                <span className="font-mono tabular-nums text-[#111827]">{readiness?.coverage ?? 0} / 100</span>
+              </div>
+              <div role="progressbar" aria-label="Profile diagnostic coverage" aria-valuemin={0} aria-valuemax={100}
+                aria-valuenow={readiness?.coverage ?? 0} className="h-2 overflow-hidden rounded-sm bg-[#E5E7EB]">
+                <div className="h-full rounded-sm bg-[#6C55E8] transition-[width]" style={{width:`${Math.max(0,Math.min(100,readiness?.coverage ?? 0))}%`}} />
+              </div>
+              <p className="mt-2 text-[11px] leading-relaxed text-[#6B7280]">Method {readiness?.methodology_version}. Not saved as a report.</p>
+            </div>
+            <div className="space-y-3">{readiness?.checks.map(check=>{
+              const statusLabel=check.status==='pass' ? 'Met' : check.status==='action' ? 'Action needed' : check.status==='not_applicable' ? 'N/A' : 'Unknown';
+              const statusColor=check.status==='pass' ? 'text-emerald-700' : check.status==='action' ? 'text-amber-700' : 'text-[#6B7280]';
+              return <div key={check.id} className="border-b border-[#F3F4F6] pb-3 last:border-0">
+                <div className="flex flex-wrap items-start justify-between gap-2 text-xs">
+                  <div className="flex items-start gap-2">
+                    <StatusDot status={check.status} />
+                    <span className="font-medium text-[#374151]">{check.label}
+                      <span className="font-normal text-[#9CA3AF]"> · {check.weight}pt · {check.severity}</span>
+                    </span>
+                  </div>
+                  <span className={statusColor+' text-[11px] font-medium'}>{statusLabel}</span>
                 </div>
-              )}
-              {!extraData && extraError && <p role="status" className="text-xs leading-relaxed text-[#6B7280]">{extraError}</p>}
-              {!extraData && !extraError && <Empty>Photos, Q&amp;A and post data require an active Google Business Profile connection.</Empty>}
-            </>;
-          })()}
-        </Section>
+                <p className="mt-1 pl-4 text-[11px] leading-relaxed text-[#6B7280]">{check.status==='action' ? check.recommendation : check.detail}</p>
+                <p className="mt-1 pl-4 break-words text-[10px] leading-relaxed text-[#9CA3AF]">
+                  Observed: {check.observed_value ?? 'No value returned'} · Source: {evidenceSourceLabel(check.source)} · {evidenceTime(check.observed_at)}
+                  {check.evidence_ref ? <span className="block font-mono">Evidence: {check.evidence_ref}</span> : null}
+                  {(check.limitations ?? []).map(limit=><span key={limit} className="block">Limit: {limit}</span>)}
+                </p>
+              </div>;
+            })}</div>
+            <a href="https://support.google.com/business/answer/7091" target="_blank" rel="noreferrer" className="mt-4 inline-block text-xs font-medium text-[#6C55E8]">Google's local ranking guidance</a>
+          </Section>
+        </div>
+
+        {/* ── Search keywords ───────────────────────────────────────────── */}
         <Section title="Search terms bringing customers to this profile"
           description={'Google Business Profile · '+current.keywords.month+' · Last completed calendar month. These are profile discovery terms, not all searches within a radius.'}>
           {current.keywords.status!=='available' ? <Empty>{warningText('keywords')}</Empty> : current.keywords.items.length===0 ?
@@ -523,6 +497,8 @@ export function GoogleProfilePage(){
               {current.keywords.has_more && <p className="mt-3 text-[11px] text-[#6B7280]">Showing the first 100 terms returned by Google.</p>}
             </div>}
         </Section>
+
+        {/* ── Nearby competitors ────────────────────────────────────────── */}
         <Section title="Nearby competitor comparison"
           description={'Businesses matching '+(current.nearby.search_term ?? 'your primary category')+'. Distances are from this location. This is a maximum 20-result discovery sample, not a Google ranking or a complete market census.'}
           action={<div className="inline-flex flex-wrap gap-1 rounded-lg bg-[#F3F4F6] p-1" aria-label="Competitor search radius">{RADII.map(r=><button key={r} aria-pressed={radius===r}
@@ -559,6 +535,8 @@ export function GoogleProfilePage(){
             </>}
           <div className="mt-4 border-t border-[#F3F4F6] pt-4"><GoogleAttribution /></div>
         </Section>
+
+        {/* ── Local search opportunities ────────────────────────────────── */}
         <Section title="Local search opportunities" description="What the available data can tell you">
           <div className="grid gap-5 md:grid-cols-3">
             <div><h3 className="text-xs font-semibold text-[#374151]">Relevance</h3><p className="mt-2 text-xs leading-relaxed text-[#6B7280]">

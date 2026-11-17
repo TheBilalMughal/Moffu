@@ -15,8 +15,14 @@ const ALLOWED_SPACINGS = [500, 1000, 2000, 5000] as const;
 const ALLOWED_DEPTHS = [20, 50, 100] as const;
 const EXPIRY_DAYS = 30;
 
+function providerAuth() {
+  const login = Deno.env.get('DATAFORSEO_LOGIN');
+  const password = Deno.env.get('DATAFORSEO_PASSWORD');
+  return login && password ? btoa(`${login}:${password}`) : Deno.env.get('DATAFORSEO_AUTH') ?? '';
+}
+
 function currentConfig() {
-  const auth = Deno.env.get('DATAFORSEO_AUTH') ?? '';
+  const auth = providerAuth();
   const price = Number(Deno.env.get('GEORANK_PRICE_PER_REQUEST_USD'));
   const cap = Number(Deno.env.get('GEORANK_MONTHLY_CAP_USD'));
   const rightsApproved = Deno.env.get('GEORANK_SOURCE_RIGHTS_APPROVED') === 'true';
@@ -76,7 +82,7 @@ Deno.serve(async (req: Request) => {
       body = parsed as Record<string, unknown>;
     } catch { return json({ error: 'INVALID_REQUEST' }, 400); }
     const action = body.action;
-    if (!['status', 'history', 'estimate', 'start'].includes(String(action))) return json({ error: 'INVALID_ACTION' }, 400);
+    if (!['status', 'provider_check', 'history', 'estimate', 'start'].includes(String(action))) return json({ error: 'INVALID_ACTION' }, 400);
     if (action !== 'status') await entitled(admin, user.id);
 
     const locationId = typeof body.location_id === 'string' ? body.location_id : '';
@@ -85,6 +91,21 @@ Deno.serve(async (req: Request) => {
       .select('id,display_name,address,latitude,longitude,dataforseo_place_id').eq('id', locationId).eq('user_id', user.id).maybeSingle();
     if (locationError) return json({ error: 'DATABASE_UNAVAILABLE' }, 503);
     if (!location) return json({ error: 'LOCATION_NOT_FOUND' }, 404);
+    if (action === 'provider_check') {
+      const auth = providerAuth();
+      if (!auth) return json({ connected: false, reason: 'PROVIDER_CREDENTIALS_NOT_CONFIGURED' });
+      try {
+        // This endpoint is free. Do not return the account identity, balance, or raw provider response to a tenant.
+        const response = await fetch('https://api.dataforseo.com/v3/appendix/user_data', {
+          headers: { Authorization: `Basic ${auth}` }, signal: AbortSignal.timeout(10000),
+        });
+        if (!response.ok) return json({ connected: false,
+          reason: response.status === 401 || response.status === 403 ? 'PROVIDER_AUTH_FAILED' : 'PROVIDER_UNAVAILABLE' });
+        const data = await response.json();
+        const connected = data?.status_code === 20000 && data?.tasks?.[0]?.status_code === 20000;
+        return json({ connected, reason: connected ? null : 'PROVIDER_REJECTED' });
+      } catch { return json({ connected: false, reason: 'PROVIDER_UNAVAILABLE' }); }
+    }
     if (action === 'history') {
       const { data: scans, error: scansError } = await admin.from('georank_scans')
         .select('id,keyword,grid_size,result_depth,status,estimated_cost_usd,actual_cost_usd,created_at,expires_at')

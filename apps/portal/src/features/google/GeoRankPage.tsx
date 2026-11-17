@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocationStore } from '@/features/location/location.store';
 import { georankService } from './georank.service';
-import type { GeoRankRequest, GeoRankStatus, GeoScanResponse } from './georank.service';
+import type { GeoRankRequest, GeoRankStatus, GeoRankProviderCheck, GeoScanResponse } from './georank.service';
 
 const GRID_SIZES = [3, 5, 7, 9] as const;
 const SPACINGS = [500, 1000, 2000, 5000] as const;
@@ -22,6 +22,12 @@ const ERROR_LABELS: Record<string, string> = {
   MONTHLY_BUDGET_EXCEEDED: 'The monthly GeoRank budget is already reserved or spent.',
   PROVIDER_REQUEST_FAILED: 'The ranking provider did not complete the request. Reserved spend remains held until reconciled.',
   FEATURE_REQUIRED: 'GeoRank requires an active plan with Google Profile access.',
+};
+const PROVIDER_CHECK_LABELS: Record<string, string> = {
+  PROVIDER_CREDENTIALS_NOT_CONFIGURED: 'DataForSEO credentials are missing on the server.',
+  PROVIDER_AUTH_FAILED: 'DataForSEO rejected the server credentials.',
+  PROVIDER_REJECTED: 'DataForSEO returned an account error.',
+  PROVIDER_UNAVAILABLE: 'Could not reach DataForSEO. Try again later.',
 };
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
@@ -55,6 +61,8 @@ export function GeoRankPage() {
   const currentLocation = locations.find((location) => location.id === locationId);
   const [status, setStatus] = useState<GeoRankStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const [providerCheck, setProviderCheck] = useState<GeoRankProviderCheck | null>(null);
+  const [checkingProvider, setCheckingProvider] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [gridSize, setGridSize] = useState<(typeof GRID_SIZES)[number]>(5);
   const [spacing, setSpacing] = useState<(typeof SPACINGS)[number]>(1000);
@@ -70,7 +78,7 @@ export function GeoRankPage() {
 
   useEffect(() => {
     let active = true;
-    setStatus(null); setEstimate(null); setResult(null); setHistory([]); setError(null);
+    setStatus(null); setProviderCheck(null); setEstimate(null); setResult(null); setHistory([]); setError(null);
     if (!locationId) return;
     setLoadingStatus(true);
     Promise.allSettled([georankService.getStatus(locationId), georankService.getHistory(locationId)]).then(([statusResult, historyResult]) => {
@@ -90,6 +98,14 @@ export function GeoRankPage() {
     location_id: locationId, keyword: keyword.trim(), grid_size: gridSize, spacing_meters: spacing,
     result_depth: depth, country_code: country, language_code: language, device,
   }) : null;
+
+  async function handleProviderCheck() {
+    if (!locationId) return;
+    setCheckingProvider(true); setProviderCheck(null);
+    try { setProviderCheck(await georankService.checkProvider(locationId)); }
+    catch { setProviderCheck({ connected: false, reason: 'PROVIDER_UNAVAILABLE' }); }
+    finally { setCheckingProvider(false); }
+  }
 
   async function handleEstimate() {
     const body = request();
@@ -178,6 +194,15 @@ export function GeoRankPage() {
             <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${status?.available ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'}`}>
               {loadingStatus ? 'Checking' : status?.available ? 'Ready' : 'Unavailable'}</span></div>
           <p className="mt-1 text-xs text-[#6B7280]">Rank source: DataForSEO Google Maps results. Your Google Maps API key does not provide the rank scan itself.</p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button type="button" disabled={checkingProvider || loadingStatus} onClick={handleProviderCheck}
+              className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-1.5 text-xs font-medium text-[#374151] hover:bg-[#F9FAFB] disabled:opacity-50">
+              {checkingProvider ? 'Checking…' : 'Test DataForSEO connection'}
+            </button>
+            {providerCheck && <span role="status" className={`text-xs ${providerCheck.connected ? 'text-emerald-700' : 'text-rose-700'}`}>
+              {providerCheck.connected ? 'Credentials verified (no charge)' : PROVIDER_CHECK_LABELS[providerCheck.reason ?? ''] ?? 'Connection failed.'}
+            </span>}
+          </div>
           <ul className="mt-5 space-y-3">
             {status?.blockers.map((blocker) => <li key={blocker} className="flex gap-2 text-xs leading-relaxed text-[#6B7280]">
               <span className="mt-0.5 text-amber-600">●</span><span>{BLOCKER_LABELS[blocker] ?? blocker}</span></li>)}

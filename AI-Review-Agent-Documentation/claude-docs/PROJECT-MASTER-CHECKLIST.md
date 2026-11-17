@@ -42,6 +42,7 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | GOOGLE-008 | Disconnect/revoke cleanup | IMPLEMENTED | - | `google-disconnect` v4 — revokes Google token, sets DISCONNECTED, clears is_selected |
 | GOOGLE-009 | Quota/backoff | PENDING | - | Retry/backoff logic not yet added to edge functions |
 | GOOGLE-010 | Ambiguous write reconciliation | PENDING | - | - |
+| GOOGLE-011 | GBP post creation from portal | IN_PROGRESS | GOOGLE-001 | `google-create-post` Edge Function + `createGooglePost` service method + `PostCreatePanel` UI implemented locally; Edge Function not yet deployed (push nai krna) |
 | REVIEWS-001 | Inbox filters/pagination | IMPLEMENTED | - | ReviewsPage: filter tabs (All/Pending/Draft Ready/Replied), star filter, date range, search; scoped to is_selected locations |
 | REVIEWS-002 | Review detail | IMPLEMENTED | - | Review cards with reviewer name, rating stars, date, review text, location label |
 | REVIEWS-003 | Generate draft | IMPLEMENTED | - | "Generate Draft" button → `ai-generate-draft` edge function → populates editable textarea; records ai_draft usage event |
@@ -302,8 +303,8 @@ These rows track this change separately from older conflicting implementation no
 |---|---|---|---|
 | GEORANK-001 | Provider and upstream rights approved for customer-facing local rank analysis | BLOCKED | DataForSEO technical candidate only; current terms leave upstream rights/use unresolved; written use/retention/display review required; see `20-MOFFU-2.0-PHASE-2-GEORANK-SOURCE-REVIEW.md` |
 | GEORANK-002 | Source-neutral grid geometry, result-state validation, truthful metrics, and configurable cost estimate | TESTED | `supabase/functions/_shared/georank-core.ts`; 7 focused Node tests and strict TypeScript check pass |
-| GEORANK-003 | Tenant-safe scan history and atomic usage reservation | IMPLEMENTED LOCALLY | New additive migration has owner RLS and monthly reservation RPC; migration not applied pending history reconciliation |
+| GEORANK-003 | Tenant-safe scan history and atomic usage reservation | DEPLOYED | Migration applied to production as `20261116083141_georank_scans_and_usage_reservations`; scan tables verified with RLS enabled. Broader migration-history reconciliation remains open |
 | GEORANK-004 | Crash-resumable jobs, leases, retries, and cancellation | NOT STARTED | Local adapter currently processes bounded work synchronously |
-| GEORANK-005 | Approved provider adapter and real permitted geo scans | IMPLEMENTED BUT DISABLED | Local DataForSEO adapter; no calls sent; rights, coordinate provenance, provider secret, and cost caps unresolved |
+| GEORANK-005 | Approved provider adapter and real permitted geo scans | IMPLEMENTED BUT DISABLED | DataForSEO secret exists but free connection test rejected it; pilot price/cap configured; rights and coordinate provenance unresolved; no paid scan sent |
 | GEORANK-006 | Competitor Radar joins only compatible GeoRank observations and labels discovery/rank separately | IN_PROGRESS | Existing GBP/Places competitor sample remains; no GeoRank comparisons exposed |
-| GEORANK-007 | Customer GeoRank page with estimate, grid, metrics, and scan history | IMPLEMENTED LOCALLY, GATED | `/georank`; GeoRank v1 status function is deployed; scans require approved rights, migration, and server environment configuration |
+| GEORANK-007 | Customer GeoRank page with estimate, grid, metrics, and scan history | IMPLEMENTED, GATED | `/georank`; GeoRank function and production schema are deployed; free DataForSEO connection test added; scans still require valid credentials and rights approval |

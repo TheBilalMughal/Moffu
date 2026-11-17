@@ -111,7 +111,6 @@ function FeedbackIcon() {
 const navItems: { to: string; label: string; icon: React.ReactNode; featureKey: string | null }[] = [
   { to: '/dashboard',      label: 'Overview',       icon: <ChartBarIcon />,       featureKey: null },
   { to: '/google-profile', label: 'Google Profile', icon: <GoogleProfileIcon />,  featureKey: 'feature_google_profile' },
-  { to: '/georank', label: 'GeoRank', icon: <ChartBarIcon />, featureKey: 'feature_google_profile' },
   { to: '/reviews',        label: 'Reviews',        icon: <StarIcon />,           featureKey: null },
   { to: '/insights/trends', label: 'Insights', icon: <InsightsIcon />, featureKey: 'feature_insights' },
   { to: '/brand-brain', label: 'Brand Brain', icon: <SlidersIcon />,    featureKey: 'feature_brand_brain' },
@@ -883,7 +882,7 @@ const RAIL_GROUPS: RailGroup[] = [
     items: [
       { to: '/dashboard', label: 'Overview', icon: <ChartBarIcon />, featureKey: null, end: true },
       { to: '/google-profile', label: 'Google Profile', icon: <GoogleProfileIcon />, featureKey: 'feature_google_profile' },
-      { to: '/georank', label: 'GeoRank', icon: <ChartBarIcon />, featureKey: 'feature_google_profile' },
+      { to: '/google-profile/posts', label: 'Posts', icon: (<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l6 6v8a2 2 0 01-2 2zM7 10h10M7 14h6"/></svg>), featureKey: 'feature_google_profile' },
     ],
   },
   {
