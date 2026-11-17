@@ -7,6 +7,7 @@ import { useLocationStore } from '@/features/location/location.store';
 import { billingService } from '@/features/billing/billing.service';
 import type { Plan, Subscription } from '@/features/billing/billing.service';
 import { fetchProfileAnalysis } from '@/features/google/profile-analysis.service';
+import { topicIntelligenceService, type TopicStat } from '@/features/google/topic-intelligence.service';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1053,6 +1054,125 @@ function EmptyState() {
   );
 }
 
+// ─── Topic Intelligence Section ───────────────────────────────────────────────
+
+const TOPIC_COLORS: Record<string, { pos: string; neg: string; icon: string }> = {
+  staff_service:     { pos: '#10B981', neg: '#EF4444', icon: 'M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z' },
+  food_quality:      { pos: '#10B981', neg: '#EF4444', icon: 'M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-1.5-.75m0-9.75 1.5-.75a3.354 3.354 0 013 0 3.354 3.354 0 003 0 3.354 3.354 0 013 0 3.354 3.354 0 003 0 3.354 3.354 0 011.5.75' },
+  wait_time:         { pos: '#10B981', neg: '#EF4444', icon: 'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z' },
+  value_pricing:     { pos: '#10B981', neg: '#EF4444', icon: 'M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+  cleanliness:       { pos: '#10B981', neg: '#EF4444', icon: 'M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5' },
+  ambiance:          { pos: '#10B981', neg: '#EF4444', icon: 'M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25' },
+  delivery_shipping: { pos: '#10B981', neg: '#EF4444', icon: 'M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12' },
+  location_parking:  { pos: '#10B981', neg: '#EF4444', icon: 'M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z' },
+  communication:     { pos: '#10B981', neg: '#EF4444', icon: 'M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z' },
+};
+
+function TopicIntelligenceSection({
+  topics, loading, analyzing, pendingCount, onAnalyze,
+}: {
+  topics: TopicStat[];
+  loading: boolean;
+  analyzing: boolean;
+  pendingCount: number;
+  onAnalyze: () => void;
+}) {
+  const hasData = topics.length > 0;
+  const displayTopics = topics.slice(0, 8);
+
+  return (
+    <GlassCard className="p-5">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-0.5">Topic Intelligence</p>
+          <p className="text-xs text-[#9CA3AF]">What customers mention most — and how they feel about it</p>
+        </div>
+        <button
+          onClick={onAnalyze}
+          disabled={analyzing}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D1D5DB] text-[11px] font-medium text-[#6B7280] hover:border-[#6C55E8] hover:text-[#6C55E8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {analyzing ? (
+            <>
+              <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+              Analyzing…
+            </>
+          ) : (
+            <>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+              </svg>
+              {hasData ? 'Re-analyze' : 'Analyze reviews'}
+              {pendingCount > 0 && <span className="ml-0.5 text-[10px] text-[#6C55E8]">({pendingCount} new)</span>}
+            </>
+          )}
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[1,2,3,4,5,6].map(i => (
+            <div key={i} className="h-10 rounded-lg bg-[#F3F4F6] animate-pulse" />
+          ))}
+        </div>
+      ) : !hasData ? (
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <div className="w-10 h-10 rounded-xl bg-[#F3F4F6] flex items-center justify-center mb-3">
+            <svg className="w-5 h-5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-[#374151] mb-1">No topic data yet</p>
+          <p className="text-xs text-[#9CA3AF]">Click "Analyze reviews" to let AI tag your reviews by topic.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5">
+          {displayTopics.map(t => {
+            const col = TOPIC_COLORS[t.topic];
+            const posW = t.total > 0 ? Math.round((t.positive / t.total) * 100) : 0;
+            const negW = t.total > 0 ? Math.round((t.negative / t.total) * 100) : 0;
+            const neuW = 100 - posW - negW;
+            return (
+              <div key={t.topic}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-[#6B7280] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d={col?.icon ?? ''} />
+                    </svg>
+                    <span className="text-xs font-medium text-[#374151]">{t.label}</span>
+                  </div>
+                  <span className="text-[11px] text-[#9CA3AF]">{t.total} mention{t.total !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="h-1.5 w-full rounded-full overflow-hidden bg-[#F3F4F6] flex">
+                  {posW > 0 && <div style={{ width: `${posW}%`, background: '#10B981' }} />}
+                  {neuW > 0 && <div style={{ width: `${neuW}%`, background: '#D1D5DB' }} />}
+                  {negW > 0 && <div style={{ width: `${negW}%`, background: '#EF4444' }} />}
+                </div>
+                <div className="flex items-center gap-3 mt-1">
+                  {t.positive > 0  && <span className="text-[10px] text-emerald-500">{t.positive} positive</span>}
+                  {t.negative > 0  && <span className="text-[10px] text-red-500">{t.negative} negative</span>}
+                  {t.neutral  > 0  && <span className="text-[10px] text-[#9CA3AF]">{t.neutral} neutral</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {hasData && (
+        <div className="mt-4 pt-4 border-t border-[#F3F4F6] flex items-center gap-4 text-[11px] text-[#9CA3AF]">
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />Positive</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#D1D5DB] inline-block" />Neutral</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />Negative</span>
+        </div>
+      )}
+    </GlassCard>
+  );
+}
+
 // ─── OverviewPage ──────────────────────────────────────────────────────────────
 
 export function OverviewPage() {
@@ -1072,6 +1192,10 @@ export function OverviewPage() {
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [insights, setInsights]                 = useState<InsightsSummary | null>(null);
   const [loadingInsights, setLoadingInsights]   = useState(false);
+  const [topics, setTopics]                     = useState<TopicStat[]>([]);
+  const [loadingTopics, setLoadingTopics]       = useState(false);
+  const [analyzingTopics, setAnalyzingTopics]   = useState(false);
+  const [topicsPending, setTopicsPending]       = useState(0);
   const [sub, setSub]                           = useState<Subscription | null>(null);
   const [billingPlans, setBillingPlans]         = useState<Plan[]>([]);
 
@@ -1147,6 +1271,23 @@ export function OverviewPage() {
       .finally(() => { if (!controller.signal.aborted) setLoadingInsights(false); });
     return () => controller.abort();
   }, [user, setup.googleConnected, setup.loading, selectedLocId, allLocations]);
+
+  // ── Topic Intelligence ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!orgId || !setup.googleConnected || setup.loading) return;
+    setLoadingTopics(true);
+    topicIntelligenceService.getTopics(orgId, selectedLocId)
+      .then(({ topics: t }) => setTopics(t))
+      .catch(() => { /* non-fatal */ })
+      .finally(() => setLoadingTopics(false));
+    // Pending count
+    const locIds = selectedLocId
+      ? [selectedLocId]
+      : allLocations.map(l => l.id);
+    topicIntelligenceService.getPendingCount(locIds)
+      .then(n => setTopicsPending(n))
+      .catch(() => { /* non-fatal */ });
+  }, [orgId, setup.googleConnected, setup.loading, selectedLocId, allLocations]);
 
   // ── Billing (subscription + plans for upgrade card) ───────────────────────
   useEffect(() => {
@@ -1291,6 +1432,29 @@ export function OverviewPage() {
           {/* Google Profile Performance */}
           {setup.googleConnected && (
             <InsightsSection insights={insights} loading={loadingInsights} />
+          )}
+
+          {/* Topic Intelligence */}
+          {setup.googleConnected && (
+            <TopicIntelligenceSection
+              topics={topics}
+              loading={loadingTopics}
+              analyzing={analyzingTopics}
+              pendingCount={topicsPending}
+              onAnalyze={async () => {
+                setAnalyzingTopics(true);
+                const locId = selectedLocId ?? null;
+                await topicIntelligenceService.analyze(locId);
+                if (orgId) {
+                  const { topics: t } = await topicIntelligenceService.getTopics(orgId, locId);
+                  setTopics(t);
+                  const locIds = locId ? [locId] : allLocations.map(l => l.id);
+                  const n = await topicIntelligenceService.getPendingCount(locIds);
+                  setTopicsPending(n);
+                }
+                setAnalyzingTopics(false);
+              }}
+            />
           )}
         </>
       ) : null}
