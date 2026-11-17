@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom';
 import { useLocationStore } from '@/features/location/location.store';
 import { supabase } from '@/lib/supabase';
-import { googleService, type GoogleConnection, type GoogleLocation, type QAQuestion } from './google.service';
+import { googleService, type GoogleConnection, type GoogleLocation, type QAQuestion, type Competitor } from './google.service';
 import { analysisMessage, fetchProfileAnalysis, type ProfileAnalysis } from './profile-analysis.service';
 import { DateRangePicker } from '@/components/DateRangePicker';
 
@@ -58,6 +58,7 @@ const IconEdit=()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" s
 const IconQuestion=()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
 const IconSearch=()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
 const IconSend=()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
+const IconRefresh=({spinning}:{spinning?:boolean})=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={spinning?'animate-spin':''} style={{transition:'transform 0.3s'}}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>;
 
 // ── Layout helpers ───────────────────────────────────────────────────
 function Section({title,description,action,children,className='',collapsible=false}:{title:string;description?:string;action?:ReactNode;children:ReactNode;className?:string;collapsible?:boolean}){
@@ -539,8 +540,9 @@ export function GoogleProfilePage(){
   // Active advanced panel
   const [activePanel,setActivePanel]=useState<'none'|'qa'|'info'|'photos'|'attrs'|'keywords'|'strength'>('none');
 
-  // Profile Doctor collapsed
-  const [doctorOpen,setDoctorOpen]=useState(false);
+  // Competitor benchmarking (fetched independently so radius change doesn't reload full analysis)
+  const [competitorItems,setCompetitorItems]=useState<Competitor[]>([]);
+  const [competitorLoading,setCompetitorLoading]=useState(false);
 
   useEffect(()=>{
     let active=true;
@@ -570,18 +572,31 @@ export function GoogleProfilePage(){
     if(!selected||!connection){setAnalysis(null);setError('');setLoading(false);return;}
     const controller=new AbortController();
     setAnalysis(null);setError('');setLoading(true);
-    fetchProfileAnalysis(selected.id,radius,controller.signal).then(data=>{
+    fetchProfileAnalysis(selected.id,5,controller.signal).then(data=>{
       if(!controller.signal.aborted) setAnalysis(data);
     }).catch(e=>{
       if(!controller.signal.aborted) setError(e instanceof Error?e.message:'Unable to load analysis.');
     }).finally(()=>{if(!controller.signal.aborted) setLoading(false);});
     return ()=>controller.abort();
-  },[selected?.id,connection?.id,radius,revision]);
+  },[selected?.id,connection?.id,revision]);
 
   useEffect(()=>{
     const timer=setInterval(()=>{if(document.visibilityState==='visible') setRevision(n=>n+1);},REFRESH_MS);
     return ()=>clearInterval(timer);
-  },[selected?.id,radius]);
+  },[selected?.id]);
+
+  // Silent competitor refresh when radius changes (independent of main analysis)
+  useEffect(()=>{
+    if(!selected||!connection){setCompetitorItems([]);return;}
+    let alive=true;
+    setCompetitorLoading(true);
+    googleService.getCompetitors(selected.id,radius).then(r=>{
+      if(!alive) return;
+      setCompetitorItems((r.competitors??[]).filter(c=>!c.is_you));
+      setCompetitorLoading(false);
+    });
+    return ()=>{alive=false;};
+  },[selected?.id,connection?.id,radius]);
 
   useEffect(()=>{
     if(!selected){setReviewRows(null);return;}
@@ -625,7 +640,7 @@ export function GoogleProfilePage(){
     return ()=>{alive=false;};
   },[selected?.id,connection?.id,revision]);
 
-  void insightLoading; void insightTotals;
+  void insightLoading; void insightTotals; void insightError;
 
   const togglePanel=useCallback((panel:typeof activePanel)=>{
     setActivePanel(p=>p===panel?'none':panel);
@@ -643,11 +658,11 @@ export function GoogleProfilePage(){
     <Link to="/settings" className="text-sm font-medium text-[#6C55E8]">Open Settings</Link>
   </Section></div>;
 
-  const current=analysis?.location_id===locationId&&analysis.nearby.radius_km===radius?analysis:null;
+  const current=analysis?.location_id===locationId?analysis:null;
   const profile=current?.profile;
   const reviews=current?.reviews;
   const readiness=current?.readiness;
-  const competitors=current?.nearby.items.filter(c=>!c.is_you)??[];
+  const competitors=competitorItems;
   const rated=competitors.filter(c=>c.rating!==null);
   const average=rated.length?rated.reduce((s,c)=>s+c.rating!,0)/rated.length:null;
   const reviewAverage=competitors.length?Math.round(competitors.reduce((s,c)=>s+c.review_count,0)/competitors.length):null;
@@ -666,61 +681,67 @@ export function GoogleProfilePage(){
   return <div className="w-full space-y-6 p-4 sm:p-6">
 
     {/* ── Profile Header ──────────────────────────────────────────────── */}
-    <div className={`${panel} p-5`}>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
-          {/* Avatar */}
-          <div className="flex-shrink-0">
-            <div className="h-16 w-16 rounded-full bg-gradient-to-br from-[#6C55E8] to-[#9B88F0] flex items-center justify-center text-white text-2xl font-bold shadow-sm">
-              {(selected?.display_name??'?')[0]?.toUpperCase()}
-            </div>
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-lg font-bold text-[#111827]">{selected?.display_name??'Select a location'}</h1>
-              {profile?.source==='google_business_profile' && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#EEF2FF] px-2 py-0.5 text-[11px] font-medium text-[#6C55E8]">
-                  <IconCheck/>Verified
-                </span>
-              )}
-            </div>
-            {selected?.address && <p className="mt-0.5 text-xs text-[#6B7280] flex items-center gap-1"><IconPin/>{selected.address}</p>}
-            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[#6B7280]">
-              {reviews?.google_review_count!=null && <span>{number(reviews.google_review_count)} reviews</span>}
-              {reviews?.rating!=null && <span className="flex items-center gap-1 text-amber-500"><IconStar/>{reviews.rating.toFixed(1)}</span>}
-              {profile?.category && <span className="text-[#9CA3AF]">{profile.category}</span>}
-            </div>
+    <div className="flex flex-wrap items-start justify-between gap-4 pb-2">
+      <div className="flex items-center gap-4">
+        {/* Avatar — tries business favicon, falls back to initials */}
+        <div className="flex-shrink-0 relative">
+          {profile?.website && safeUrl(profile.website) ? (
+            <img
+              src={`https://logo.clearbit.com/${new URL(safeUrl(profile.website)!).hostname}`}
+              alt=""
+              className="h-16 w-16 rounded-full object-cover shadow-sm bg-[#F3F4F6]"
+              onError={e=>{(e.target as HTMLImageElement).style.display='none';(e.target as HTMLImageElement).nextElementSibling?.removeAttribute('hidden');}}
+            />
+          ) : null}
+          <div hidden={!!(profile?.website && safeUrl(profile.website))}
+            className="h-16 w-16 rounded-full bg-gradient-to-br from-[#6C55E8] to-[#9B88F0] flex items-center justify-center text-white text-2xl font-bold shadow-sm">
+            {(selected?.display_name??'?')[0]?.toUpperCase()}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {readiness && <StrengthRing score={readiness.score??0}/>}
-          <div className="flex flex-col gap-2">
-            <DateRangePicker from={globalFrom} to={globalTo} onChange={(f,t)=>{setGlobalFrom(f);setGlobalTo(t);}} alignRight/>
-            <div className="flex gap-2">
-              {!globalLocationId && locations.length>0 && <div ref={selectorRef} className="relative">
-                <button type="button" aria-expanded={menuOpen} onClick={()=>setMenuOpen(v=>!v)}
-                  className="inline-flex items-center gap-2 rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium hover:bg-[#F9FAFB]">
-                  <span className="max-w-[160px] truncate">{selected?.display_name??'Choose location'}</span>
-                  <IconChevron open={menuOpen}/>
-                </button>
-                {menuOpen && <div className="absolute right-0 z-30 mt-1 max-h-72 w-72 overflow-y-auto rounded-xl border border-[#E5E7EB] bg-white p-1 shadow-sm">
-                  {locations.map(l=><button key={l.id} type="button" onClick={()=>{setLocalId(l.id);setMenuOpen(false);}}
-                    className={'block w-full rounded-lg px-3 py-2 text-left text-xs hover:bg-[#F9FAFB] '+(l.id===locationId?'bg-[#F5F3FF] text-[#6C55E8]':'text-[#374151]')}>
-                    {l.display_name??'Unnamed'}{l.address && <span className="mt-0.5 block text-[11px] text-[#9CA3AF]">{l.address}</span>}
-                  </button>)}
-                </div>}
-              </div>}
-              <button type="button" disabled={loading||!selected} onClick={()=>setRevision(n=>n+1)}
-                className="rounded-xl bg-[#6C55E8] px-4 py-2 text-xs font-semibold text-white hover:bg-[#5A42D1] disabled:opacity-50">
-                {loading?'Analyzing…':'Refresh'}
-              </button>
-              {selected && <button type="button" onClick={()=>setShowPostModal(true)}
-                className="flex items-center gap-1 rounded-xl border border-[#6C55E8] px-3 py-2 text-xs font-semibold text-[#6C55E8] hover:bg-[#F5F3FF]">
-                <IconPlus/>Post
-              </button>}
-            </div>
+        <div>
+          {/* Row 1: Name + rating inline */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-lg font-bold text-[#111827]">{selected?.display_name??'Select a location'}</h1>
+            {reviews?.rating!=null && <span className="flex items-center gap-1 text-amber-500 text-sm font-semibold"><IconStar/>{reviews.rating.toFixed(1)}</span>}
+            {profile?.source==='google_business_profile' && (
+              <span className="inline-flex items-center gap-1 rounded-lg bg-[#EEF2FF] px-2 py-0.5 text-[11px] font-medium text-[#6C55E8]">
+                <IconCheck/>Verified
+              </span>
+            )}
           </div>
+          {/* Row 2: Category */}
+          {profile?.category && <p className="mt-0.5 text-xs text-[#6B7280]">{profile.category}</p>}
+          {/* Row 3: Address */}
+          {selected?.address && <p className="mt-0.5 text-xs text-[#9CA3AF] flex items-center gap-1"><IconPin/>{selected.address}</p>}
+          {reviews?.google_review_count!=null && <p className="mt-1 text-[11px] text-[#9CA3AF]">{number(reviews.google_review_count)} reviews</p>}
         </div>
+      </div>
+      {/* Controls: location selector | refresh icon | date range | post */}
+      <div className="flex flex-wrap items-center gap-2">
+        {!globalLocationId && locations.length>0 && <div ref={selectorRef} className="relative">
+          <button type="button" aria-expanded={menuOpen} onClick={()=>setMenuOpen(v=>!v)}
+            className="inline-flex items-center gap-2 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-medium hover:bg-[#F9FAFB]">
+            <span className="max-w-[140px] truncate">{selected?.display_name??'Choose location'}</span>
+            <IconChevron open={menuOpen}/>
+          </button>
+          {menuOpen && <div className="absolute right-0 z-30 mt-1 max-h-72 w-72 overflow-y-auto rounded-xl border border-[#E5E7EB] bg-white p-1 shadow-sm">
+            {locations.map(l=><button key={l.id} type="button" onClick={()=>{setLocalId(l.id);setMenuOpen(false);}}
+              className={'block w-full rounded-lg px-3 py-2 text-left text-xs hover:bg-[#F9FAFB] '+(l.id===locationId?'bg-[#F5F3FF] text-[#6C55E8]':'text-[#374151]')}>
+              {l.display_name??'Unnamed'}{l.address && <span className="mt-0.5 block text-[11px] text-[#9CA3AF]">{l.address}</span>}
+            </button>)}
+          </div>}
+        </div>}
+        {/* Silent refresh icon button */}
+        <button type="button" disabled={loading||!selected} onClick={()=>setRevision(n=>n+1)}
+          title={loading?'Loading…':'Refresh data'}
+          className="rounded-lg border border-[#E5E7EB] bg-white p-2 text-[#6B7280] hover:bg-[#F9FAFB] disabled:opacity-40 transition-colors">
+          <IconRefresh spinning={loading}/>
+        </button>
+        <DateRangePicker from={globalFrom} to={globalTo} onChange={(f,t)=>{setGlobalFrom(f);setGlobalTo(t);}} alignRight/>
+        {selected && <button type="button" onClick={()=>setShowPostModal(true)}
+          className="flex items-center gap-1 rounded-lg border border-[#6C55E8] px-3 py-2 text-xs font-semibold text-[#6C55E8] hover:bg-[#F5F3FF]">
+          <IconPlus/>Post
+        </button>}
       </div>
     </div>
 
@@ -735,8 +756,10 @@ export function GoogleProfilePage(){
       {/* ── Advanced feature toolbar ─────────────────────────────────── */}
       <div className="flex flex-wrap gap-2">
         {advancedBtns.map(b=><button key={b.id} type="button" onClick={()=>togglePanel(b.id)}
-          className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${activePanel===b.id?'border-[#6C55E8] bg-[#F5F3FF] text-[#6C55E8]':'border-[#E5E7EB] bg-white text-[#6B7280] hover:bg-[#F9FAFB]'}`}>
+          title={activePanel===b.id?`${b.label} (active — click to close)`:b.label}
+          className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors relative ${activePanel===b.id?'border-[#6C55E8] bg-[#F5F3FF] text-[#6C55E8]':'border-[#E5E7EB] bg-white text-[#6B7280] hover:bg-[#F9FAFB]'}`}>
           {b.icon}{b.label}
+          {activePanel===b.id && <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-[#6C55E8]"/>}
         </button>)}
       </div>
 
@@ -800,7 +823,7 @@ export function GoogleProfilePage(){
         {!extraLoading && recentPosts && recentPosts.length>0 && (
           <Section title="Recent posts" action={
             <button type="button" onClick={()=>setShowPostModal(true)}
-              className="flex items-center gap-1 rounded-xl bg-[#6C55E8] px-3 py-2 text-xs font-semibold text-white hover:bg-[#5A42D1]">
+              className="flex items-center gap-1 rounded-lg bg-[#6C55E8] px-3 py-2 text-xs font-semibold text-white hover:bg-[#5A42D1]">
               <IconPlus/>Add post
             </button>
           }>
@@ -825,7 +848,7 @@ export function GoogleProfilePage(){
 
             {/* Business profile — social media style */}
             <Section className="flex-1" title="Business profile"
-              action={<button type="button" onClick={()=>togglePanel('info')} className="flex items-center gap-1 rounded-xl border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#6B7280] hover:bg-[#F9FAFB]"><IconEdit/>Edit</button>}>
+              action={<button type="button" onClick={()=>togglePanel('info')} className="flex items-center gap-1 rounded-lg border border-[#E5E7EB] px-3 py-1.5 text-xs font-medium text-[#6B7280] hover:bg-[#F9FAFB]"><IconEdit/>Edit</button>}>
               {profile?.source!=='google_business_profile' && <p className="mb-4 text-xs text-amber-700">{warningText('profile')}</p>}
               <div className="space-y-3">
                 {[
@@ -863,7 +886,7 @@ export function GoogleProfilePage(){
                 const total=reviewRows.length;
                 const STAR_COLOR=['','#EF4444','#F97316','#EAB308','#84CC16','#22C55E'];
                 return total===0 ? <Empty>No reviews synced in this date range.</Empty> : <>
-                  <div className="grid gap-6 sm:grid-cols-2">
+                  <div className="space-y-5">
                     <div>
                       <p className="mb-3 text-xs font-semibold text-[#374151]">Rating distribution</p>
                       <div className="space-y-2">{ratings.map(r=><div key={r.rating} className="flex items-center gap-2">
@@ -901,16 +924,11 @@ export function GoogleProfilePage(){
 
           </div>
 
-          {/* Right col: Profile Doctor (expandable) */}
+          {/* Right col: Profile Doctor (always expanded) */}
           <section className={panel}>
             <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[#F3F4F6] p-5">
               <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-semibold text-[#111827]">Profile Doctor diagnostics</h2>
-                  <button type="button" onClick={()=>setDoctorOpen(v=>!v)} className="text-[#9CA3AF] hover:text-[#6B7280]">
-                    <IconChevron open={doctorOpen}/>
-                  </button>
-                </div>
+                <h2 className="text-sm font-semibold text-[#111827]">Profile Doctor diagnostics</h2>
                 <p className="mt-1 text-xs text-[#6B7280]">Profile completeness and optimization tips.</p>
               </div>
               {/* Mini bar chart in header */}
@@ -920,7 +938,7 @@ export function GoogleProfilePage(){
                 ))}
               </div>}
             </div>
-            {doctorOpen && <div className="p-5 space-y-5">
+            <div className="p-5 space-y-5">
               {readiness && <>
                 <div className="flex items-center gap-4">
                   <StrengthRing score={readiness.score??0}/>
@@ -942,48 +960,42 @@ export function GoogleProfilePage(){
                 </div>
               </>}
               {/* Competitor benchmarking */}
-              {competitors.length>0 && <>
-                <div className="border-t border-[#F3F4F6] pt-5">
-                  <p className="mb-3 text-xs font-semibold text-[#374151]">Competitive Benchmarking</p>
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    <div className="rounded-xl bg-[#F9FAFB] p-3 text-center">
-                      <p className="text-[10px] text-[#9CA3AF]">Your rating</p>
-                      <p className="font-mono text-lg font-bold text-[#6C55E8]">{reviews?.rating?.toFixed(1)?? '—'}</p>
-                    </div>
-                    <div className="rounded-xl bg-[#F9FAFB] p-3 text-center">
-                      <p className="text-[10px] text-[#9CA3AF]">Area avg</p>
-                      <p className="font-mono text-lg font-bold text-[#374151]">{average?.toFixed(1)?? '—'}</p>
-                    </div>
-                    <div className="rounded-xl bg-[#F9FAFB] p-3 text-center">
-                      <p className="text-[10px] text-[#9CA3AF]">Avg reviews</p>
-                      <p className="font-mono text-lg font-bold text-[#374151]">{reviewAverage??'—'}</p>
-                    </div>
+              <div className="border-t border-[#F3F4F6] pt-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-semibold text-[#374151]">Competitive Benchmarking</p>
+                  {competitorLoading && <span className="text-[10px] text-[#9CA3AF]">Updating…</span>}
+                </div>
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="rounded-lg bg-[#F9FAFB] p-3 text-center">
+                    <p className="text-[10px] text-[#9CA3AF]">Your rating</p>
+                    <p className="font-mono text-lg font-bold text-[#6C55E8]">{reviews?.rating?.toFixed(1)??'—'}</p>
                   </div>
-                  <div className="flex gap-2 mb-3">
-                    {RADII.map(r=><button key={r} type="button" onClick={()=>setRadius(r)}
-                      className={`flex-1 rounded-lg border py-1.5 text-xs font-medium ${radius===r?'border-[#6C55E8] text-[#6C55E8] bg-[#F5F3FF]':'border-[#E5E7EB] text-[#6B7280]'}`}>
-                      {r} km</button>)}
+                  <div className="rounded-lg bg-[#F9FAFB] p-3 text-center">
+                    <p className="text-[10px] text-[#9CA3AF]">Area avg</p>
+                    <p className="font-mono text-lg font-bold text-[#374151]">{average?.toFixed(1)??'—'}</p>
                   </div>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {competitors.slice(0,8).map((c,i)=><div key={c.place_id} className="flex items-center gap-3 text-xs">
-                      <span className="flex-shrink-0 w-5 text-center font-medium text-[#9CA3AF]">#{i+1}</span>
-                      <span className="flex-1 min-w-0 truncate text-[#374151]">{c.name}</span>
-                      {c.rating!=null && <span className="flex items-center gap-0.5 text-amber-500 flex-shrink-0 text-[11px]"><IconStar/>{c.rating.toFixed(1)}</span>}
-                      <span className="flex-shrink-0 text-[#9CA3AF] text-[11px]">{number(c.review_count)}</span>
-                    </div>)}
+                  <div className="rounded-lg bg-[#F9FAFB] p-3 text-center">
+                    <p className="text-[10px] text-[#9CA3AF]">Avg reviews</p>
+                    <p className="font-mono text-lg font-bold text-[#374151]">{reviewAverage??'—'}</p>
                   </div>
                 </div>
-              </>}
-            </div>}
-            {!doctorOpen && readiness && <div className="p-5">
-              <div className="flex items-center gap-4">
-                <StrengthRing score={readiness.score??0}/>
-                <div>
-                  <p className="text-sm font-medium text-[#374151]">Click the arrow to expand full diagnostics</p>
-                  <p className="text-xs text-[#6B7280]">{readiness.checks?.filter((c:{status:string})=>c.status==='action').length??0} action items found</p>
+                <div className="flex gap-2 mb-3">
+                  {RADII.map(r=><button key={r} type="button" onClick={()=>setRadius(r)}
+                    title={`Show competitors within ${r} km`}
+                    className={`flex-1 rounded-lg border py-1.5 text-xs font-medium transition-colors ${radius===r?'border-[#6C55E8] text-[#6C55E8] bg-[#F5F3FF]':'border-[#E5E7EB] text-[#6B7280] hover:bg-[#F9FAFB]'}`}>
+                    {r} km</button>)}
                 </div>
+                {competitors.length===0 && !competitorLoading && <p className="text-xs text-[#9CA3AF]">No competitors found in this radius.</p>}
+                {competitors.length>0 && <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {competitors.slice(0,8).map((c,i)=><div key={c.place_id} className="flex items-center gap-3 text-xs">
+                    <span className="flex-shrink-0 w-5 text-center font-medium text-[#9CA3AF]">#{i+1}</span>
+                    <span className="flex-1 min-w-0 truncate text-[#374151]">{c.name}</span>
+                    {c.rating!=null && <span className="flex items-center gap-0.5 text-amber-500 flex-shrink-0 text-[11px]"><IconStar/>{c.rating.toFixed(1)}</span>}
+                    <span className="flex-shrink-0 text-[#9CA3AF] text-[11px]">{number(c.review_count)}</span>
+                  </div>)}
+                </div>}
               </div>
-            </div>}
+            </div>
           </section>
 
         </div>
