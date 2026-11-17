@@ -683,18 +683,9 @@ export function GoogleProfilePage(){
     {/* ── Profile Header ──────────────────────────────────────────────── */}
     <div className="flex flex-wrap items-start justify-between gap-4 pb-2">
       <div className="flex items-center gap-4">
-        {/* Avatar — tries business favicon, falls back to initials */}
-        <div className="flex-shrink-0 relative">
-          {profile?.website && safeUrl(profile.website) ? (
-            <img
-              src={`https://logo.clearbit.com/${new URL(safeUrl(profile.website)!).hostname}`}
-              alt=""
-              className="h-16 w-16 rounded-full object-cover shadow-sm bg-[#F3F4F6]"
-              onError={e=>{(e.target as HTMLImageElement).style.display='none';(e.target as HTMLImageElement).nextElementSibling?.removeAttribute('hidden');}}
-            />
-          ) : null}
-          <div hidden={!!(profile?.website && safeUrl(profile.website))}
-            className="h-16 w-16 rounded-full bg-gradient-to-br from-[#6C55E8] to-[#9B88F0] flex items-center justify-center text-white text-2xl font-bold shadow-sm">
+        {/* Avatar — initials */}
+        <div className="flex-shrink-0">
+          <div className="h-16 w-16 rounded-full bg-gradient-to-br from-[#6C55E8] to-[#9B88F0] flex items-center justify-center text-white text-2xl font-bold shadow-sm">
             {(selected?.display_name??'?')[0]?.toUpperCase()}
           </div>
         </div>
