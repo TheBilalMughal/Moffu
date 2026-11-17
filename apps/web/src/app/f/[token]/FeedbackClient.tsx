@@ -10,7 +10,7 @@ interface Props {
   edgeFnUrl: string;
 }
 
-type Step = 'choose' | 'unhappy_form' | 'happy_done' | 'unhappy_done' | 'submitting' | 'error';
+type Step = 'choose' | 'unhappy_form' | 'happy_done' | 'unhappy_done' | 'already_done' | 'submitting' | 'error';
 
 export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, edgeFnUrl }: Props) {
   const [step, setStep] = useState<Step>('choose');
@@ -35,7 +35,7 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
       });
       const data = await res.json();
       if (!res.ok) {
-        if (data.error === 'already_responded') { setStep('unhappy_done'); return; }
+        if (res.status === 409 || data.error === 'already_responded') { setStep('already_done'); return; }
         throw new Error(data.error ?? 'Unknown error');
       }
       setStep(sentiment === 'happy' ? 'happy_done' : 'unhappy_done');
@@ -126,8 +126,10 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
                 onChange={e => setFeedbackText(e.target.value)}
                 placeholder="Tell us what happened..."
                 rows={4}
+                maxLength={5000}
                 className="w-full px-4 py-3 text-sm text-[#111827] placeholder-[#D1D5DB] border border-[#E5EAE8] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#111827]/15 focus:border-[#111827] resize-none transition"
               />
+              <p className="mt-1.5 text-right text-[11px] text-[#9CA3AF]">{feedbackText.length}/5000</p>
               <button
                 onClick={() => submit('unhappy', feedbackText)}
                 disabled={!feedbackText.trim()}
@@ -182,7 +184,7 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
               </div>
               <h2 className="text-lg font-bold text-[#111827] mb-2">Feedback received</h2>
               <p className="text-sm text-[#6B7280]">
-                Thank you{name}. The team has been notified and will look into this.
+                Thank you{name}. The business can review your private feedback in its Feedback Inbox.
               </p>
               {safeGoogleReviewUrl && (
                 <a href={safeGoogleReviewUrl} target="_blank" rel="noopener noreferrer"
@@ -190,6 +192,18 @@ export function FeedbackClient({ token, customerName, orgName, googleReviewUrl, 
                   Leave an honest Google review (optional)
                 </a>
               )}
+            </div>
+          )}
+
+          {step === 'already_done' && (
+            <div className="px-8 py-12 text-center">
+              <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-7 h-7 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <h2 className="text-lg font-bold text-[#111827] mb-2">Already submitted</h2>
+              <p className="text-sm text-[#6B7280]">This feedback link has already been used. Thank you for sharing your experience.</p>
             </div>
           )}
 

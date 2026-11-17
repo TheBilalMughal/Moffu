@@ -52,30 +52,48 @@ export function FeedbackInboxPage() {
 
   const [rows, setRows]           = useState<FeedbackRow[]>([]);
   const [loading, setLoading]     = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [actionError, setActionError] = useState('');
   const [sentiment, setSentiment] = useState<SentimentFilter>('all');
   const [resolved, setResolved]   = useState<ResolvedFilter>('open');
   const [resolving, setResolving] = useState<string | null>(null);
 
   // ── Load ──────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!orgId) return;
-    setLoading(true);
-    supabase
-      .from('feedback_responses')
-      .select(`
-        id, request_id, location_id,
-        sentiment, feedback_text,
-        resolved, resolved_at, responded_at,
-        feedback_requests (
-          customer_name, customer_email, channel,
-          sent_at, open_count, last_opened_at,
-          google_locations ( display_name )
-        )
-      `)
-      .eq('org_id', orgId)
-      .order('responded_at', { ascending: false })
-      .then(({ data }) => {
-        const mapped: FeedbackRow[] = (data ?? []).map((r: Record<string, unknown>) => {
+    let cancelled = false;
+    if (!orgId) {
+      setRows([]);
+      setLoading(false);
+      return () => { cancelled = true; };
+    }
+
+    async function loadFeedback() {
+      setLoading(true);
+      setLoadError('');
+      const { data, error } = await supabase
+        .from('feedback_responses')
+        .select(`
+          id, request_id, location_id,
+          sentiment, feedback_text,
+          resolved, resolved_at, responded_at,
+          feedback_requests (
+            customer_name, customer_email, channel,
+            sent_at, open_count, last_opened_at,
+            google_locations ( display_name )
+          )
+        `)
+        .eq('org_id', orgId)
+        .order('responded_at', { ascending: false });
+
+      if (cancelled) return;
+      if (error) {
+        setRows([]);
+        setLoadError('Could not load feedback. Check your connection and try again.');
+        setLoading(false);
+        return;
+      }
+
+      const mapped: FeedbackRow[] = (data ?? []).map((r: Record<string, unknown>) => {
           const req = r.feedback_requests as Record<string, unknown> | null;
           const loc = req?.google_locations as Record<string, unknown> | null;
           return {
@@ -95,20 +113,32 @@ export function FeedbackInboxPage() {
             open_count:     (req?.open_count as number) ?? 0,
             last_opened_at: req?.last_opened_at as string | null ?? null,
           };
-        });
-        setRows(mapped);
-        setLoading(false);
       });
+      setRows(mapped);
+      setLoading(false);
+    }
+
+    void loadFeedback();
+    return () => { cancelled = true; };
   }, [orgId]);
 
   // ── Resolve ───────────────────────────────────────────────────────────────
   async function markResolved(id: string) {
     setResolving(id);
-    await supabase
+    setActionError('');
+    const resolvedAt = new Date().toISOString();
+    const { data, error } = await supabase
       .from('feedback_responses')
-      .update({ resolved: true, resolved_at: new Date().toISOString(), resolved_by: user?.id })
-      .eq('id', id);
-    setRows(prev => prev.map(r => r.id === id ? { ...r, resolved: true, resolved_at: new Date().toISOString() } : r));
+      .update({ resolved: true, resolved_at: resolvedAt, resolved_by: user?.id })
+      .eq('id', id)
+      .select('id')
+      .maybeSingle();
+    if (error || !data) {
+      setActionError('Could not resolve this feedback. Please try again.');
+      setResolving(null);
+      return;
+    }
+    setRows(prev => prev.map(r => r.id === id ? { ...r, resolved: true, resolved_at: resolvedAt } : r));
     setResolving(null);
   }
 
@@ -152,6 +182,8 @@ export function FeedbackInboxPage() {
           New request
         </Link>
       </div>
+
+      {(loadError || actionError) && <p role="alert" className="relative mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{loadError || actionError}</p>}
 
       {/* Stat cards */}
       <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -278,7 +310,7 @@ export function FeedbackInboxPage() {
                   {r.feedback_text ? (
                     <p className="text-xs text-[#6B7280] leading-relaxed line-clamp-2">{r.feedback_text}</p>
                   ) : r.sentiment === 'happy' ? (
-                    <p className="text-xs text-emerald-600">Redirected to Google review page</p>
+                    <p className="text-xs text-emerald-600">Positive feedback submitted</p>
                   ) : null}
                   {/* Email tracking badge */}
                   {r.channel === 'email' && (

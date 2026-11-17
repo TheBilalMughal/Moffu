@@ -21,12 +21,19 @@ export function NewFeedbackRequestPage() {
   const [emailSent, setEmailSent]         = useState(false);
   const [emailError, setEmailError]       = useState('');
 
-  const webBase = import.meta.env.VITE_WEB_URL ?? 'https://moffu.vercel.app';
+  const webBase = (import.meta.env.VITE_WEB_URL ?? 'https://www.moffu.pro').replace(/\/+$/, '');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!orgId || !user) return;
-    if (!googleUrl.trim()) { setError('Google review URL is required.'); return; }
+    let reviewUrl: URL;
+    try {
+      reviewUrl = new URL(googleUrl.trim());
+      if (reviewUrl.protocol !== 'https:') throw new Error('HTTPS required');
+    } catch {
+      setError('Enter a valid HTTPS Google review URL.');
+      return;
+    }
     setError('');
     setSaving(true);
 
@@ -38,7 +45,7 @@ export function NewFeedbackRequestPage() {
         location_id:       selectedLocId ?? null,
         customer_name:     customerName.trim() || null,
         customer_email:    customerEmail.trim() || null,
-        google_review_url: googleUrl.trim(),
+        google_review_url: reviewUrl.href,
         channel:           'manual',
       })
       .select('id, token')
@@ -65,21 +72,24 @@ export function NewFeedbackRequestPage() {
     if (!created || !user) return;
     setSendingEmail(true);
     setEmailError('');
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/feedback-send-email`, {
-      method:  'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `Bearer ${session?.access_token ?? ''}`,
-      },
-      body: JSON.stringify({ request_id: created.id }),
-    });
-    setSendingEmail(false);
-    if (res.ok) {
-      setEmailSent(true);
-    } else {
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) throw new Error('Your session expired. Sign in again to send this email.');
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/feedback-send-email`, {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ request_id: created.id }),
+      });
       const body = await res.json().catch(() => ({}));
-      setEmailError(body.error ?? 'Failed to send email.');
+      if (!res.ok) throw new Error(body.error ?? 'Failed to send email.');
+      setEmailSent(true);
+    } catch (e: unknown) {
+      setEmailError(e instanceof Error ? e.message : 'Failed to send email. Check your connection and try again.');
+    } finally {
+      setSendingEmail(false);
     }
   }
 

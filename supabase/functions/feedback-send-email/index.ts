@@ -3,6 +3,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 Deno.serve(async (req) => {
@@ -66,7 +68,7 @@ Deno.serve(async (req) => {
   const greeting     = firstName ? `Hi ${firstName},` : 'Hi,';
 
   const supabaseUrl  = Deno.env.get('SUPABASE_URL')!;
-  const webUrl       = Deno.env.get('WEB_URL') ?? 'https://moffu.vercel.app';
+  const webUrl       = (Deno.env.get('WEB_URL') ?? 'https://www.moffu.pro').replace(/\/+$/, '');
   const feedbackLink = `${webUrl}/f/${reqRow.token}`;
   const trackOpenUrl = `${supabaseUrl}/functions/v1/feedback-track?token=${reqRow.token}&event=open`;
   const trackClickUrl= `${supabaseUrl}/functions/v1/feedback-track?token=${reqRow.token}&event=click`;
@@ -76,25 +78,31 @@ Deno.serve(async (req) => {
       return reviewUrl.protocol === 'https:' ? reviewUrl.href : null;
     } catch { return null; }
   })();
-  const escapeHtmlAttr = (value: string) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;');
+  const escapeHtml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const escapeHtmlAttr = escapeHtml;
+  const safeOrgName = escapeHtml(orgName);
+  const safeGreeting = escapeHtml(greeting);
+  const safeLocationName = locationName ? escapeHtml(locationName) : null;
+  const safeLocationAddr = locationAddr ? escapeHtml(locationAddr) : null;
+  const fromName = orgName.replace(/[\r\n]+/g, ' ').trim().slice(0, 120) || 'Business';
   const actionsHtml = publicReviewUrl ? `
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
                 <tr>
                   <td width="48%" style="padding-right:6px;">
-                    <a href="${escapeHtmlAttr(publicReviewUrl)}" style="display:block;text-align:center;background:#0D4C3C;color:#ffffff;font-size:14px;font-weight:600;padding:14px 16px;border-radius:12px;text-decoration:none;">
+                    <a href="${escapeHtmlAttr(trackClickUrl)}" style="display:block;text-align:center;background:#0D4C3C;color:#ffffff;font-size:14px;font-weight:600;padding:14px 16px;border-radius:12px;text-decoration:none;">
                       Leave an honest Google review
                     </a>
                   </td>
                   <td width="4%"></td>
                   <td width="48%" style="padding-left:6px;">
-                    <a href="${feedbackLink}" style="display:block;text-align:center;background:#F8FAF9;color:#374151;font-size:14px;font-weight:600;padding:14px 16px;border-radius:12px;text-decoration:none;border:1px solid #E5EAE8;">
+                    <a href="${escapeHtmlAttr(feedbackLink)}" style="display:block;text-align:center;background:#F8FAF9;color:#374151;font-size:14px;font-weight:600;padding:14px 16px;border-radius:12px;text-decoration:none;border:1px solid #E5EAE8;">
                       Share private feedback
                     </a>
                   </td>
                 </tr>
               </table>` : `
-              <a href="${feedbackLink}" style="display:block;text-align:center;background:#0D4C3C;color:#ffffff;font-size:14px;font-weight:600;padding:14px 20px;border-radius:12px;text-decoration:none;margin-bottom:28px;">
+              <a href="${escapeHtmlAttr(feedbackLink)}" style="display:block;text-align:center;background:#0D4C3C;color:#ffffff;font-size:14px;font-weight:600;padding:14px 20px;border-radius:12px;text-decoration:none;margin-bottom:28px;">
                 Share private feedback
               </a>`;
 
@@ -133,16 +141,16 @@ Deno.serve(async (req) => {
               ${locationName ? `
               <p style="margin:0 0 20px;text-align:center;">
                 <span style="display:inline-block;background:#F0F7F5;border:1px solid #D1EAE4;border-radius:8px;padding:4px 12px;font-size:11px;font-weight:600;color:#0D4C3C;text-transform:uppercase;letter-spacing:0.06em;">
-                  ${locationName}${locationAddr ? ` · ${locationAddr}` : ''}
+                  ${safeLocationName}${safeLocationAddr ? ` · ${safeLocationAddr}` : ''}
                 </span>
               </p>` : ''}
 
-              <p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;text-align:center;">${orgName}</p>
+              <p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;text-align:center;">${safeOrgName}</p>
               <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#111827;text-align:center;line-height:1.3;">
                 How was your experience?
               </h1>
               <p style="margin:0 0 32px;font-size:14px;color:#6B7280;text-align:center;line-height:1.6;">
-                ${greeting}<br/>
+                ${safeGreeting}<br/>
                 We welcome honest feedback. A public Google review and private feedback are both optional and available to every customer.
               </p>
 
@@ -150,7 +158,7 @@ Deno.serve(async (req) => {
               ${actionsHtml}
 
               <p style="margin:0;font-size:11px;color:#D1D5DB;text-align:center;">
-                Or <a href="${feedbackLink}" style="color:#9CA3AF;text-decoration:underline;">open in browser</a>
+                Or <a href="${escapeHtmlAttr(feedbackLink)}" style="color:#9CA3AF;text-decoration:underline;">open in browser</a>
               </p>
             </td>
           </tr>
@@ -159,7 +167,7 @@ Deno.serve(async (req) => {
           <tr>
             <td style="padding-top:24px;text-align:center;">
               <p style="margin:0;font-size:11px;color:#D1D5DB;">
-                Powered by <a href="${webUrl}" style="color:#9CA3AF;text-decoration:none;">Moffu</a>
+                Powered by <a href="${escapeHtmlAttr(webUrl)}" style="color:#9CA3AF;text-decoration:none;">Moffu</a>
               </p>
             </td>
           </tr>
@@ -170,7 +178,7 @@ Deno.serve(async (req) => {
   </table>
 
   <!-- Tracking pixel (1×1 transparent GIF) -->
-  <img src="${trackOpenUrl}" width="1" height="1" style="display:none;border:0;" alt=""/>
+  <img src="${escapeHtmlAttr(trackOpenUrl)}" width="1" height="1" style="display:none;border:0;" alt=""/>
 </body>
 </html>`;
 
@@ -185,9 +193,9 @@ Deno.serve(async (req) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from:    `${orgName} <feedback@moffu.co>`,
+      from:    `${fromName} <feedback@moffu.co>`,
       to:      [reqRow.customer_email],
-      subject: `How was your experience at ${locationName ?? orgName}?`,
+      subject: `How was your experience at ${(locationName ?? orgName).replace(/[\r\n]+/g, ' ').slice(0, 160)}?`,
       html,
     }),
   });

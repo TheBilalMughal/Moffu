@@ -3,6 +3,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 Deno.serve(async (req) => {
@@ -27,9 +29,13 @@ Deno.serve(async (req) => {
       .eq('token', token)
       .maybeSingle();
 
-    if (error || !req_row) return json({ error: 'Not found' }, 404);
+    if (error) {
+      console.error('Failed to load feedback request:', error.message);
+      return json({ error: 'Could not load this feedback link' }, 500);
+    }
+    if (!req_row) return json({ error: 'Not found' }, 404);
     if (req_row.status === 'responded') return json({ error: 'already_responded', name: req_row.customer_name }, 409);
-    if (new Date(req_row.expires_at) < new Date()) return json({ error: 'expired' }, 410);
+    if (req_row.status === 'expired' || new Date(req_row.expires_at) <= new Date()) return json({ error: 'expired' }, 410);
 
     // Fetch org name for the page
     const { data: org } = await supabase
@@ -39,8 +45,6 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     return json({
-      id:               req_row.id,
-      token:            req_row.token,
       customer_name:    req_row.customer_name,
       google_review_url: req_row.google_review_url,
       org_name:         org?.name ?? 'this business',
@@ -49,48 +53,44 @@ Deno.serve(async (req) => {
 
   // ── POST /feedback-gate — submit response ──
   if (req.method === 'POST') {
-    let body: { token: string; sentiment: 'happy' | 'unhappy'; feedback_text?: string; rating_choice?: number };
+    let body: { token?: unknown; sentiment?: unknown; feedback_text?: unknown; rating_choice?: unknown };
     try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
     const { token, sentiment, feedback_text, rating_choice } = body;
-    if (!token || !sentiment) return json({ error: 'Missing fields' }, 400);
-    if (!['happy', 'unhappy'].includes(sentiment)) return json({ error: 'Invalid sentiment' }, 400);
+    if (typeof token !== 'string' || token.trim().length < 16 || token.length > 128) {
+      return json({ error: 'Invalid feedback token' }, 400);
+    }
+    if (sentiment !== 'happy' && sentiment !== 'unhappy') return json({ error: 'Invalid sentiment' }, 400);
+    if (feedback_text !== undefined && typeof feedback_text !== 'string') return json({ error: 'Invalid feedback text' }, 400);
+    if (typeof feedback_text === 'string' && feedback_text.length > 5000) return json({ error: 'Feedback is too long' }, 400);
+    if (rating_choice !== undefined && rating_choice !== null && (!Number.isInteger(rating_choice) || Number(rating_choice) < 1 || Number(rating_choice) > 5)) {
+      return json({ error: 'Invalid rating' }, 400);
+    }
 
-    // Load request row
-    const { data: req_row, error: fetchErr } = await supabase
-      .from('feedback_requests')
-      .select('id, status, expires_at, org_id, location_id, google_review_url')
-      .eq('token', token)
-      .maybeSingle();
-
-    if (fetchErr || !req_row) return json({ error: 'Not found' }, 404);
-    if (req_row.status === 'responded') return json({ error: 'already_responded' }, 409);
-    if (new Date(req_row.expires_at) < new Date()) return json({ error: 'expired' }, 410);
-
-    // Insert response
-    const { error: insertErr } = await supabase.from('feedback_responses').insert({
-      request_id:    req_row.id,
-      org_id:        req_row.org_id,
-      location_id:   req_row.location_id,
-      sentiment,
-      rating_choice: rating_choice ?? null,
-      feedback_text: sentiment === 'unhappy' ? (feedback_text ?? null) : null,
+    const { data, error } = await supabase.rpc('submit_feedback_response', {
+      p_token: token,
+      p_sentiment: sentiment,
+      p_feedback_text: typeof feedback_text === 'string' ? feedback_text.trim() : null,
+      p_rating_choice: typeof rating_choice === 'number' ? rating_choice : null,
     });
 
-    if (insertErr) return json({ error: 'Failed to save response' }, 500);
+    if (error) {
+      console.error('Failed to save public feedback response:', error.message);
+      return json({ error: 'Failed to save response' }, 500);
+    }
 
-    // Mark request as responded
-    await supabase
-      .from('feedback_requests')
-      .update({ status: 'responded' })
-      .eq('id', req_row.id);
-
-    return json({
-      ok:               true,
-      sentiment,
-      // The public review invitation is available regardless of private sentiment.
-      google_review_url: req_row.google_review_url,
-    });
+    switch (data?.status) {
+      case 'ok':
+        return json({ ok: true, sentiment: data.sentiment, google_review_url: data.google_review_url });
+      case 'already_responded':
+        return json({ error: 'already_responded' }, 409);
+      case 'expired':
+        return json({ error: 'expired' }, 410);
+      case 'not_found':
+        return json({ error: 'Not found' }, 404);
+      default:
+        return json({ error: 'Invalid feedback response' }, 400);
+    }
   }
 
   return json({ error: 'Method not allowed' }, 405);

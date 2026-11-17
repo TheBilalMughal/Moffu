@@ -27,14 +27,33 @@ Deno.serve(async (req) => {
     // Increment open_count + update last_opened_at via RPC to avoid race
     await supabase.rpc('increment_feedback_open', { p_token: token });
   } else if (event === 'click') {
+    const { data: request } = await supabase
+      .from('feedback_requests')
+      .select('google_review_url')
+      .eq('token', token)
+      .maybeSingle();
+
+    let destination: URL;
+    try {
+      destination = new URL(request?.google_review_url ?? '');
+      if (destination.protocol !== 'https:') throw new Error('Unsafe review URL');
+    } catch {
+      return new Response('Review link unavailable', { status: 404, headers: { 'Cache-Control': 'no-store' } });
+    }
+
     await supabase
       .from('feedback_requests')
       .update({ clicked_at: new Date().toISOString() })
       .eq('token', token)
-      .is('clicked_at', null); // only set once
+      .is('clicked_at', null); // first click timestamp only
+
+    return new Response(null, {
+      status: 302,
+      headers: { Location: destination.href, 'Cache-Control': 'no-store' },
+    });
   }
 
-  // Always return the tracking pixel — never a redirect (would break email clients)
+  // Open-tracking requests return the pixel; review clicks use a safe HTTPS redirect above.
   return new Response(TRANSPARENT_GIF, {
     headers: {
       'Content-Type': 'image/gif',

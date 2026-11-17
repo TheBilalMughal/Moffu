@@ -15,13 +15,12 @@ export default async function FeedbackPage({ params }: Props) {
   const edgeFnUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/feedback-gate`;
 
   let pageData: {
-    id: string;
     customer_name: string | null;
     org_name: string;
     google_review_url: string | null;
   } | null = null;
 
-  let errorState: 'not_found' | 'expired' | 'already_responded' | null = null;
+  let errorState: 'not_found' | 'expired' | 'already_responded' | 'unavailable' | null = null;
 
   try {
     const res = await fetch(`${edgeFnUrl}?token=${encodeURIComponent(token)}`, {
@@ -31,9 +30,9 @@ export default async function FeedbackPage({ params }: Props) {
     else if (res.status === 410) { errorState = 'expired'; }
     else if (res.status === 409) { errorState = 'already_responded'; }
     else if (res.ok) { pageData = await res.json(); }
-    else { errorState = 'not_found'; }
+    else { errorState = 'unavailable'; }
   } catch {
-    errorState = 'not_found';
+    errorState = 'unavailable';
   }
 
   if (errorState) {
@@ -41,6 +40,7 @@ export default async function FeedbackPage({ params }: Props) {
       not_found:        { title: 'Link not found',      sub: 'This feedback link is invalid or has been removed.' },
       expired:          { title: 'Link expired',        sub: 'This feedback link is no longer active.' },
       already_responded:{ title: 'Already submitted',   sub: 'You have already submitted your feedback. Thank you!' },
+      unavailable:      { title: 'Feedback is unavailable', sub: 'We could not load this feedback link right now. Please try again in a moment.' },
     };
     const { title, sub } = messages[errorState]!;
     return (
