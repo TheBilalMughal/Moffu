@@ -551,8 +551,6 @@ function TopbarLocationPicker() {
   const current = selectedId ? locations.find(l => l.id === selectedId) : null;
   const currentRating = selectedId ? locationRatings[selectedId] : undefined;
 
-  const isActive = !!selectedId;
-
   return (
     <div ref={ref} className="relative inline-flex items-center">
       <button
@@ -577,17 +575,6 @@ function TopbarLocationPicker() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m6 9 6 6 6-6"/>
         </svg>}
       </button>
-      {isActive && locations.length > 1 && <button
-        type="button"
-        aria-label="Show all locations"
-        title="Show all locations"
-        onClick={() => { setSelectedId(null); setOpen(false); }}
-        className="ml-1 inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-[#9CA3AF] transition-colors hover:bg-[#F3F4F6] hover:text-red-500"
-      >
-        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18 18 6M6 6l12 12"/>
-        </svg>
-      </button>}
 
       {open && (
         <div id="topbar-location-options" role="listbox" aria-label="Choose a location" className="absolute left-0 top-full z-[200] mt-1.5 max-h-80 min-w-[240px] overflow-y-auto rounded-xl border border-[#E5E7EB] bg-white py-1.5 shadow-lg">

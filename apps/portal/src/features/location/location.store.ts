@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 export interface LocationOption {
   id: string;
@@ -16,25 +15,17 @@ interface LocationState {
   clearAll: () => void;
 }
 
-export const useLocationStore = create<LocationState>()(
-  persist(
-    (set) => ({
-      locations: [],
-      selectedId: null,
-      locationRatings: {},
-      setLocations: (locations) => set((state) => ({
-        locations,
-        selectedId: state.selectedId && locations.some((location) => location.id === state.selectedId)
-          ? state.selectedId
-          : null,
-      })),
-      setSelectedId: (selectedId) => set({ selectedId }),
-      setLocationRatings: (locationRatings) => set({ locationRatings }),
-      clearAll: () => set({ locations: [], selectedId: null, locationRatings: {} }),
-    }),
-    {
-      name: 'moffu-location-selection',
-      partialize: (state) => ({ selectedId: state.selectedId }),
-    },
-  ),
-);
+export const useLocationStore = create<LocationState>((set) => ({
+  locations: [],
+  selectedId: null,
+  locationRatings: {},
+  setLocations: (locations) => set((state) => ({
+    locations,
+    selectedId: state.selectedId && locations.some((location) => location.id === state.selectedId)
+      ? state.selectedId
+      : null,
+  })),
+  setSelectedId: (selectedId) => set({ selectedId }),
+  setLocationRatings: (locationRatings) => set({ locationRatings }),
+  clearAll: () => set({ locations: [], selectedId: null, locationRatings: {} }),
+}));
