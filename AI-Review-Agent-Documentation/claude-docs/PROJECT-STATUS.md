@@ -627,6 +627,16 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 9. Refresh: icon-only silent refresh (no "Analyzing…" text, spinning icon)
 10. Inline controls: DateRangePicker + Post button next to refresh icon
 
+**google-qa-list Edge Function (v2, deployed):**
+- Fixed 404: switched from old `serve()` (deno.land/std) to `Deno.serve()` — Supabase runtime requires the latter
+- Removed redundant unanswered-filter fetch; single call fetches all questions
+- Cleaner token refresh path
+
+**google-generate-image Edge Function (v2, deployed):**
+- Fixed 500: switched from old `serve()` to `Deno.serve()`
+- Changed model from `gemini-2.0-flash-preview-image-generation` to `gemini-2.0-flash-exp`
+- Updated `responseModalities` to `['TEXT', 'IMAGE']` (required by Gemini 2.0 Flash Exp for image output)
+
 **google-competitors Edge Function (v3, deployed):**
 - All error paths return 200 + `{ competitors: [], warning: "..." }` instead of 400/500
 - **Root cause fix**: migrated from legacy Places Nearby Search API (`maps.googleapis.com`) to Places API v1 Text Search (`places.googleapis.com/v1/places:searchText`) — same endpoint used by `google-profile-analysis` which was already working
