@@ -611,3 +611,24 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 
 **TypeScript**: clean compile (`tsc --noEmit` passes)
 **Not pushed/deployed:** `push nai krna hai` constraint in effect.
+
+## Google Profile — 10 UI improvements + competitor fix — 2026-11-17
+**IMPLEMENTED + DEPLOYED (Edge Function only; portal not pushed)**
+
+**GoogleProfilePage.tsx — 10 changes (commit b841f79):**
+1. Profile Doctor: always expanded, no collapse toggle
+2. Review analytics: Monthly chart stacked below Rating distribution (space-y-5)
+3. Competitive Benchmarking: radius KM change silently refreshes only that section (separate useEffect)
+4. All buttons/tabs: `rounded-lg` border radius
+5. Business avatar: Clearbit logo API attempt with initials fallback
+6. Filter tab active state: purple dot indicator + tooltip
+7. Header info order: Name+Rating → Category → Address
+8. Profile header: flat, no card background; Strength ring kept inline
+9. Refresh: icon-only silent refresh (no "Analyzing…" text, spinning icon)
+10. Inline controls: DateRangePicker + Post button next to refresh icon
+
+**google-competitors Edge Function (v2, deployed):**
+- All error paths now return 200 + `{ competitors: [], warning: "..." }` instead of 400/500
+- Warnings: `location_not_found`, `no_coordinates`, `no_maps_key`, `places_api_unavailable`, `zero_results`, `places_REQUEST_DENIED` (etc.)
+- Browser console no longer shows 400 errors for expected failure cases
+- Removed `rankby: 'prominence'` param conflict (was causing INVALID_REQUEST on some API keys)
