@@ -1081,7 +1081,7 @@ function TopicIntelligenceSection({
   const displayTopics = topics.slice(0, 8);
 
   return (
-    <GlassCard className="p-5">
+    <GlassCard className="p-5 mt-5">
       <div className="flex items-center justify-between mb-5">
         <div>
           <p className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mb-0.5">Topic Intelligence</p>

@@ -644,3 +644,26 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - Parses `data.places[]` with `p.displayName.text`, `p.location.latitude/longitude`, `p.userRatingCount`
 - `no_category` warning added for locations without a category/description
 - Competitive Benchmarking section now populates with real data
+
+## Topic Intelligence — AI topic tagging for reviews — 2026-11-17
+**IMPLEMENTED + DEPLOYED** ✅
+
+**DB migration applied (`kgttncfkzdrgswfkkdji`):**
+- `reviews.topics_analyzed_at TIMESTAMPTZ` — tracks per-review analysis state; NULL = not yet analyzed
+- `review_topics` table (review_id, org_id, location_id, topic TEXT, sentiment TEXT CHECK IN ('positive','negative','neutral'), analyzed_at) + UNIQUE(review_id, topic)
+- RLS policy: org members can SELECT their own topic rows
+- Indexes on (org_id, location_id, topic, sentiment) and (review_id)
+
+**Edge Function:**
+- `analyze-review-topics` v1 (ACTIVE, `verify_jwt: false`) — authenticates user manually, resolves org's selected locations, fetches unanalyzed reviews (batch 60), marks no-body reviews without AI, calls Gemini 2.0 Flash (falls back to 1.5 Flash), upserts topic+sentiment pairs to `review_topics`, stamps `topics_analyzed_at`
+- 9 canonical topic slugs: staff_service, food_quality, wait_time, value_pricing, cleanliness, ambiance, delivery_shipping, location_parking, communication
+- **Deployment**: CI did not auto-deploy on push; deployed directly via Supabase MCP (2026-11-18)
+
+**Portal UI:**
+- `TopicIntelligenceSection` component on OverviewPage (shown when Google connected)
+- Horizontal sentiment bars per topic (green=positive, red=negative, gray=neutral), sorted by mention count
+- "Analyze reviews" / "Re-analyze" button with pending count badge
+- Loading skeletons + empty state
+- `topicIntelligenceService` in `apps/portal/src/features/google/topic-intelligence.service.ts`
+
+**Design fix (2026-11-18):** `mt-5` added to TopicIntelligenceSection GlassCard — no-gap spacing between Profile Views · Daily chart card and Topic Intelligence card is now resolved.
