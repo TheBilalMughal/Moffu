@@ -402,8 +402,7 @@ function WeeklyHighlight({ dash }: { dash: DashboardData }) {
       <span className="text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-wide flex-shrink-0">{v.label}</span>
       <span className="w-px h-3 bg-[#E5E7EB] flex-shrink-0" />
       <span className="text-xs font-semibold text-[#111827]">{v.msg}</span>
-      <span className="text-[11px] text-[#9CA3AF] hidden sm:inline">{v.sub}</span>
-      {v.cta && <span className="ml-auto">{v.cta}</span>}
+      <span className="text-[11px] text-[#9CA3AF] hidden sm:inline">{v.sub}{v.cta && <> · {v.cta}</>}</span>
     </div>
   );
 }
