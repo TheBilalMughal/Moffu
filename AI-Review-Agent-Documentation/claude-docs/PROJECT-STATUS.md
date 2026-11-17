@@ -569,3 +569,45 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - `google.service.ts` — `createGooglePost(locationId, data)` method added
 
 **Not pushed/deployed:** `push nai krna hai` constraint in effect.
+
+## Google Profile full advanced redesign — 2026-11-17
+**IMPLEMENTED LOCALLY (not pushed)**
+
+**GoogleProfilePage.tsx — complete rewrite v3 (all 7 advanced features):**
+- **Profile Header**: round avatar with business initial, verified badge, rating, category, Profile Strength ring (SVG circular progress)
+- **Compact 5-col KPI row**: 4 existing metric cards + inline Search/Maps mini-card (4 stats in 2×2 grid)
+- **Advanced feature toolbar**: 6 buttons toggling panels inline — Q&A Manager, Edit Info, Photo AI, Attributes, Keyword Trends, Strength Advisor
+- **Q&A Manager**: fetches questions from `google-qa-list` edge fn, inline reply textarea, publishes via `google-qa-reply`
+- **Business Info Editor**: edit description/website/phone, saves via `google-update-profile`
+- **Photo Manager**: AI image generation (Gemini via `google-generate-image`), HTML5 canvas for text overlay, upload via `google-upload-photo`
+- **Attributes Toggle**: grouped toggles (Accessibility/Amenities/Payment), saves via `google-update-profile`
+- **Keyword Opportunity Tracker**: monthly Search+Maps impressions bar chart with MoM delta cards
+- **Profile Strength Advisor**: SVG ring + 7-point checklist (description, website, phone, hours, category, replies, GBP connection)
+- **Profile Doctor**: now collapsible/expandable with mini bar chart in header; shows strength ring + checks when expanded
+- **Competitive Benchmarking**: embedded inside Profile Doctor panel (not a separate section)
+- **Add Post modal**: floating overlay with X to close; replaces the dedicated posts subpage
+- **Recent Posts**: horizontal scroll cards on main page (from `fetchExtraData`)
+- **Business Profile card**: social media style with icon+label rows instead of description list
+
+**Service methods added to `google.service.ts`:**
+- `listQAs(locationId)` → `google-qa-list`
+- `replyQA(locationId, questionName, text)` → `google-qa-reply`
+- `updateProfile(locationId, fields)` → `google-update-profile`
+- `uploadPhoto(locationId, imageBase64, mimeType, category)` → `google-upload-photo`
+- `generateImage(config)` → `google-generate-image`
+- `QAQuestion` interface added
+
+**New Edge Functions (committed, not deployed):**
+- `supabase/functions/google-qa-list/index.ts`
+- `supabase/functions/google-qa-reply/index.ts`
+- `supabase/functions/google-update-profile/index.ts`
+- `supabase/functions/google-upload-photo/index.ts`
+- `supabase/functions/google-generate-image/index.ts`
+
+**Cleanup:**
+- Posts subpage (`GooglePostsPage.tsx`) retained but `/google-profile/posts` route and sidebar link removed (Posts is now a modal)
+- `App.tsx`: removed `GooglePostsPage` import and route
+- `DashboardLayout.tsx`: removed Posts submenu item
+
+**TypeScript**: clean compile (`tsc --noEmit` passes)
+**Not pushed/deployed:** `push nai krna hai` constraint in effect.

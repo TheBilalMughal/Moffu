@@ -59,6 +59,15 @@ export interface BusinessSearchResult {
   reviews_count: number | null;
 }
 
+export interface QAQuestion {
+  name: string;
+  author?: { displayName?: string };
+  text: string;
+  createTime?: string;
+  topAnswers?: Array<{ author?: { displayName?: string }; text: string; createTime?: string }>;
+  totalAnswerCount?: number;
+}
+
 export const googleService = {
   async getConnection(): Promise<{ data?: GoogleConnection | null; error?: string }> {
     const { data: { user } } = await supabase.auth.getUser();
@@ -310,6 +319,66 @@ export const googleService = {
     const json = await res.json();
     if (!res.ok) return { error: json.error ?? 'Failed to create post' };
     return { post: json.post };
+  },
+
+  async listQAs(locationId: string): Promise<{ questions?: QAQuestion[]; total_size?: number; error?: string }> {
+    const auth = await getAuthHeader();
+    if (!auth) return { error: 'Not authenticated' };
+    const res = await fetch(`${BASE}/google-qa-list`, {
+      method: 'POST', headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ location_id: locationId }),
+    });
+    const json = await res.json();
+    if (!res.ok) return { error: json.error ?? 'Failed to load Q&A' };
+    return { questions: json.questions, total_size: json.total_size };
+  },
+
+  async replyQA(locationId: string, questionName: string, text: string): Promise<{ error?: string }> {
+    const auth = await getAuthHeader();
+    if (!auth) return { error: 'Not authenticated' };
+    const res = await fetch(`${BASE}/google-qa-reply`, {
+      method: 'POST', headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ location_id: locationId, question_name: questionName, text }),
+    });
+    const json = await res.json();
+    if (!res.ok) return { error: json.error ?? 'Reply failed' };
+    return {};
+  },
+
+  async updateProfile(locationId: string, fields: { description?: string; websiteUri?: string; primaryPhone?: string; attributes?: unknown[] }): Promise<{ error?: string }> {
+    const auth = await getAuthHeader();
+    if (!auth) return { error: 'Not authenticated' };
+    const res = await fetch(`${BASE}/google-update-profile`, {
+      method: 'POST', headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ location_id: locationId, ...fields }),
+    });
+    const json = await res.json();
+    if (!res.ok) return { error: json.error ?? 'Update failed' };
+    return {};
+  },
+
+  async uploadPhoto(locationId: string, imageBase64: string, mimeType: string, category = 'ADDITIONAL'): Promise<{ error?: string }> {
+    const auth = await getAuthHeader();
+    if (!auth) return { error: 'Not authenticated' };
+    const res = await fetch(`${BASE}/google-upload-photo`, {
+      method: 'POST', headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ location_id: locationId, image_base64: imageBase64, mime_type: mimeType, category }),
+    });
+    const json = await res.json();
+    if (!res.ok) return { error: json.error ?? 'Upload failed' };
+    return {};
+  },
+
+  async generateImage(config: { businessType: string; postType: string; description: string; style: string }): Promise<{ imageBase64?: string; mimeType?: string; error?: string }> {
+    const auth = await getAuthHeader();
+    if (!auth) return { error: 'Not authenticated' };
+    const res = await fetch(`${BASE}/google-generate-image`, {
+      method: 'POST', headers: { Authorization: auth, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ business_type: config.businessType, post_type: config.postType, description: config.description, style: config.style }),
+    });
+    const json = await res.json();
+    if (!res.ok) return { error: json.error ?? 'Generation failed' };
+    return { imageBase64: json.image_base64, mimeType: json.mime_type };
   },
 
   async fetchInsights(locationId: string | null, startDate: string, endDate: string): Promise<{
