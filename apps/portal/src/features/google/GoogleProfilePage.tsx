@@ -534,7 +534,19 @@ export function GoogleProfilePage(){
                 <span>{competitors.length} nearby businesses returned</span><span>Average reviews: {number(reviewAverage)}</span>
                 {reviews?.rating!=null && average!=null && <span>Your rating vs sample: {(reviews.rating-average)>=0 ? '+' : ''}{(reviews.rating-average).toFixed(1)}</span>}
               </div>
-              <div className="overflow-x-auto"><table className="w-full min-w-[520px] text-left text-xs">
+              <div className="space-y-3 md:hidden">
+                {competitors.map(c=><article key={c.place_id} className="border-b border-[#F3F4F6] pb-3 last:border-0 last:pb-0">
+                  <a href={safeUrl(c.maps_url)} target="_blank" rel="noreferrer" className="text-xs font-medium text-[#374151] hover:text-[#6C55E8]">{c.name}</a>
+                  <p className="mt-1 text-[11px] leading-relaxed text-[#9CA3AF]">{c.address}</p>
+                  <div className="mt-3 grid grid-cols-3 gap-2 rounded-lg bg-[#F9FAFB] px-3 py-2.5">
+                    <div><p className="text-[10px] text-[#9CA3AF]">Distance</p><p className="mt-1 font-mono text-xs font-medium tabular-nums text-[#374151]">{c.distance_km.toFixed(1)} km</p></div>
+                    <div><p className="text-[10px] text-[#9CA3AF]">Rating</p><p className="mt-1 font-mono text-xs font-medium tabular-nums text-[#374151]">{c.rating?.toFixed(1) ?? '—'} ★</p></div>
+                    <div><p className="text-[10px] text-[#9CA3AF]">Reviews</p><p className="mt-1 font-mono text-xs font-medium tabular-nums text-[#374151]">{number(c.review_count)}</p></div>
+                  </div>
+                  <div className="mt-2">{c.attributions.map((a,i)=><a key={i} href={safeUrl(a.providerUri)} target="_blank" rel="noreferrer" className="mr-2 text-[10px] text-[#6B7280]">{a.provider}</a>)}</div>
+                </article>)}
+              </div>
+              <div className="hidden overflow-x-auto md:block"><table className="w-full min-w-[520px] text-left text-xs">
                 <thead><tr className="border-b border-[#E5E7EB] text-[#6B7280]">{['Business','Distance','Rating','Reviews'].map(h=><th key={h} scope="col" className="pb-3 pr-4 font-medium">{h}</th>)}</tr></thead>
                 <tbody>{competitors.map(c=><tr key={c.place_id} className="border-b border-[#F3F4F6] last:border-0">
                   <td className="py-3 pr-4"><a href={safeUrl(c.maps_url)} target="_blank" rel="noreferrer" className="font-medium text-[#374151] hover:text-[#6C55E8]">{c.name}</a>
