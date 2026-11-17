@@ -561,11 +561,7 @@ function TopbarLocationPicker() {
         aria-expanded={open}
         aria-controls="topbar-location-options"
         onClick={() => { if (locations.length > 1) setOpen(o => !o); }}
-        className={`inline-flex h-9 max-w-[calc(100vw-2rem)] items-center gap-2 whitespace-nowrap rounded-lg border px-3 text-sm transition-colors md:max-w-[340px] ${locations.length === 1 ? 'cursor-default' : ''} ${
-          isActive
-            ? 'border-[#6C55E8] bg-[#EDE9FE] text-[#6C55E8] font-medium'
-            : 'border-[#D1D5DB] text-[#6B7280] hover:border-[#6C55E8] hover:text-[#6C55E8]'
-        }`}
+        className={`inline-flex h-9 max-w-[calc(100vw-2rem)] items-center gap-2 whitespace-nowrap rounded-lg border px-3 text-sm transition-colors md:max-w-[340px] border-[#D1D5DB] text-[#6B7280] ${locations.length === 1 ? 'cursor-default' : 'hover:border-[#6C55E8] hover:text-[#6C55E8]'}`}
       >
         <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
