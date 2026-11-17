@@ -6,6 +6,7 @@ import { useOrgStore } from '@/features/onboarding/org.store';
 import { useLocationStore } from '@/features/location/location.store';
 import { billingService } from '@/features/billing/billing.service';
 import type { Plan, Subscription } from '@/features/billing/billing.service';
+import { fetchProfileAnalysis } from '@/features/google/profile-analysis.service';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1044,6 +1045,7 @@ export function OverviewPage() {
   const user       = useAuthStore(s => s.user);
   const orgId      = useOrgStore(s => s.orgId);
   const selectedLocId = useLocationStore(s => s.selectedId);
+  const allLocations  = useLocationStore(s => s.locations);
 
   const [setup, setSetup] = useState<SetupStatus>({
     googleConnected: false, locationSelected: false,
@@ -1106,43 +1108,31 @@ export function OverviewPage() {
     setDash(computeDash(filtered));
   }, [selectedLocId, allRows, loadingDash]);
 
-  // ── Google Profile Insights ────────────────────────────────────────────────
+  // ── Google Profile Insights (from profile-analysis, same source as Google Profile page) ──
   useEffect(() => {
     if (!user || !setup.googleConnected || setup.loading) return;
+    const locId = selectedLocId ?? allLocations[0]?.id ?? null;
+    if (!locId) return;
+    const controller = new AbortController();
     setLoadingInsights(true);
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) { setLoadingInsights(false); return; }
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-fetch-insights`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify(selectedLocId ? { location_id: selectedLocId } : {}),
-          }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          if (data.totals) {
-            setInsights({
-              impressions:        data.totals.total_views ?? 0,
-              direction_requests: data.totals.direction_requests ?? 0,
-              call_clicks:        data.totals.calls ?? 0,
-              website_clicks:     data.totals.website_clicks ?? 0,
-              trend: (data.metrics ?? []).map((m: { date: string; views_search: number; views_maps: number }) => ({
-                date:        m.date,
-                impressions: (m.views_search ?? 0) + (m.views_maps ?? 0),
-              })),
-            });
-          }
+    fetchProfileAnalysis(locId, 5, controller.signal)
+      .then(analysis => {
+        if (controller.signal.aborted) return;
+        const p = analysis.performance;
+        if (p && p.status !== 'unavailable') {
+          setInsights({
+            impressions:        (p.search_views ?? 0) + (p.maps_views ?? 0),
+            direction_requests: p.directions ?? 0,
+            call_clicks:        p.calls ?? 0,
+            website_clicks:     p.website_clicks ?? 0,
+            trend: [],
+          });
         }
-      } catch { /* non-fatal */ }
-      setLoadingInsights(false);
-    });
-  }, [user, setup.googleConnected, setup.loading, selectedLocId]);
+      })
+      .catch(() => { /* non-fatal */ })
+      .finally(() => { if (!controller.signal.aborted) setLoadingInsights(false); });
+    return () => controller.abort();
+  }, [user, setup.googleConnected, setup.loading, selectedLocId, allLocations]);
 
   // ── Billing (subscription + plans for upgrade card) ───────────────────────
   useEffect(() => {
