@@ -22,12 +22,23 @@ export const useLocationStore = create<LocationState>()(
       locations: [],
       selectedId: null,
       locationRatings: {},
-      setLocations: (locations) => set((state) => ({
-        locations,
-        selectedId: state.selectedId && locations.some((location) => location.id === state.selectedId)
-          ? state.selectedId
-          : null,
-      })),
+      setLocations: (locations) => set((state) => {
+        // state.selectedId may still be null if persist hasn't rehydrated yet —
+        // fall back to reading sessionStorage directly to avoid a race condition.
+        let effectiveId = state.selectedId;
+        if (!effectiveId) {
+          try {
+            const raw = sessionStorage.getItem('moffu-location-selection');
+            effectiveId = raw ? (JSON.parse(raw)?.state?.selectedId ?? null) : null;
+          } catch { /* ignore */ }
+        }
+        return {
+          locations,
+          selectedId: effectiveId && locations.some((l) => l.id === effectiveId)
+            ? effectiveId
+            : null,
+        };
+      }),
       setSelectedId: (selectedId) => set({ selectedId }),
       setLocationRatings: (locationRatings) => set({ locationRatings }),
       clearAll: () => set({ locations: [], selectedId: null, locationRatings: {} }),
