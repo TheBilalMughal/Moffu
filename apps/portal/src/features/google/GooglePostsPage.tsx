@@ -233,15 +233,13 @@ export function GooglePostsPage() {
     if (needsEvent && (!eventStart || !eventEnd)) { setCreateError('Start and end dates are required.'); return; }
     if (needsUrl && !ctaUrl.trim()) { setCreateError('CTA URL is required for this button type.'); return; }
     setCreating(true);
-    const res = await googleService.createGooglePost(locationId, {
-      summary,
-      topic_type: topicType,
-      cta_type: ctaType || undefined,
-      cta_url: ctaUrl || undefined,
-      event_title: eventTitle || undefined,
-      event_start_date: eventStart || undefined,
-      event_end_date: eventEnd || undefined,
-    });
+    const payload: Parameters<typeof googleService.createGooglePost>[1] = { summary, topic_type: topicType };
+    if (ctaType) payload.cta_type = ctaType;
+    if (ctaUrl) payload.cta_url = ctaUrl;
+    if (eventTitle) payload.event_title = eventTitle;
+    if (eventStart) payload.event_start_date = eventStart;
+    if (eventEnd) payload.event_end_date = eventEnd;
+    const res = await googleService.createGooglePost(locationId, payload);
     setCreating(false);
     if (res.error) { setCreateError(res.error); return; }
     setCreateSuccess(true);
