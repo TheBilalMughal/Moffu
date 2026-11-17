@@ -1,4 +1,5 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { googleService } from '@/features/google/google.service';
 import { useLocationStore } from '@/features/location/location.store';
@@ -847,14 +848,15 @@ function ReviewRow({ review, locationName, expanded, selected, focused, onToggle
 
   return (
     <>
-      {modalOpen && (
+      {modalOpen && createPortal(
         <PublishModal
           review={review}
           locationName={locationName}
           onClose={() => { setModalOpen(false); setModalInitialText(undefined); }}
           onPublish={onPublish}
           {...(modalInitialText !== undefined ? { initialText: modalInitialText } : {})}
-        />
+        />,
+        document.body,
       )}
 
       <tr onClick={onToggle}
