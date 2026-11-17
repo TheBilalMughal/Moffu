@@ -420,20 +420,19 @@ function GlassCard({ children, className = '' }: { children: React.ReactNode; cl
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 
 function StatCard({
-  label, value, sub, trend, icon, accent = false, urgent = false,
+  label, value, sub, trend, icon, accent = false, urgent = false, ctaHref,
 }: {
   label: string; value: string | number; sub?: string;
   trend?: { value: number; label: string } | null;
-  icon: React.ReactNode; accent?: boolean; urgent?: boolean;
+  icon: React.ReactNode; accent?: boolean; urgent?: boolean; ctaHref?: string;
 }) {
   return (
     <GlassCard>
       {accent && <div className="absolute inset-0 bg-gradient-to-br from-[#6C55E8]/8 via-transparent to-[#6C55E8]/3 pointer-events-none" />}
-      {urgent && <div className="absolute inset-0 bg-gradient-to-br from-amber-500/8 via-transparent to-transparent pointer-events-none" />}
       <div className="relative px-5 py-5">
         <div className="flex items-start justify-between mb-3">
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-            accent ? 'bg-[#111827]/10 text-[#6C55E8]' : urgent ? 'bg-amber-100 text-amber-600' : 'bg-[#F3F4F6] text-[#6B7280]'
+            accent ? 'bg-[#111827]/10 text-[#6C55E8]' : urgent ? 'bg-[#F3F4F6] text-red-500' : 'bg-[#F3F4F6] text-[#6B7280]'
           }`}>{icon}</div>
           {trend != null && (
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${
@@ -447,6 +446,11 @@ function StatCard({
         <p className="text-2xl font-bold text-[#111827] leading-none mb-1">{value}</p>
         {sub && <p className="text-[11px] text-[#9CA3AF]">{sub}</p>}
         {trend != null && <p className="text-[10px] text-[#D1D5DB] mt-0.5">{trend.label}</p>}
+        {ctaHref && (
+          <a href={ctaHref} className="inline-block mt-2 text-[11px] font-medium text-[#6C55E8] hover:text-[#5A42D1] transition-colors">
+            Reply now →
+          </a>
+        )}
       </div>
     </GlassCard>
   );
@@ -1226,6 +1230,7 @@ export function OverviewPage() {
             <StatCard label="Pending Reply" value={dash.pending}
               sub={dash.pending > 0 ? 'Need attention' : 'All caught up!'}
               urgent={dash.pending > 0}
+              ctaHref={dash.pending > 0 ? '/reviews' : undefined}
               icon={<svg style={{ width: 18, height: 18 }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>}
             />
           </>
