@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     // Get the user's location
     const locQ = supabase
       .from('google_locations')
-      .select('id, display_name, latitude, longitude, description, address')
+      .select('id, display_name, latitude, longitude, description, address, category')
       .eq('user_id', user.id);
     if (body.location_id) locQ.eq('id', body.location_id);
     else locQ.eq('is_selected', true);
@@ -52,9 +52,14 @@ Deno.serve(async (req) => {
     const { data: loc } = await locQ.maybeSingle();
     if (!loc) return ok({ competitors: [], warning: 'location_not_found' });
 
-    // No coordinates — return empty gracefully (coordinates populated on sync)
     if (!loc.latitude || !loc.longitude) {
       return ok({ competitors: [], warning: 'no_coordinates' });
+    }
+
+    // Category is required for a meaningful text search
+    const searchTerm = (loc.category || loc.description || '').trim();
+    if (!searchTerm) {
+      return ok({ competitors: [], warning: 'no_category' });
     }
 
     // Get Google Maps API key
@@ -70,53 +75,68 @@ Deno.serve(async (req) => {
       return ok({ competitors: [], warning: 'no_maps_key' });
     }
 
-    const params = new URLSearchParams({
-      location: `${loc.latitude},${loc.longitude}`,
-      radius:   String(radiusKm * 1000),
-      key:      mapsKey,
+    // Use Places API v1 Text Search — same endpoint as google-profile-analysis
+    const placesRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': mapsKey,
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.rating,places.userRatingCount,places.formattedAddress,places.location',
+      },
+      body: JSON.stringify({
+        textQuery: searchTerm,
+        languageCode: 'en',
+        pageSize: 20,
+        locationBias: {
+          circle: {
+            center: { latitude: loc.latitude, longitude: loc.longitude },
+            radius: radiusKm * 1000,
+          },
+        },
+      }),
     });
-    // Add keyword only if available (improves relevance)
-    const keyword = (loc.description ?? '').trim();
-    if (keyword) params.set('keyword', keyword);
-
-    const placesRes = await fetch(
-      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?${params}`,
-    );
 
     if (!placesRes.ok) {
-      console.error('Places API HTTP error:', placesRes.status);
+      const errBody = await placesRes.text();
+      console.error('Places API HTTP error:', placesRes.status, errBody);
       return ok({ competitors: [], warning: 'places_api_unavailable' });
     }
 
     const placesData = await placesRes.json();
-    if (placesData.status === 'ZERO_RESULTS') {
+
+    // v1 returns { places: [...] } or { error: {...} }
+    if (placesData.error) {
+      console.error('Places API error:', placesData.error.status, placesData.error.message);
+      return ok({ competitors: [], warning: `places_${placesData.error.status ?? 'error'}` });
+    }
+
+    const places = placesData.places ?? [];
+    if (places.length === 0) {
       return ok({ competitors: [], warning: 'zero_results' });
     }
-    if (placesData.status !== 'OK') {
-      console.error('Places API status:', placesData.status, placesData.error_message);
-      return ok({ competitors: [], warning: `places_${placesData.status}` });
-    }
 
-    type PlaceResult = {
-      name: string;
-      place_id: string;
+    type PlaceV1 = {
+      id: string;
+      displayName?: { text: string };
       rating?: number;
-      user_ratings_total?: number;
-      vicinity?: string;
-      geometry: { location: { lat: number; lng: number } };
+      userRatingCount?: number;
+      formattedAddress?: string;
+      location?: { latitude: number; longitude: number };
     };
 
-    const results: PlaceResult[] = placesData.results ?? [];
-    const competitors = results.map((p, i) => {
-      const distKm = haversineKm(loc.latitude!, loc.longitude!, p.geometry.location.lat, p.geometry.location.lng);
-      const isYou = p.name.toLowerCase().trim() === (loc.display_name ?? '').toLowerCase().trim();
+    const competitors = (places as PlaceV1[]).map((p, i) => {
+      const lat = p.location?.latitude ?? loc.latitude!;
+      const lng = p.location?.longitude ?? loc.longitude!;
+      const distKm = haversineKm(loc.latitude!, loc.longitude!, lat, lng);
+      const name = p.displayName?.text ?? '';
+      const isYou = name.toLowerCase().trim() === (loc.display_name ?? '').toLowerCase().trim();
       return {
         position:     i + 1,
-        name:         p.name,
-        place_id:     p.place_id,
+        name,
+        place_id:     p.id ?? '',
         rating:       p.rating ?? null,
-        review_count: p.user_ratings_total ?? 0,
-        address:      p.vicinity ?? null,
+        review_count: p.userRatingCount ?? 0,
+        address:      p.formattedAddress ?? null,
         distance_km:  Math.round(distKm * 10) / 10,
         is_you:       isYou,
       };

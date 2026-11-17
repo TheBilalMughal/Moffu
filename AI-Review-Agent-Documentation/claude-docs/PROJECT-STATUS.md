@@ -627,8 +627,10 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 9. Refresh: icon-only silent refresh (no "Analyzing…" text, spinning icon)
 10. Inline controls: DateRangePicker + Post button next to refresh icon
 
-**google-competitors Edge Function (v2, deployed):**
-- All error paths now return 200 + `{ competitors: [], warning: "..." }` instead of 400/500
-- Warnings: `location_not_found`, `no_coordinates`, `no_maps_key`, `places_api_unavailable`, `zero_results`, `places_REQUEST_DENIED` (etc.)
-- Browser console no longer shows 400 errors for expected failure cases
-- Removed `rankby: 'prominence'` param conflict (was causing INVALID_REQUEST on some API keys)
+**google-competitors Edge Function (v3, deployed):**
+- All error paths return 200 + `{ competitors: [], warning: "..." }` instead of 400/500
+- **Root cause fix**: migrated from legacy Places Nearby Search API (`maps.googleapis.com`) to Places API v1 Text Search (`places.googleapis.com/v1/places:searchText`) — same endpoint used by `google-profile-analysis` which was already working
+- Uses `textQuery: loc.category` + `locationBias.circle` body, `X-Goog-Api-Key` header — matching the API key capability (New Places API, not legacy)
+- Parses `data.places[]` with `p.displayName.text`, `p.location.latitude/longitude`, `p.userRatingCount`
+- `no_category` warning added for locations without a category/description
+- Competitive Benchmarking section now populates with real data
