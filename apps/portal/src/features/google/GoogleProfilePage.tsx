@@ -53,7 +53,6 @@ const IconPin=()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" st
 const IconX=()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
 const IconPlus=()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
 const IconChevron=({open}:{open:boolean})=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={`transition-transform ${open?'rotate-180':''}`}><polyline points="6 9 12 15 18 9"/></svg>;
-const IconImage=()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>;
 const IconEdit=()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
 const IconQuestion=()=><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
 const IconSearch=()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
@@ -284,107 +283,6 @@ function BusinessInfoEditor({locationId,initialDescription,initialWebsite,initia
     <button type="button" onClick={save} disabled={saving}
       className="rounded-lg bg-[#6C55E8] px-4 py-2 text-xs font-semibold text-white hover:bg-[#5A42D1] disabled:opacity-50">
       {saving?'Saving…':'Save changes'}</button>
-  </div>;
-}
-
-// ── Photo Manager with AI Gen + Canvas ──────────────────────────────
-function PhotoManager({locationId,businessName}:{locationId:string;businessName:string}){
-  const [businessType,setBusinessType]=useState('');
-  const [postType,setPostType]=useState('STANDARD');
-  const [description,setDescription]=useState('');
-  const [style,setStyle]=useState('professional');
-  const [generating,setGenerating]=useState(false);
-  const [genErr,setGenErr]=useState('');
-  const [genImage,setGenImage]=useState<string|null>(null);
-  const [genMime,setGenMime]=useState('image/png');
-  const [overlayText,setOverlayText]=useState('');
-  const [uploading,setUploading]=useState(false);
-  const [uploadMsg,setUploadMsg]=useState('');
-  const canvasRef=useRef<HTMLCanvasElement>(null);
-
-  async function generate(){
-    setGenerating(true);setGenErr('');setGenImage(null);
-    const r=await googleService.generateImage({businessType:businessType||businessName,postType,description,style});
-    setGenerating(false);
-    if(r.error){setGenErr(r.error);return;}
-    setGenImage(r.imageBase64??null);
-    setGenMime(r.mimeType??'image/png');
-  }
-
-  useEffect(()=>{
-    if(!genImage||!canvasRef.current) return;
-    const canvas=canvasRef.current;
-    const ctx=canvas.getContext('2d');
-    if(!ctx) return;
-    const img=new Image();
-    img.onload=()=>{
-      canvas.width=img.width; canvas.height=img.height;
-      ctx.drawImage(img,0,0);
-      if(overlayText){
-        ctx.font=`bold ${Math.round(img.width/15)}px sans-serif`;
-        ctx.fillStyle='rgba(0,0,0,0.5)';
-        ctx.fillRect(0,img.height-Math.round(img.width/8),img.width,Math.round(img.width/8));
-        ctx.fillStyle='#ffffff';
-        ctx.textAlign='center';
-        ctx.textBaseline='middle';
-        ctx.fillText(overlayText,img.width/2,img.height-Math.round(img.width/16));
-      }
-    };
-    img.src=`data:${genMime};base64,${genImage}`;
-  },[genImage,genMime,overlayText]);
-
-  async function uploadPhoto(){
-    if(!genImage||!canvasRef.current) return;
-    setUploading(true);setUploadMsg('');
-    const dataUrl=canvasRef.current.toDataURL(genMime);
-    const base64=dataUrl.split(',')[1]??'';
-    const r=await googleService.uploadPhoto(locationId,base64,genMime);
-    setUploading(false);
-    setUploadMsg(r.error??'Photo uploaded to Google Business Profile.');
-  }
-
-  return <div className="space-y-5">
-    <div className="grid grid-cols-2 gap-3">
-      <div>
-        <label className="mb-1 block text-xs font-medium text-[#374151]">Business type</label>
-        <input value={businessType} onChange={e=>setBusinessType(e.target.value)} placeholder={businessName}
-          className="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-xs focus:border-[#6C55E8] focus:outline-none"/>
-      </div>
-      <div>
-        <label className="mb-1 block text-xs font-medium text-[#374151]">Post context</label>
-        <select value={postType} onChange={e=>setPostType(e.target.value)}
-          className="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-xs focus:border-[#6C55E8] focus:outline-none">
-          <option value="STANDARD">What's New</option>
-          <option value="EVENT">Event</option>
-          <option value="OFFER">Offer/Promotion</option>
-        </select>
-      </div>
-    </div>
-    <div>
-      <label className="mb-1 block text-xs font-medium text-[#374151]">Scene / content description</label>
-      <input value={description} onChange={e=>setDescription(e.target.value)} placeholder="e.g. staff serving customers, interior of restaurant…"
-        className="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-xs focus:border-[#6C55E8] focus:outline-none"/>
-    </div>
-    <div className="flex gap-2">
-      {(['professional','vibrant','minimal','warm'] as const).map(s=><button key={s} type="button" onClick={()=>setStyle(s)}
-        className={`flex-1 rounded-lg border py-2 text-xs capitalize ${style===s?'border-[#6C55E8] bg-[#F5F3FF] text-[#6C55E8]':'border-[#E5E7EB] text-[#6B7280] hover:bg-[#F9FAFB]'}`}>{s}</button>)}
-    </div>
-    <button type="button" onClick={generate} disabled={generating}
-      className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#6C55E8] px-4 py-3 text-sm font-semibold text-white hover:bg-[#5A42D1] disabled:opacity-50">
-      <IconImage/>{generating?'Generating…':'Generate image with AI'}</button>
-    {genErr && <p className="text-xs text-red-600">{genErr}</p>}
-    {genImage && <div className="space-y-3">
-      <canvas ref={canvasRef} className="w-full rounded-xl border border-[#E5E7EB]" style={{maxHeight:'360px',objectFit:'contain'}}/>
-      <div>
-        <label className="mb-1 block text-xs font-medium text-[#374151]">Text overlay (optional)</label>
-        <input value={overlayText} onChange={e=>setOverlayText(e.target.value)} placeholder="e.g. Grand Opening 20% Off"
-          className="w-full rounded-xl border border-[#E5E7EB] px-3 py-2 text-xs focus:border-[#6C55E8] focus:outline-none"/>
-      </div>
-      {uploadMsg && <p className={`text-xs ${uploadMsg.includes('uploaded')?'text-emerald-600':'text-red-600'}`}>{uploadMsg}</p>}
-      <button type="button" onClick={uploadPhoto} disabled={uploading}
-        className="rounded-lg bg-[#6C55E8] px-4 py-2 text-xs font-semibold text-white hover:bg-[#5A42D1] disabled:opacity-50">
-        {uploading?'Uploading…':'Upload to Google Business Profile'}</button>
-    </div>}
   </div>;
 }
 
@@ -675,7 +573,6 @@ export function GoogleProfilePage(){
   const advancedBtns=[
     {id:'qa' as const,label:'Q&A Manager',icon:<IconQuestion/>},
     {id:'info' as const,label:'Edit Info',icon:<IconEdit/>},
-    {id:'photos' as const,label:'Photo AI',icon:<IconImage/>},
     {id:'attrs' as const,label:'Attributes',icon:<IconCheck/>},
     {id:'keywords' as const,label:'Keyword Trends',icon:<IconSearch/>},
     {id:'strength' as const,label:'Strength Advisor',icon:<IconShield/>},
@@ -763,9 +660,6 @@ export function GoogleProfilePage(){
       </Section>}
       {activePanel==='info' && <Section title="Edit Business Info" description="Update your description, website and phone on Google Business Profile.">
         <BusinessInfoEditor locationId={selected.id} {...(profile?.description!=null?{initialDescription:profile.description}:{})} {...(profile?.website!=null?{initialWebsite:profile.website}:{})} {...(profile?.phone!=null?{initialPhone:profile.phone}:{})}/>
-      </Section>}
-      {activePanel==='photos' && <Section title="Photo Manager" description="Generate a professional image with AI, add text overlay, and upload to Google.">
-        <PhotoManager locationId={selected.id} businessName={selected.display_name??''}/>
       </Section>}
       {activePanel==='attrs' && <Section title="Business Attributes" description="Toggle accessibility, amenity and payment attributes on your profile.">
         <AttributesManager locationId={selected.id}/>
