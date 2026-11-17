@@ -597,12 +597,12 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - `generateImage(config)` → `google-generate-image`
 - `QAQuestion` interface added
 
-**New Edge Functions (committed, not deployed):**
-- `supabase/functions/google-qa-list/index.ts`
-- `supabase/functions/google-qa-reply/index.ts`
-- `supabase/functions/google-update-profile/index.ts`
-- `supabase/functions/google-upload-photo/index.ts`
-- `supabase/functions/google-generate-image/index.ts`
+**New Edge Functions (committed + deployed 2026-11-17):**
+- `supabase/functions/google-qa-list/index.ts` — v1 ACTIVE
+- `supabase/functions/google-qa-reply/index.ts` — v1 ACTIVE
+- `supabase/functions/google-update-profile/index.ts` — v1 ACTIVE
+- `supabase/functions/google-upload-photo/index.ts` — v1 ACTIVE
+- `supabase/functions/google-generate-image/index.ts` — v1 ACTIVE
 
 **Cleanup:**
 - Posts subpage (`GooglePostsPage.tsx`) retained but `/google-profile/posts` route and sidebar link removed (Posts is now a modal)
