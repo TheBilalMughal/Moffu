@@ -136,8 +136,8 @@ function computeDash(rows: ReviewRow[]): DashboardData | null {
   const total     = rows.length;
   const ratings   = rows.map(r => r.rating).filter((r): r is number => r != null);
   const avgRating = ratings.length > 0 ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
-  const pending   = rows.filter(r => r.status === 'PENDING').length;
   const replied   = rows.filter(r => r.status === 'PUBLISHED').length;
+  const pending   = rows.filter(r => r.status !== 'PUBLISHED').length;
   const replyRate = total > 0 ? Math.round((replied / total) * 100) : 0;
 
   const breakdown = [0, 0, 0, 0, 0];
@@ -182,7 +182,7 @@ function computeDash(rows: ReviewRow[]): DashboardData | null {
     ? pctChange(Math.round(last30Avg * 10), Math.round(prev30Avg * 10)) : null;
   const trendReplyRate = pctChange(last30Rate, prev30Rate);
 
-  const pendingRows       = rows.filter(r => r.status === 'PENDING');
+  const pendingRows       = rows.filter(r => r.status !== 'PUBLISHED');
   const oldestPending     = pendingRows[pendingRows.length - 1];
   const oldestPendingDays = oldestPending?.published_at ? daysSince(oldestPending.published_at) : null;
 
