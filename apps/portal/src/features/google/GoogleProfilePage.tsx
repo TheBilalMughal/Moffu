@@ -543,6 +543,7 @@ export function GoogleProfilePage(){
   // Competitor benchmarking (fetched independently so radius change doesn't reload full analysis)
   const [competitorItems,setCompetitorItems]=useState<Competitor[]>([]);
   const [competitorLoading,setCompetitorLoading]=useState(false);
+  const [competitorWarning,setCompetitorWarning]=useState<string|null>(null);
 
   useEffect(()=>{
     let active=true;
@@ -587,12 +588,14 @@ export function GoogleProfilePage(){
 
   // Silent competitor refresh when radius changes (independent of main analysis)
   useEffect(()=>{
-    if(!selected||!connection){setCompetitorItems([]);return;}
+    if(!selected||!connection){setCompetitorItems([]);setCompetitorWarning(null);return;}
     let alive=true;
     setCompetitorLoading(true);
+    setCompetitorWarning(null);
     googleService.getCompetitors(selected.id,radius).then(r=>{
       if(!alive) return;
       setCompetitorItems((r.competitors??[]).filter(c=>!c.is_you));
+      setCompetitorWarning(r.warning??null);
       setCompetitorLoading(false);
     });
     return ()=>{alive=false;};
@@ -976,7 +979,21 @@ export function GoogleProfilePage(){
                     className={`flex-1 rounded-lg border py-1.5 text-xs font-medium transition-colors ${radius===r?'border-[#6C55E8] text-[#6C55E8] bg-[#F5F3FF]':'border-[#E5E7EB] text-[#6B7280] hover:bg-[#F9FAFB]'}`}>
                     {r} km</button>)}
                 </div>
-                {competitors.length===0 && !competitorLoading && <p className="text-xs text-[#9CA3AF]">No competitors found in this radius.</p>}
+                {competitors.length===0 && !competitorLoading && (
+                  <p className="text-xs text-[#9CA3AF]">
+                    {competitorWarning==='no_coordinates'
+                      ? 'Location coordinates not available. Run a sync to populate them.'
+                      : competitorWarning==='no_maps_key'
+                      ? 'Google Maps API key not configured in Admin settings.'
+                      : competitorWarning==='places_REQUEST_DENIED'
+                      ? 'Places API not enabled. Enable it in Google Cloud Console for this API key.'
+                      : competitorWarning==='zero_results'
+                      ? 'No businesses found in this radius.'
+                      : competitorWarning
+                      ? `No competitor data available. (${competitorWarning})`
+                      : 'No competitors found in this radius.'}
+                  </p>
+                )}
                 {competitors.length>0 && <div className="space-y-2 max-h-48 overflow-y-auto">
                   {competitors.slice(0,8).map((c,i)=><div key={c.place_id} className="flex items-center gap-3 text-xs">
                     <span className="flex-shrink-0 w-5 text-center font-medium text-[#9CA3AF]">#{i+1}</span>

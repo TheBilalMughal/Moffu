@@ -180,7 +180,7 @@ export const googleService = {
     return { locations_fetched: json.locations_fetched };
   },
 
-  async getCompetitors(locationId: string | null, radiusKm: number): Promise<{ competitors?: Competitor[]; error?: string }> {
+  async getCompetitors(locationId: string | null, radiusKm: number): Promise<{ competitors?: Competitor[]; warning?: string; error?: string }> {
     const auth = await getAuthHeader();
     if (!auth) return { error: 'Not authenticated' };
     const res = await fetch(`${BASE}/google-competitors`, {
@@ -190,7 +190,7 @@ export const googleService = {
     });
     const json = await res.json();
     if (!res.ok) return { error: json.error ?? 'Failed to fetch competitors' };
-    return { competitors: json.competitors };
+    return { competitors: json.competitors, warning: json.warning };
   },
 
   async searchBusiness(keyword: string): Promise<{ businesses?: BusinessSearchResult[]; error?: string }> {
