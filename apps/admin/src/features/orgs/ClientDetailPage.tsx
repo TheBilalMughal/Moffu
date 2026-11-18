@@ -17,7 +17,7 @@ interface RawEvent { event_type: string; created_at: string; }
 type ChartPeriod = '1m' | '3m' | '6m' | 'custom';
 interface MemberRow { user_id: string; role: string; display_name: string | null; email: string | null; created_at: string; }
 interface GoogleConn { id: string; google_email: string | null; state: string; connected_at: string; }
-interface GoogleLocation { id: string; connection_id: string; display_name: string | null; address: string | null; is_selected: boolean; }
+interface GoogleLocation { id: string; connection_id: string; display_name: string | null; address: string | null; is_selected: boolean; google_location_name: string | null; }
 interface PlanOption { id: string; slug: string; name: string; }
 interface SubHistory { id: string; action: string; metadata: Record<string, unknown> | null; created_at: string; }
 interface OrgOverride {
@@ -337,7 +337,7 @@ export function ClientDetailPage() {
     if (connIds.length > 0) {
       const { data: locData } = await supabase
         .from('google_locations')
-        .select('id, connection_id, display_name, address, is_selected')
+        .select('id, connection_id, display_name, address, is_selected, google_location_name')
         .in('connection_id', connIds);
       setGoogleLocations((locData ?? []) as GoogleLocation[]);
     } else {
@@ -972,9 +972,20 @@ export function ClientDetailPage() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-[#F3F4F6]">
-                          {locs.map(loc => (
+                          {locs.map(loc => {
+                            const mapsQuery = [loc.display_name, loc.address].filter(Boolean).join(', ');
+                            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`;
+                            return (
                             <tr key={loc.id} className="hover:bg-[#FAFAF7]">
-                              <td className="px-5 py-3.5 text-[#374151] font-medium">{loc.display_name ?? '—'}</td>
+                              <td className="px-5 py-3.5 font-medium">
+                                {loc.display_name ? (
+                                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+                                    className="text-[#374151] hover:text-[#6C55E8] hover:underline inline-flex items-center gap-1">
+                                    {loc.display_name}
+                                    <svg className="w-3 h-3 text-[#9CA3AF] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                  </a>
+                                ) : '—'}
+                              </td>
                               <td className="px-5 py-3.5 text-[#6B7280] text-xs">{loc.address ?? '—'}</td>
                               <td className="px-5 py-3.5">
                                 {loc.is_selected
@@ -983,7 +994,8 @@ export function ClientDetailPage() {
                                 }
                               </td>
                             </tr>
-                          ))}
+                            );
+                          })}
                         </tbody>
                       </table>
                     )}

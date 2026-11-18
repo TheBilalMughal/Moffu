@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { env } from '@/lib/env';
 import { Dropdown } from '@/components/Dropdown';
 import { DateRangePicker } from '@/components/DateRangePicker';
 import { formatDate, formatId, refToSlug } from '@/lib/format';
@@ -48,6 +49,8 @@ export function ClientsPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [deactivating, setDeactivating] = useState<string | null>(null);
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+  const [emailSentFor, setEmailSentFor] = useState<Set<string>>(new Set());
   const [suspendTarget, setSuspendTarget] = useState<Client | null>(null);
   const [suspendReason, setSuspendReason] = useState('');
   const [suspendNote, setSuspendNote] = useState('');
@@ -222,6 +225,25 @@ export function ClientsPage() {
     }
     setDeactivating(null);
     load();
+  }
+
+  async function handleSendGbpEmail(client: Client) {
+    if (!client.owner_email) return;
+    setSendingEmail(client.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await fetch(`${env.supabaseUrl}/functions/v1/admin-send-gbp-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': env.supabaseAnonKey,
+        },
+        body: JSON.stringify({ to_email: client.owner_email, org_name: client.name }),
+      });
+      setEmailSentFor(prev => new Set(prev).add(client.id));
+    } catch { /* silent */ }
+    finally { setSendingEmail(null); }
   }
 
   function clearFilters() {
@@ -405,10 +427,25 @@ export function ClientsPage() {
                               Configured
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#9CA3AF]">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#D1D5DB] flex-shrink-0" />
-                              Not Set Up
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#9CA3AF]">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#D1D5DB] flex-shrink-0" />
+                                Not Set Up
+                              </span>
+                              {c.owner_email && (
+                                emailSentFor.has(c.id) ? (
+                                  <span className="text-[10px] font-medium text-[#059669] bg-[#ECFDF5] px-1.5 py-0.5 rounded">Sent</span>
+                                ) : (
+                                  <button
+                                    onClick={() => handleSendGbpEmail(c)}
+                                    disabled={sendingEmail === c.id}
+                                    className="text-[10px] font-semibold text-[#6C55E8] border border-[#6C55E8]/30 bg-[#F5F3FF] hover:bg-[#D8CCFF] px-1.5 py-0.5 rounded transition-colors disabled:opacity-50"
+                                  >
+                                    {sendingEmail === c.id ? '…' : 'Send Email'}
+                                  </button>
+                                )
+                              )}
+                            </div>
                           )}
                         </td>
                         <td className="px-5 py-1.5 text-[#374151]">{c.member_count}</td>
