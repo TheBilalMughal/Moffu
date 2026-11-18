@@ -461,7 +461,7 @@ export function ClientsPage() {
                         <td className="px-5 py-1.5">
                           {!c.gbp_configured && c.owner_email ? (
                             isCoolingDown(c.id) ? (
-                              <span title="Email sent in the last 24 hours" className="inline-flex items-center gap-1 text-[10px] font-medium text-[#059669] bg-[#ECFDF5] px-1.5 py-0.5 rounded-lg">
+                              <span title="Email sent in the last 24 hours" className="inline-flex items-center gap-1 text-[10px] font-medium text-[#059669]">
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
