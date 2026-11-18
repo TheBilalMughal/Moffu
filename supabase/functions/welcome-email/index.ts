@@ -1,29 +1,41 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 serve(async (req) => {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
 
-  // Validate webhook secret so only our DB trigger can call this
   const webhookSecret = Deno.env.get('WELCOME_WEBHOOK_SECRET');
-  if (webhookSecret) {
-    const incoming = req.headers.get('x-webhook-secret');
-    if (incoming !== webhookSecret) {
-      console.error('Invalid webhook secret');
-      return new Response('Unauthorized', { status: 401 });
-    }
+  if (webhookSecret && req.headers.get('x-webhook-secret') !== webhookSecret) {
+    console.error('Invalid webhook secret');
+    return new Response('Unauthorized', { status: 401 });
   }
 
   let body: { record?: { id?: string; email?: string; raw_user_meta_data?: Record<string, string> } };
-  try {
-    body = await req.json();
-  } catch {
-    return new Response('Invalid JSON', { status: 400 });
-  }
+  try { body = await req.json(); } catch { return new Response('Invalid JSON', { status: 400 }); }
 
   const record = body.record;
-  if (!record?.email || !record?.id) {
-    return new Response('Missing user data', { status: 400 });
-  }
+  if (!record?.email || !record?.id) return new Response('Missing user data', { status: 400 });
+
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+
+  // Fetch active subscription + plan for this user
+  const { data: subData } = await supabase
+    .from('subscriptions')
+    .select('billing_interval, plans(name, features, contact_sales)')
+    .eq('user_id', record.id)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const plan = subData?.plans as { name: string; features: string[]; contact_sales: boolean } | null;
+  const planName = plan?.name ?? 'Free';
+  const planFeatures: string[] = plan?.features ?? ['1 Location', '14 AI Drafts/week', '5 AI Replies/week', 'Help Center Support'];
+  const billingInterval: string | null = subData?.billing_interval ?? null;
 
   const email = record.email;
   const meta = record.raw_user_meta_data ?? {};
@@ -33,8 +45,8 @@ serve(async (req) => {
 
   await sendEmail(
     email,
-    'Welcome to Moffu — you\'re in',
-    welcomeEmailHtml({ name, appUrl, webUrl }),
+    'Welcome to Moffu',
+    welcomeEmailHtml({ name, appUrl, webUrl, planName, planFeatures, billingInterval }),
   );
 
   return new Response('OK', { status: 200 });
@@ -57,146 +69,119 @@ async function sendEmail(to: string, subject: string, html: string) {
   if (!res.ok) console.error('Resend error:', await res.text());
 }
 
-function welcomeEmailHtml({ name, appUrl, webUrl }: {
+function welcomeEmailHtml({ name, appUrl, webUrl, planName, planFeatures, billingInterval }: {
   name: string | null;
   appUrl: string;
   webUrl: string;
+  planName: string;
+  planFeatures: string[];
+  billingInterval: string | null;
 }): string {
   const firstName = name ? name.split(' ')[0] : null;
   const greeting = firstName ? `Hey ${firstName},` : 'Hey,';
   const year = new Date().getFullYear();
 
+  const featureRows = planFeatures.map(f => `
+    <tr><td style="padding:0 0 10px;">
+      <table cellpadding="0" cellspacing="0"><tr>
+        <td style="vertical-align:top;padding-top:5px;padding-right:12px;width:12px;">
+          <div style="width:5px;height:5px;background:#6C55E8;border-radius:50%;"></div>
+        </td>
+        <td style="font-size:13px;color:#374151;line-height:1.5;">${f}</td>
+      </tr></table>
+    </td></tr>`).join('');
+
+  const billingNote = billingInterval === 'annual'
+    ? ' &middot; billed annually'
+    : billingInterval === 'monthly' ? ' &middot; billed monthly' : '';
+
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
-<body style="margin:0;padding:0;background:#F4F1FF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F1FF;padding:40px 16px;">
+<body style="margin:0;padding:0;background:#F5F5F5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F5F5;padding:40px 16px;">
   <tr><td align="center">
     <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
 
       <!-- Logo -->
-      <tr><td align="center" style="padding-bottom:24px;">
+      <tr><td style="padding-bottom:20px;">
         <table cellpadding="0" cellspacing="0"><tr>
-          <td style="background:#6C55E8;border-radius:10px;width:36px;height:36px;text-align:center;vertical-align:middle;">
-            <span style="color:#fff;font-size:18px;font-weight:900;line-height:36px;">M</span>
+          <td style="background:#6C55E8;border-radius:8px;width:28px;height:28px;text-align:center;vertical-align:middle;">
+            <span style="color:#fff;font-size:14px;font-weight:900;line-height:28px;">M</span>
           </td>
-          <td style="padding-left:10px;font-size:20px;font-weight:900;color:#111827;letter-spacing:-0.03em;vertical-align:middle;">Moffu</td>
+          <td style="padding-left:8px;font-size:16px;font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;vertical-align:middle;">Moffu</td>
         </tr></table>
       </td></tr>
 
       <!-- Card -->
-      <tr><td style="background:#ffffff;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;">
-
-        <!-- Purple header -->
+      <tr><td style="background:#ffffff;border-radius:8px;border:1px solid #E5E5E5;padding:32px 36px;">
         <table width="100%" cellpadding="0" cellspacing="0">
-          <tr><td style="background:#6C55E8;padding:32px 36px 28px;">
-            <p style="margin:0 0 8px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.08em;">Welcome to Moffu</p>
-            <h1 style="margin:0 0 10px;font-size:30px;font-weight:900;color:#ffffff;letter-spacing:-0.03em;line-height:1.1;">you&rsquo;re in.<br/>let&rsquo;s get to work.</h1>
-            <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.72);line-height:1.6;">Your account is live. No more ignored reviews, no more lost customers.</p>
+
+          <!-- Header -->
+          <tr><td style="padding-bottom:6px;">
+            <p style="margin:0;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;">New Account</p>
           </td></tr>
-        </table>
+          <tr><td style="padding-bottom:4px;">
+            <h1 style="margin:0;font-size:22px;font-weight:800;color:#1A1A1A;letter-spacing:-0.02em;">Welcome to Moffu</h1>
+          </td></tr>
+          <tr><td style="padding-bottom:28px;border-bottom:1px solid #F0F0F0;">
+            <p style="margin:0;font-size:13px;color:#9CA3AF;">Your account is active and ready to use.</p>
+          </td></tr>
 
-        <!-- Body -->
-        <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 36px 0;">
-
-          <!-- Greeting -->
-          <tr><td style="padding-bottom:28px;border-bottom:1px solid #F3F4F6;">
-            <p style="margin:0;font-size:14px;color:#374151;line-height:1.7;">
+          <!-- Greeting + intro -->
+          <tr><td style="padding-top:24px;padding-bottom:24px;border-bottom:1px solid #F0F0F0;">
+            <p style="margin:0;font-size:14px;color:#374151;line-height:1.75;">
               ${greeting}<br/><br/>
-              Most businesses lose customers because they let bad reviews sit unanswered for weeks. You just fixed that. Here&rsquo;s what&rsquo;s ready for you right now.
+              Your account is live. Connect your Google Business Profile and reviews will start syncing automatically. You can generate AI reply drafts and publish them straight to Google from one place.
             </p>
           </td></tr>
 
-          <!-- Features label -->
+          <!-- Plan section -->
           <tr><td style="padding-top:24px;padding-bottom:16px;">
-            <p style="margin:0;font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;">What you unlocked</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#F9F9F9;border:1px solid #EBEBEB;border-radius:6px;padding:14px 18px;">
+              <tr>
+                <td>
+                  <p style="margin:0 0 2px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;">Your plan</p>
+                  <p style="margin:0;font-size:15px;font-weight:700;color:#1A1A1A;">${planName}${billingNote}</p>
+                </td>
+                <td align="right" valign="top">
+                  <span style="display:inline-block;background:#6C55E8;color:#ffffff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.05em;">Active</span>
+                </td>
+              </tr>
+            </table>
           </td></tr>
 
-          <!-- Feature 1 -->
-          <tr><td style="padding-bottom:18px;">
-            <table cellpadding="0" cellspacing="0"><tr>
-              <td style="vertical-align:top;padding-top:5px;padding-right:14px;">
-                <div style="width:6px;height:6px;background:#6C55E8;border-radius:50%;"></div>
-              </td>
-              <td>
-                <p style="margin:0 0 2px;font-size:14px;font-weight:700;color:#111827;">AI Reply Drafts</p>
-                <p style="margin:0;font-size:13px;color:#9CA3AF;line-height:1.5;">On-brand replies to any review in seconds. No blank page, no guesswork.</p>
-              </td>
-            </tr></table>
+          <!-- Plan features -->
+          <tr><td style="padding-bottom:28px;border-bottom:1px solid #F0F0F0;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="padding-top:4px;">
+              ${featureRows}
+            </table>
           </td></tr>
 
-          <!-- Feature 2 -->
-          <tr><td style="padding-bottom:18px;">
-            <table cellpadding="0" cellspacing="0"><tr>
-              <td style="vertical-align:top;padding-top:5px;padding-right:14px;">
-                <div style="width:6px;height:6px;background:#6C55E8;border-radius:50%;"></div>
-              </td>
-              <td>
-                <p style="margin:0 0 2px;font-size:14px;font-weight:700;color:#111827;">Auto-sync Reviews</p>
-                <p style="margin:0;font-size:13px;color:#9CA3AF;line-height:1.5;">Google reviews come in automatically. Nothing slips through.</p>
-              </td>
-            </tr></table>
+          <!-- First step: Connect Google -->
+          <tr><td style="padding-top:24px;padding-bottom:8px;">
+            <p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;">First step</p>
+            <p style="margin:0 0 18px;font-size:14px;color:#374151;line-height:1.65;">Connect your Google Business Profile to start syncing reviews. Takes about 30 seconds.</p>
+            <a href="${appUrl}/settings/connections" style="display:inline-block;background:#6C55E8;color:#ffffff;font-size:14px;font-weight:700;padding:12px 24px;border-radius:6px;text-decoration:none;letter-spacing:-0.01em;">Connect Google Business</a>
           </td></tr>
 
-          <!-- Feature 3 -->
-          <tr><td style="padding-bottom:18px;">
-            <table cellpadding="0" cellspacing="0"><tr>
-              <td style="vertical-align:top;padding-top:5px;padding-right:14px;">
-                <div style="width:6px;height:6px;background:#6C55E8;border-radius:50%;"></div>
-              </td>
-              <td>
-                <p style="margin:0 0 2px;font-size:14px;font-weight:700;color:#111827;">Brand Brain</p>
-                <p style="margin:0;font-size:13px;color:#9CA3AF;line-height:1.5;">Set your tone, language and rules once. Every reply sounds like you, not a bot.</p>
-              </td>
-            </tr></table>
-          </td></tr>
-
-          <!-- Feature 4 -->
-          <tr><td style="padding-bottom:28px;border-bottom:1px solid #F3F4F6;">
-            <table cellpadding="0" cellspacing="0"><tr>
-              <td style="vertical-align:top;padding-top:5px;padding-right:14px;">
-                <div style="width:6px;height:6px;background:#6C55E8;border-radius:50%;"></div>
-              </td>
-              <td>
-                <p style="margin:0 0 2px;font-size:14px;font-weight:700;color:#111827;">Review Analytics</p>
-                <p style="margin:0;font-size:13px;color:#9CA3AF;line-height:1.5;">See where your ratings are going and what to fix. Data, not gut feeling.</p>
-              </td>
-            </tr></table>
-          </td></tr>
-
-          <!-- Plan line -->
-          <tr><td style="padding:20px 0 24px;border-bottom:1px solid #F3F4F6;">
-            <table width="100%" cellpadding="0" cellspacing="0"><tr>
-              <td style="font-size:13px;color:#9CA3AF;">You&rsquo;re on the <span style="font-weight:700;color:#111827;">Free Plan</span> &mdash; 1 location, 25 AI drafts/mo</td>
-              <td align="right" style="font-size:11px;font-weight:700;color:#6C55E8;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;padding-left:12px;">Active</td>
-            </tr></table>
-          </td></tr>
-
-          <!-- CTA -->
-          <tr><td style="padding:24px 0 20px;">
-            <a href="${appUrl}" style="display:block;background:#6C55E8;color:#ffffff;font-size:14px;font-weight:700;padding:15px;border-radius:10px;text-decoration:none;text-align:center;letter-spacing:-0.01em;">Open your dashboard</a>
+          <!-- Dashboard link -->
+          <tr><td style="padding-top:16px;padding-bottom:28px;border-bottom:1px solid #F0F0F0;">
+            <p style="margin:0;font-size:13px;color:#9CA3AF;">
+              Or <a href="${appUrl}" style="color:#6C55E8;text-decoration:none;font-weight:600;">open your dashboard</a> to explore first.
+            </p>
           </td></tr>
 
           <!-- Support -->
-          <tr><td style="padding-bottom:32px;">
+          <tr><td style="padding-top:20px;">
             <p style="margin:0;font-size:12px;color:#9CA3AF;line-height:1.6;">
-              Got questions? We actually reply &mdash; <a href="mailto:support@moffu.pro" style="color:#6C55E8;text-decoration:none;">support@moffu.pro</a>
+              Questions? Reply to this email or write to <a href="mailto:support@moffu.pro" style="color:#6C55E8;text-decoration:none;">support@moffu.pro</a>
             </p>
           </td></tr>
 
         </table>
-
-        <!-- Upgrade strip -->
-        <table width="100%" cellpadding="0" cellspacing="0">
-          <tr><td style="background:#F3F4F6;padding:16px 36px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#9CA3AF;line-height:1.6;">
-              Need more locations or unlimited AI replies? <a href="${webUrl}/pricing" style="color:#6C55E8;font-weight:700;text-decoration:none;">See upgrade options</a>
-            </p>
-          </td></tr>
-        </table>
-
       </td></tr>
 
       <!-- Footer -->
-      <tr><td style="padding-top:20px;text-align:center;">
+      <tr><td style="padding-top:16px;text-align:center;">
         <p style="margin:0;font-size:11px;color:#9CA3AF;">
           &copy; ${year} Moffu &middot; <a href="${webUrl}" style="color:#9CA3AF;text-decoration:none;">moffu.pro</a> &middot; <a href="${appUrl}/settings/notifications" style="color:#9CA3AF;text-decoration:none;">Unsubscribe</a>
         </p>

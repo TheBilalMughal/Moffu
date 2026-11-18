@@ -712,3 +712,23 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - `CRON_SECRET` must be set via `supabase secrets set CRON_SECRET=<value>`
 - `app.cron_secret` DB setting must be set via `ALTER DATABASE postgres SET app.cron_secret = '<same value>'` so pg_cron can read it
 - `GEMINI_API_KEY` and `RESEND_API_KEY` must already be set as Supabase secrets (confirmed by user)
+
+## Transactional Email System v2 — 2026-11-18
+**IMPLEMENTED + DEPLOYED** ✅
+
+**DB migration applied (`kgttncfkzdrgswfkkdji`) — `20261118000003_email_sequences`:**
+- `email_sequences` table: id, user_id (FK auth.users), sequence_type TEXT, sent_at TIMESTAMPTZ, metadata JSONB — UNIQUE(user_id, sequence_type); RLS denies all authenticated access (service role only)
+- `trigger_first_review_email()` PL/pgSQL function: fires on `reviews` INSERT, calls `send-first-review-email` edge function via `net.http_post` with `x-webhook-secret: moffu-first-review-2026`; passes user_id, location_id, review_id, reviewer_name, rating, body
+- `on_review_created_first_review_email` trigger on `public.reviews` AFTER INSERT
+- `cron_send_onboarding_emails()` function: called by pg_cron; calls `send-onboarding-emails` edge function via `net.http_post` with `x-webhook-secret: moffu-onboarding-cron-2026`
+- pg_cron job `send-onboarding-emails`: runs `30 * * * *` (every hour at :30), calls `cron_send_onboarding_emails()`
+
+**Edge Functions deployed (all ACTIVE, `verify_jwt: false`):**
+- `welcome-email` v4: **rewritten** — now fetches user's active subscription + plan from DB (service role); shows real plan name + feature list from `plans.features`; flat professional design; primary CTA: "Connect Google Business"; secondary: dashboard link
+- `send-onboarding-emails` v1 (new): 24h Google connect reminder — finds users 23-25h old with no `google_connections` and no `google_connect_reminder` email_sequences row; sends reminder email with flat design + CTA; inserts into email_sequences for deduplication
+- `send-first-review-email` v1 (new): Gen Z first-review celebration — deduplicates via email_sequences; traverses full location chain to count total reviews; only sends if count == 1; fetches user email via auth admin API; casual Gen Z tone ("no way. you got your first review.", "it's giving growth era", "go reply before they forget about you"); shows reviewer name + star rating + review snippet in card
+
+**Pending configuration (Supabase secrets):**
+- `FIRST_REVIEW_WEBHOOK_SECRET` = `moffu-first-review-2026` — set via Supabase dashboard Secrets or CLI
+- `ONBOARDING_CRON_SECRET` = `moffu-onboarding-cron-2026` — set via Supabase dashboard Secrets or CLI
+- (Both secrets are hardcoded in migration SQL triggers for now; without matching env vars the edge functions will accept all requests — set them to enforce security)
