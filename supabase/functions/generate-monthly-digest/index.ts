@@ -22,13 +22,17 @@ function json(data: unknown, status = 200) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function prevMonth(month: string): string {
-  const [y, m] = month.split('-').map(Number);
+  const parts = month.split('-').map(Number);
+  const y = parts[0] ?? 2024;
+  const m = parts[1] ?? 1;
   if (m === 1) return `${y - 1}-12`;
   return `${y}-${String(m - 1).padStart(2, '0')}`;
 }
 
 function monthLabel(month: string): string {
-  const [y, m] = month.split('-').map(Number);
+  const parts = month.split('-').map(Number);
+  const y = parts[0] ?? 2024;
+  const m = parts[1] ?? 1;
   return new Date(y, m - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' });
 }
 
@@ -82,8 +86,12 @@ async function generateForOrg(
 ): Promise<{ ok: boolean; error?: string }> {
   const prev = prevMonth(month);
   const monthStart = `${month}-01`;
-  const monthEnd   = `${month.slice(0, 4)}-${String(Number(month.slice(5)) + 1).padStart(2, '0')}-01`;
-  const prevStart  = `${prev}-01`;
+  // Handle December → next year January correctly
+  const [mYear, mMonth] = month.split('-').map(Number);
+  const nextYear  = mMonth === 12 ? mYear + 1 : mYear;
+  const nextMonth = mMonth === 12 ? 1 : mMonth + 1;
+  const monthEnd  = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+  const prevStart = `${prev}-01`;
 
   // Org info
   const { data: org } = await supabase
@@ -92,11 +100,20 @@ async function generateForOrg(
     .eq('id', orgId)
     .maybeSingle();
 
+  // Get location IDs for this org (reviews are linked via location_id, not org_id)
+  const { data: locations } = await supabase
+    .from('google_locations')
+    .select('id')
+    .eq('org_id', orgId);
+  const locationIds = (locations ?? []).map((l: { id: string }) => l.id);
+
+  if (locationIds.length === 0) return { ok: true };
+
   // Reviews this month
   const { data: monthReviews } = await supabase
     .from('reviews')
     .select('id, rating, body, reviewer_name, reply_text, published_at')
-    .eq('org_id', orgId)
+    .in('location_id', locationIds)
     .gte('published_at', monthStart)
     .lt('published_at', monthEnd)
     .order('published_at', { ascending: false });
@@ -125,7 +142,7 @@ async function generateForOrg(
   const { data: prevReviews } = await supabase
     .from('reviews')
     .select('rating')
-    .eq('org_id', orgId)
+    .in('location_id', locationIds)
     .gte('published_at', prevStart)
     .lt('published_at', monthStart);
 
@@ -138,7 +155,7 @@ async function generateForOrg(
   const { count: pendingCount } = await supabase
     .from('reviews')
     .select('id', { count: 'exact', head: true })
-    .eq('org_id', orgId)
+    .in('location_id', locationIds)
     .is('reply_text', null);
 
   // Top topics from this month's reviews
@@ -429,13 +446,13 @@ Write a JSON object with these exact keys (no markdown, raw JSON only):
 
   if (members?.length) {
     const userIds = members.map((m: { user_id: string }) => m.user_id);
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('email')
-      .in('id', userIds)
-      .not('email', 'is', null);
 
-    const emails = (profiles ?? []).map((p: { email: string }) => p.email).filter(Boolean);
+    // Fetch emails from auth.users via service-role admin API (profiles table has no email column)
+    const emails: string[] = [];
+    for (const uid of userIds) {
+      const { data: authData } = await supabase.auth.admin.getUserById(uid);
+      if (authData?.user?.email) emails.push(authData.user.email);
+    }
 
     if (emails.length) {
       await sendDigestEmail({ to: emails, subject: emailSubject, html: emailHtml });
