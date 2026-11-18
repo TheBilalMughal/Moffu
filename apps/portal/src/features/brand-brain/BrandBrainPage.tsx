@@ -1066,16 +1066,16 @@ function Step6({ locations, locCache, globalData, onDataChange, onFlagToggle }: 
         <h2 className="text-lg font-bold text-[#111827] mb-1">Location Overrides</h2>
         <p className="text-sm text-[#6B7280]">Customise Brand Brain settings per location. Toggle a field to override it.</p>
       </div>
-      <div className="flex gap-5">
+      <div className="flex flex-col md:flex-row gap-5">
         {/* Location list */}
-        <div className="w-64 flex-shrink-0 space-y-1">
+        <div className="flex flex-row md:flex-col gap-2 md:gap-1 overflow-x-auto pb-2 md:pb-0 flex-shrink-0 md:w-64">
           {locations.map(l => {
             const lflags = locCache[l.id]?.flags;
             const overrides = lflags ? Object.values(lflags).filter(Boolean).length : 0;
             const isActive = selectedLoc === l.id;
             return (
               <button key={l.id} onClick={() => setSelectedLoc(l.id)}
-                className={`w-full text-left px-3 py-2.5 rounded-xl border-2 transition-all ${isActive ? 'border-[#6C55E8] bg-[#EDE9FE]' : 'border-[#E5E7EB] hover:border-[#6C55E8]/40'}`}>
+                className={`flex-shrink-0 min-w-[160px] md:min-w-0 md:w-full text-left px-3 py-2.5 rounded-xl border-2 transition-all ${isActive ? 'border-[#6C55E8] bg-[#EDE9FE]' : 'border-[#E5E7EB] hover:border-[#6C55E8]/40'}`}>
                 <p className={`text-xs font-semibold truncate ${isActive ? 'text-[#6C55E8]' : 'text-[#374151]'}`}>{l.display_name ?? 'Location'}</p>
                 {overrides > 0 && <p className={`text-[10px] mt-0.5 ${isActive ? 'text-[#6C55E8]' : 'text-[#9CA3AF]'}`}>{overrides} override{overrides !== 1 ? 's' : ''}</p>}
               </button>

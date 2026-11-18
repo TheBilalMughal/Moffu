@@ -667,3 +667,15 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - `topicIntelligenceService` in `apps/portal/src/features/google/topic-intelligence.service.ts`
 
 **Design fix (2026-11-18):** `mt-5` added to TopicIntelligenceSection GlassCard — no-gap spacing between Profile Views · Daily chart card and Topic Intelligence card is now resolved.
+
+## Mobile layout fixes — 2026-11-18
+
+**Brand Brain Step 6 — Location Overrides:**
+- Fixed horizontal overflow on mobile: outer container changed from `flex gap-5` to `flex flex-col md:flex-row gap-5`
+- Location sidebar: `w-64 flex-shrink-0 space-y-1` → `flex flex-row md:flex-col gap-2 md:gap-1 overflow-x-auto pb-2 md:pb-0 flex-shrink-0 md:w-64`
+- Each location button now `flex-shrink-0 min-w-[160px] md:min-w-0 md:w-full` so the list scrolls horizontally on mobile and stacks vertically on desktop
+
+**Settings — Integrations tab (Google Business Profile row):**
+- Fixed cramped button layout on mobile: outer row changed from `flex items-center justify-between` to `flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3`
+- Right-side button container gets `flex-shrink-0` to prevent compression at any width
+- Google icon gets `flex-shrink-0` to prevent it from collapsing

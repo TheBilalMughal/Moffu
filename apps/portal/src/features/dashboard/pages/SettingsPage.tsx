@@ -1052,9 +1052,9 @@ export function SettingsPage() {
             </div>
           ) : (
             <div>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg border border-[#E5E7EB] flex items-center justify-center bg-white">
+                  <div className="w-9 h-9 rounded-lg border border-[#E5E7EB] flex items-center justify-center bg-white flex-shrink-0">
                     <GoogleIcon />
                   </div>
                   <div>
@@ -1064,7 +1064,7 @@ export function SettingsPage() {
                       : <p className="text-xs text-[#9CA3AF]">Connect to sync reviews automatically</p>}
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-shrink-0">
                   {connection && <StateChip state={connection.state} />}
                   {isConnected ? (
                     <div className="flex items-center gap-2">
