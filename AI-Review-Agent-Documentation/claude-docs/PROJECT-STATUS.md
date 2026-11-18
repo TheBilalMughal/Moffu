@@ -691,12 +691,13 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - pg_cron job `monthly-digest-job`: runs `0 8 1 * *` (UTC), calls `generate-monthly-digest` edge function via `net.http_post` with `x-cron-secret` header from `current_setting('app.cron_secret', true)`
 
 **Edge Function:**
-- `generate-monthly-digest` v3 (ACTIVE, `verify_jwt: false`) — deployed via Supabase MCP 2026-11-18
+- `generate-monthly-digest` v4 (ACTIVE, `verify_jwt: false`) — deployed via Supabase MCP 2026-11-18
 - Dual auth: `x-cron-secret` header for pg_cron, user JWT for manual portal trigger
 - Cron mode: processes all active orgs in sequence
 - User mode: resolves org_id via org_members, processes single org
-- For each org: fetches location IDs from `google_locations` (reviews link via `location_id`, not `org_id`), fetches this-month + prev-month reviews, computes avgRating/replyRate/pendingCount/ratingDist, aggregates top 5 topics from `review_topics`, calls Gemini 2.0 Flash (falls back to 1.5 Flash) for JSON summary/insights/actions, builds full inline-CSS HTML email, upserts to `monthly_digests`, fetches org member emails via `supabase.auth.admin.getUserById()` (profiles has no email column), sends via Resend from `notifications@moffu.pro`, updates `sent_at` + `sent_to`
+- For each org: traverses full location chain `org_members → google_connections (via user_id) → google_locations (via connection_id)` to get locationIds, fetches this-month + prev-month reviews via `location_id IN (locationIds)`, computes avgRating/replyRate/pendingCount/ratingDist, aggregates top 5 topics from `review_topics`, calls Gemini 2.0 Flash (falls back to 1.5 Flash) for JSON summary/insights/actions, builds full inline-CSS HTML email, upserts to `monthly_digests`, fetches org member emails via `supabase.auth.admin.getUserById()` (profiles has no email column), sends via Resend from `notifications@moffu.pro`, updates `sent_at` + `sent_to`
 - **Bug fixes (v3):** reviews queried via `location_id IN (org's locations)` not `.eq('org_id')`; email fetched from `auth.users` admin API not `profiles.email`; December monthEnd calculation fixed
+- **Bug fix (v4):** `google_locations` has no `org_id` column — v3 `.eq('org_id', orgId)` on `google_locations` returned empty array causing silent early return with `{"ok":true}`; fixed to traverse full chain via `connection_id` from `google_connections`
 
 **Portal UI (`/digest`):**
 - `DigestPage` with collapsible `DigestCard` per month, `RatingBar` distribution component

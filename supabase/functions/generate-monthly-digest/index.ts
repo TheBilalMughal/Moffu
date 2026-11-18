@@ -100,11 +100,29 @@ async function generateForOrg(
     .eq('id', orgId)
     .maybeSingle();
 
-  // Get location IDs for this org (reviews are linked via location_id, not org_id)
+  // Get location IDs for this org via the full chain:
+  // org_members → google_connections (by user_id) → google_locations (by connection_id)
+  const { data: orgMembersData } = await supabase
+    .from('org_members')
+    .select('user_id')
+    .eq('org_id', orgId)
+    .eq('status', 'active');
+  const memberUserIds = (orgMembersData ?? []).map((m: { user_id: string }) => m.user_id);
+
+  if (memberUserIds.length === 0) return { ok: true };
+
+  const { data: connections } = await supabase
+    .from('google_connections')
+    .select('id')
+    .in('user_id', memberUserIds);
+  const connectionIds = (connections ?? []).map((c: { id: string }) => c.id);
+
+  if (connectionIds.length === 0) return { ok: true };
+
   const { data: locations } = await supabase
     .from('google_locations')
     .select('id')
-    .eq('org_id', orgId);
+    .in('connection_id', connectionIds);
   const locationIds = (locations ?? []).map((l: { id: string }) => l.id);
 
   if (locationIds.length === 0) return { ok: true };
