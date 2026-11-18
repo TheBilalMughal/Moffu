@@ -30,6 +30,7 @@ import { NewFeedbackRequestPage } from '@/features/feedback/NewFeedbackRequestPa
 import { MarketingPage } from '@/features/marketing/MarketingPage';
 import { NewPostPage } from '@/features/marketing/NewPostPage';
 import { ComplaintsPage } from '@/features/dashboard/pages/ComplaintsPage';
+import { DigestPage } from '@/features/digest/DigestPage';
 
 
 export function App() {
@@ -94,6 +95,7 @@ export function App() {
           <Route path="/feedback/new"  element={<FeatureGatePage feature="feature_feedback"><NewFeedbackRequestPage /></FeatureGatePage>} />
           <Route path="/marketing"     element={<FeatureGatePage feature="feature_marketing"><MarketingPage /></FeatureGatePage>} />
           <Route path="/marketing/new" element={<FeatureGatePage feature="feature_marketing"><NewPostPage /></FeatureGatePage>} />
+          <Route path="/digest" element={<DigestPage />} />
         </Route>
 
         {/* Invite acceptance — no auth required to view */}

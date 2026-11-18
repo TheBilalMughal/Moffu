@@ -165,6 +165,10 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | PRIVACY-008 | Legal holds | PENDING | - | - |
 | PRIVACY-009 | Data inventory/subprocessors | PENDING | - | - |
 | PRIVACY-010 | Privacy incident assessment | PENDING | - | - |
+| DIGEST-001 | Monthly AI Digest — DB schema + RLS + pg_cron job | IMPLEMENTED | - | migration 20261118000002_monthly_digests; monthly_digests table; pg_cron 0 8 1 * * schedule; RLS select policy via org_members |
+| DIGEST-002 | Monthly AI Digest — Edge Function (Gemini + Resend) | IMPLEMENTED | - | generate-monthly-digest v1 ACTIVE; dual auth (cron-secret/JWT); Gemini 2.0 Flash; Resend from notifications@moffu.pro |
+| DIGEST-003 | Monthly AI Digest — Portal UI (/digest) | IMPLEMENTED | - | DigestPage.tsx; collapsible DigestCard; RatingBar; month selector; generate trigger; nav item in DashboardLayout |
+| DIGEST-004 | Monthly AI Digest — CRON_SECRET + app.cron_secret config | PENDING | - | Requires: supabase secrets set CRON_SECRET + ALTER DATABASE postgres SET app.cron_secret |
 | LEGAL-001 | Versioned Terms/Privacy/Cookies | PENDING | - | LEGAL_REVIEW_REQUIRED |
 | LEGAL-002 | Legal acceptances | PENDING | - | - |
 | LEGAL-003 | Material update/reacceptance rules | PENDING | - | - |

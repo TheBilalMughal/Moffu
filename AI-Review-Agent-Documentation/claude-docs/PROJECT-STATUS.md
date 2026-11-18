@@ -679,3 +679,34 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - Fixed cramped button layout on mobile: outer row changed from `flex items-center justify-between` to `flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3`
 - Right-side button container gets `flex-shrink-0` to prevent compression at any width
 - Google icon gets `flex-shrink-0` to prevent it from collapsing
+
+## Monthly AI Digest — 2026-11-18
+**IMPLEMENTED + DEPLOYED** ✅
+
+**DB migration applied (`kgttncfkzdrgswfkkdji`) — `20261118000002_monthly_digests`:**
+- `monthly_digests` table: id, org_id, month (TEXT 'YYYY-MM'), review_count, avg_rating, avg_rating_prev, reply_rate, pending_count, rating_dist (JSONB), top_topics (JSONB), summary_text, insights_html, action_items (JSONB), email_subject, sent_at, sent_to (JSONB), generated_at
+- UNIQUE(org_id, month) constraint
+- Index `idx_monthly_digests_org_month` on (org_id, month DESC)
+- RLS: org members can SELECT their own rows via org_members join
+- pg_cron job `monthly-digest-job`: runs `0 8 1 * *` (UTC), calls `generate-monthly-digest` edge function via `net.http_post` with `x-cron-secret` header from `current_setting('app.cron_secret', true)`
+
+**Edge Function:**
+- `generate-monthly-digest` v1 (ACTIVE, `verify_jwt: false`) — deployed via Supabase MCP 2026-11-18
+- Dual auth: `x-cron-secret` header for pg_cron, user JWT for manual portal trigger
+- Cron mode: processes all active orgs in sequence
+- User mode: resolves org_id via org_members, processes single org
+- For each org: fetches this-month + prev-month reviews, computes avgRating/replyRate/pendingCount/ratingDist, aggregates top 5 topics from `review_topics`, calls Gemini 2.0 Flash (falls back to 1.5 Flash) for JSON summary/insights/actions, builds full inline-CSS HTML email, upserts to `monthly_digests`, fetches org member emails from `profiles`, sends via Resend from `notifications@moffu.pro`, updates `sent_at` + `sent_to`
+
+**Portal UI (`/digest`):**
+- `DigestPage` with collapsible `DigestCard` per month, `RatingBar` distribution component
+- Month selector (last 12 months) + "Generate & email digest" button with loading state
+- Empty state with generate CTA; auto-expands first digest on load
+- Shows: summary, 4-col stats grid, rating distribution bars, topics list, AI insights, action items, sent status
+- Route `/digest` added to `App.tsx`; "Monthly Digest" nav item added to Overview RAIL_GROUPS in `DashboardLayout.tsx`
+
+**TypeScript**: portal typecheck passes (`tsc --noEmit` clean)
+
+**Pending configuration:**
+- `CRON_SECRET` must be set via `supabase secrets set CRON_SECRET=<value>`
+- `app.cron_secret` DB setting must be set via `ALTER DATABASE postgres SET app.cron_secret = '<same value>'` so pg_cron can read it
+- `GEMINI_API_KEY` and `RESEND_API_KEY` must already be set as Supabase secrets (confirmed by user)
