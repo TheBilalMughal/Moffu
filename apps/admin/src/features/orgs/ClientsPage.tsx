@@ -397,6 +397,7 @@ export function ClientsPage() {
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Email</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Plan</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">GBP Status</th>
+                  <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Send Email</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Members</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Joined</th>
                   <th className="px-5 py-2.5 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wide">Usage</th>
@@ -407,7 +408,7 @@ export function ClientsPage() {
                 {loading ? (
                   Array.from({ length: 6 }).map((_, i) => (
                     <tr key={i}>
-                      {Array.from({ length: 9 }).map((_, j) => (
+                      {Array.from({ length: 10 }).map((_, j) => (
                         <td key={j} className="px-5 py-1.5">
                           <div className="h-3.5 bg-[#E5E7EB] rounded animate-pulse w-20" />
                         </td>
@@ -416,7 +417,7 @@ export function ClientsPage() {
                   ))
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
+                    <td colSpan={10} className="px-5 py-12 text-center text-sm text-[#9CA3AF]">
                       {hasFilters ? 'No clients match your filters.' : 'No clients yet.'}
                     </td>
                   </tr>
@@ -450,39 +451,42 @@ export function ClientsPage() {
                               Configured
                             </span>
                           ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#9CA3AF]">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#D1D5DB] flex-shrink-0" />
-                                Not Set Up
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#9CA3AF]">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#D1D5DB] flex-shrink-0" />
+                              Not Set Up
+                            </span>
+                          )}
+                        </td>
+                        {/* Send Email column */}
+                        <td className="px-5 py-1.5">
+                          {!c.gbp_configured && c.owner_email ? (
+                            isCoolingDown(c.id) ? (
+                              <span title="Email sent in the last 24 hours" className="inline-flex items-center gap-1 text-[10px] font-medium text-[#059669] bg-[#ECFDF5] px-1.5 py-0.5 rounded-lg">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Sent
                               </span>
-                              {c.owner_email && (
-                                isCoolingDown(c.id) ? (
-                                  <span title="Email sent in the last 24 hours" className="inline-flex items-center gap-1 text-[10px] font-medium text-[#059669] bg-[#ECFDF5] px-1.5 py-0.5 rounded-lg">
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Sent
-                                  </span>
+                            ) : (
+                              <button
+                                onClick={() => handleSendGbpEmail(c)}
+                                disabled={sendingEmail === c.id}
+                                title="Send GBP setup email"
+                                className="p-1 rounded-lg text-[#6C55E8] hover:bg-[#F5F3FF] hover:text-[#5A42D1] disabled:opacity-40 transition-colors"
+                              >
+                                {sendingEmail === c.id ? (
+                                  <svg className="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                                  </svg>
                                 ) : (
-                                  <button
-                                    onClick={() => handleSendGbpEmail(c)}
-                                    disabled={sendingEmail === c.id}
-                                    title="Send GBP setup email"
-                                    className="p-1 rounded-lg text-[#6C55E8] hover:bg-[#F5F3FF] hover:text-[#5A42D1] disabled:opacity-40 transition-colors"
-                                  >
-                                    {sendingEmail === c.id ? (
-                                      <svg className="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                                      </svg>
-                                    ) : (
-                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                      </svg>
-                                    )}
-                                  </button>
-                                )
-                              )}
-                            </div>
+                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                  </svg>
+                                )}
+                              </button>
+                            )
+                          ) : (
+                            <span className="text-xs text-[#D1D5DB]">—</span>
                           )}
                         </td>
                         <td className="px-5 py-1.5 text-[#374151]">{c.member_count}</td>
