@@ -1,11 +1,27 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+
 serve(async (req) => {
-  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS });
+  }
+
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405, headers: CORS });
+  }
 
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader) return new Response('Unauthorized', { status: 401 });
+  if (!authHeader) {
+    return new Response('Unauthorized', { status: 401, headers: CORS });
+  }
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -13,10 +29,11 @@ serve(async (req) => {
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
-  // Verify caller is a platform member
   const jwt = authHeader.replace('Bearer ', '');
   const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
-  if (authError || !user) return new Response('Unauthorized', { status: 401 });
+  if (authError || !user) {
+    return new Response('Unauthorized', { status: 401, headers: CORS });
+  }
 
   const { data: pm } = await supabase
     .from('platform_members')
@@ -24,12 +41,38 @@ serve(async (req) => {
     .eq('user_id', user.id)
     .maybeSingle();
 
-  if (!pm) return new Response('Forbidden', { status: 403 });
+  if (!pm) {
+    return new Response('Forbidden', { status: 403, headers: CORS });
+  }
 
-  let body: { to_email?: string; org_name?: string };
-  try { body = await req.json(); } catch { return new Response('Invalid JSON', { status: 400 }); }
+  let body: { to_email?: string; org_name?: string; org_id?: string };
+  try { body = await req.json(); } catch {
+    return new Response('Invalid JSON', { status: 400, headers: CORS });
+  }
 
-  if (!body.to_email || !body.org_name) return new Response('Missing to_email or org_name', { status: 400 });
+  if (!body.to_email || !body.org_name || !body.org_id) {
+    return new Response('Missing to_email, org_name, or org_id', { status: 400, headers: CORS });
+  }
+
+  // 24h cooldown check
+  const { data: recent } = await supabase
+    .from('admin_outreach_log')
+    .select('sent_at')
+    .eq('org_id', body.org_id)
+    .eq('email_type', 'gbp_connect')
+    .order('sent_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (recent?.sent_at) {
+    const elapsed = Date.now() - new Date(recent.sent_at).getTime();
+    if (elapsed < TWENTY_FOUR_HOURS) {
+      return new Response(
+        JSON.stringify({ ok: false, reason: 'cooldown', next_eligible: new Date(new Date(recent.sent_at).getTime() + TWENTY_FOUR_HOURS).toISOString() }),
+        { status: 429, headers: { ...CORS, 'Content-Type': 'application/json' } },
+      );
+    }
+  }
 
   const appUrl = 'https://app.moffu.pro';
   const year = new Date().getFullYear();
@@ -117,7 +160,7 @@ serve(async (req) => {
   const resendKey = Deno.env.get('RESEND_API_KEY');
   if (!resendKey) {
     console.error('RESEND_API_KEY not set');
-    return new Response('Email service not configured', { status: 500 });
+    return new Response('Email service not configured', { status: 500, headers: CORS });
   }
 
   const res = await fetch('https://api.resend.com/emails', {
@@ -135,11 +178,19 @@ serve(async (req) => {
   if (!res.ok) {
     const err = await res.text();
     console.error('Resend error:', err);
-    return new Response('Failed to send email', { status: 500 });
+    return new Response('Failed to send email', { status: 500, headers: CORS });
   }
+
+  // Log the send so the 24h cooldown can be enforced next time
+  await supabase.from('admin_outreach_log').insert({
+    org_id: body.org_id,
+    email_type: 'gbp_connect',
+    to_email: body.to_email,
+    sent_by: user.id,
+  });
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { ...CORS, 'Content-Type': 'application/json' },
   });
 });

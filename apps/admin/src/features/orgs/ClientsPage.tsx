@@ -50,7 +50,7 @@ export function ClientsPage() {
   const [dateTo, setDateTo] = useState('');
   const [deactivating, setDeactivating] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
-  const [emailSentFor, setEmailSentFor] = useState<Set<string>>(new Set());
+  const [lastSentMap, setLastSentMap] = useState<Map<string, string>>(new Map());
   const [suspendTarget, setSuspendTarget] = useState<Client | null>(null);
   const [suspendReason, setSuspendReason] = useState('');
   const [suspendNote, setSuspendNote] = useState('');
@@ -184,6 +184,21 @@ export function ClientsPage() {
     });
 
     setClients(enriched);
+
+    // Load last outreach timestamps so the 24h cooldown icon state is correct
+    const { data: outreachRows } = await supabase
+      .from('admin_outreach_log')
+      .select('org_id, sent_at')
+      .eq('email_type', 'gbp_connect')
+      .in('org_id', orgIds)
+      .order('sent_at', { ascending: false });
+
+    const newLastSentMap = new Map<string, string>();
+    (outreachRows ?? []).forEach((r: { org_id: string; sent_at: string }) => {
+      if (!newLastSentMap.has(r.org_id)) newLastSentMap.set(r.org_id, r.sent_at);
+    });
+    setLastSentMap(newLastSentMap);
+
     setLoading(false);
   }
 
@@ -227,21 +242,29 @@ export function ClientsPage() {
     load();
   }
 
+  function isCoolingDown(orgId: string): boolean {
+    const lastSent = lastSentMap.get(orgId);
+    if (!lastSent) return false;
+    return Date.now() - new Date(lastSent).getTime() < 24 * 60 * 60 * 1000;
+  }
+
   async function handleSendGbpEmail(client: Client) {
     if (!client.owner_email) return;
     setSendingEmail(client.id);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      await fetch(`${env.supabaseUrl}/functions/v1/admin-send-gbp-email`, {
+      const res = await fetch(`${env.supabaseUrl}/functions/v1/admin-send-gbp-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token}`,
           'apikey': env.supabaseAnonKey,
         },
-        body: JSON.stringify({ to_email: client.owner_email, org_name: client.name }),
+        body: JSON.stringify({ to_email: client.owner_email, org_name: client.name, org_id: client.id }),
       });
-      setEmailSentFor(prev => new Set(prev).add(client.id));
+      if (res.ok) {
+        setLastSentMap(prev => new Map(prev).set(client.id, new Date().toISOString()));
+      }
     } catch { /* silent */ }
     finally { setSendingEmail(null); }
   }
@@ -433,15 +456,29 @@ export function ClientsPage() {
                                 Not Set Up
                               </span>
                               {c.owner_email && (
-                                emailSentFor.has(c.id) ? (
-                                  <span className="text-[10px] font-medium text-[#059669] bg-[#ECFDF5] px-1.5 py-0.5 rounded">Sent</span>
+                                isCoolingDown(c.id) ? (
+                                  <span title="Email sent in the last 24 hours" className="inline-flex items-center gap-1 text-[10px] font-medium text-[#059669] bg-[#ECFDF5] px-1.5 py-0.5 rounded-lg">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Sent
+                                  </span>
                                 ) : (
                                   <button
                                     onClick={() => handleSendGbpEmail(c)}
                                     disabled={sendingEmail === c.id}
-                                    className="text-[10px] font-semibold text-[#6C55E8] border border-[#6C55E8]/30 bg-[#F5F3FF] hover:bg-[#D8CCFF] px-1.5 py-0.5 rounded transition-colors disabled:opacity-50"
+                                    title="Send GBP setup email"
+                                    className="p-1 rounded-lg text-[#6C55E8] hover:bg-[#F5F3FF] hover:text-[#5A42D1] disabled:opacity-40 transition-colors"
                                   >
-                                    {sendingEmail === c.id ? '…' : 'Send Email'}
+                                    {sendingEmail === c.id ? (
+                                      <svg className="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                                      </svg>
+                                    ) : (
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                      </svg>
+                                    )}
                                   </button>
                                 )
                               )}

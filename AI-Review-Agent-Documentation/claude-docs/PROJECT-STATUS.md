@@ -267,6 +267,12 @@ Also hardened `handle_new_user` with `ON CONFLICT (id) DO NOTHING` to guard agai
 
 **Owner role:** granted same permissions as `super_admin` across all Edge Functions (`admin-impersonate`, `admin-create-user`, `admin-delete-member`, `admin-broadcast`).
 
+**Admin enhancements (2026-11-18):**
+- `ClientDetailPage` Google tab: location names are now clickable links opening Google Maps search in a new tab
+- `ClientsPage` GBP Status column: "Not Set Up" rows show a flat envelope icon button that sends a GBP setup email via `admin-send-gbp-email` Edge Function (v2)
+- 24h cooldown: `admin_outreach_log` table (migration `20261118000004`) tracks every send; button shows a green "Sent" badge for 24h after sending, then reappears; cooldown enforced on both frontend (DB-loaded on page load) and backend (edge function returns 429 if within 24h)
+- Icon state persists across page refreshes (loaded from `admin_outreach_log`)
+
 **Pending:** none — all admin portal items implemented or removed from scope.
 
 ## Tier 1 Automations
