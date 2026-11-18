@@ -206,7 +206,7 @@ async function generateForOrg(
   const worst = [...reviews].filter(r => r.rating <= 2 && r.body?.length > 20)[0];
   const sample = reviews.filter(r => r.body?.length > 20).slice(0, 8);
 
-  const ratingDelta = avgRating && avgRatingPrev ? (avgRating - avgRatingPrev).toFixed(2) : null;
+  const ratingDeltaNum = avgRating && avgRatingPrev ? (avgRating - avgRatingPrev) : null;
 
   // ── Gemini prompt ─────────────────────────────────────────────────────────
   const topicsText = topTopics.length
@@ -220,7 +220,7 @@ async function generateForOrg(
 
 Month: ${monthLabel(month)}
 Reviews received: ${reviewCount}
-Average rating: ${avgRating ?? 'N/A'}${ratingDelta ? ` (${Number(ratingDelta) >= 0 ? '+' : ''}${ratingDelta} vs last month)` : ''}
+Average rating: ${avgRating ?? 'N/A'}${ratingDeltaNum !== null ? ` (${ratingDeltaNum >= 0 ? '+' : ''}${ratingDeltaNum.toFixed(2)} vs last month)` : ''}
 Reply rate: ${replyRate}%
 Pending unreplied reviews: ${pendingCount ?? 0}
 
@@ -256,182 +256,161 @@ Write a JSON object with these exact keys (no markdown, raw JSON only):
     }
   } catch { /* use defaults */ }
 
-  // Build insights HTML
-  const insightsHtml = insightsList.length
-    ? insightsList.map(i => `<li style="margin-bottom:10px;font-size:14px;color:#374151;line-height:1.6;">${i}</li>`).join('')
-    : '';
+  const emailSubject = `${monthLabel(month)} review report — ${org?.name ?? 'your business'}`;
 
-  const emailSubject = `Your ${monthLabel(month)} Review Digest — ${reviewCount} reviews, ${avgRating ?? '?'}★ avg`;
-
-  // ── Email HTML ────────────────────────────────────────────────────────────
-  const ratingArrow = avgRating && avgRatingPrev
-    ? (avgRating >= avgRatingPrev ? '↑' : '↓')
+  const ratingDelta = avgRating && avgRatingPrev
+    ? `${(avgRating - avgRatingPrev) >= 0 ? '+' : ''}${(avgRating - avgRatingPrev).toFixed(1)} vs last month`
     : '';
-  const ratingColor = avgRating && avgRatingPrev
-    ? (avgRating >= avgRatingPrev ? '#10B981' : '#EF4444')
-    : '#6C55E8';
 
   const starBars = [5, 4, 3, 2, 1].map(star => {
     const count = ratingDist[String(star)] ?? 0;
     const pct = reviewCount > 0 ? Math.round((count / reviewCount) * 100) : 0;
-    const barColor = star >= 4 ? '#10B981' : star === 3 ? '#F59E0B' : '#EF4444';
-    return `
-      <tr>
-        <td style="font-size:12px;color:#6B7280;white-space:nowrap;padding-right:8px;width:16px;">${star}★</td>
-        <td style="padding-right:8px;">
-          <div style="background:#F3F4F6;border-radius:4px;height:8px;width:120px;">
-            <div style="background:${barColor};border-radius:4px;height:8px;width:${pct}%;"></div>
-          </div>
-        </td>
-        <td style="font-size:12px;color:#9CA3AF;white-space:nowrap;">${count}</td>
-      </tr>`;
+    return `<tr>
+      <td style="font-size:12px;color:#9CA3AF;white-space:nowrap;padding-right:10px;width:14px;vertical-align:middle;">${star}</td>
+      <td style="vertical-align:middle;padding-right:10px;">
+        <div style="background:#F0F0F0;height:6px;width:140px;border-radius:3px;">
+          <div style="background:#6C55E8;height:6px;width:${pct}%;border-radius:3px;"></div>
+        </div>
+      </td>
+      <td style="font-size:12px;color:#9CA3AF;white-space:nowrap;width:24px;">${count}</td>
+    </tr>`;
   }).join('');
 
-  const topicsRows = topTopics.slice(0, 4).map(t => {
-    const posColor = '#10B981'; const negColor = '#EF4444';
-    return `
-      <tr style="border-bottom:1px solid #F3F4F6;">
-        <td style="padding:8px 0;font-size:13px;color:#374151;font-weight:600;">${t.label}</td>
-        <td style="padding:8px 0 8px 12px;font-size:12px;color:${posColor};">${t.positive} pos</td>
-        <td style="padding:8px 0 8px 8px;font-size:12px;color:${negColor};">${t.negative} neg</td>
-        <td style="padding:8px 0 8px 8px;font-size:12px;color:#9CA3AF;text-align:right;">${t.total} total</td>
-      </tr>`;
-  }).join('');
+  const topicsRows = topTopics.slice(0, 4).map((t, i) => `
+    <tr${i < Math.min(topTopics.length, 4) - 1 ? ' style="border-bottom:1px solid #F0F0F0;"' : ''}>
+      <td style="padding:9px 0;font-size:13px;color:#1A1A1A;">${t.label}</td>
+      <td style="padding:9px 0;font-size:12px;color:#6C55E8;text-align:right;white-space:nowrap;">${t.positive} pos &nbsp; <span style="color:#9CA3AF;">${t.negative} neg</span></td>
+    </tr>`).join('');
 
   const actionsHtml = actionItems.map((a, i) => `
     <tr>
-      <td style="padding:14px 0${i < actionItems.length - 1 ? ';border-bottom:1px solid #F3F4F6' : ''};">
-        <table cellpadding="0" cellspacing="0"><tr>
-          <td style="vertical-align:top;padding-top:3px;padding-right:12px;">
-            <div style="width:22px;height:22px;background:#6C55E8;border-radius:6px;text-align:center;line-height:22px;font-size:11px;font-weight:800;color:#fff;">${i + 1}</div>
-          </td>
-          <td>
-            <p style="margin:0 0 2px;font-size:14px;font-weight:700;color:#111827;">${a.title}</p>
-            <p style="margin:0;font-size:13px;color:#9CA3AF;line-height:1.5;">${a.description}</p>
-          </td>
-        </tr></table>
+      <td style="padding:10px 0${i < actionItems.length - 1 ? ';border-bottom:1px solid #F0F0F0' : ''};">
+        <p style="margin:0 0 2px;font-size:13px;font-weight:600;color:#1A1A1A;">${i + 1}. ${a.title}</p>
+        <p style="margin:0;font-size:13px;color:#6B7280;line-height:1.55;">${a.description}</p>
       </td>
     </tr>`).join('');
+
+  const insightsHtml = insightsList.length
+    ? insightsList.map(i => `<li style="margin-bottom:8px;font-size:13px;color:#374151;line-height:1.6;">${i}</li>`).join('')
+    : '';
 
   const year = new Date().getFullYear();
   const appUrl = 'https://app.moffu.pro';
 
-  const emailHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
-<body style="margin:0;padding:0;background:#F4F1FF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F1FF;padding:40px 16px;">
-  <tr><td align="center">
-    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+  const emailHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+</head>
+<body style="margin:0;padding:0;background:#F5F5F5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F5F5;padding:36px 16px 48px;">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:540px;">
 
-      <!-- Logo -->
-      <tr><td align="center" style="padding-bottom:24px;">
-        <table cellpadding="0" cellspacing="0"><tr>
-          <td style="background:#6C55E8;border-radius:10px;width:36px;height:36px;text-align:center;vertical-align:middle;">
-            <span style="color:#fff;font-size:18px;font-weight:900;line-height:36px;">M</span>
-          </td>
-          <td style="padding-left:10px;font-size:20px;font-weight:900;color:#111827;letter-spacing:-0.03em;vertical-align:middle;">Moffu</td>
-        </tr></table>
+  <!-- Logo row -->
+  <tr><td style="padding-bottom:20px;">
+    <table cellpadding="0" cellspacing="0"><tr>
+      <td style="width:28px;height:28px;background:#6C55E8;border-radius:6px;text-align:center;vertical-align:middle;">
+        <span style="color:#fff;font-size:14px;font-weight:800;line-height:28px;display:block;">M</span>
+      </td>
+      <td style="padding-left:8px;font-size:15px;font-weight:700;color:#1A1A1A;vertical-align:middle;letter-spacing:-0.01em;">Moffu</td>
+    </tr></table>
+  </td></tr>
+
+  <!-- Card -->
+  <tr><td style="background:#ffffff;border-radius:8px;border:1px solid #E5E5E5;">
+
+    <!-- Top section: title + meta -->
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:28px 32px 24px;border-bottom:1px solid #F0F0F0;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.07em;">Monthly report</p>
+        <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#1A1A1A;letter-spacing:-0.02em;line-height:1.2;">${monthLabel(month)}</h1>
+        <p style="margin:0;font-size:13px;color:#6B7280;line-height:1.5;">${org?.name ?? 'Your business'}</p>
+      </td></tr>
+    </table>
+
+    <!-- Stats row -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px solid #F0F0F0;">
+      <tr>
+        <td style="padding:20px 32px;border-right:1px solid #F0F0F0;">
+          <p style="margin:0 0 1px;font-size:24px;font-weight:700;color:#1A1A1A;letter-spacing:-0.02em;">${reviewCount}</p>
+          <p style="margin:0;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.05em;">Reviews</p>
+        </td>
+        <td style="padding:20px 32px;border-right:1px solid #F0F0F0;">
+          <p style="margin:0 0 1px;font-size:24px;font-weight:700;color:#1A1A1A;letter-spacing:-0.02em;">${avgRating ?? '—'}<span style="font-size:13px;font-weight:400;color:#9CA3AF;margin-left:4px;">/5</span></p>
+          <p style="margin:0;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.05em;">${ratingDelta || 'Avg rating'}</p>
+        </td>
+        <td style="padding:20px 32px;">
+          <p style="margin:0 0 1px;font-size:24px;font-weight:700;color:#1A1A1A;letter-spacing:-0.02em;">${replyRate}%</p>
+          <p style="margin:0;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.05em;">Replied</p>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Body -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="padding:0 32px;">
+
+      <!-- Summary -->
+      <tr><td style="padding:24px 0;border-bottom:1px solid #F0F0F0;">
+        <p style="margin:0;font-size:14px;color:#374151;line-height:1.7;">${summary}</p>
       </td></tr>
 
-      <!-- Card -->
-      <tr><td style="background:#ffffff;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;">
-
-        <!-- Header -->
-        <table width="100%" cellpadding="0" cellspacing="0">
-          <tr><td style="background:#6C55E8;padding:28px 36px 24px;">
-            <p style="margin:0 0 6px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.08em;">Monthly Digest</p>
-            <h1 style="margin:0 0 8px;font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.03em;line-height:1.2;">${monthLabel(month)}</h1>
-            <p style="margin:0;font-size:13px;color:rgba(255,255,255,0.72);line-height:1.5;">${org?.name ?? 'Your business'} &mdash; here&rsquo;s how your reviews performed.</p>
-          </td></tr>
-        </table>
-
-        <!-- KPI strip -->
-        <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px solid #F3F4F6;">
-          <tr>
-            <td style="padding:20px 24px;text-align:center;border-right:1px solid #F3F4F6;">
-              <p style="margin:0 0 2px;font-size:28px;font-weight:900;color:#111827;letter-spacing:-0.03em;">${reviewCount}</p>
-              <p style="margin:0;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;">Reviews</p>
-            </td>
-            <td style="padding:20px 24px;text-align:center;border-right:1px solid #F3F4F6;">
-              <p style="margin:0 0 2px;font-size:28px;font-weight:900;color:${ratingColor};letter-spacing:-0.03em;">${avgRating ?? '—'} ${ratingArrow}</p>
-              <p style="margin:0;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;">Avg Rating</p>
-            </td>
-            <td style="padding:20px 24px;text-align:center;">
-              <p style="margin:0 0 2px;font-size:28px;font-weight:900;color:${replyRate >= 80 ? '#10B981' : replyRate >= 50 ? '#F59E0B' : '#EF4444'};letter-spacing:-0.03em;">${replyRate}%</p>
-              <p style="margin:0;font-size:11px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.06em;">Reply Rate</p>
-            </td>
-          </tr>
-        </table>
-
-        <!-- Body -->
-        <table width="100%" cellpadding="0" cellspacing="0" style="padding:28px 36px 0;">
-
-          <!-- Summary -->
-          <tr><td style="padding-bottom:24px;border-bottom:1px solid #F3F4F6;">
-            <p style="margin:0;font-size:14px;color:#374151;line-height:1.7;">${summary}</p>
-          </td></tr>
-
-          <!-- Rating distribution -->
-          <tr><td style="padding-top:24px;padding-bottom:20px;border-bottom:1px solid #F3F4F6;">
-            <p style="margin:0 0 14px;font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;">Rating breakdown</p>
-            <table cellpadding="0" cellspacing="4">${starBars}</table>
-          </td></tr>
-
-          ${topTopics.length > 0 ? `
-          <!-- Topics -->
-          <tr><td style="padding-top:24px;padding-bottom:4px;border-bottom:1px solid #F3F4F6;">
-            <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;">Top topics</p>
-            <table width="100%" cellpadding="0" cellspacing="0">${topicsRows}</table>
-          </td></tr>` : ''}
-
-          ${insightsList.length > 0 ? `
-          <!-- AI Insights -->
-          <tr><td style="padding-top:24px;padding-bottom:20px;border-bottom:1px solid #F3F4F6;">
-            <p style="margin:0 0 14px;font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;">AI insights</p>
-            <ul style="margin:0;padding-left:18px;">${insightsHtml}</ul>
-          </td></tr>` : ''}
-
-          ${actionItems.length > 0 ? `
-          <!-- Action items -->
-          <tr><td style="padding-top:24px;border-bottom:1px solid #F3F4F6;">
-            <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.08em;">Actions for next month</p>
-            <table width="100%" cellpadding="0" cellspacing="0">${actionsHtml}</table>
-          </td></tr>` : ''}
-
-          ${pendingCount ? `
-          <!-- Pending notice -->
-          <tr><td style="padding-top:16px;padding-bottom:16px;border-bottom:1px solid #F3F4F6;">
-            <p style="margin:0;font-size:13px;color:#374151;background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:12px 14px;line-height:1.5;">
-              You have <strong>${pendingCount} unreplied review${pendingCount !== 1 ? 's' : ''}</strong> waiting. Responding promptly improves your ranking on Google.
-            </p>
-          </td></tr>` : ''}
-
-          <!-- CTA -->
-          <tr><td style="padding:24px 0 20px;">
-            <a href="${appUrl}/digest" style="display:block;background:#6C55E8;color:#ffffff;font-size:14px;font-weight:700;padding:15px;border-radius:10px;text-decoration:none;text-align:center;letter-spacing:-0.01em;">View full digest in portal</a>
-          </td></tr>
-
-          <!-- Support -->
-          <tr><td style="padding-bottom:32px;">
-            <p style="margin:0;font-size:12px;color:#9CA3AF;line-height:1.6;">
-              Questions? <a href="mailto:support@moffu.pro" style="color:#6C55E8;text-decoration:none;">support@moffu.pro</a>
-            </p>
-          </td></tr>
-
-        </table>
-
+      <!-- Rating breakdown -->
+      <tr><td style="padding:20px 0;border-bottom:1px solid #F0F0F0;">
+        <p style="margin:0 0 12px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.07em;">Rating breakdown</p>
+        <table cellpadding="0" cellspacing="3">${starBars}</table>
       </td></tr>
 
-      <!-- Footer -->
-      <tr><td style="padding-top:20px;text-align:center;">
-        <p style="margin:0;font-size:11px;color:#9CA3AF;">
-          &copy; ${year} Moffu &middot; <a href="https://moffu.pro" style="color:#9CA3AF;text-decoration:none;">moffu.pro</a> &middot; <a href="${appUrl}/settings/preferences" style="color:#9CA3AF;text-decoration:none;">Manage notifications</a>
-        </p>
+      ${topTopics.length > 0 ? `
+      <!-- Topics -->
+      <tr><td style="padding:20px 0;border-bottom:1px solid #F0F0F0;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.07em;">What customers mentioned</p>
+        <table width="100%" cellpadding="0" cellspacing="0">${topicsRows}</table>
+      </td></tr>` : ''}
+
+      ${insightsList.length > 0 ? `
+      <!-- Insights -->
+      <tr><td style="padding:20px 0;border-bottom:1px solid #F0F0F0;">
+        <p style="margin:0 0 12px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.07em;">Key findings</p>
+        <ul style="margin:0;padding-left:16px;">${insightsHtml}</ul>
+      </td></tr>` : ''}
+
+      ${actionItems.length > 0 ? `
+      <!-- Recommendations -->
+      <tr><td style="padding:20px 0;border-bottom:1px solid #F0F0F0;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.07em;">Recommendations</p>
+        <table width="100%" cellpadding="0" cellspacing="0">${actionsHtml}</table>
+      </td></tr>` : ''}
+
+      ${pendingCount ? `
+      <!-- Pending -->
+      <tr><td style="padding:16px 0;border-bottom:1px solid #F0F0F0;">
+        <p style="margin:0;font-size:13px;color:#374151;line-height:1.6;"><strong>${pendingCount} review${pendingCount !== 1 ? 's' : ''}</strong> ${pendingCount !== 1 ? 'are' : 'is'} waiting for a reply. Responding within 24 hours improves your visibility on Google.</p>
+      </td></tr>` : ''}
+
+      <!-- CTA -->
+      <tr><td style="padding:24px 0 28px;">
+        <a href="${appUrl}/digest" style="display:inline-block;background:#6C55E8;color:#ffffff;font-size:13px;font-weight:600;padding:11px 20px;border-radius:6px;text-decoration:none;letter-spacing:0;">View full report</a>
+        <span style="display:inline-block;padding-left:16px;font-size:12px;color:#9CA3AF;vertical-align:middle;">Questions? <a href="mailto:support@moffu.pro" style="color:#6B7280;text-decoration:none;">support@moffu.pro</a></span>
       </td></tr>
 
     </table>
+
   </td></tr>
+
+  <!-- Footer -->
+  <tr><td style="padding-top:16px;text-align:center;">
+    <p style="margin:0;font-size:11px;color:#B0B0B0;">
+      &copy; ${year} Moffu &nbsp;&middot;&nbsp; <a href="https://moffu.pro" style="color:#B0B0B0;text-decoration:none;">moffu.pro</a> &nbsp;&middot;&nbsp; <a href="${appUrl}/settings/preferences" style="color:#B0B0B0;text-decoration:none;">Unsubscribe</a>
+    </p>
+  </td></tr>
+
 </table>
-</body></html>`;
+</td></tr>
+</table>
+</body>
+</html>`;
 
   // Upsert digest record
   const { error: upsertErr } = await supabase
