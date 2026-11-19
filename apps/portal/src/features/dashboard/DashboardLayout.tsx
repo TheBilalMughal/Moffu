@@ -761,9 +761,13 @@ function SidebarUpgradeCard({ sub, plans }: { sub: Subscription | null; plans: P
           </span>
         </div>
 
-        <p className="text-[11px] font-bold text-white mb-0.5">Ready for more?</p>
+        <p className="text-[11px] font-bold text-white mb-0.5">
+          {(nextPlan.slug === 'starter' || nextPlan.slug === 'growth') ? 'Try free for 14 days' : 'Ready for more?'}
+        </p>
         <p className="text-[10px] text-white/40 mb-2 leading-relaxed">
-          Unlock more with {nextPlan.name}.
+          {(nextPlan.slug === 'starter' || nextPlan.slug === 'growth')
+            ? `No credit card needed. Cancel anytime.`
+            : `Unlock more with ${nextPlan.name}.`}
         </p>
 
         {highlights.length > 0 && (
@@ -802,7 +806,7 @@ function SidebarUpgradeCard({ sub, plans }: { sub: Subscription | null; plans: P
             ) : null}
           </div>
           <span className="flex-shrink-0 inline-flex items-center bg-[#6C55E8] group-hover:bg-[#5A42D1] text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-colors whitespace-nowrap">
-            Upgrade →
+            {(nextPlan.slug === 'starter' || nextPlan.slug === 'growth') ? 'Start free trial →' : 'Upgrade →'}
           </span>
         </div>
       </div>
@@ -1073,7 +1077,7 @@ export function DashboardLayout() {
       if (!user) return;
       const { data: sub } = await supabase
         .from('subscriptions').select('plan_id')
-        .eq('user_id', user.id).eq('status', 'active').maybeSingle();
+        .eq('user_id', user.id).in('status', ['active', 'trialing']).maybeSingle();
       if (!sub) {
         setIsFreePlan(true);
         setFeatureLoading(false);

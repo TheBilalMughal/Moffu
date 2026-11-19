@@ -1,7 +1,7 @@
 # Project Status
 
 ## Current milestone
-PHASE 6 — Billing COMPLETE. Marketing: Meta Pixel + GTM/GA4 + cookie consent + CompleteRegistration event LIVE. 14-day free trial for Starter/Growth added (DB migration, paddle-webhook, edge functions, portal UI).
+PHASE 6 — Billing COMPLETE. Marketing: Meta Pixel + GTM/GA4 + cookie consent + CompleteRegistration event LIVE. 14-day free trial for Starter/Growth added (DB migration, paddle-webhook, edge functions, portal UI). Trial CTA ("Start free trial") shown in sidebar upgrade card and dashboard overview card for Starter/Growth next plans; `loadFeatureAccess` now accepts `trialing` status.
 
 ## Completed
 

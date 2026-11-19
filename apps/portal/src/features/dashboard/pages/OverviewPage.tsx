@@ -605,9 +605,13 @@ function UpgradeCard({ sub, plans }: { sub: Subscription | null; plans: Plan[] }
           </span>
         </div>
 
-        <p className="text-sm font-bold text-white mb-0.5">Ready for more?</p>
+        <p className="text-sm font-bold text-white mb-0.5">
+          {(nextPlan.slug === 'starter' || nextPlan.slug === 'growth') ? 'Try free for 14 days' : 'Ready for more?'}
+        </p>
         <p className="text-[11px] text-white/40 mb-3 leading-relaxed">
-          Unlock more capacity and features with {nextPlan.name}.
+          {(nextPlan.slug === 'starter' || nextPlan.slug === 'growth')
+            ? `Start your free trial of ${nextPlan.name}. No credit card needed.`
+            : `Unlock more capacity and features with ${nextPlan.name}.`}
         </p>
 
         {highlights.length > 0 && (
@@ -661,8 +665,8 @@ function UpgradeCard({ sub, plans }: { sub: Subscription | null; plans: Plan[] }
               </div>
             ) : null}
           </div>
-          <span className="inline-flex items-center gap-1.5 bg-[#6C55E8] group-hover:bg-[#5A42D1] text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-colors">
-            Upgrade →
+          <span className="inline-flex items-center gap-1.5 bg-[#6C55E8] group-hover:bg-[#5A42D1] text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-colors whitespace-nowrap">
+            {(nextPlan.slug === 'starter' || nextPlan.slug === 'growth') ? 'Start free trial →' : 'Upgrade →'}
           </span>
         </div>
       </div>
