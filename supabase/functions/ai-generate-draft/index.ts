@@ -142,20 +142,53 @@ function lengthGuide(key: string): string {
   return '3-4 sentences';
 }
 
-// Merge location override onto global: non-null override fields win
-function mergeOverride(
-  global: Record<string, unknown>,
-  override: Record<string, unknown> | null,
+// Brand Brain step IDs in the portal are 1–6. Keep this allowlist in sync
+// with WIZARD_STEPS: Identity, Voice, Format, Rules, Guardrails, Locations.
+const BRAND_BRAIN_STEP_FIELDS: Record<number, string[]> = {
+  1: ['business_name', 'business_type', 'business_desc', 'reply_signature'],
+  2: ['tone', 'custom_tone_instructions'],
+  3: ['reply_length', 'use_customer_name', 'use_emoji'],
+  4: ['primary_language', 'reviewer_lang_behaviour', 'negative_rule', 'star_rating_rules', 'keyword_contexts'],
+  5: ['prohibited_phrases', 'approval_rules', 'example_reply'],
+};
+
+function resolveEntitledBrain(
+  global: Record<string, unknown> | null,
+  location: Record<string, unknown> | null,
+  stepMask: number,
 ): Record<string, unknown> {
-  if (!override) return global;
-  const merged = { ...global };
-  const skip = new Set(['id', 'user_id', 'location_id', 'created_at', 'updated_at']);
-  for (const [key, val] of Object.entries(override)) {
-    if (!skip.has(key) && val !== null && val !== undefined) {
-      merged[key] = val;
+  const effective: Record<string, unknown> = {};
+  const hasStep = (stepId: number) => (stepMask & (1 << (stepId - 1))) !== 0;
+
+  // Global values are active only when their owning Brand Brain tab is included.
+  for (const [stepIdText, fields] of Object.entries(BRAND_BRAIN_STEP_FIELDS)) {
+    if (!hasStep(Number(stepIdText))) continue;
+    for (const field of fields) {
+      if (global?.[field] !== undefined) effective[field] = global[field];
     }
   }
-  return merged;
+
+  if (!location) return effective;
+
+  // Identity overrides are edited in the Identity tab itself.
+  if (hasStep(1)) {
+    for (const field of BRAND_BRAIN_STEP_FIELDS[1]) {
+      if (location[field] !== null && location[field] !== undefined) effective[field] = location[field];
+    }
+  }
+
+  // Other per-location overrides are exposed by the Locations tab and may
+  // override only a base setting that this plan also unlocks.
+  if (!hasStep(6)) return effective;
+  for (const [stepIdText, fields] of Object.entries(BRAND_BRAIN_STEP_FIELDS)) {
+    const stepId = Number(stepIdText);
+    if (stepId === 1 || !hasStep(stepId)) continue;
+    for (const field of fields) {
+      if (location[field] !== null && location[field] !== undefined) effective[field] = location[field];
+    }
+  }
+
+  return effective;
 }
 
 // Find keyword contexts whose trigger appears in the review body
@@ -214,6 +247,39 @@ Deno.serve(async (req) => {
     if (!aiSetting) return json({ error: 'No AI provider configured. Please set one in the admin panel.' }, 503);
     if (!review)    return json({ error: 'Review not found' }, 404);
 
+    // Resolve the active package on the server. Client-side tab locks are only
+    // presentation; they must never decide which instructions reach the model.
+    const { data: subscription, error: subscriptionError } = await supabase
+      .from('subscriptions')
+      .select('plan_id')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'trialing'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (subscriptionError || !subscription) {
+      return json({ error: 'No active subscription found. Please contact support.' }, 403);
+    }
+
+    const { data: planEntitlements, error: entitlementsError } = await supabase
+      .from('plan_entitlements')
+      .select('key, value_type, bool_value, limit_value')
+      .eq('plan_id', subscription.plan_id)
+      .in('key', ['feature_brand_brain', 'brand_brain_steps']);
+    if (entitlementsError) {
+      console.error('Unable to load Brand Brain entitlements:', entitlementsError);
+      return json({ error: 'Could not verify Brand Brain package access. Please try again.' }, 503);
+    }
+
+    const featureEntitlement = planEntitlements?.find((entitlement) => entitlement.key === 'feature_brand_brain');
+    const stepsEntitlement = planEntitlements?.find((entitlement) => entitlement.key === 'brand_brain_steps');
+    const brandBrainEnabled = featureEntitlement?.bool_value === true;
+    const stepMask = !brandBrainEnabled || !stepsEntitlement
+      ? 0
+      : stepsEntitlement.value_type === 'UNLIMITED'
+        ? 63
+        : (Number(stepsEntitlement.limit_value ?? 0) & 63);
+
     // Check AI draft usage limit
     const limitCheck = await checkAndRecordUsage(supabase, user.id, 'ai_draft', review_id);
     if (!limitCheck.allowed) {
@@ -235,8 +301,8 @@ Deno.serve(async (req) => {
       locOverride = ov ?? null;
     }
 
-    // Merge global brain + location override
-    const brain = mergeOverride(globalBrain ?? {}, locOverride) as Record<string, unknown>;
+    // Only pass settings from package-unlocked tabs to the prompt/approval logic.
+    const brain = resolveEntitledBrain(globalBrain ?? null, locOverride, stepMask);
 
     // ── Resolve effective settings ───────────────────────────────────────────
     const businessName  = (brain.business_name  as string | null) ?? 'our business';
