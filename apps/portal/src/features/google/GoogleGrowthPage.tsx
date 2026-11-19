@@ -4,17 +4,23 @@ import { googleGrowthService } from './google-growth.service';
 import type { GoogleGrowthReport, GoogleGrowthStatus } from './google-growth.service';
 
 function friendlyError(code: string) {
-  if (code.includes('SERVICE_DISABLED') || code.includes('API_NOT_ENABLED') || code.includes('REQUEST_DENIED')) {
-    return 'Enable Search Console API, Google Analytics Admin API, and Google Analytics Data API in the Google Cloud project, then reconnect.';
+  const normalizedCode = code.toUpperCase();
+  if (normalizedCode.includes('SERVICE_DISABLED') || normalizedCode.includes('API_NOT_ENABLED') || normalizedCode.includes('ACCESSNOTCONFIGURED')) {
+    return 'The required Google API is disabled in the Cloud project for this OAuth client. Enable Search Console API and Google Analytics Admin API, then refresh properties.';
   }
-  if (code.includes('PERMISSION_DENIED') || code.includes('PROPERTY_NOT_ACCESSIBLE')) {
-    return 'The connected Google account needs access to the selected Search Console property and GA4 property.';
+  if (normalizedCode.includes('API_KEY_SERVICE_BLOCKED') || normalizedCode.includes('REQUEST_DENIED')) {
+    return 'Google rejected the API request. Check the OAuth client project and API restrictions, then refresh properties.';
+  }
+  if (normalizedCode.includes('PERMISSION_DENIED') || normalizedCode.includes('PROPERTY_NOT_ACCESSIBLE')) {
+    return 'Google denied property access. Make sure this Google account can open the Search Console site and GA4 property. If the API is enabled, add this account in each product’s access settings, then refresh properties.';
   }
   if (code === 'GOOGLE_RECONNECT_REQUIRED') return 'Google access expired. Reconnect Search Console and Analytics.';
   if (code === 'GOOGLE_CONFIGURATION_INCOMPLETE' || code === 'GOOGLE_CONFIGURATION_UNAVAILABLE') return 'Google OAuth credentials or redirect URL are not configured in Admin settings.';
   if (code === 'SELECT_BOTH_PROPERTIES') return 'Choose both a Search Console property and a GA4 property, then save.';
   if (code === 'SEARCH_CONSOLE_PROPERTY_NOT_ACCESSIBLE') return 'This Google account cannot access that Search Console property.';
   if (code === 'GA4_PROPERTY_NOT_ACCESSIBLE') return 'This Google account cannot access that GA4 property.';
+  if (code === 'NO_SEARCH_CONSOLE_PROPERTIES') return 'No Search Console site is available to this Google account. Add and verify your website in Search Console, or ask a current owner to grant this account access, then refresh properties.';
+  if (code === 'NO_GA4_PROPERTIES') return 'No GA4 property is available to this Google account. Add this account under the property’s Admin → Property access management, then refresh properties.';
   return code.replaceAll('_', ' ').toLowerCase();
 }
 
@@ -164,6 +170,8 @@ export function GoogleGrowthPage() {
               {sites.map(site => <option key={site.siteUrl} value={site.siteUrl}>{site.siteUrl}</option>)}
             </select>
             {status.resources?.searchConsole.error && <ResourceError code={status.resources.searchConsole.error} />}
+            {status.resources && !status.resources.searchConsole.error && sites.length === 0 &&
+              <ResourceError code="NO_SEARCH_CONSOLE_PROPERTIES" />}
           </label>
           <label className="block">
             <span className="text-xs font-medium text-[#374151]">Google Analytics 4 property</span>
@@ -173,6 +181,8 @@ export function GoogleGrowthPage() {
               {properties.map(item => <option key={item.property} value={item.property}>{item.displayName}{item.parentAccount ? ` · ${item.parentAccount}` : ''}</option>)}
             </select>
             {status.resources?.analytics.error && <ResourceError code={status.resources.analytics.error} />}
+            {status.resources && !status.resources.analytics.error && properties.length === 0 &&
+              <ResourceError code="NO_GA4_PROPERTIES" />}
           </label>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2">

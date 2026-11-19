@@ -110,9 +110,21 @@ async function providerJson(url: string, accessToken: string, init: RequestInit 
     signal: AbortSignal.timeout(15_000),
   });
   if (!response.ok) {
-    let status = `HTTP_${response.status}`;
-    try { status = (await response.json())?.error?.status ?? status; } catch { /* keep status only */ }
-    throw new GrowthError(`GOOGLE_API_${status}`, response.status === 401 ? 401 : 502);
+    let providerCode = `HTTP_${response.status}`;
+    try {
+      const payload = await response.json();
+      const providerError = payload?.error;
+      const reasons = [
+        ...(Array.isArray(providerError?.errors) ? providerError.errors.map((item: { reason?: string }) => item?.reason) : []),
+        ...(Array.isArray(providerError?.details) ? providerError.details.map((item: { reason?: string }) => item?.reason) : []),
+      ].filter((reason): reason is string => typeof reason === 'string' && /^[A-Za-z0-9_]+$/.test(reason));
+      // Google uses PERMISSION_DENIED for disabled APIs too; preserve the
+      // structured reason so the UI can tell setup errors from account access.
+      providerCode = reasons.find(reason => ['SERVICE_DISABLED', 'accessNotConfigured', 'API_KEY_SERVICE_BLOCKED'].includes(reason))
+        ?? providerError?.status
+        ?? providerCode;
+    } catch { /* keep HTTP status only */ }
+    throw new GrowthError(`GOOGLE_API_${providerCode}`, response.status === 401 ? 401 : 502);
   }
   return response.json();
 }
