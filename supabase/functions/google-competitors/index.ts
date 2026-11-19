@@ -44,12 +44,16 @@ Deno.serve(async (req) => {
     // Get the user's location
     const locQ = supabase
       .from('google_locations')
-      .select('id, display_name, latitude, longitude, description, address, category')
+      .select('id, display_name, latitude, longitude, description, address')
       .eq('user_id', user.id);
     if (body.location_id) locQ.eq('id', body.location_id);
     else locQ.eq('is_selected', true);
 
-    const { data: loc } = await locQ.maybeSingle();
+    const { data: loc, error: locationError } = await locQ.maybeSingle();
+    if (locationError) {
+      console.error('google-competitors location lookup failed:', locationError.code);
+      return ok({ competitors: [], warning: 'location_lookup_failed' });
+    }
     if (!loc) return ok({ competitors: [], warning: 'location_not_found' });
 
     if (!loc.latitude || !loc.longitude) {
@@ -57,7 +61,7 @@ Deno.serve(async (req) => {
     }
 
     // Category is required for a meaningful text search
-    const searchTerm = (loc.category || loc.description || '').trim();
+    const searchTerm = (loc.description || '').trim();
     if (!searchTerm) {
       return ok({ competitors: [], warning: 'no_category' });
     }
