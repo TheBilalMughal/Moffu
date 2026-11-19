@@ -58,7 +58,7 @@ export function GoogleConnectPage() {
         .from('subscriptions')
         .select('plan_id')
         .eq('user_id', user.id)
-        .eq('status', 'active')
+        .in('status', ['active', 'trialing'])
         .maybeSingle();
       if (!sub) { setLocationLimit(1); return 1; }
       const { data: ent } = await supabase

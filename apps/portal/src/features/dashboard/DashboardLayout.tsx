@@ -1116,6 +1116,11 @@ export function DashboardLayout() {
           map['feature_team'] = e.value_type === 'UNLIMITED' || (e.limit_value ?? 2) > 1;
         }
       }
+      const teamEntitlement = ents?.find(e => e.key === 'team_members');
+      if (teamEntitlement) {
+        const numericSeatAccess = teamEntitlement.value_type === 'UNLIMITED' || (teamEntitlement.limit_value ?? 1) > 1;
+        map['feature_team'] = map['feature_team'] !== false && numericSeatAccess;
+      }
       setFeatureAccess(map);
       setFeatureLoading(false);
     }

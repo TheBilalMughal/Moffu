@@ -721,7 +721,7 @@ export function SettingsPage() {
       const { data: { user: u } } = await supabase.auth.getUser();
       if (!u) return;
       const { data: sub } = await supabase
-        .from('subscriptions').select('plan_id').eq('user_id', u.id).eq('status', 'active').maybeSingle();
+        .from('subscriptions').select('plan_id').eq('user_id', u.id).in('status', ['active', 'trialing']).maybeSingle();
       if (!sub) return;
       const { data: ent } = await supabase
         .from('plan_entitlements').select('value_type, limit_value')

@@ -206,6 +206,36 @@ Deno.serve(async (req) => {
   if (!member?.org_id) return json({ error: 'No org found' }, 400);
   const orgId = member.org_id;
 
+  const { data: owner } = await supabase.from('org_members').select('user_id')
+    .eq('org_id', orgId).eq('role', 'owner').eq('status', 'active').maybeSingle();
+  if (!owner) return json({ error: 'Organization owner not found' }, 403);
+  const { data: subscription } = await supabase.from('subscriptions').select('plan_id')
+    .eq('user_id', owner.user_id).in('status', ['active', 'trialing']).maybeSingle();
+  if (!subscription) return json({ error: 'An active subscription is required to create marketing posts.' }, 402);
+  const { data: accessEntitlements } = await supabase.from('plan_entitlements')
+    .select('key, value_type, limit_value, bool_value')
+    .eq('plan_id', subscription.plan_id)
+    .in('key', ['feature_marketing', 'marketing_posts']);
+  const marketingFeature = accessEntitlements?.find(e => e.key === 'feature_marketing');
+  if (marketingFeature?.bool_value === false) {
+    return json({ error: 'Marketing is not included in your current plan.' }, 402);
+  }
+  const postsEntitlement = accessEntitlements?.find(e => e.key === 'marketing_posts');
+  if (!postsEntitlement) return json({ error: 'Marketing post allowance is not configured for this plan.' }, 402);
+  if (postsEntitlement.value_type !== 'UNLIMITED') {
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const { count, error: countError } = await supabase.from('marketing_posts')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', orgId).gte('created_at', monthStart.toISOString());
+    if (countError) return json({ error: 'Could not check your marketing post allowance.' }, 503);
+    const limit = postsEntitlement.limit_value ?? 0;
+    if ((count ?? 0) >= limit) {
+      return json({ error: `You have reached your monthly marketing post limit (${count ?? 0}/${limit}).` }, 429);
+    }
+  }
+
   const [settingsRes, brainRes, aiSettingsRes, locationRes] = await Promise.all([
     supabase.from('marketing_settings').select('*').eq('org_id', orgId).maybeSingle(),
     supabase.from('brand_brain').select('*').eq('user_id', user.id).maybeSingle(),

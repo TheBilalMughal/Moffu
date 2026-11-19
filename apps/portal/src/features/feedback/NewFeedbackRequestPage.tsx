@@ -52,7 +52,16 @@ export function NewFeedbackRequestPage() {
       .single();
 
     setSaving(false);
-    if (dbErr || !data) { setError('Failed to create request. Please try again.'); return; }
+    if (dbErr || !data) {
+      if (dbErr?.message.includes('PACKAGE_LIMIT_REACHED:feedback_requests')) {
+        setError('You have reached your monthly feedback request limit. Upgrade your plan to create more requests.');
+      } else if (dbErr?.message.includes('FEATURE_NOT_INCLUDED:feature_feedback')) {
+        setError('Feedback is not included in your current plan. Upgrade to create feedback requests.');
+      } else {
+        setError(dbErr?.message ?? 'Failed to create request. Please try again.');
+      }
+      return;
+    }
     setCreated({
       id:    data.id,
       token: data.token,

@@ -54,6 +54,18 @@ Deno.serve(async (req) => {
     .maybeSingle();
   if (!membership) return json({ error: 'Forbidden' }, 403);
 
+  const { data: owner } = await supabase.from('org_members').select('user_id')
+    .eq('org_id', reqRow.org_id).eq('role', 'owner').eq('status', 'active').maybeSingle();
+  if (!owner) return json({ error: 'Organization owner not found' }, 403);
+  const { data: subscription } = await supabase.from('subscriptions').select('plan_id')
+    .eq('user_id', owner.user_id).in('status', ['active', 'trialing']).maybeSingle();
+  if (!subscription) return json({ error: 'An active subscription is required to send feedback requests.' }, 402);
+  const { data: feedbackFeature } = await supabase.from('plan_entitlements').select('bool_value')
+    .eq('plan_id', subscription.plan_id).eq('key', 'feature_feedback').maybeSingle();
+  if (feedbackFeature?.bool_value === false) {
+    return json({ error: 'Feedback is not included in your current plan.' }, 402);
+  }
+
   const [{ data: org }, { data: location }] = await Promise.all([
     supabase.from('organizations').select('name').eq('id', reqRow.org_id).maybeSingle(),
     reqRow.location_id

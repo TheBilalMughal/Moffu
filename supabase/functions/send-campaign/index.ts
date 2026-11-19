@@ -48,115 +48,32 @@ function buildEmailHtml(bodyText: string, trackOpenUrl: string, trackClickUrl: s
 </html>`;
 }
 
-// ── Entitlement checker ─────────────────────────────────────────────────────
-
-interface Entitlement {
-  value_type: string;
-  limit_value: number | null;
-  usage_reset: string | null;
-}
-
 async function checkCampaignEmailLimit(
   adminClient: ReturnType<typeof createClient>,
   orgId: string,
+  campaignId: string,
   newEmailCount: number,
 ): Promise<{ allowed: boolean; reason?: string; limit: number | null; used: number }> {
-
-  // 1. Find org owner → their subscription → plan
-  const { data: owner } = await adminClient
-    .from('org_members')
-    .select('user_id')
-    .eq('org_id', orgId)
-    .eq('role', 'owner')
-    .limit(1)
-    .single();
-
-  if (!owner) {
-    return { allowed: false, reason: 'No owner found for this organization.', limit: 0, used: 0 };
-  }
-
-  const { data: sub } = await adminClient
-    .from('subscriptions')
-    .select('plan_id, status')
-    .eq('user_id', owner.user_id)
-    .in('status', ['active', 'trialing'])
-    .limit(1)
-    .single();
-
-  if (!sub) {
-    return { allowed: false, reason: 'No active subscription found. Please upgrade your plan to send campaigns.', limit: 0, used: 0 };
-  }
-
-  // 2. Get campaign_emails entitlement for the plan
-  const { data: ent } = await adminClient
-    .from('plan_entitlements')
-    .select('value_type, limit_value, usage_reset')
-    .eq('plan_id', sub.plan_id)
-    .eq('key', 'campaign_emails')
-    .single() as { data: Entitlement | null };
-
-  // No entitlement row = feature not included on this plan
-  if (!ent) {
-    return { allowed: false, reason: 'Campaign emails are not included in your current plan. Please upgrade to send review request campaigns.', limit: 0, used: 0 };
-  }
-
-  // Unlimited
-  if (ent.value_type === 'UNLIMITED') {
-    return { allowed: true, limit: null, used: 0 };
-  }
-
-  const limitValue = ent.limit_value ?? 0;
-
-  // Limit = 0 means feature is blocked on this plan
-  if (limitValue === 0) {
-    return { allowed: false, reason: 'Campaign emails are not included in your current plan. Please upgrade to send review request campaigns.', limit: 0, used: 0 };
-  }
-
-  // 3. Count emails sent this month for this org
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-
-  const { count } = await adminClient
-    .from('campaign_events')
-    .select('id', { count: 'exact', head: true })
-    .eq('event_type', 'sent')
-    .gte('created_at', monthStart)
-    .in('campaign_id', (
-      adminClient
-        .from('campaigns')
-        .select('id')
-        .eq('org_id', orgId)
-    ) as unknown as string[]);
-
-  // Fallback: direct count query if the above doesn't work
-  const { data: countData } = await adminClient.rpc('count_org_campaign_emails_this_month', {
+  const { data, error } = await adminClient.rpc('reserve_campaign_email_quota', {
     p_org_id: orgId,
-    p_month_start: monthStart,
-  }).catch(() => ({ data: null }));
-
-  const used = typeof countData === 'number' ? countData : (count ?? 0);
-  const remaining = limitValue - used;
-
-  if (remaining <= 0) {
-    return {
-      allowed: false,
-      reason: `You have reached your monthly email limit of ${limitValue}. Used: ${used}. Resets on the 1st of next month.`,
-      limit: limitValue,
-      used,
-    };
+    p_campaign_id: campaignId,
+    p_requested: newEmailCount,
+  });
+  const row = Array.isArray(data) ? data[0] : data;
+  if (error || !row) {
+    const detail = error?.message ?? 'Could not reserve the campaign quota.';
+    const friendly = detail.includes('PACKAGE_LIMIT_REACHED:campaign_emails')
+      ? 'Campaign emails are not included in your current plan.'
+      : detail;
+    return { allowed: false, reason: friendly, limit: 0, used: 0 };
   }
-
-  // Would this campaign exceed the limit?
-  if (used + newEmailCount > limitValue) {
-    return {
-      allowed: false,
-      reason: `This campaign would send ${newEmailCount} emails but you only have ${remaining} remaining this month (limit: ${limitValue}, used: ${used}).`,
-      limit: limitValue,
-      used,
-    };
-  }
-
-  return { allowed: true, limit: limitValue, used };
+  const result = row as { allowed: boolean; used: number; limit_value: number | null; reason: string | null };
+  return {
+    allowed: result.allowed,
+    reason: result.reason ?? undefined,
+    limit: result.limit_value,
+    used: Number(result.used ?? 0),
+  };
 }
 
 // ── Main handler ────────────────────────────────────────────────────────────
@@ -200,6 +117,7 @@ serve(async (req) => {
     if (!mem) return json({ error: 'Forbidden' }, 403);
 
     if (campaign.status === 'sent') return json({ error: 'Campaign already sent' }, 409);
+    if (campaign.status === 'sending') return json({ error: 'Campaign is already being sent' }, 409);
 
     // Load pending contacts
     const { data: contacts } = await adminClient
@@ -216,7 +134,7 @@ serve(async (req) => {
     }
 
     // ── Entitlement check ───────────────────────────────────────────────────
-    const limitCheck = await checkCampaignEmailLimit(adminClient, campaign.org_id, contacts.length);
+    const limitCheck = await checkCampaignEmailLimit(adminClient, campaign.org_id, campaign_id, contacts.length);
 
     if (!limitCheck.allowed) {
       // Mark campaign as failed with reason
@@ -308,6 +226,8 @@ serve(async (req) => {
       sent_count:     sentCount,
       total_contacts: contacts.length,
     }).eq('id', campaign_id);
+
+    await adminClient.rpc('release_campaign_email_quota', { p_campaign_id: campaign_id });
 
     await adminClient.from('audit_events').insert({
       actor_id:    user.id,

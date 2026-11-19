@@ -1431,7 +1431,7 @@ export function BrandBrainPage() {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: sub } = await supabase.from('subscriptions').select('plan_id').eq('user_id', user.id).eq('status', 'active').maybeSingle();
+      const { data: sub } = await supabase.from('subscriptions').select('plan_id').eq('user_id', user.id).in('status', ['active', 'trialing']).maybeSingle();
       if (!sub) return;
       const { data: ent } = await supabase.from('plan_entitlements').select('value_type, limit_value').eq('plan_id', sub.plan_id).eq('key', 'brand_brain_steps').maybeSingle();
       if (ent) setStepMask(ent.value_type === 'UNLIMITED' ? 63 : ((ent.limit_value ?? 63) & 63));

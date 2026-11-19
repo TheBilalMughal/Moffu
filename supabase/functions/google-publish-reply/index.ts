@@ -1,110 +1,20 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-type UsageEventType = 'ai_draft' | 'published_reply';
-const ENTITLEMENT_KEY: Record<UsageEventType, string> = {
-  ai_draft: 'ai_drafts',
-  published_reply: 'published_replies',
-};
-const OVERRIDE_FIELD: Record<UsageEventType, string> = {
-  ai_draft: 'ai_drafts_per_month',
-  published_reply: 'published_replies_per_month',
-};
-
 async function checkAndRecordUsage(
   supabase: SupabaseClient,
   userId: string,
-  eventType: UsageEventType,
+  eventType: 'ai_draft' | 'published_reply',
+  reviewId: string,
 ): Promise<{ allowed: boolean; used: number; limit: number | null }> {
-  const entKey = ENTITLEMENT_KEY[eventType];
-  const overrideField = OVERRIDE_FIELD[eventType];
-
-  const { data: sub } = await supabase
-    .from('subscriptions')
-    .select('current_period_start, current_period_end, plan_id')
-    .eq('user_id', userId)
-    .in('status', ['active', 'trialing'])
-    .maybeSingle();
-
-  if (!sub) return { allowed: false, used: 0, limit: 0 };
-
-  // Check org-level override first
-  const { data: orgMember } = await supabase
-    .from('org_members')
-    .select('org_id')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  let overrideLimit: number | null = null;
-  if (orgMember?.org_id) {
-    const { data: override } = await supabase
-      .from('org_plan_overrides')
-      .select(overrideField)
-      .eq('org_id', orgMember.org_id)
-      .maybeSingle();
-    if (override && override[overrideField] !== null && override[overrideField] !== undefined) {
-      overrideLimit = override[overrideField] as number;
-    }
-  }
-
-  // -1 = unlimited via override
-  if (overrideLimit === -1) return { allowed: true, used: 0, limit: null };
-
-  // If no org override, fall back to plan entitlement
-  if (overrideLimit === null) {
-    const { data: ent } = await supabase
-      .from('plan_entitlements')
-      .select('value_type, limit_value, usage_reset')
-      .eq('plan_id', sub.plan_id)
-      .eq('key', entKey)
-      .maybeSingle();
-
-    if (!ent || ent.value_type === 'UNLIMITED') return { allowed: true, used: 0, limit: null };
-
-    const resetCadence = (ent.usage_reset as string | null) ?? 'monthly';
-    let periodStart: string;
-    let periodEnd: string;
-
-    if (resetCadence === 'weekly') {
-      const now = new Date();
-      const start = new Date(now);
-      start.setDate(now.getDate() - 7);
-      periodStart = start.toISOString();
-      periodEnd = now.toISOString();
-    } else {
-      periodStart = sub.current_period_start;
-      periodEnd = sub.current_period_end;
-    }
-
-    const { count } = await supabase
-      .from('usage_events')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('event_type', eventType)
-      .gte('created_at', periodStart)
-      .lte('created_at', periodEnd);
-
-    const used = count ?? 0;
-    const limit = ent.limit_value ?? 0;
-    return used >= limit ? { allowed: false, used, limit } : { allowed: true, used, limit };
-  }
-
-  // Org override is a positive number — count usage in current calendar month
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
-
-  const { count } = await supabase
-    .from('usage_events')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('event_type', eventType)
-    .gte('created_at', monthStart)
-    .lte('created_at', monthEnd);
-
-  const used = count ?? 0;
-  return used >= overrideLimit
-    ? { allowed: false, used, limit: overrideLimit }
-    : { allowed: true, used, limit: overrideLimit };
+  const { data, error } = await supabase.rpc('reserve_plan_usage', {
+    p_user_id: userId,
+    p_event_type: eventType,
+    p_review_id: reviewId,
+  });
+  const row = Array.isArray(data) ? data[0] : data;
+  if (error || !row) return { allowed: false, used: 0, limit: 0 };
+  const result = row as { allowed: boolean; used: number; limit_value: number | null };
+  return { allowed: result.allowed, used: Number(result.used ?? 0), limit: result.limit_value };
 }
 
 const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')!;
@@ -178,7 +88,7 @@ Deno.serve(async (req) => {
     }
 
     // Check published_reply limit before hitting Google
-    const limitCheck = await checkAndRecordUsage(supabase, user.id, 'published_reply');
+    const limitCheck = await checkAndRecordUsage(supabase, user.id, 'published_reply', review_id);
     if (!limitCheck.allowed) {
       return json({
         error: 'Published reply limit reached for this period',
@@ -246,7 +156,6 @@ Deno.serve(async (req) => {
         reply_published_at: now,
         reply_draft: null,
       }).eq('id', review_id),
-      supabase.from('usage_events').insert({ user_id: user.id, event_type: 'published_reply', review_id }),
     ]);
 
     return json({ success: true });

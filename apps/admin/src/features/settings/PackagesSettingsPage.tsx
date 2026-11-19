@@ -87,6 +87,17 @@ function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
 }
 
+function parseLimit(value: string, minimum = 0): number | null {
+  if (!/^\d+$/.test(value.trim())) {
+    return null;
+  }
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < minimum) {
+    return null;
+  }
+  return parsed;
+}
+
 function formatPrice(cents: number, currency: string) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 0 }).format(cents / 100);
 }
@@ -291,6 +302,26 @@ export function PackagesSettingsPage() {
     const slug = form.slug || slugify(form.name);
     if (!slug) { toast.error('Slug is required.'); return; }
 
+    const L = form.limits;
+    const numericLimits = [
+      ['locations', L.locations, 1],
+      ['team members', L.team_members, 0],
+      ['Brand Brain steps mask', L.brand_brain_steps, 0],
+      ...(!L.replies_unlimited ? [['published replies', L.replies_limit, 0] as [string, string, number]] : []),
+      ...(!L.ai_drafts_unlimited ? [['AI drafts', L.ai_drafts_limit, 0] as [string, string, number]] : []),
+      ...(!L.campaign_emails_unlimited ? [['campaign emails', L.campaign_emails_limit, 0] as [string, string, number]] : []),
+      ...(!L.campaign_sms_unlimited ? [['campaign SMS', L.campaign_sms_limit, 0] as [string, string, number]] : []),
+      ...(!L.campaign_whatsapp_unlimited ? [['campaign WhatsApp', L.campaign_whatsapp_limit, 0] as [string, string, number]] : []),
+      ...(!L.marketing_posts_unlimited ? [['marketing posts', L.marketing_posts_limit, 0] as [string, string, number]] : []),
+      ...(!L.feedback_requests_unlimited ? [['feedback requests', L.feedback_requests_limit, 0] as [string, string, number]] : []),
+    ] as [string, string, number][];
+    for (const [label, value, minimum] of numericLimits) {
+      if (parseLimit(value, minimum) === null) {
+        toast.error(`Enter a whole number of ${minimum} or higher for ${label}.`);
+        return;
+      }
+    }
+
     setSaving(true);
 
     const discountVal = parseFloat(form.discount_value || '0');
@@ -336,12 +367,12 @@ export function PackagesSettingsPage() {
 
     if (pe) { toast.error(pe.message); setSaving(false); return; }
 
-    const L = form.limits;
+    const cap = (value: string, minimum = 0) => parseLimit(value, minimum) ?? minimum;
     const entUpserts = [
-      { plan_id: planId, key: 'locations',           value_type: 'LIMIT',     limit_value: parseInt(L.locations) || 1,           bool_value: null, enum_value: null,            usage_reset: null },
-      { plan_id: planId, key: 'published_replies',   value_type: L.replies_unlimited   ? 'UNLIMITED' : 'LIMIT', limit_value: L.replies_unlimited   ? null : parseInt(L.replies_limit) || 50,   bool_value: null, enum_value: null, usage_reset: L.replies_reset },
-      { plan_id: planId, key: 'ai_drafts',           value_type: L.ai_drafts_unlimited ? 'UNLIMITED' : 'LIMIT', limit_value: L.ai_drafts_unlimited ? null : parseInt(L.ai_drafts_limit) || 50, bool_value: null, enum_value: null, usage_reset: L.ai_drafts_reset },
-      { plan_id: planId, key: 'team_members',        value_type: 'LIMIT',     limit_value: parseInt(L.team_members) || 1,         bool_value: null, enum_value: null,            usage_reset: null },
+      { plan_id: planId, key: 'locations',           value_type: 'LIMIT',     limit_value: cap(L.locations, 1),           bool_value: null, enum_value: null,            usage_reset: null },
+      { plan_id: planId, key: 'published_replies',   value_type: L.replies_unlimited   ? 'UNLIMITED' : 'LIMIT', limit_value: L.replies_unlimited   ? null : cap(L.replies_limit),   bool_value: null, enum_value: null, usage_reset: L.replies_reset },
+      { plan_id: planId, key: 'ai_drafts',           value_type: L.ai_drafts_unlimited ? 'UNLIMITED' : 'LIMIT', limit_value: L.ai_drafts_unlimited ? null : cap(L.ai_drafts_limit), bool_value: null, enum_value: null, usage_reset: L.ai_drafts_reset },
+      { plan_id: planId, key: 'team_members',        value_type: 'LIMIT',     limit_value: cap(L.team_members),         bool_value: null, enum_value: null,            usage_reset: null },
       { plan_id: planId, key: 'brand_brain_steps',   value_type: 'LIMIT', limit_value: (parseInt(L.brand_brain_steps) || 0) & 63, bool_value: null, enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'support_tier',        value_type: 'ENUM',      limit_value: null,                                  bool_value: null, enum_value: L.support_tier,  usage_reset: null },
       { plan_id: planId, key: 'feature_brand_brain',    value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_brand_brain,    enum_value: null, usage_reset: null },
@@ -350,11 +381,11 @@ export function PackagesSettingsPage() {
       { plan_id: planId, key: 'feature_campaigns',   value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_campaigns,   enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'feature_marketing',   value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_marketing,   enum_value: null, usage_reset: null },
       { plan_id: planId, key: 'feature_feedback',    value_type: 'BOOLEAN', limit_value: null, bool_value: L.feature_feedback,    enum_value: null, usage_reset: null },
-      { plan_id: planId, key: 'campaign_emails',    value_type: L.campaign_emails_unlimited    ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_emails_unlimited    ? null : parseInt(L.campaign_emails_limit) || 0,    bool_value: null, enum_value: null, usage_reset: 'monthly' },
-      { plan_id: planId, key: 'campaign_sms',       value_type: L.campaign_sms_unlimited       ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_sms_unlimited       ? null : parseInt(L.campaign_sms_limit) || 0,       bool_value: null, enum_value: null, usage_reset: 'monthly' },
-      { plan_id: planId, key: 'campaign_whatsapp',  value_type: L.campaign_whatsapp_unlimited  ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_whatsapp_unlimited  ? null : parseInt(L.campaign_whatsapp_limit) || 0,  bool_value: null, enum_value: null, usage_reset: 'monthly' },
-      { plan_id: planId, key: 'marketing_posts',    value_type: L.marketing_posts_unlimited    ? 'UNLIMITED' : 'LIMIT', limit_value: L.marketing_posts_unlimited    ? null : parseInt(L.marketing_posts_limit) || 0,    bool_value: null, enum_value: null, usage_reset: 'monthly' },
-      { plan_id: planId, key: 'feedback_requests',  value_type: L.feedback_requests_unlimited  ? 'UNLIMITED' : 'LIMIT', limit_value: L.feedback_requests_unlimited  ? null : parseInt(L.feedback_requests_limit) || 0,  bool_value: null, enum_value: null, usage_reset: 'monthly' },
+      { plan_id: planId, key: 'campaign_emails',    value_type: L.campaign_emails_unlimited    ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_emails_unlimited    ? null : cap(L.campaign_emails_limit),    bool_value: null, enum_value: null, usage_reset: 'monthly' },
+      { plan_id: planId, key: 'campaign_sms',       value_type: L.campaign_sms_unlimited       ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_sms_unlimited       ? null : cap(L.campaign_sms_limit),       bool_value: null, enum_value: null, usage_reset: 'monthly' },
+      { plan_id: planId, key: 'campaign_whatsapp',  value_type: L.campaign_whatsapp_unlimited  ? 'UNLIMITED' : 'LIMIT', limit_value: L.campaign_whatsapp_unlimited  ? null : cap(L.campaign_whatsapp_limit),  bool_value: null, enum_value: null, usage_reset: 'monthly' },
+      { plan_id: planId, key: 'marketing_posts',    value_type: L.marketing_posts_unlimited    ? 'UNLIMITED' : 'LIMIT', limit_value: L.marketing_posts_unlimited    ? null : cap(L.marketing_posts_limit),    bool_value: null, enum_value: null, usage_reset: 'monthly' },
+      { plan_id: planId, key: 'feedback_requests',  value_type: L.feedback_requests_unlimited  ? 'UNLIMITED' : 'LIMIT', limit_value: L.feedback_requests_unlimited  ? null : cap(L.feedback_requests_limit),  bool_value: null, enum_value: null, usage_reset: 'monthly' },
     ];
     const { error: ee } = await supabase.from('plan_entitlements').upsert(entUpserts as any, { onConflict: 'plan_id,key' });
     if (ee) { toast.error(ee.message); setSaving(false); return; }
@@ -899,14 +930,14 @@ export function PackagesSettingsPage() {
                                 <span className="text-xs font-medium text-[#374151]">{ch.label}</span>
                                 {!ch.active && <span className="text-[10px] font-semibold bg-[#F3F4F6] text-[#9CA3AF] px-1.5 py-0.5 rounded-md">Coming soon</span>}
                               </div>
-                              <label className="flex items-center gap-2">
+                              <div className="flex items-center gap-2">
                                 <span className="text-[11px] text-[#6B7280]">Unlimited</span>
                                 <button type="button" disabled={!ch.active} role="switch" aria-checked={isUnlimited}
                                   onClick={() => ch.active && setForm(f => ({ ...f, limits: { ...f.limits, [ch.unlimitedKey]: !isUnlimited } }))}
                                   className={`relative inline-flex h-4 w-7 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${isUnlimited ? 'bg-[#6C55E8]' : 'bg-[#D1D5DB]'}`}>
                                   <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition ease-in-out duration-200 ${isUnlimited ? 'translate-x-3' : 'translate-x-0'}`} />
                                 </button>
-                              </label>
+                              </div>
                             </div>
                             {!isUnlimited ? (
                               <div className="flex items-center gap-2">
@@ -937,21 +968,22 @@ export function PackagesSettingsPage() {
                       ]).map(({ label, unlimitedKey, limitKey, unit }) => {
                         const isUnlimited = form.limits[unlimitedKey];
                         return (
-                          <div key={label} className="border border-[#E5E7EB] rounded-xl px-4 py-3 bg-white opacity-50">
+                          <div key={label} className="border border-[#E5E7EB] rounded-xl px-4 py-3 bg-white">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <span className="text-xs font-medium text-[#374151]">{label}</span>
-                                <span className="text-[10px] font-semibold bg-[#F3F4F6] text-[#9CA3AF] px-1.5 py-0.5 rounded-md">Coming soon</span>
                               </div>
-                              <label className="flex items-center gap-2">
+                              <div className="flex items-center gap-2">
                                 <span className="text-[11px] text-[#6B7280]">Unlimited</span>
-                                <div className={`relative inline-flex h-4 w-7 flex-shrink-0 rounded-full border-2 border-transparent ${isUnlimited ? 'bg-[#6C55E8]' : 'bg-[#D1D5DB]'}`}>
+                                <button type="button" role="switch" aria-checked={isUnlimited}
+                                  onClick={() => setForm(f => ({ ...f, limits: { ...f.limits, [unlimitedKey]: !isUnlimited } }))}
+                                  className={`relative inline-flex h-4 w-7 flex-shrink-0 rounded-full border-2 border-transparent ${isUnlimited ? 'bg-[#6C55E8]' : 'bg-[#D1D5DB]'}`}>
                                   <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition ease-in-out duration-200 ${isUnlimited ? 'translate-x-3' : 'translate-x-0'}`} />
-                                </div>
-                              </label>
+                                </button>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <input type="number" min="0" disabled
+                              <input type="number" min="0"
                                 value={form.limits[limitKey]}
                                 onChange={e => setForm(f => ({ ...f, limits: { ...f.limits, [limitKey]: e.target.value } }))}
                                 placeholder="0 = no access"
