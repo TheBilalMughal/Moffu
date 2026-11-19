@@ -738,3 +738,19 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - `FIRST_REVIEW_WEBHOOK_SECRET` = `moffu-first-review-2026` — set via Supabase dashboard Secrets or CLI
 - `ONBOARDING_CRON_SECRET` = `moffu-onboarding-cron-2026` — set via Supabase dashboard Secrets or CLI
 - (Both secrets are hardcoded in migration SQL triggers for now; without matching env vars the edge functions will accept all requests — set them to enforce security)
+
+## Google Profile competitor Places API incident — 2026-11-19
+**Root cause confirmed from production logs:**
+- The portal showed “Places API not enabled” while the Google Cloud project had Places API (New) enabled. Supabase logs showed Google's exact response: the function was calling a legacy API that was not enabled for the project.
+- Production `google-competitors` v5 still called Legacy Nearby Search (`maps.googleapis.com/maps/api/place/nearbysearch/json`). The repository already had the Places API (New) Text Search implementation, but it had not been deployed to production.
+
+**Fixes deployed:**
+- Deployed `google-competitors` v6 using `POST https://places.googleapis.com/v1/places:searchText`; verified the active source no longer calls the legacy endpoint.
+- The first v6 request then showed `location_not_found`. Production schema inspection found that `google_locations` has `description`, `latitude`, and `longitude`, but no `category` column. The function selected the nonexistent column and ignored the query error, incorrectly returning `location_not_found`.
+- Updated the function to query only columns present in the production schema, use `description` (the synced GBP primary category) as its search term, and return `location_lookup_failed` when the database query itself errors.
+- Deployed `google-competitors` v7 (ACTIVE). No migration or Legacy Places API enablement is needed for these fixes.
+- Commit `35a02dc` (`fix(edge-fn): use existing location category field`) was pushed to `origin/main`.
+
+**Verification and remaining check:**
+- Confirmed the production table schema and verified the deployed v7 source uses Places API (New), selects `description` rather than `category`, and handles location query errors separately.
+- A successful authenticated competitor response after v7 has not yet been observed. Refresh the Google Profile page and verify; if the warning persists, use the new warning (`location_lookup_failed`, `no_coordinates`, or `no_category`) to narrow the next check.
