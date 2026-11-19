@@ -25,10 +25,14 @@ export function GoogleCallbackPage() {
       return;
     }
 
-    googleService.handleCallback(code, state).then(async ({ error: err }) => {
+    googleService.handleCallback(code, state).then(async ({ error: err, redirect_to: redirectTo }) => {
       if (err) {
         setErrorMsg(err);
         setStatus('error');
+        return;
+      }
+      if (redirectTo?.startsWith('/')) {
+        navigate(redirectTo, { replace: true });
         return;
       }
       // Check if this user already has selected locations (returning client)

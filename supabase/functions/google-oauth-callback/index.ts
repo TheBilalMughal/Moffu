@@ -48,6 +48,65 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Google credentials not configured. Set them in Admin → Settings → Google API.' }), { status: 500, headers: corsHeaders });
     }
 
+    // Search Console / GA4 use their own service-role-only connection row so
+    // granting analytics scopes never replaces the user's GBP refresh token.
+    const { data: growthConnection, error: growthLookupError } = await supabase
+      .from('google_growth_connections')
+      .select('id,oauth_state,oauth_state_expires_at,refresh_token')
+      .eq('user_id', user.id)
+      .eq('oauth_state', state)
+      .maybeSingle();
+    if (growthLookupError) throw new Error('Google Growth connection lookup failed');
+    if (growthConnection) {
+      if (!growthConnection.oauth_state_expires_at || Date.parse(growthConnection.oauth_state_expires_at) < Date.now()) {
+        await supabase.from('google_growth_connections').update({ oauth_state: null, oauth_state_expires_at: null }).eq('id', growthConnection.id);
+        return new Response(JSON.stringify({ error: 'Google connection request expired. Please try again.' }), { status: 400, headers: corsHeaders });
+      }
+
+      const growthTokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri, grant_type: 'authorization_code' }),
+      });
+      if (!growthTokenRes.ok) {
+        console.error('Google Growth token exchange failed:', growthTokenRes.status);
+        await supabase.from('google_growth_connections').update({ oauth_state: null, oauth_state_expires_at: null }).eq('id', growthConnection.id);
+        return new Response(JSON.stringify({ error: 'Google authorization could not be completed. Please retry.' }), { status: 400, headers: corsHeaders });
+      }
+
+      const growthTokens = await growthTokenRes.json();
+      if (typeof growthTokens.access_token !== 'string') throw new Error('Google Growth returned no access token');
+      const grantedScopes = typeof growthTokens.scope === 'string' ? growthTokens.scope.split(/\s+/).filter(Boolean) : [];
+      const requiredScopes = ['https://www.googleapis.com/auth/webmasters.readonly', 'https://www.googleapis.com/auth/analytics.readonly'];
+      if (grantedScopes.length && requiredScopes.some(scope => !grantedScopes.includes(scope))) {
+        await supabase.from('google_growth_connections').update({ oauth_state: null, oauth_state_expires_at: null }).eq('id', growthConnection.id);
+        return new Response(JSON.stringify({ error: 'Please grant both Search Console and Google Analytics read-only permissions.' }), { status: 400, headers: corsHeaders });
+      }
+      const refreshToken = typeof growthTokens.refresh_token === 'string' && growthTokens.refresh_token
+        ? growthTokens.refresh_token : growthConnection.refresh_token;
+      if (!refreshToken) throw new Error('Google did not issue a refresh token; reconnect with offline access.');
+
+      const profileRes = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+        headers: { Authorization: `Bearer ${growthTokens.access_token}` },
+      });
+      const profile = profileRes.ok ? await profileRes.json() : {};
+      const { error: saveGrowthError } = await supabase.from('google_growth_connections').update({
+        google_email: profile.email ?? null,
+        access_token: growthTokens.access_token,
+        refresh_token: refreshToken,
+        token_expiry: new Date(Date.now() + Number(growthTokens.expires_in ?? 3600) * 1000).toISOString(),
+        scopes: grantedScopes.length ? grantedScopes : requiredScopes,
+        connected_at: new Date().toISOString(),
+        oauth_state: null,
+        oauth_state_expires_at: null,
+        updated_at: new Date().toISOString(),
+      }).eq('id', growthConnection.id);
+      if (saveGrowthError) throw new Error('Google Growth credentials could not be saved');
+      return new Response(JSON.stringify({ success: true, redirect_to: '/google-growth?google_growth=connected' }), {
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
     const { data: connection, error: connError } = await supabase
       .from('google_connections')
       .select('id, oauth_state')

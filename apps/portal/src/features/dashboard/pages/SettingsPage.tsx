@@ -1331,6 +1331,21 @@ export function SettingsPage() {
         </div>
       </div>
 
+      <div className="bg-white rounded-xl border border-[#E5E7EB] mb-5">
+        <div className="px-6 py-4 border-b border-[#E5E7EB]">
+          <h2 className="text-sm font-semibold text-[#111827]">SEO &amp; Leads</h2>
+        </div>
+        <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-[#111827]">Search Console + Google Analytics</p>
+            <p className="mt-0.5 text-xs text-[#9CA3AF]">Connect read-only reporting for website search visibility and Google organic conversions.</p>
+          </div>
+          <Link to="/google-growth" className="flex-shrink-0 rounded-lg bg-[#111827] px-4 py-2 text-center text-xs font-semibold text-white hover:bg-[#6C55E8] transition-colors">
+            Manage connection
+          </Link>
+        </div>
+      </div>
+
       {/* Billing shortcut */}
       <div className="bg-white rounded-xl border border-[#E5E7EB] mb-5">        <div className="px-6 py-4 border-b border-[#E5E7EB]">
           <h2 className="text-sm font-semibold text-[#111827]">Billing</h2>

@@ -127,7 +127,7 @@ export const googleService = {
     return { auth_url: json.auth_url };
   },
 
-  async handleCallback(code: string, state: string): Promise<{ error?: string }> {
+  async handleCallback(code: string, state: string): Promise<{ error?: string; redirect_to?: string }> {
     const auth = await getAuthHeader();
     if (!auth) return { error: 'Not authenticated' };
 
@@ -138,7 +138,7 @@ export const googleService = {
     });
     const json = await res.json();
     if (!res.ok) return { error: json.error ?? 'Callback failed' };
-    return {};
+    return { redirect_to: typeof json.redirect_to === 'string' ? json.redirect_to : undefined };
   },
 
   async syncReviews(): Promise<{ synced?: number; error?: string; errors?: string[] }> {

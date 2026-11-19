@@ -188,6 +188,10 @@ password_requirements = ""
 # The handler accepts OPTIONS preflight and validates Bearer tokens with Supabase Auth itself.
 verify_jwt = false
 
+# The handler validates the caller's Supabase bearer token and accepts CORS preflight requests.
+[functions.google-growth]
+verify_jwt = false
+
 [functions.georank]
 verify_jwt = true
 

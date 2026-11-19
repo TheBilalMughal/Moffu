@@ -754,3 +754,14 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 **Verification and remaining check:**
 - Confirmed the production table schema and verified the deployed v7 source uses Places API (New), selects `description` rather than `category`, and handles location query errors separately.
 - A successful authenticated competitor response after v7 has not yet been observed. Refresh the Google Profile page and verify; if the warning persists, use the new warning (`location_lookup_failed`, `no_coordinates`, or `no_category`) to narrow the next check.
+
+## Google Search Console + GA4 SEO & Leads — 2026-11-19
+**IMPLEMENTED + DEPLOYED** ✅
+
+- Added a separate read-only Google OAuth flow for Search Console and GA4; existing Google Business Profile OAuth tokens and setup flow remain separate.
+- Portal page `/google-growth` is linked as **SEO & Leads** in the dashboard and Settings. It supports choosing a Search Console property and GA4 property, then compares 28/90-day clicks, impressions, CTR, average web Search position, Google organic sessions/users, and GA4 conversions against the preceding period. Search queries are shown with clicks/impressions/CTR/average position. The UI clarifies that Search Console position is website Search ranking, not Maps ranking, and GA4 conversions require configured key events.
+- Applied Supabase migration `20261119170341_google_growth_connections`: per-user OAuth/property storage, RLS enabled, no client/anon/public grants; service-role Edge Function only.
+- Deployed `google-growth` v1 (manual user-token validation; `verify_jwt=false` because Supabase's gateway rejects the app's auth flow before the handler) and updated `google-oauth-callback` v51 while retaining its existing `verify_jwt=true` setting.
+- Verification: portal TypeScript typecheck passed; `git diff --check` clean; live preflight returned 204 with CORS headers; unauthenticated POST returned 401. Actual Google account/property/report flow is pending Google Cloud API and OAuth consent configuration.
+
+**Required Google Cloud setup before customer connection:** enable Google Search Console API (`webmasters.googleapis.com`), Google Analytics Admin API (`analyticsadmin.googleapis.com`), and Google Analytics Data API (`analyticsdata.googleapis.com`) for the OAuth client project. Ensure the OAuth consent screen allows the signed-in account and includes the `webmasters.readonly` and `analytics.readonly` scopes. No Maps ranking or Google Business Profile performance metric is represented by this page.
