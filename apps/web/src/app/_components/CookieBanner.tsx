@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 const STORAGE_KEY = 'moffu_cookie_consent';
+const GA4_ID = 'G-KJ1XX07ZEE';
+const PIXEL_ID = '1161577489720496';
 
 export type CookieConsent = 'all' | 'essential';
 
@@ -19,35 +21,68 @@ function saveConsent(value: CookieConsent) {
   try { localStorage.setItem(STORAGE_KEY, value); } catch {}
 }
 
-// ─── Analytics loader ────────────────────────────────────────────────────────
-// When you add Google Analytics, uncomment the block below and replace
-// G-XXXXXXXXXX with your Measurement ID.
-//
-// function loadAnalytics() {
-//   if (document.getElementById('ga-script')) return;
-//   const s = document.createElement('script');
-//   s.id  = 'ga-script';
-//   s.src = 'https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX';
-//   s.async = true;
-//   document.head.appendChild(s);
-//   window.dataLayer = window.dataLayer || [];
-//   function gtag(...args: unknown[]) { window.dataLayer.push(args); }
-//   gtag('js', new Date());
-//   gtag('config', 'G-XXXXXXXXXX');
-// }
-// ─────────────────────────────────────────────────────────────────────────────
+function activateAllTracking() {
+  if (typeof window === 'undefined') return;
+
+  // Update GTM consent mode
+  const dl = (window as any).dataLayer;
+  if (dl) {
+    dl.push(['consent', 'update', {
+      analytics_storage: 'granted',
+      ad_storage: 'granted',
+    }]);
+  }
+
+  // Load GA4 directly
+  if (!document.getElementById('ga4-script')) {
+    const s = document.createElement('script');
+    s.id = 'ga4-script';
+    s.async = true;
+    s.src = `https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`;
+    document.head.appendChild(s);
+    (window as any).dataLayer = (window as any).dataLayer || [];
+    function gtag(...args: unknown[]) { (window as any).dataLayer.push(args); }
+    gtag('js', new Date());
+    gtag('config', GA4_ID);
+  }
+
+  // Load Meta Pixel
+  if (!document.getElementById('meta-pixel-fb')) {
+    const w = window as any;
+    if (!w.fbq) {
+      const n: any = function () {
+        n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+      };
+      w.fbq = n; w._fbq = n;
+      n.push = n; n.loaded = true; n.version = '2.0'; n.queue = [];
+    }
+    w.fbq('init', PIXEL_ID);
+    w.fbq('track', 'PageView');
+
+    const s = document.createElement('script');
+    s.id = 'meta-pixel-fb';
+    s.async = true;
+    s.src = 'https://connect.facebook.net/en_US/fbevents.js';
+    document.head.appendChild(s);
+  }
+}
 
 export function CookieBanner() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    if (!getStoredConsent()) setShow(true);
+    const stored = getStoredConsent();
+    if (!stored) {
+      setShow(true);
+    } else if (stored === 'all') {
+      activateAllTracking();
+    }
   }, []);
 
   function accept(choice: CookieConsent) {
     saveConsent(choice);
     setShow(false);
-    // if (choice === 'all') loadAnalytics(); // uncomment when analytics is ready
+    if (choice === 'all') activateAllTracking();
   }
 
   if (!show) return null;
