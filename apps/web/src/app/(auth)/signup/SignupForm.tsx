@@ -39,8 +39,14 @@ export function SignupForm() {
         password,
         options: { data: { full_name: name } },
       });
-      if (error) setError(error.message);
-      else setSuccess(true);
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess(true);
+        if (typeof window !== 'undefined' && (window as any).fbq) {
+          (window as any).fbq('track', 'CompleteRegistration');
+        }
+      }
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
