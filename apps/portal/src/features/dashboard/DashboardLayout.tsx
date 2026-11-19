@@ -766,7 +766,7 @@ function SidebarUpgradeCard({ sub, plans }: { sub: Subscription | null; plans: P
         </p>
         <p className="text-[10px] text-white/40 mb-2 leading-relaxed">
           {(nextPlan.slug === 'starter' || nextPlan.slug === 'growth')
-            ? `No credit card needed. Cancel anytime.`
+            ? `Try ${nextPlan.name} free. Cancel anytime.`
             : `Unlock more with ${nextPlan.name}.`}
         </p>
 

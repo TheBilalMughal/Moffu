@@ -610,7 +610,7 @@ function UpgradeCard({ sub, plans }: { sub: Subscription | null; plans: Plan[] }
         </p>
         <p className="text-[11px] text-white/40 mb-3 leading-relaxed">
           {(nextPlan.slug === 'starter' || nextPlan.slug === 'growth')
-            ? `Start your free trial of ${nextPlan.name}. No credit card needed.`
+            ? `Start your 14-day free trial of ${nextPlan.name}. Cancel anytime.`
             : `Unlock more capacity and features with ${nextPlan.name}.`}
         </p>
 
