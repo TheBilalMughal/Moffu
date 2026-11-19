@@ -36,6 +36,7 @@ export interface Subscription {
   current_period_start: string;
   current_period_end: string;
   cancel_at_period_end: boolean;
+  trial_ends_at: string | null;
   extra_locations: number;
   addon_items: AddonItem[];
   overage_protection: boolean;
@@ -124,9 +125,9 @@ export const billingService = {
 
     const { data } = await supabase
       .from('subscriptions')
-      .select('id, plan_id, status, billing_interval, current_period_start, current_period_end, cancel_at_period_end, plans(slug, name), subscription_addons(id, addon_type, quantity, unit_price_cents)')
+      .select('id, plan_id, status, billing_interval, current_period_start, current_period_end, cancel_at_period_end, trial_ends_at, plans(slug, name), subscription_addons(id, addon_type, quantity, unit_price_cents)')
       .eq('user_id', user.id)
-      .eq('status', 'active')
+      .in('status', ['active', 'trialing'])
       .maybeSingle();
 
     if (!data) return null;
@@ -145,6 +146,7 @@ export const billingService = {
       current_period_start: data.current_period_start,
       current_period_end: data.current_period_end,
       cancel_at_period_end: data.cancel_at_period_end,
+      trial_ends_at: (data as any).trial_ends_at ?? null,
       extra_locations: extraLocations,
       addon_items: rawAddons.map(a => ({ id: a.id, addon_type: a.addon_type, quantity: a.quantity, unit_price_cents: a.unit_price_cents })),
       overage_protection: true,

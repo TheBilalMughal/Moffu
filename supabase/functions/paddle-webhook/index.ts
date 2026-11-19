@@ -139,6 +139,7 @@ async function handleSubscriptionUpsert(supabase: ReturnType<typeof createClient
 
   const currentPeriodStart = (data.current_billing_period as { starts_at: string } | null)?.starts_at ?? new Date().toISOString();
   const currentPeriodEnd = (data.current_billing_period as { ends_at: string } | null)?.ends_at ?? new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString();
+  const trialEndsAt = (data.trial_dates as { ends_at?: string } | null)?.ends_at ?? null;
 
   const updatePayload: Record<string, unknown> = {
     paddle_subscription_id: paddleSubId,
@@ -147,6 +148,7 @@ async function handleSubscriptionUpsert(supabase: ReturnType<typeof createClient
     cancel_at_period_end: cancelAtPeriodEnd,
     current_period_start: currentPeriodStart,
     current_period_end: currentPeriodEnd,
+    trial_ends_at: trialEndsAt,
     updated_at: new Date().toISOString(),
   };
 

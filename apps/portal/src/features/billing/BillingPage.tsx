@@ -718,8 +718,15 @@ export function BillingPage() {
 
   const currentPlan = plans.find(p => p.id === sub?.plan_id);
   const isFree = !sub || sub.plan_slug === 'free';
+  const isTrialing = sub?.status === 'trialing';
   const planSlug = sub?.plan_slug ?? 'free';
   const planColor = (PLAN_COLORS[planSlug] ?? PLAN_COLORS.free)!;
+
+  const trialDaysLeft = (() => {
+    if (!isTrialing || !sub?.trial_ends_at) return null;
+    const diff = new Date(sub.trial_ends_at).getTime() - Date.now();
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  })();
 
   // Annual savings
   const monthlyPaidPlan = !isFree && sub?.billing_interval !== 'annual' && currentPlan;
@@ -867,6 +874,11 @@ export function BillingPage() {
                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${isFree ? 'bg-[#F3F4F6] text-[#6B7280]' : 'bg-[#EDE9FE] text-[#6C55E8]'}`}>
                   {isFree ? 'Free' : sub?.billing_interval === 'annual' ? 'Annual' : 'Monthly'}
                 </span>
+                {isTrialing && (
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-700">
+                    Trial{trialDaysLeft !== null ? ` · ${trialDaysLeft}d left` : ''}
+                  </span>
+                )}
                 {hasOverride && (
                   <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-[#FFF7ED] text-[#C2410C]">
                     Scale
@@ -1155,9 +1167,11 @@ export function BillingPage() {
                   if (isUpgrade) {
                     const price = plan.prices.find(p => p.interval === billingInterval) ?? plan.prices.find(p => p.interval === 'monthly');
                     const paddlePriceId = price?.paddle_price_id ?? null;
+                    const offersTrial = plan.slug === 'starter' || plan.slug === 'growth';
+                    const ctaLabel = offersTrial ? 'Start 14-day free trial' : 'Upgrade';
                     if (!paddlePriceId) return (
                       <button disabled className="w-full py-2.5 text-xs font-semibold rounded-xl cursor-not-allowed opacity-50 bg-[#111827] text-white">
-                        Upgrade
+                        {ctaLabel}
                       </button>
                     );
                     return (
@@ -1166,7 +1180,7 @@ export function BillingPage() {
                         disabled={checkoutLoading === plan.slug}
                         className="w-full py-2.5 text-xs font-semibold rounded-xl bg-[#6C55E8] text-white hover:bg-[#5A42D1] disabled:opacity-60 transition-colors"
                       >
-                        {checkoutLoading === plan.slug ? 'Loading…' : 'Upgrade'}
+                        {checkoutLoading === plan.slug ? 'Loading…' : ctaLabel}
                       </button>
                     );
                   }

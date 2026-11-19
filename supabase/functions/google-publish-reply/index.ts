@@ -22,7 +22,7 @@ async function checkAndRecordUsage(
     .from('subscriptions')
     .select('current_period_start, current_period_end, plan_id')
     .eq('user_id', userId)
-    .eq('status', 'active')
+    .in('status', ['active', 'trialing'])
     .maybeSingle();
 
   if (!sub) return { allowed: false, used: 0, limit: 0 };

@@ -1,7 +1,7 @@
 # Project Status
 
 ## Current milestone
-PHASE 6 — Billing & Subscription (schema + UI + usage tracking + server-side limit enforcement COMPLETE; Stripe/Paddle integration pending)
+PHASE 6 — Billing COMPLETE. Marketing: Meta Pixel + GTM/GA4 + cookie consent + CompleteRegistration event LIVE. 14-day free trial for Starter/Growth added (DB migration, paddle-webhook, edge functions, portal UI).
 
 ## Completed
 
