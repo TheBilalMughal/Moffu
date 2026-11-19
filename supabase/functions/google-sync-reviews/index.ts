@@ -89,14 +89,31 @@ interface GBPReviewsResponse {
   nextPageToken?: string;
 }
 
-async function fetchGBPReviews(locationName: string, accessToken: string, errors: string[]): Promise<GBPReview[]> {
+async function fetchGBPReviews(
+  locationName: string,
+  accessToken: string,
+  errors: string[],
+  refreshAccessToken: () => Promise<string>,
+): Promise<GBPReview[]> {
   const reviews: GBPReview[] = [];
   let pageToken = '';
+  let retriedAfterUnauthorized = false;
   // Use v4 endpoint (Google My Business API — enabled via Cloud Console)
   const baseUrl = `https://mybusiness.googleapis.com/v4/${locationName}/reviews`;
-  do {
+  while (true) {
     const url = `${baseUrl}?pageSize=50${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (res.status === 401 && !retriedAfterUnauthorized) {
+      retriedAfterUnauthorized = true;
+      try {
+        accessToken = await refreshAccessToken();
+        continue;
+      } catch (refreshErr) {
+        console.error('Google access token was rejected and refresh failed:', refreshErr);
+        errors.push('Google authorization expired and could not be refreshed. Reconnect Google in Settings → Integrations.');
+        break;
+      }
+    }
     if (!res.ok) {
       const body = await res.text();
       console.error('GBP reviews error:', res.status, body);
@@ -106,7 +123,8 @@ async function fetchGBPReviews(locationName: string, accessToken: string, errors
     const data: GBPReviewsResponse = await res.json();
     reviews.push(...(data.reviews ?? []));
     pageToken = data.nextPageToken ?? '';
-  } while (pageToken);
+    if (!pageToken) break;
+  }
   return reviews;
 }
 
@@ -144,17 +162,25 @@ Deno.serve(async (req) => {
     if (!tokenRow) return json({ error: 'No tokens found' }, 400);
 
     let accessToken = tokenRow.access_token;
+    const refreshAndStoreAccessToken = async () => {
+      const refreshed = await doRefreshToken(tokenRow.refresh_token, clientId, clientSecret);
+      const tokenExpiry = new Date(Date.now() + refreshed.expires_in * 1000).toISOString();
+      const { error: tokenSaveError } = await supabase.from('google_connection_tokens')
+        .update({ access_token: refreshed.access_token, updated_at: new Date().toISOString() })
+        .eq('connection_id', connection.id);
+      if (tokenSaveError) throw tokenSaveError;
+      const { error: expirySaveError } = await supabase.from('google_connections')
+        .update({ token_expiry: tokenExpiry })
+        .eq('id', connection.id);
+      if (expirySaveError) throw expirySaveError;
+      accessToken = refreshed.access_token;
+      return accessToken;
+    };
+
     const expiry = connection.token_expiry ? new Date(connection.token_expiry) : new Date(0);
     if (expiry <= new Date(Date.now() + 60_000)) {
       try {
-        const refreshed = await doRefreshToken(tokenRow.refresh_token, clientId, clientSecret);
-        accessToken = refreshed.access_token;
-        await supabase.from('google_connection_tokens')
-          .update({ access_token: accessToken })
-          .eq('connection_id', connection.id);
-        await supabase.from('google_connections')
-          .update({ token_expiry: new Date(Date.now() + refreshed.expires_in * 1000).toISOString() })
-          .eq('id', connection.id);
+        await refreshAndStoreAccessToken();
       } catch (refreshErr) {
         console.error('Token refresh failed — marking REFRESH_FAILED:', refreshErr);
         await supabase.from('google_connections')
@@ -193,7 +219,7 @@ Deno.serve(async (req) => {
           .eq('id', location.id);
       }
 
-      const reviews = await fetchGBPReviews(locationName, accessToken, errors);
+      const reviews = await fetchGBPReviews(locationName, accessToken, errors, refreshAndStoreAccessToken);
 
       for (const review of reviews) {
         const hasReply = !!review.reviewReply?.comment;

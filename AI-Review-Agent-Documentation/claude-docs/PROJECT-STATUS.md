@@ -771,6 +771,12 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - The UI had collapsed Google API `PERMISSION_DENIED` responses into one generic property-access warning. Updated the Edge Function to preserve Google’s structured API-disabled reason where supplied, and clarified the portal message for API configuration versus property-level access. Empty-but-successful property lists now explain how to add/verify a Search Console site or grant GA4 property access.
 - Google documents that Search Console lists sites accessible to the authorized user, and GA4 account summaries list Analytics accounts accessible to that caller. A Search Console site must be verified or shared; the same connected Google account needs GA4 property access. Actual provider error reason remains unconfirmed until the refreshed page returns it.
 
+## GBP review sync 401 after Google Growth OAuth — 2026-11-19
+- Supabase function logs confirm GBP Reviews returned `401 UNAUTHENTICATED` (“Request had invalid authentication credentials”). This was an invalid Google access token, not the Supabase caller JWT or a disabled-API error.
+- The GBP token and the Search Console/GA4 token are stored separately. Read-only DB metadata showed the GBP token row had not been overwritten by the SEO callback, had a refresh token, and had a future recorded expiry when Google rejected it. The exact reason Google invalidated that access token early is not confirmed.
+- Fixed `google-sync-reviews` to refresh and persist a new Google access token once when GBP returns 401, then retry that page; scheduled expiry-based refresh remains in place.
+- Deployed `google-sync-reviews` v52 (ACTIVE, JWT verification enabled) to Supabase project `kgttncfkzdrgswfkkdji`. Authenticated portal sync after this deployment has not yet been observed, so the retry path still needs one user-session confirmation. If Google's refresh token is also revoked, reconnect Google from portal Integrations.
+
 ## Admin Client Portal Page Visibility — 2026-11-19
 **IMPLEMENTED + DATABASE MIGRATION APPLIED** ✅
 

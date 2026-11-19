@@ -37,13 +37,14 @@ The master checklist is durable project memory. Claude updates statuses only aft
 | GOOGLE-002 | Secure token storage | IMPLEMENTED | - | `google_connection_tokens` table; service-role only (no authenticated RLS policy); stored server-side in edge function only |
 | GOOGLE-003 | Accounts/locations fetch | IMPLEMENTED | - | `google-oauth-callback` v4 — exchanges code, fetches GBP locations, inserts into `google_locations` |
 | GOOGLE-004 | Explicit location mapping | IMPLEMENTED | - | `google_locations.is_selected` toggle in SettingsPage; only selected locations propagate to Reviews/Insights/sidebar |
-| GOOGLE-005 | Initial sync | IMPLEMENTED | - | `google-sync-reviews` v4 edge function; "Sync now" button in SettingsPage |
+| GOOGLE-005 | Initial sync | IMPLEMENTED | - | `google-sync-reviews` v52 ACTIVE; scheduled token refresh plus one refresh-and-retry on GBP 401; "Sync now" button in SettingsPage |
 | GOOGLE-006 | Connection health | IMPLEMENTED | - | `google_connections` state machine: PENDING/CONNECTED/REFRESH_FAILED/REVOKED/DISCONNECTED/ERROR; shown in SettingsPage |
 | GOOGLE-007 | Reconnect | IMPLEMENTED | - | Re-running OAuth flow reconnects; status resets to CONNECTED |
 | GOOGLE-008 | Disconnect/revoke cleanup | IMPLEMENTED | - | `google-disconnect` v4 — revokes Google token, sets DISCONNECTED, clears is_selected |
 | GOOGLE-009 | Quota/backoff | PENDING | - | Retry/backoff logic not yet added to edge functions |
 | GOOGLE-010 | Ambiguous write reconciliation | PENDING | - | - |
 | GOOGLE-011 | GBP post creation from portal | IN_PROGRESS | GOOGLE-001 | `google-create-post` Edge Function + `createGooglePost` service method + `PostCreatePanel` UI implemented locally; Edge Function not yet deployed (push nai krna) |
+| GOOGLE-012 | Recover GBP sync when Google rejects a token before its stored expiry | DEPLOYED, AWAITING LIVE CONFIRMATION | GOOGLE-002 | `google-sync-reviews` v52 ACTIVE; refreshes and retries a single GBP 401; Supabase logs confirmed `UNAUTHENTICATED`; authenticated post-deploy sync not yet observed |
 | REVIEWS-001 | Inbox filters/pagination | IMPLEMENTED | - | ReviewsPage: filter tabs (All/Pending/Draft Ready/Replied), star filter, date range, search; scoped to is_selected locations |
 | REVIEWS-002 | Review detail | IMPLEMENTED | - | Review cards with reviewer name, rating stars, date, review text, location label |
 | REVIEWS-003 | Generate draft | IMPLEMENTED | - | "Generate Draft" button → `ai-generate-draft` edge function → populates editable textarea; records ai_draft usage event |
