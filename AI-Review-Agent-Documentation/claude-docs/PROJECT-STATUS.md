@@ -770,3 +770,13 @@ IMPLEMENTED: Portal now enforces feature access on route and sidebar navigation 
 - User completed the Google consent screen; the stored Google grant includes the requested read-only Search Console and Analytics scopes. The selected site/property fields are still empty, so no SEO report can load yet.
 - The UI had collapsed Google API `PERMISSION_DENIED` responses into one generic property-access warning. Updated the Edge Function to preserve Google’s structured API-disabled reason where supplied, and clarified the portal message for API configuration versus property-level access. Empty-but-successful property lists now explain how to add/verify a Search Console site or grant GA4 property access.
 - Google documents that Search Console lists sites accessible to the authorized user, and GA4 account summaries list Analytics accounts accessible to that caller. A Search Console site must be verified or shared; the same connected Google account needs GA4 property access. Actual provider error reason remains unconfirmed until the refreshed page returns it.
+
+## Admin Client Portal Page Visibility — 2026-11-19
+**IMPLEMENTED + DATABASE MIGRATION APPLIED** ✅
+
+- Added **Settings → Page Visibility** in the Admin portal with Show/Hide switches for all 21 customer-facing portal pages.
+- A single shared page registry drives the Admin list, portal navigation filtering, and direct-route guards. Campaign details, marketing post creation, and feedback forms inherit their parent page visibility. Auth, invite, and OAuth callback flows stay outside this page list.
+- Hiding a page removes it from the portal sidebar and redirects direct visits to the first visible page. At least one visible page is required in the Admin UI. Existing subscription `FeatureGatePage` checks remain in place.
+- Added Supabase migration `20261119173757_portal_page_visibility`: global visibility rows default visible; authenticated users can read the non-sensitive list; only platform `owner`/`super_admin` can insert or update; updates are audited in `audit_events`; table is included in `supabase_realtime` for active portal refresh.
+- Supabase project `kgttncfkzdrgswfkkdji`: migration applied; policy inspection confirms authenticated read and owner/super-admin write policies. Portal fails open if visibility cannot be fetched, preserving existing access during a read outage.
+- Admin, portal, and shared types TypeScript checks completed successfully; `git diff --check` clean. Production Vercel deployment and a browser-level toggle smoke check were not performed in this task.

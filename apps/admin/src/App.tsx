@@ -35,6 +35,7 @@ import { RefundsPage } from '@/features/billing/RefundsPage';
 import { ReportsPage } from '@/features/analytics/ReportsPage';
 import { IntegrationsHealthPage } from '@/features/platform/IntegrationsHealthPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
+import { PageVisibilityPage } from '@/features/settings/PageVisibilityPage';
 
 export function App() {
   const initialize = useAdminAuthStore((s) => s.initialize);
@@ -95,6 +96,7 @@ export function App() {
             <Route path="notifications/email" element={<EmailSettingsPage />} />
             {/* Security tab */}
             <Route path="security" element={<SecuritySettingsPage />} />
+            <Route path="page-visibility" element={<PageVisibilityPage />} />
             {/* Legacy redirects */}
             <Route path="packages" element={<PackagesSettingsPage />} />
             <Route path="ai"       element={<Navigate to="/settings/api/ai"   replace />} />

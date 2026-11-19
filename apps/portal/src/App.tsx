@@ -32,6 +32,7 @@ import { MarketingPage } from '@/features/marketing/MarketingPage';
 import { NewPostPage } from '@/features/marketing/NewPostPage';
 import { ComplaintsPage } from '@/features/dashboard/pages/ComplaintsPage';
 import { DigestPage } from '@/features/digest/DigestPage';
+import { PortalPageGate, PortalPageVisibilityProvider } from '@/components/PortalPageVisibility';
 
 
 export function App() {
@@ -71,33 +72,33 @@ export function App() {
         <Route path="/google/connect" element={<AuthGuard><GoogleConnectPage /></AuthGuard>} />
 
         {/* Protected dashboard routes */}
-        <Route element={<AuthGuard><DashboardLayout /></AuthGuard>}>
-          <Route path="/dashboard" element={<OverviewPage />} />
-          <Route path="/reviews"   element={<ReviewsPage />} />
-          <Route path="/reviews/complaints" element={<ComplaintsPage />} />
+        <Route element={<AuthGuard><PortalPageVisibilityProvider><DashboardLayout /></PortalPageVisibilityProvider></AuthGuard>}>
+          <Route path="/dashboard" element={<PortalPageGate pageKey="overview"><OverviewPage /></PortalPageGate>} />
+          <Route path="/reviews"   element={<PortalPageGate pageKey="reviews"><ReviewsPage /></PortalPageGate>} />
+          <Route path="/reviews/complaints" element={<PortalPageGate pageKey="complaints"><ComplaintsPage /></PortalPageGate>} />
           <Route path="/insights" element={<Navigate to="/insights/trends" replace />} />
-          <Route path="/insights/trends"      element={<FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage>} />
-          <Route path="/insights/ratings"     element={<FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage>} />
-          <Route path="/insights/agent-rules" element={<FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage>} />
-          <Route path="/google-profile" element={<FeatureGatePage feature="feature_google_profile"><GoogleProfilePage /></FeatureGatePage>} />
-          <Route path="/google-growth" element={<FeatureGatePage feature="feature_google_profile"><GoogleGrowthPage /></FeatureGatePage>} />
-          <Route path="/georank" element={<FeatureGatePage feature="feature_google_profile"><GeoRankPage /></FeatureGatePage>} />
-          <Route path="/competitors" element={<FeatureGatePage feature="feature_google_profile"><CompetitorPage /></FeatureGatePage>} />
-          <Route path="/brand-brain" element={<FeatureGatePage feature="feature_brand_brain"><BrandBrainPage /></FeatureGatePage>} />
-          <Route path="/billing"   element={<BillingPage />} />
-          <Route path="/plan"             element={<BillingPage />} />
+          <Route path="/insights/trends"      element={<PortalPageGate pageKey="insights_trends"><FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/insights/ratings"     element={<PortalPageGate pageKey="insights_ratings"><FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/insights/agent-rules" element={<PortalPageGate pageKey="insights_agent_rules"><FeatureGatePage feature="feature_insights"><InsightsPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/google-profile" element={<PortalPageGate pageKey="google_profile"><FeatureGatePage feature="feature_google_profile"><GoogleProfilePage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/google-growth" element={<PortalPageGate pageKey="seo_leads"><FeatureGatePage feature="feature_google_profile"><GoogleGrowthPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/georank" element={<PortalPageGate pageKey="georank"><FeatureGatePage feature="feature_google_profile"><GeoRankPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/competitors" element={<PortalPageGate pageKey="competitors"><FeatureGatePage feature="feature_google_profile"><CompetitorPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/brand-brain" element={<PortalPageGate pageKey="brand_brain"><FeatureGatePage feature="feature_brand_brain"><BrandBrainPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/billing"   element={<PortalPageGate pageKey="billing"><BillingPage /></PortalPageGate>} />
+          <Route path="/plan"             element={<PortalPageGate pageKey="plan"><BillingPage /></PortalPageGate>} />
           <Route path="/settings" element={<Navigate to="/settings/account" replace />} />
-          <Route path="/settings/account" element={<SettingsPage />} />
-          <Route path="/settings/preferences" element={<SettingsPage />} />
-          <Route path="/settings/integrations" element={<SettingsPage />} />
-          <Route path="/team"      element={<FeatureGatePage feature="feature_team"><TeamPage /></FeatureGatePage>} />
-          <Route path="/campaigns"     element={<FeatureGatePage feature="feature_campaigns"><CampaignsPage /></FeatureGatePage>} />
-          <Route path="/campaigns/:id" element={<FeatureGatePage feature="feature_campaigns"><CampaignDetailPage /></FeatureGatePage>} />
-          <Route path="/feedback"      element={<FeatureGatePage feature="feature_feedback"><FeedbackInboxPage /></FeatureGatePage>} />
-          <Route path="/feedback/new"  element={<FeatureGatePage feature="feature_feedback"><NewFeedbackRequestPage /></FeatureGatePage>} />
-          <Route path="/marketing"     element={<FeatureGatePage feature="feature_marketing"><MarketingPage /></FeatureGatePage>} />
-          <Route path="/marketing/new" element={<FeatureGatePage feature="feature_marketing"><NewPostPage /></FeatureGatePage>} />
-          <Route path="/digest" element={<DigestPage />} />
+          <Route path="/settings/account" element={<PortalPageGate pageKey="account"><SettingsPage /></PortalPageGate>} />
+          <Route path="/settings/preferences" element={<PortalPageGate pageKey="preferences"><SettingsPage /></PortalPageGate>} />
+          <Route path="/settings/integrations" element={<PortalPageGate pageKey="integrations"><SettingsPage /></PortalPageGate>} />
+          <Route path="/team"      element={<PortalPageGate pageKey="team"><FeatureGatePage feature="feature_team"><TeamPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/campaigns"     element={<PortalPageGate pageKey="campaigns"><FeatureGatePage feature="feature_campaigns"><CampaignsPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/campaigns/:id" element={<PortalPageGate pageKey="campaigns"><FeatureGatePage feature="feature_campaigns"><CampaignDetailPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/feedback"      element={<PortalPageGate pageKey="feedback"><FeatureGatePage feature="feature_feedback"><FeedbackInboxPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/feedback/new"  element={<PortalPageGate pageKey="feedback"><FeatureGatePage feature="feature_feedback"><NewFeedbackRequestPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/marketing"     element={<PortalPageGate pageKey="marketing"><FeatureGatePage feature="feature_marketing"><MarketingPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/marketing/new" element={<PortalPageGate pageKey="marketing"><FeatureGatePage feature="feature_marketing"><NewPostPage /></FeatureGatePage></PortalPageGate>} />
+          <Route path="/digest" element={<PortalPageGate pageKey="monthly_digest"><DigestPage /></PortalPageGate>} />
         </Route>
 
         {/* Invite acceptance — no auth required to view */}

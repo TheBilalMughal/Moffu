@@ -10,6 +10,8 @@ import { LocationSelectionModal } from '@/features/billing/LocationSelectionModa
 import { billingService } from '@/features/billing/billing.service';
 import type { Plan, Subscription } from '@/features/billing/billing.service';
 import { usePageTracking } from '@/hooks/usePageTracking';
+import { getPortalPageForPath } from '@moffu/types';
+import { usePortalPageVisibility } from '@/components/PortalPageVisibility';
 
 function StarIcon() {
   return (
@@ -1004,6 +1006,7 @@ function RailGroupButton({
 
 export function DashboardLayout() {
   usePageTracking();
+  const { isVisible, firstVisiblePage } = usePortalPageVisibility();
   const { setLocations, setSelectedId, setLocationRatings } = useLocationStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -1015,6 +1018,15 @@ export function DashboardLayout() {
   const [adminDowngradePlan, setAdminDowngradePlan] = useState<{ name: string; locationLimit: number } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authUserId, setAuthUserId] = useState<string | null>(null);
+  const visibleRailGroups = RAIL_GROUPS
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => {
+        const page = getPortalPageForPath(item.to);
+        return !page || isVisible(page.key);
+      }),
+    }))
+    .filter(group => group.items.length > 0);
 
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
@@ -1173,7 +1185,7 @@ export function DashboardLayout() {
   }
 
   const activeGroupId = (() => {
-    for (const group of RAIL_GROUPS) {
+    for (const group of visibleRailGroups) {
       for (const item of group.items) {
         const matches = item.end
           ? location.pathname === item.to
@@ -1181,12 +1193,12 @@ export function DashboardLayout() {
         if (matches) return group.id;
       }
     }
-    return RAIL_GROUPS[0]!.id;
+    return visibleRailGroups[0]!.id;
   })();
-  const activeGroup = RAIL_GROUPS.find(g => g.id === activeGroupId) ?? RAIL_GROUPS[0]!;
+  const activeGroup = visibleRailGroups.find(g => g.id === activeGroupId) ?? visibleRailGroups[0]!;
 
   // Derive current page label for breadcrumb
-  const currentPage = RAIL_GROUPS.flatMap(g => g.items).find(item => {
+  const currentPage = visibleRailGroups.flatMap(g => g.items).find(item => {
     if (item.end) return location.pathname === item.to;
     return location.pathname === item.to || location.pathname.startsWith(item.to + '/');
   })?.label ?? null;
@@ -1213,10 +1225,10 @@ export function DashboardLayout() {
 
         {/* Icon Rail � desktop only */}
         <aside className="hidden md:flex w-14 flex-shrink-0 bg-[#111111] flex-col items-center py-4 gap-1 z-20">
-          <a href="/dashboard" className="w-10 h-10 flex items-center justify-center mb-2" aria-label="Moffu home">
+          <a href={firstVisiblePage.path} className="w-10 h-10 flex items-center justify-center mb-2" aria-label="Moffu home">
             <img src="/images/fevicon.png" alt="" className="w-8 h-8 rounded-lg object-contain" aria-hidden="true" />
           </a>
-          {RAIL_GROUPS.map(group => (
+          {visibleRailGroups.map(group => (
             <RailGroupButton
               key={group.id}
               icon={group.icon}
@@ -1271,7 +1283,7 @@ export function DashboardLayout() {
             </div>
             {/* Mobile: show all items */}
             <div className="md:hidden flex flex-col gap-0.5">
-              {RAIL_GROUPS.flatMap(group => group.items).map(item => (
+              {visibleRailGroups.flatMap(group => group.items).map(item => (
                 <NavItem
                   key={item.to}
                   to={item.to}

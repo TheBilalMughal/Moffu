@@ -4,6 +4,7 @@ The master checklist is durable project memory. Claude updates statuses only aft
 
 | ID | Requirement | Status | Depends on | Evidence |
 |---|---|---|---|---|
+| ADMIN-PORTAL-001 | Admin controls global visibility for every client portal page; hidden pages disappear from navigation and direct routes redirect while plan entitlements remain enforced | IMPLEMENTED | Supabase | `apps/admin/src/features/settings/PageVisibilityPage.tsx`; shared page registry; portal nav filtering and `PortalPageGate`; migration `20261119173757_portal_page_visibility` applied to `kgttncfkzdrgswfkkdji`, authenticated read and owner/super_admin write policies verified; portal/admin/types typechecks pass |
 | CORE-001 | Three web surfaces and routing boundaries | IMPLEMENTED | - | apps/web (Next.js), apps/portal (Vite/React), apps/admin (Vite/React) scaffolded with separate routing |
 | CORE-002 | Shared provider-independent backend/service architecture | IN_PROGRESS | - | packages/types (shared DTOs), packages/config, auth service abstraction in portal/admin. DB + API services pending. |
 | CORE-003 | No Dead UI | IN_PROGRESS | - | Auth pages fully wired. Placeholder dashboard pages clearly marked, not presented as real features. |
